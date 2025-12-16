@@ -1,0 +1,22 @@
+{
+  "name": "qsi-africa-ts",
+  "version": "1.0.0",
+  "description": "QSI Africa Platform - TypeScript Monorepo",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../admin-client && npm install",
+    "build": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "dev": "cd server && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:admin": "cd admin-client && npm run build",
+    "build:all": "npm run build && npm run build:client && npm run build:admin"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": ["qsi", "africa", "typescript", "express", "react"],
+  "author": "QSI Africa",
+  "license": "ISC"
+}
