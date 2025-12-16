@@ -2,9 +2,19 @@ import OpenAI from 'openai';
 import prisma from '../config/prisma';
 import type { ChatMessage } from '../types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-load OpenAI client to avoid crash if API key is not set
+let openaiInstance: OpenAI | null = null;
+
+const getOpenAIClient = (): OpenAI => {
+  if (!openaiInstance) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+    openaiInstance = new OpenAI({ apiKey });
+  }
+  return openaiInstance;
+};
 
 interface ContactInfo {
   name: string;
@@ -304,7 +314,7 @@ async function continueInfrastructureChat(
   ];
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini",
       messages: apiMessages,
       tools: [infrastructureTool],
@@ -432,7 +442,7 @@ async function continueVisionChat(
   );
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: selectedModel,
       messages: apiMessages,
       tools: visionTools,
@@ -540,7 +550,7 @@ async function generateFrequencyProfile(
   `;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini", // Or a more powerful model for this complex task
       messages: [{ role: "system", content: systemPrompt }],
       temperature: 0.7,
@@ -589,7 +599,7 @@ async function continueHealingChat(
   ];
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini",
       messages: apiMessages,
       tools: healingTools,
