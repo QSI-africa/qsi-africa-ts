@@ -1,0 +1,29 @@
+/* admin-client/src/index.css */
+:root {
+  --qsi-primary: #7e57c2;
+  --qsi-bg-light: #ffffff;
+  --qsi-bg-dark: #0f0f23;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

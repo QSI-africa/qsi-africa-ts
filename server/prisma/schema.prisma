@@ -1,0 +1,361 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. UPDATED: User Roles
+enum UserRole {
+  CLIENT
+  TEAM_MEMBER // Generic
+  SUPER_USER
+  ADMIN
+  ENGINEER
+  ARCHITECT
+  QUANTITY_SURVEYOR
+  GENERAL_USER
+}
+
+enum InvoiceType {
+  QUOTATION
+  INVOICE
+  RECEIPT
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+  OVERDUE
+  QUOTATION
+}
+
+enum PilotType {
+  CONCEPT // Actionable case
+  FRAMEWORK // Template
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      UserRole @default(GENERAL_USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Submissions
+  frequencyProfile          FrequencyProfile?
+  healingSubmissions        HealingSubmission[]
+  visionSubmissions         VisionSubmission[]
+  infrastructureSubmissions InfrastructureSubmission[]
+
+  // Task Relations (Inverse Fields)
+  tasksAssignedBy Task[] @relation("AssignedBy") // Fix for Error 2
+  tasksAssignedTo Task[] @relation("AssignedTo") // Fix for Error 3
+
+  // Document & Log Relations (Inverse Fields)
+  taskDocumentsUploaded TaskDocument[]
+  auditLogs             AuditLog[]
+  documents             Document[]
+  uploadedDocuments     Document[] @relation("DocumentUploader")
+  clientInvoices        Invoice[]  @relation("ClientInvoices")
+
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+}
+
+model FrequencyProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to User
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique // One-to-one relation
+
+  // --- Data collected from onboarding ---
+  location        String?
+  personalBeliefs String? @db.Text
+  background      String? @db.Text
+  lifeVision      String? @db.Text
+  challenges      String? @db.Text
+
+  // --- AI-Generated Output ---
+  generatedProfile String? @db.Text // The "Frequency Profile"
+}
+
+// 2. UPDATED: Task Status
+enum TaskStatus {
+  PENDING_ASSIGNMENT // New task from chatbot
+  PENDING_DESIGN // Assigned to Engineer/Architect
+  PENDING_DESIGN_APPROVAL // Submitted to Super User
+  PENDING_QUANTIFYING // Assigned to Quantity Surveyor
+  PENDING_FINAL_APPROVAL // Submitted to Super User
+  COMPLETED // Approved by Super User, sent to client
+  REJECTED // e.g., Design rejected, needs rework
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @default("No description provided.") // <-- ADD THIS DEFAULT
+  status      String   @default("PENDING")
+  priority    String   @default("MEDIUM")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Submission (1:1 relation)
+  submission   InfrastructureSubmission @relation(fields: [submissionId], references: [id])
+  submissionId String                   @unique // This is correct for 1:1
+
+  // Assignment (Needs @relation names to separate the two links to User)
+  assignedBy   User?   @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedById String?
+
+  assignedTo   User?   @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  // Documents
+  auditLogs     AuditLog[]
+  documents     Document[]
+  taskDocuments TaskDocument[]
+}
+
+// 3. NEW: TaskDocument Model
+model TaskDocument {
+  id           String   @id @default(cuid())
+  filename     String // Original filename (e.g., "design_v1.pdf")
+  filepath     String // Path on the server/S3
+  mimetype     String // e.g., "application/pdf"
+  documentType String // "DESIGN" or "QUOTATION"
+  createdAt    DateTime @default(now())
+
+  // Who uploaded this?
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+
+  // What task does it belong to?
+  task   Task   @relation(fields: [taskId], references: [id])
+  taskId Int
+}
+
+// 4. AuditLog Model (Unchanged)
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  actor   User?   @relation(fields: [actorId], references: [id])
+  actorId String?
+
+  task   Task?   @relation(fields: [taskId], references: [id])
+  taskId Int?
+}
+
+// 5. InfrastructureSubmission (Unchanged)
+model InfrastructureSubmission {
+  id                  String   @id @default(cuid())
+  contactInfo         String
+  conversationHistory Json?
+  generatedSolution   String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Link to the user who made the submission
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  // Link to the uploaded document (One-to-One)
+  document Document?
+  
+  // Additional documents (One-to-Many)
+  documents Document[] @relation("SubmissionDocuments")
+
+  // ADDED: Inverse field for the Task model (1:1 relation)
+  task Task?
+
+  @@index([userId])
+}
+
+// ... (HealingSubmission and VisionSubmission are unchanged) ...
+model HealingSubmission {
+  id                  String   @id @default(cuid())
+  struggleDescription String
+  contactInfo         String
+  generatedPlan       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User?    @relation(fields: [userId], references: [id])
+  userId              String?
+
+  @@index([userId])
+}
+
+model VisionSubmission {
+  id                    String   @id @default(cuid())
+  contactInfo           String // Stored as "Name <email>"
+  initialPrompt         String // The very first thing the user typed
+  conversationHistory   Json? // Store the back-and-forth messages (optional but good for context)
+  generatedVisionOutput String? // The final structured vision generated by AI (Markdown format)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User?    @relation(fields: [userId], references: [id])
+  userId                String?
+
+  @@index([userId])
+}
+
+model PilotProject {
+  id               String    @id @default(cuid())
+  key              String    @unique // Short key like 'udmp', 'glenview'
+  title            String
+  subtext          String? // Optional subtext/theme
+  shortDescription String
+  expandedView     String?   @db.Text // Store the longer description (Markdown potentially)
+  imageUrl         String? // Optional image URL
+  isActive         Boolean   @default(true) // To control visibility
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  type             PilotType @default(CONCEPT)
+}
+
+model HealingPackage {
+  id           String   @id @default(cuid())
+  title        String   @unique
+  shortPreview String
+  fee          String // e.g., "$80"
+  duration     String // e.g., "60 min"
+  cta          String // Call to action text, e.g., "Start Healing Relationship"
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model HealingSuggestion {
+  id        String   @id @default(cuid())
+  text      String   @unique // The suggestion text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  fileName     String // The name stored on the server (UUID)
+  originalName String // The name the user uploaded
+  mimeType     String
+  filePath     String // Full path on the server
+  fileSize     Int
+  uploadedAt   DateTime @default(now())
+  category     String?
+  documentType String?  @default("GENERAL")
+
+  // Link to InfrastructureSubmission (One-to-One: Must have a unique foreign key)
+  infrastructureSubmission   InfrastructureSubmission? @relation(fields: [infrastructureSubmissionId], references: [id])
+  infrastructureSubmissionId String?                   @unique
+  
+  // Additional link for multiple documents per submission
+  submissionDocuments   InfrastructureSubmission? @relation("SubmissionDocuments", fields: [submissionDocumentsId], references: [id])
+  submissionDocumentsId String?
+
+  // Link to User (who uploaded it)
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+  
+  // Link to Task
+  taskId Int?
+  task   Task?    @relation(fields: [taskId], references: [id])
+  
+  // Track who uploaded (for admin context)
+  uploadedBy   User?   @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  uploadedById String?
+
+  @@index([userId])
+}
+
+// --- NEW: Infrastructure Suggestions ---
+model InfrastructureSuggestion {
+  id        String   @id @default(cuid())
+  text      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- NEW: Vision Suggestions ---
+model VisionSuggestion {
+  id        String   @id @default(cuid())
+  text      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id            Int    @id @default(autoincrement())
+  invoiceNumber String @unique // e.g., INV-001, QTE-005
+
+  // --- GENERIC LINKING ---
+  // This allows the invoice to belong to "Smart Infra", "Healing", or "Vision"
+  // without needing complex foreign keys for every single module.
+  referenceId   String? // The ID of the Project, Booking, or User
+  referenceType String? // e.g., "INFRASTRUCTURE", "HEALING", "VISION"
+
+  // --- CLIENT DETAILS (Snapshot) ---
+  // We store these directly on the invoice so they don't change 
+  // even if the user profile updates later.
+  clientName    String
+  clientEmail   String
+  sentToEmail   String  // Email where invoice was sent
+  clientPhone   String?
+  clientAddress String?
+
+  // --- FINANCIALS ---
+  currency    String  @default("USD")
+  totalAmount Decimal @default(0.0)
+  taxAmount   Decimal @default(0.0)
+  discount    Decimal @default(0.0)
+
+  status InvoiceStatus @default(DRAFT)
+  type   InvoiceType   @default(QUOTATION)
+
+  dueDate    DateTime?
+  issuedDate DateTime  @default(now())
+
+  // --- CONTENT ---
+  notes  String? // "Bank details: Stanbic X..."
+  footer String? // "Thank you for doing business."
+  pdfPath String? // Path to generated PDF
+
+  // --- RELATIONS ---
+  items InvoiceItem[] // The list of services/products
+  
+  // Optional link to User (client)
+  client   User?   @relation("ClientInvoices", fields: [clientId], references: [id])
+  clientId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InvoiceItem {
+  id        Int     @id @default(autoincrement())
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  title       String // e.g., "Healing Package - Standard"
+  description String? // e.g., "Consultation Session"
+  price       Decimal @default(0.0) // Total price for this item
+  quantity    Decimal @default(1)
+  unitPrice   Decimal @default(0.0)
+  total       Decimal @default(0.0) // quantity * unitPrice
+  isHealingPackage Boolean @default(false)
+}

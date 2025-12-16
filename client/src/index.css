@@ -1,0 +1,30 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  min-height: 100vh;
+  zoom: 100%;
+}
+
+html,
+body {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  zoom: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: transparent;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}

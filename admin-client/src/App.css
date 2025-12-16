@@ -1,0 +1,121 @@
+/* src/App.css */
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, box-shadow 0.3s ease !important;
+  scroll-behavior: smooth;
+}
+
+/* Global styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  background-color: transparent;
+}
+
+/* Theme-aware background gradients */
+[data-theme="light"] body {
+  background: linear-gradient(135deg, #f6fafd 0%, #b3cfe5 100%) !important;
+}
+
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #0a1931 0%, #0f2442 100%) !important;
+}
+
+/* Professional card styles with glass morphism */
+.glass-card {
+  backdrop-filter: blur(10px);
+  border: 1px solid;
+  border-color: rgba(74, 127, 167, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .glass-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(179, 207, 229, 0.2);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b3cfe5;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #4a7fa7;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a7fa7;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #b3cfe5;
+}
+
+/* Brand-specific styles */
+.brand-gradient {
+  background: linear-gradient(135deg, #0a1931 0%, #4a7fa7 50%, #b3cfe5 100%);
+}
+
+.brand-text-gradient {
+  background: linear-gradient(135deg, #0a1931 0%, #4a7fa7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .brand-text-gradient {
+  background: linear-gradient(135deg, #b3cfe5 0%, #4a7fa7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation for smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid #4a7fa7;
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] *:focus {
+  outline: 2px solid #b3cfe5;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

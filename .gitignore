@@ -1,0 +1,45 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/server/src/generated/prisma
+/server/.env
+/admin-client/node_modules
+/admin-client/.env
+/client/node_modules
+/client/.env
+
+# Sensitive files
+/documents/*.json
+*.json.key
+*-adminsdk-*.json
+
+# Build outputs
+/server/dist
+/admin-client/dist
+/client/dist
+dist-ssr
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.local
+
+# TypeScript
+*.tsbuildinfo
