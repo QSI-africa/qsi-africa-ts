@@ -14,8 +14,32 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Configure CORS for local development and Railway production
+const allowedOrigins = [
+  'http://localhost:5173',  // Local client dev
+  'http://localhost:5174',  // Local admin-client dev
+  'https://web-production-2c5ae.up.railway.app'  // Railway server (for API docs/health)
+];
+
+// Add Railway frontend URLs when deployed
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+if (process.env.ADMIN_CLIENT_URL) {
+  allowedOrigins.push(process.env.ADMIN_CLIENT_URL);
+}
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
