@@ -6,7 +6,7 @@ buildCommand = "npm install && npm run build"
 node_version = "18"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "npx prisma migrate deploy && npm run db:seed && npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
