@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "npm install && npm run build"
 
 [nixpacks.phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs-22_x"]
 
 [deploy]
 startCommand = "npx serve -s dist -l 3000"
