@@ -18,7 +18,7 @@ import { BulbFilled } from "@ant-design/icons";
 import {
   lightTheme,
   darkTheme,
-} from "../../client/src/components/theme/theme-config";
+} from "./theme/theme-config";
 import HealingPackagesPage from "./pages/HealingPackagesPage";
 import HealingSuggestionsPage from "./pages/HealingSuggestionsPage";
 import ClientListPage from "./pages/ClientListPage";
