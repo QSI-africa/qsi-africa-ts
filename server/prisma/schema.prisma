@@ -33,7 +33,6 @@ enum InvoiceStatus {
   PAID
   CANCELLED
   OVERDUE
-  QUOTATION
 }
 
 enum PilotType {
@@ -61,11 +60,9 @@ model User {
   tasksAssignedTo Task[] @relation("AssignedTo") // Fix for Error 3
 
   // Document & Log Relations (Inverse Fields)
-  taskDocumentsUploaded TaskDocument[]
-  auditLogs             AuditLog[]
-  documents             Document[]
-  uploadedDocuments     Document[] @relation("DocumentUploader")
-  clientInvoices        Invoice[]  @relation("ClientInvoices")
+  taskDocumentsUploaded TaskDocument[] // Fix for Error 4
+  auditLogs             AuditLog[] // Fix for Error 5
+  documents             Document[] // Inverse from the Document model
 
   passwordResetToken   String?
   passwordResetExpires DateTime?
@@ -103,7 +100,7 @@ enum TaskStatus {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   title       String
   description String   @default("No description provided.") // <-- ADD THIS DEFAULT
   status      String   @default("PENDING")
@@ -124,8 +121,9 @@ model Task {
 
   // Documents
   auditLogs     AuditLog[]
-  documents     Document[]
   taskDocuments TaskDocument[]
+
+  documents       Document[]
 }
 
 // 3. NEW: TaskDocument Model
@@ -136,14 +134,14 @@ model TaskDocument {
   mimetype     String // e.g., "application/pdf"
   documentType String // "DESIGN" or "QUOTATION"
   createdAt    DateTime @default(now())
-
+  comments     String?  @db.Text 
   // Who uploaded this?
   uploadedBy   User   @relation(fields: [uploadedById], references: [id])
   uploadedById String
 
   // What task does it belong to?
   task   Task   @relation(fields: [taskId], references: [id])
-  taskId Int
+  taskId String
 }
 
 // 4. AuditLog Model (Unchanged)
@@ -157,7 +155,7 @@ model AuditLog {
   actorId String?
 
   task   Task?   @relation(fields: [taskId], references: [id])
-  taskId Int?
+  taskId String?
 }
 
 // 5. InfrastructureSubmission (Unchanged)
@@ -175,9 +173,6 @@ model InfrastructureSubmission {
 
   // Link to the uploaded document (One-to-One)
   document Document?
-  
-  // Additional documents (One-to-Many)
-  documents Document[] @relation("SubmissionDocuments")
 
   // ADDED: Inverse field for the Task model (1:1 relation)
   task Task?
@@ -185,7 +180,19 @@ model InfrastructureSubmission {
   @@index([userId])
 }
 
-// ... (HealingSubmission and VisionSubmission are unchanged) ...
+model PilotEngagement {
+  id             String   @id @default(cuid())
+  pilotKey       String   // e.g., "futurecraft"
+  pilotTitle     String
+  engagementType String   // e.g., "partner", "investor", "client"
+  message        String   @db.Text
+  contactName    String
+  contactEmail   String
+  contactPhone   String?
+  status         String   @default("PENDING") // For backend tracking (PENDING, REVIEWED, ARCHIVED)
+  createdAt      DateTime @default(now())
+}
+
 model HealingSubmission {
   id                  String   @id @default(cuid())
   struggleDescription String
@@ -260,24 +267,14 @@ model Document {
 
   // Link to InfrastructureSubmission (One-to-One: Must have a unique foreign key)
   infrastructureSubmission   InfrastructureSubmission? @relation(fields: [infrastructureSubmissionId], references: [id])
-  infrastructureSubmissionId String?                   @unique
-  
-  // Additional link for multiple documents per submission
-  submissionDocuments   InfrastructureSubmission? @relation("SubmissionDocuments", fields: [submissionDocumentsId], references: [id])
-  submissionDocumentsId String?
+  infrastructureSubmissionId String?                   @unique // <-- FIX 1: Must be unique for 1:1
 
   // Link to User (who uploaded it)
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id]) // <-- FIX 2: Inverse relation is now on User model
   userId String?
-  
-  // Link to Task
-  taskId Int?
-  task   Task?    @relation(fields: [taskId], references: [id])
-  
-  // Track who uploaded (for admin context)
-  uploadedBy   User?   @relation("DocumentUploader", fields: [uploadedById], references: [id])
-  uploadedById String?
 
+taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id])
   @@index([userId])
 }
 
@@ -300,7 +297,7 @@ model VisionSuggestion {
 }
 
 model Invoice {
-  id            Int    @id @default(autoincrement())
+  id            String @id @default(uuid())
   invoiceNumber String @unique // e.g., INV-001, QTE-005
 
   // --- GENERIC LINKING ---
@@ -314,7 +311,6 @@ model Invoice {
   // even if the user profile updates later.
   clientName    String
   clientEmail   String
-  sentToEmail   String  // Email where invoice was sent
   clientPhone   String?
   clientAddress String?
 
@@ -333,29 +329,21 @@ model Invoice {
   // --- CONTENT ---
   notes  String? // "Bank details: Stanbic X..."
   footer String? // "Thank you for doing business."
-  pdfPath String? // Path to generated PDF
 
   // --- RELATIONS ---
   items InvoiceItem[] // The list of services/products
-  
-  // Optional link to User (client)
-  client   User?   @relation("ClientInvoices", fields: [clientId], references: [id])
-  clientId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model InvoiceItem {
-  id        Int     @id @default(autoincrement())
-  invoiceId Int
+  id        String  @id @default(uuid())
+  invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  title       String // e.g., "Healing Package - Standard"
-  description String? // e.g., "Consultation Session"
-  price       Decimal @default(0.0) // Total price for this item
+  description String // e.g., "Consultation Session"
   quantity    Decimal @default(1)
   unitPrice   Decimal @default(0.0)
   total       Decimal @default(0.0) // quantity * unitPrice
-  isHealingPackage Boolean @default(false)
 }

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # --- 1. The Database (Postgres) ---
+  db:
+    image: postgres:15-alpine
+    container_name: qsi_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123 
+      POSTGRES_DB: qsi_db
+    volumes:
+      # FIX: Use a relative path to mount data outside the 'server' folder
+      - ../pg_data:/var/lib/postgresql/data 
+
+  # --- 2. The Backend (QSI App) ---
+  backend:
+    image: elvisk2710/qsi-backend:latest
+    container_name: qsi_backend
+    restart: always
+    depends_on:
+      - db
+    env_file: .env # Looks for .env in the same 'server' folder
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:password123@qsi_postgres:5432/qsi_db?schema=public
+
+volumes:
+  #this is a test   
+  # The external volume must still be defined, but it will live in the project root
+  pg_data:

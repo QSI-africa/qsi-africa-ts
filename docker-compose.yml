@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ==================================
+  # DATABASE (PostgreSQL)
+  # ==================================
+  db:
+    image: postgres:15-alpine
+    container_name: qsi_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-qsi_africa}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # ==================================
+  # SERVER (Backend)
+  # ==================================
+  server:
+    # IMAGE PLACEHOLDER: Update with your Registry URL
+    image: registry.digitalocean.com/qsi-africa/server:latest
+    container_name: qsi_server
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-qsi_africa}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+
+  # ==================================
+  # CLIENT (Frontend)
+  # ==================================
+  client:
+    image: registry.digitalocean.com/qsi-africa/client:latest
+    container_name: qsi_client
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
+  # ==================================
+  # ADMIN CLIENT
+  # ==================================
+  admin-client:
+    image: registry.digitalocean.com/qsi-africa/admin-client:latest
+    container_name: qsi_admin
+    restart: always
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
