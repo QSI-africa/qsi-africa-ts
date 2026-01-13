@@ -49,6 +49,7 @@ jobs:
           host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             # Navigate to the project folder (or create it)
             mkdir -p ~/qsi-africa-ts && cd ~/qsi-africa-ts
