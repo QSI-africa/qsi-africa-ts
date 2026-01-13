@@ -2,9 +2,9 @@ name: CI/CD to DigitalOcean
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 env:
   # TODO: Replace with your actual registry name
