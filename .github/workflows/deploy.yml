@@ -1,121 +1,78 @@
-name: CI/CD to DigitalOcean
+name: Deploy Monorepo to Droplet
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - main
+      - master
 
 env:
-  # TODO: Replace with your actual registry name
-  REGISTRY: registry.digitalocean.com/qsi-africa
-  IMAGE_TAG: ${{ github.sha }}
+  # The user provided prompt uses this repo user
+  DOCKER_REPO: qsidocker2026
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [server, client, admin-client]
     steps:
-      - name: Checkout code
+      - name: ⬇️ Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Only login and push on 'push' events, not PRs (unless you want to push PR images)
-      - name: Install doctl
-        if: github.event_name == 'push'
-        uses: digitalocean/action-doctl@v2
+      - name: 🔑 Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Log in to DigitalOcean Container Registry
-        if: github.event_name == 'push'
-        run: doctl registry login --expiry-seconds 1200
+      - name: 🏗️ Build & Push Images
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ env.DOCKER_REPO }}/qsi-${{ matrix.service }}:latest
+          # Pass build args only for client service
+          build-args: |
+            ${{ matrix.service == 'client' && format('VITE_API_BASE_URL={0}', vars.VITE_API_BASE_URL || 'https://api.qsi.africa/api') || '' }}
 
-      # ======================================================
-      # SERVER
-      # ======================================================
-      - name: Build Server
-        run: |
-          docker build -t server-image ./server
-
-      - name: Push Server to Registry
-        if: github.event_name == 'push'
-        run: |
-          docker tag server-image $REGISTRY/server:$IMAGE_TAG
-          docker tag server-image $REGISTRY/server:latest
-          docker push $REGISTRY/server:$IMAGE_TAG
-          docker push $REGISTRY/server:latest
-
-      # ======================================================
-      # CLIENT
-      # ======================================================
-      - name: Build Client
-        run: |
-          docker build \
-            --build-arg VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL || 'https://api.qsi.africa/api' }} \
-            -t client-image ./client
-
-      - name: Push Client to Registry
-        if: github.event_name == 'push'
-        run: |
-          docker tag client-image $REGISTRY/client:$IMAGE_TAG
-          docker tag client-image $REGISTRY/client:latest
-          docker push $REGISTRY/client:$IMAGE_TAG
-          docker push $REGISTRY/client:latest
-
-      # ======================================================
-      # ADMIN CLIENT
-      # ======================================================
-      - name: Build Admin Client
-        run: |
-          docker build -t admin-client-image ./admin-client
-
-      - name: Push Admin Client to Registry
-        if: github.event_name == 'push'
-        run: |
-          docker tag admin-client-image $REGISTRY/admin-client:$IMAGE_TAG
-          docker tag admin-client-image $REGISTRY/admin-client:latest
-          docker push $REGISTRY/admin-client:$IMAGE_TAG
-          docker push $REGISTRY/admin-client:latest
-
-      # ======================================================
-      # DEPLOY TO DROPLET
-      # ======================================================
-  deploy:
-    runs-on: ubuntu-latest
+  deploy-via-ssh:
     needs: build-and-push
-    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy docker-compose.yml to Droplet
-        uses: appleboy/scp-action@v0.1.7
+      - name: 🚀 Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DROPLET_IP }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./docker-compose.yml"
-          target: "/root/app/"
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: ${{ secrets.DROPLET_USER }}
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate to app directory
-            cd /root/app
-
-            # Login to Registry (using the token passed as env var or pre-configured)
-            # You might need to install doctl on the droplet or just use docker login
-            echo ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} | docker login registry.digitalocean.com -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} --password-stdin
+            # Navigate to the project folder (or create it)
+            mkdir -p ~/qsi-africa-ts && cd ~/qsi-africa-ts
             
-            # Pull latest images
+            # Reset the folder to match your GitHub repo configuration (to get latest docker-compose.yml)
+            # This requires 'git' to be installed on the droplet
+            if [ -d ".git" ]; then
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git init
+              git remote add origin https://github.com/${{ github.repository }}.git
+              git fetch origin main
+              git checkout -t origin/main
+            fi
+
+            # Login to Docker Hub on the server to avoid rate limits (optional but recommended)
+            # echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+            # Pull newest images
             docker compose pull
             
-            # Restart services
-            docker compose up -d
-
+            # Restart containers
+            docker compose up -d --remove-orphans
+            
+            # Clean up unused images to save disk space
+            docker image prune -f

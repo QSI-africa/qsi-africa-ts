@@ -21,8 +21,7 @@ services:
   # SERVER (Backend)
   # ==================================
   server:
-    # IMAGE PLACEHOLDER: Update with your Registry URL
-    image: registry.digitalocean.com/qsi-africa/server:latest
+    image: elvisk2710/qsi-server:latest
     container_name: qsi_server
     restart: always
     depends_on:
@@ -43,7 +42,7 @@ services:
   # CLIENT (Frontend)
   # ==================================
   client:
-    image: registry.digitalocean.com/qsi-africa/client:latest
+    image: elvisk2710/qsi-client:latest
     container_name: qsi_client
     restart: always
     ports:
@@ -55,7 +54,7 @@ services:
   # ADMIN CLIENT
   # ==================================
   admin-client:
-    image: registry.digitalocean.com/qsi-africa/admin-client:latest
+    image: elvisk2710/qsi-admin-client:latest
     container_name: qsi_admin
     restart: always
     ports:
