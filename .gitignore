@@ -43,3 +43,5 @@ lerna-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+server/src/config/firebase-service-account.json
+server/src/config/firebase-service-account.json
