@@ -57,13 +57,13 @@ jobs:
             # Reset the folder to match your GitHub repo configuration (to get latest docker-compose.yml)
             # This requires 'git' to be installed on the droplet
             if [ -d ".git" ]; then
-              git fetch origin main
-              git reset --hard origin/main
+              git fetch origin master
+              git reset --hard origin/master
             else
               git init
               git remote add origin https://github.com/${{ github.repository }}.git
-              git fetch origin main
-              git checkout -t origin/main
+              git fetch origin master
+              git checkout -t origin/master
             fi
 
             # Login to Docker Hub on the server to avoid rate limits (optional but recommended)
