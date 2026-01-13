@@ -21,7 +21,7 @@ services:
   # SERVER (Backend)
   # ==================================
   server:
-    image: elvisk2710/qsi-server:latest
+    image: qsidocker2026/qsi-server:latest
     container_name: qsi_server
     restart: always
     depends_on:
@@ -42,7 +42,7 @@ services:
   # CLIENT (Frontend)
   # ==================================
   client:
-    image: elvisk2710/qsi-client:latest
+    image: qsidocker2026/qsi-client:latest
     container_name: qsi_client
     restart: always
     ports:
@@ -54,7 +54,7 @@ services:
   # ADMIN CLIENT
   # ==================================
   admin-client:
-    image: elvisk2710/qsi-admin-client:latest
+    image: qsidocker2026/qsi-admin-client:latest
     container_name: qsi_admin
     restart: always
     ports:
