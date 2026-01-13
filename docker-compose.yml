@@ -26,8 +26,8 @@ services:
     restart: always
     depends_on:
       - db
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       PORT: 3001
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-qsi_africa}?sslmode=disable
@@ -39,14 +39,28 @@ services:
       EMAIL_PASS: ${EMAIL_PASS}
 
   # ==================================
+  # NGINX REVERSE PROXY
+  # ==================================
+  nginx-proxy:
+    image: qsidocker2026/qsi-nginx-proxy:latest
+    container_name: qsi_proxy
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - client
+      - admin-client
+      - server
+
+  # ==================================
   # CLIENT (Frontend)
   # ==================================
   client:
     image: qsidocker2026/qsi-client:latest
     container_name: qsi_client
     restart: always
-    ports:
-      - "80:80"
+    expose: 
+      - "80"
     depends_on:
       - server
 
@@ -57,8 +71,8 @@ services:
     image: qsidocker2026/qsi-admin-client:latest
     container_name: qsi_admin
     restart: always
-    ports:
-      - "8080:80"
+    expose: 
+      - "80"
 
 volumes:
   db_data:

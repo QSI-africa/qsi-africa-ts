@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [server, client, admin-client]
+        service: [server, client, admin-client, nginx-proxy]
     steps:
       - name: ⬇️ Checkout Code
         uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
       - name: 🏗️ Build & Push Images
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.service }}
+          context: ${{ matrix.service == 'nginx-proxy' && './deploy/nginx' || format('./{0}', matrix.service) }}
           push: true
           no-cache: true
           tags: ${{ env.DOCKER_REPO }}/qsi-${{ matrix.service }}:latest
