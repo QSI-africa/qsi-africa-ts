@@ -6,7 +6,7 @@ echo "🚀 QSI Container Started..."
 # 1. Wait for Database (Simple retry logic)
 echo "⏳ Waiting for Database to be ready..."
 # We can use a simple timeout or just let Prisma retry connecting
-sleep 5 
+node src/scripts/wait-for-db.js
 
 # 2. Run Migrations Automatically
 # This creates the tables if they don't exist
