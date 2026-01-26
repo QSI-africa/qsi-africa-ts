@@ -30,6 +30,7 @@ import ChatInput from "../components/ChatInput";
 import HealingPackagesSidebar from "../components/HealingPackagesSidebar";
 import PilotProjectsSidebar from "../components/PilotProjectsSidebar";
 import { useAuth } from "../context/AuthContext";
+import FrequencyScanForm from "../components/FrequencyScanForm";
 
 const { Title, Paragraph } = Typography;
 const { useToken } = theme;
@@ -227,6 +228,7 @@ const ChatWindow: React.FC = () => {
   const [fetchedSuggestions, setFetchedSuggestions] = useState<any[]>([]);
   const [submitAction, setSubmitAction] = useState<string>("chat");
   const [selectedModule, setSelectedModule] = useState();
+  const [showFrequencyScan, setShowFrequencyScan] = useState<boolean>(false);
 
   useEffect(() => {
     setSelectedModule(moduleName);
@@ -498,12 +500,26 @@ const ChatWindow: React.FC = () => {
     baseURL,
   ]);
 
+    [moduleName, navigate, handleSendMessage, fetchedPackages]
+  );
+
   const handlePackageClick = useCallback((packageItem) => {
+    // Check if user has a frequency scan (Healing module only)
+    if (moduleName === "healing") {
+      if (!user?.frequencyScans || user.frequencyScans.length === 0) {
+        // No scan found, prompt to scan
+        setSelectedPackage(packageItem);
+        setShowFrequencyScan(true);
+        message.info("Please complete a Frequency Scan to ensure alignment with this package.");
+        return;
+      }
+    }
+
     setSelectedPackage(packageItem);
     setPackageInquiry("");
     setSubmitAction("quote");
     setInquiryModalVisible(true);
-  }, []);
+  }, [moduleName, user]);
 
   // --- START: CONSOLIDATED DATA FETCHING ---
   useEffect(() => {

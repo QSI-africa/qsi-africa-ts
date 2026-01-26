@@ -1,6 +1,6 @@
-// src/pages/PilotDetailPage.jsx
-import React, { useState, useEffect, useCallback, useMemo  } from 'react';
-import { useParams, Link } from "react-router-dom";
+// src/pages/ConceptDetailPage.tsx
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Spin,
   Typography,
@@ -34,15 +34,14 @@ import axios from "axios";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
-import { useNavigate } from "react-router-dom";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 const { useToken } = theme;
 const { TextArea } = Input;
 
-const PilotDetailPage: React.FC = () => {
-  const { pilotKey } = useParams();
+const ConceptDetailPage: React.FC = () => {
+  const { id } = useParams(); // Using ID from URL
   const [pilot, setPilot] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
@@ -72,14 +71,14 @@ const PilotDetailPage: React.FC = () => {
       {
         value: "partner",
         label: "Partnership",
-        description: "Collaborate on this project as a partner",
+        description: "Collaborate on this concept as a partner",
         icon: <FaRegHandshake />,
         color: "#52c41a",
       },
       {
         value: "invest",
         label: "Investment",
-        description: "Invest in this concept or project",
+        description: "Invest in this concept",
         icon: <FaMoneyBillTrendUp />,
         color: "#1890ff",
       },
@@ -101,7 +100,7 @@ const PilotDetailPage: React.FC = () => {
     []
   );
 
-  // Fetch pilot detail - properly memoized
+  // Fetch concept detail
   const fetchPilotDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -111,13 +110,14 @@ const PilotDetailPage: React.FC = () => {
       const baseURL =
         import.meta.env.VITE_API_BASE_URL ||
         "https://api.qsi.africa/api";
-      const response = await axios.get(`${baseURL}/submit/pilots/${pilotKey}`);
+      // Update endpoint to /submit/concepts/:id
+      const response = await axios.get(`${baseURL}/submit/concepts/${id}`);
       setPilot(response.data);
-    } catch (err) {
-      console.error("Failed to fetch pilot details:", err);
-      let errorMessage = "Could not load pilot project details.";
+    } catch (err: any) {
+      console.error("Failed to fetch concept details:", err);
+      let errorMessage = "Could not load concept details.";
       if (err.response?.status === 404) {
-        errorMessage = `Pilot project with key "${pilotKey}" not found.`;
+        errorMessage = `Concept not found.`;
       } else if (err.response?.data?.error) {
         errorMessage = err.response.data.error;
       } else if (!err.response) {
@@ -127,11 +127,11 @@ const PilotDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pilotKey]);
+  }, [id]);
 
   // Handle engagement form submission
   const handleEngagementSubmit = useCallback(
-    async (values) => {
+    async (values: any) => {
       setEngagementLoading(true);
       try {
         const baseURL =
@@ -139,7 +139,7 @@ const PilotDetailPage: React.FC = () => {
           "https://api.qsi.africa/api";
 
         const payload = {
-          pilotKey: pilotKey,
+          pilotKey: id, // Sending ID as key
           pilotTitle: pilot?.title,
           engagementType: values.engagementType,
           customIntent: values.customIntent,
@@ -166,7 +166,7 @@ const PilotDetailPage: React.FC = () => {
         setEngagementLoading(false);
       }
     },
-    [pilotKey, pilot?.title, form]
+    [id, pilot?.title, form]
   );
 
   const openEngagementModal = useCallback(() => {
@@ -181,7 +181,7 @@ const PilotDetailPage: React.FC = () => {
 
   // Handle engagement type change
   const handleEngagementTypeChange = useCallback(
-    (optionValue) => {
+    (optionValue: string) => {
       setSelectedEngagementType(optionValue);
       form.setFieldValue("engagementType", optionValue);
     },
@@ -189,12 +189,12 @@ const PilotDetailPage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (pilotKey) {
+    if (id) {
       fetchPilotDetail();
     }
-  }, [fetchPilotDetail, pilotKey]);
+  }, [fetchPilotDetail, id]);
 
-  const formatDate = useCallback((dateString) => {
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -202,8 +202,8 @@ const PilotDetailPage: React.FC = () => {
     });
   }, []);
 
-  // Responsive styles - memoized with dependencies
-  const styles = useMemo(() => {
+  // Simplified styles for brevity here, assuming token access
+    const styles = useMemo(() => {
     const isMobile = !screens.md;
     const isTablet = screens.md && !screens.lg;
 
@@ -403,6 +403,7 @@ const PilotDetailPage: React.FC = () => {
         cursor: "pointer",
         transition: "all 0.3s ease",
         background: token.colorBgContainer,
+        borderRadius: token.borderRadius,
       },
       engagementOptionCardSelected: {
         border: `2px solid ${token.colorPrimary}`,
@@ -412,13 +413,12 @@ const PilotDetailPage: React.FC = () => {
         background: token.colorFillAlter,
         border: `1px solid ${token.colorBorder}`,
         borderRadius: token.borderRadiusLG,
-        padding: `0px`,
+        padding: `12px`,
       },
     };
   }, [screens, token, pilot?.isActive]);
 
-  // Clean markdown function - memoized
-  const cleanMarkdown = useCallback((text) => {
+  const cleanMarkdown = useCallback((text: string) => {
     if (!text) return "";
 
     return text
@@ -427,7 +427,7 @@ const PilotDetailPage: React.FC = () => {
         if (
           line.trim().startsWith("*") ||
           line.trim().startsWith("-") ||
-          /^\d+\./.test(line.trim())
+          /^\d+./.test(line.trim())
         ) {
           return line.trim();
         }
@@ -437,27 +437,26 @@ const PilotDetailPage: React.FC = () => {
       .trim();
   }, []);
 
-  // ReactMarkdown components - memoized
   const markdownComponents = useMemo(
     () => ({
-      h3: (props) => (
+      h3: (props: any) => (
         <Title level={3} style={styles.contentHeadingH3} {...props} />
       ),
-      h4: (props) => (
+      h4: (props: any) => (
         <Title level={4} style={styles.contentHeadingH4} {...props} />
       ),
-      p: (props) => <Paragraph style={styles.contentParagraph} {...props} />,
-      strong: (props) => (
+      p: (props: any) => <Paragraph style={styles.contentParagraph} {...props} />,
+      strong: (props: any) => (
         <Text strong style={styles.contentStrong} {...props} />
       ),
-      em: (props) => <Text italic style={styles.contentEmphasis} {...props} />,
-      ul: (props) => <ul style={styles.contentList} {...props} />,
-      ol: (props) => <ol style={styles.contentList} {...props} />,
-      li: (props) => <li style={styles.contentListItem} {...props} />,
-      blockquote: (props) => (
+      em: (props: any) => <Text italic style={styles.contentEmphasis} {...props} />,
+      ul: (props: any) => <ul style={styles.contentList} {...props} />,
+      ol: (props: any) => <ol style={styles.contentList} {...props} />,
+      li: (props: any) => <li style={styles.contentListItem} {...props} />,
+      blockquote: (props: any) => (
         <blockquote style={styles.contentBlockquote} {...props} />
       ),
-      code: ({ inline, ...props }) => {
+      code: ({ inline, ...props }: any) => {
         if (inline) {
           return <code style={styles.contentCodeInline} {...props} />;
         }
@@ -491,9 +490,9 @@ const PilotDetailPage: React.FC = () => {
               borderColor: token.colorBorder,
               color: token.colorTextSecondary,
             }}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/concepts")}
           >
-            Back
+            Back to Concepts
           </Button>
         </div>
         <div style={{ ...styles.contentCard, ...styles.errorCard }}>
@@ -531,9 +530,9 @@ const PilotDetailPage: React.FC = () => {
             color: token.colorPrimary,
             fontWeight: token.fontWeightMedium,
           }}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/concepts")}
         >
-          Back
+          Back to Concepts
         </Button>
       </div>
 
@@ -563,7 +562,7 @@ const PilotDetailPage: React.FC = () => {
                   fontWeight: token.fontWeightMedium,
                 }}
               >
-                {mode} mode
+                {/* {mode} mode */} Concept
               </Tag>
             </Space>
           </div>
@@ -575,17 +574,19 @@ const PilotDetailPage: React.FC = () => {
             {pilot.title}
           </Title>
 
-          {pilot.shortDescription && (
+          {pilot.description && (
             <Paragraph style={styles.pilotSubtitle}>
-              {pilot.shortDescription}
+              {/* Concept uses 'description' field in schema */}
+              {pilot.description.substring(0, 150)}...
             </Paragraph>
           )}
         </header>
 
         {/* Content */}
         <article style={styles.pilotContent}>
+          {/* Concept schema has 'description' as text. Assuming it's markdown-capable */}
           <ReactMarkdown components={markdownComponents}>
-            {cleanMarkdown(pilot.expandedView || pilot.shortDescription)}
+            {cleanMarkdown(pilot.description)}
           </ReactMarkdown>
         </article>
 
@@ -595,13 +596,10 @@ const PilotDetailPage: React.FC = () => {
         <footer style={{ marginTop: `${token.marginXL}px` }}>
           <Card style={styles.ctaCard}>
             <Title level={screens.xs ? 5 : 4} style={styles.ctaTitle}>
-              Ready to{" "}
-              {`${pilot?.type == "Concept" ? "Collaborate?" : "Implement?"}`}
+              Ready to collaborate?
             </Title>
             <Paragraph style={styles.ctaDescription}>
-              {pilot?.type == "Concept"
-                ? "Interested in partnering, investing, or learning more about this concept? Let us know your intentions and we'll get back to you."
-                : "Interested in this framework, or learning more about it? Get in touch with Pan African Engineers to explore opportunities."}
+              Interested in partnering, investing, or learning more about this concept? Let us know your intentions and we'll get back to you.
             </Paragraph>
             <div style={styles.ctaActions}>
               <Button
@@ -629,7 +627,7 @@ const PilotDetailPage: React.FC = () => {
               <Button
                 type="default"
                 size={screens.xs ? "middle" : "large"}
-                onClick={() => navigate("/pilots")}
+                onClick={() => navigate("/concepts")}
                 style={{
                   background: "rgba(255, 255, 255, 0.1)",
                   color: token.colorTextLightSolid,
@@ -643,7 +641,7 @@ const PilotDetailPage: React.FC = () => {
                   minWidth: screens.xs ? "100%" : "auto",
                 }}
               >
-                View More Projects
+                View More Concepts
               </Button>
             </div>
           </Card>
@@ -699,6 +697,7 @@ const PilotDetailPage: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: "12px",
+                        padding: "16px"
                       }}
                     >
                       <div
@@ -855,4 +854,4 @@ const PilotDetailPage: React.FC = () => {
   );
 };
 
-export default PilotDetailPage;
+export default ConceptDetailPage;

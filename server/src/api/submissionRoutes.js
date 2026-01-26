@@ -401,50 +401,69 @@ router.post("/vision", async (req, res) => {
 // =========================================================================
 // 5. Pilot Project Getters
 // =========================================================================
-router.get("/pilots", async (req, res) => {
-  const { type } = req.query;
-  try {
-    let whereClause = { isActive: true };
-    if (type === "CONCEPT" || type === "FRAMEWORK") {
-      whereClause.type = type;
-    }
+// =========================================================================
+// 5. QSI Concepts & Smart City Demos Getters
+// =========================================================================
 
-    const pilots = await prisma.pilotProject.findMany({
-      where: whereClause,
+// --- QSI Concepts ---
+router.get("/concepts", async (req, res) => {
+  try {
+    const concepts = await prisma.qsiConcept.findMany({
+      where: { isActive: true },
       orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        key: true,
-        title: true,
-        subtext: true,
-        shortDescription: true,
-        expandedView: true,
-        imageUrl: true,
-        type: true,
-        isActive: true,
-      },
     });
-    res.json(pilots);
+    res.json(concepts);
   } catch (error) {
-    console.error("Failed to fetch pilot projects list:", error);
-    res.status(500).json({ error: "Failed to fetch pilot projects." });
+    console.error("Failed to fetch concepts:", error);
+    res.status(500).json({ error: "Failed to fetch concepts." });
   }
 });
 
-router.get("/pilots/:key", async (req, res) => {
-  const { key } = req.params;
+router.get("/concepts/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    const pilot = await prisma.pilotProject.findUnique({
-      where: { key: key },
+    const concept = await prisma.qsiConcept.findUnique({
+      where: { id: id },
     });
 
-    if (!pilot || !pilot.isActive) {
-      return res.status(404).json({ error: "Pilot project not found." });
+    if (!concept || !concept.isActive) {
+      return res.status(404).json({ error: "Concept not found." });
     }
-    res.json(pilot);
+    res.json(concept);
   } catch (error) {
-    console.error(`Failed to fetch pilot project ${key}:`, error);
-    res.status(500).json({ error: "Failed to fetch pilot project details." });
+    console.error(`Failed to fetch concept ${id}:`, error);
+    res.status(500).json({ error: "Failed to fetch concept details." });
+  }
+});
+
+// --- Smart City Demos ---
+router.get("/demos", async (req, res) => {
+  try {
+    const demos = await prisma.smartCityDemonstrator.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json(demos);
+  } catch (error) {
+    console.error("Failed to fetch demos:", error);
+    res.status(500).json({ error: "Failed to fetch demos." });
+  }
+});
+
+router.get("/demos/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const demo = await prisma.smartCityDemonstrator.findUnique({
+      where: { id: id },
+    });
+
+    if (!demo || !demo.isActive) {
+      return res.status(404).json({ error: "Demonstrator not found." });
+    }
+    res.json(demo);
+  } catch (error) {
+    console.error(`Failed to fetch demo ${id}:`, error);
+    res.status(500).json({ error: "Failed to fetch demonstrator details." });
   }
 });
 
@@ -551,6 +570,42 @@ router.post("/pilot-engagement", async (req, res) => {
   } catch (error) {
     console.error("Pilot Engagement Error:", error);
     res.status(500).json({ error: "Failed to submit interest." });
+  }
+});
+
+// =========================================================================
+// 8. Frequency Scan Submission
+// =========================================================================
+router.post("/scan", async (req, res) => {
+  try {
+    const { userId, location, personalBeliefs, background, lifeVision, challenges } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    // AI Generation placeholder (could call AI service here)
+    const frequencyScore = Math.floor(Math.random() * 100); // Placeholder
+    const frequencyArchetype = "Resonant Builder"; // Placeholder
+
+    const scan = await prisma.frequencyScan.create({
+      data: {
+        userId,
+        location,
+        personalBeliefs,
+        background,
+        lifeVision,
+        challenges,
+        frequencyScore,
+        frequencyArchetype,
+        generatedProfile: `Based on your vision of "${lifeVision}", your frequency suggests a strong alignment with...`
+      }
+    });
+
+    res.status(201).json(scan);
+  } catch (error) {
+    console.error("Scan submission error:", error);
+    res.status(500).json({ error: "Failed to save frequency scan." });
   }
 });
 

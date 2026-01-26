@@ -9,11 +9,14 @@ import ChatWindow from "./components/ChatWindow";
 import PilotDetailPage from "./pages/PilotDetailPage";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
-import PilotListPage from "./pages/PilotListPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Privacy from "./pages/Privacy";
+import ConceptDetailPage from "./pages/ConceptDetailPage";
+import SmartCityDemoDetail from "./pages/SmartCityDemoDetail";
+import QsiConceptsPage from "./pages/QsiConceptsPage";
+import SmartCityDemosPage from "./pages/SmartCityDemosPage";
 
 // Theme & Auth Imports
 import { lightTheme, darkTheme } from './components/theme/theme-config';
@@ -22,8 +25,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingRoute from "./components/OnboardingRoute";
 import PublicRoute from "./components/PublicRoute";
 import "./App.css";
-import FrameWorkPage from "./pages/FrameworkPage";
-import FrequencyScan from "./pages/FrequencyScan";
+// import FrameWorkPage from "./pages/FrameworkPage"; // Removed
+// import FrequencyScan from "./pages/FrequencyScan"; // Removed
 import TermsAndConditions from "./pages/TermsAndConditions";
 import InvoicesPage from "./pages/InvoicesPage";
 
@@ -183,13 +186,19 @@ const App: React.FC = () => {
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
-                  <Route path="/pilots" element={<PilotListPage />} />
+                  <Route path="/concepts" element={<QsiConceptsPage />} />
                   <Route
-                    path="/pilots/:pilotKey"
-                    element={<PilotDetailPage />}
+                    path="/concepts/:id"
+                    element={<ConceptDetailPage />}
                   />
-                  <Route path="/frameworks" element={<FrameWorkPage />} />
-                  <Route path="/frequency" element={<FrequencyScan />} />
+                  <Route path="/demos" element={<SmartCityDemosPage />} />
+                  <Route
+                    path="/demos/:id"
+                    element={<SmartCityDemoDetail />}
+                  />
+                  <Route path="/mobility" element={<div style={{padding: 100, textAlign: 'center'}}><h2>QSI Mobility</h2><p>Coming Soon</p></div>} />
+                  
+                  {/* Frequency Route REMOVED - Internal to Healing */}
 
                   {/* Add these public routes */}
                   <Route path="/terms" element={<TermsAndConditions />} />

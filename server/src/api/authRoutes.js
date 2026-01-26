@@ -103,8 +103,15 @@ router.get("/me", authMiddleware, async (req, res) => {
         email: true,
         name: true,
         role: true,
-        frequencyProfile: {
-          select: { id: true },
+        frequencyScans: {
+          select: {
+            id: true,
+            createdAt: true,
+            frequencyScore: true,
+            frequencyArchetype: true
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1
         },
       },
     });

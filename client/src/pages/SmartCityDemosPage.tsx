@@ -1,20 +1,21 @@
-// src/pages/FrameWorkPage.jsx
-import React, { useState, useEffect  } from 'react';
-import { Row, Col, Card, Typography, Spin, Input, Button, theme } from "antd";
+// src/pages/SmartCityDemosPage.tsx
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Typography, Spin, Button, theme } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
-  RocketOutlined,
   ArrowLeftOutlined,
-  SearchOutlined,
   ArrowRightOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined
 } from "@ant-design/icons";
+import { LuFrame } from "react-icons/lu";
 
 const { Title, Paragraph, Text } = Typography;
 const { useToken } = theme;
 
-const FrameWorkPage: React.FC = () => {
-  const [frameworks, setFrameworks] = useState<any[]>([]); // Renamed state
+const SmartCityDemosPage: React.FC = () => {
+  const [frameworks, setFrameworks] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
   const navigate = useNavigate();
@@ -23,20 +24,23 @@ const FrameWorkPage: React.FC = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: React.FormEvent) => {
+      // @ts-ignore
       setMousePosition({
+        // @ts-ignore
         x: (e.clientX / window.innerWidth) * 100,
+        // @ts-ignore
         y: (e.clientY / window.innerHeight) * 100,
       });
     };
-
+    // @ts-ignore
     window.addEventListener("mousemove", handleMouseMove);
+    // @ts-ignore
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Fetch pilots on component mount
+  // Fetch demos on component mount
   useEffect(() => {
     const fetchFrameworks = async () => {
-      // Renamed function
       setLoading(true);
       setError(null);
       try {
@@ -44,25 +48,24 @@ const FrameWorkPage: React.FC = () => {
           import.meta.env.VITE_API_BASE_URL ||
           "https://api.qsi.africa/api";
 
-        // --- MODIFICATION: Added ?type=FRAMEWORK to the API call ---
+        // Call new endpoint for demos
         const response = await axios.get(
-          `${baseURL}/submit/pilots?type=FRAMEWORK`
+          `${baseURL}/submit/demos`
         );
-        // ---------------------------------------------------------
 
         if (Array.isArray(response.data)) {
-          setFrameworks(response.data); // Set frameworks state
+          setFrameworks(response.data);
         } else {
           console.error(
-            "Fetched framework data is not an array:",
+            "Fetched demo data is not an array:",
             response.data
           );
-          setError("Received invalid data format for frameworks.");
+          setError("Received invalid data format for demonstrators.");
           setFrameworks([]);
         }
       } catch (err) {
-        console.error("Failed to fetch frameworks:", err);
-        setError("Could not load frameworks. Please try again later.");
+        console.error("Failed to fetch demonstrators:", err);
+        setError("Could not load demonstrators. Please try again later.");
         setFrameworks([]);
       } finally {
         setLoading(false);
@@ -71,8 +74,8 @@ const FrameWorkPage: React.FC = () => {
     fetchFrameworks();
   }, []);
 
-  const handleCardClick = (pilotKey) => {
-    navigate(`/pilots/${pilotKey}`);
+  const handleCardClick = (id: string) => {
+    navigate(`/demos/${id}`);
   };
 
   const getBackgroundGradient = () => {
@@ -126,7 +129,7 @@ const FrameWorkPage: React.FC = () => {
           level={2}
           style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}
         >
-          QSI Powered Frameworks
+          QSI Smart City Demos
         </Title>
         <Title
           level={5}
@@ -138,7 +141,7 @@ const FrameWorkPage: React.FC = () => {
             fontWeight: "400",
           }}
         >
-          Scalable Blueprints for Continental Transformation{" "}
+          Where the future is lived, not imagined
         </Title>
         <Paragraph
           style={{
@@ -148,12 +151,7 @@ const FrameWorkPage: React.FC = () => {
           }}
           type="secondary"
         >
-          These are systemic models of coherence — replicable, adaptive, and
-          designed for cities, institutions, and nations evolving toward
-          balance. Rooted in resonance, coherence, and the principle of least
-          action (Euler–Lagrange), they guide transformation not through
-          complexity but through natural alignment between people, systems, and
-          the environment.
+          These are real or proposed physical Smart City demonstrators.
         </Paragraph>
 
         {/* Loading State */}
@@ -170,7 +168,7 @@ const FrameWorkPage: React.FC = () => {
           </Text>
         )}
 
-        {/* Pilot Cards Grid */}
+        {/* Demo Cards Grid */}
         {!loading && !error && (
           <Row
             gutter={[12, 12]}
@@ -179,11 +177,11 @@ const FrameWorkPage: React.FC = () => {
             }}
           >
             {frameworks.length > 0 ? (
-              frameworks.map((pilot) => (
-                <Col key={pilot.key || pilot.id} xs={24} sm={12} md={8}>
+              frameworks.map((demo) => (
+                <Col key={demo.id} xs={24} sm={12} md={8}>
                   <Card
                     hoverable
-                    onClick={() => handleCardClick(pilot.key)}
+                    onClick={() => handleCardClick(demo.id)}
                     style={{
                       height: "100%",
                       display: "flex",
@@ -198,24 +196,37 @@ const FrameWorkPage: React.FC = () => {
                     }}
                   >
                     <div>
-                      <Title level={5} style={{ marginBottom: "8px" }}>
-                        <RocketOutlined
-                          style={{
-                            marginRight: "8px",
-                            color: token.colorPrimary,
-                          }}
-                        />
-                        {pilot.title}
-                      </Title>
+                      <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                         <Title level={5} style={{ marginBottom: "8px" }}>
+                           <LuFrame
+                             style={{
+                               marginRight: "8px",
+                               color: token.colorPrimary,
+                             }}
+                           />
+                           {demo.name}
+                         </Title>
+                         {/* Status Icon could go here */}
+                      </div>
+                      
+                      {demo.city && <Text type="secondary" style={{display:'block', marginBottom: 8}}>{demo.city}</Text>}
+                      {demo.status && (
+                        <Text style={{ fontSize: '12px', color: demo.status === 'ACTIVE' ? 'green' : 'orange' }}>
+                          {demo.status === 'ACTIVE' ? <CheckCircleOutlined /> : <ClockCircleOutlined />} {demo.status}
+                        </Text>
+                      )}
+
                       <Paragraph
                         type="secondary"
                         style={{
                           fontSize: "14px",
                           flexGrow: 1,
+                          marginTop: "16px",
                           marginBottom: "16px",
                         }}
+                        ellipsis={{ rows: 3 }}
                       >
-                        {pilot.shortDescription}
+                        {demo.shortDescription}
                       </Paragraph>
                     </div>
                     <Text
@@ -233,35 +244,15 @@ const FrameWorkPage: React.FC = () => {
             ) : (
               <Col span={24} style={{ textAlign: "center" }}>
                 <Text type="secondary">
-                  No pilot projects found matching your search.
+                  No demonstrators found.
                 </Text>
               </Col>
             )}
           </Row>
         )}
       </div>
-
-      <div
-        id="footer"
-        style={{
-          padding: "40px 20px",
-          background: "transparent",
-          borderRadius: token.borderRadiusLG,
-          marginTop: "0px",
-          textAlign: "center",
-        }}
-      >
-        <div
-          level={4}
-          style={{
-            color: token.colorTextHeading,
-            fontSize: "18px",
-            fontWeight: 600,
-          }}
-        ></div>
-      </div>
     </div>
   );
 };
 
-export default FrameWorkPage;
+export default SmartCityDemosPage;

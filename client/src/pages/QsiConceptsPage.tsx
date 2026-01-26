@@ -1,19 +1,19 @@
-// src/pages/PilotListPage.jsx
-import React, { useState, useEffect, useMemo  } from 'react';
-import { Row, Col, Card, Typography, Spin, Input, Button, theme } from "antd";
+// src/pages/QsiConceptsPage.tsx
+import React, { useState, useEffect, useMemo } from 'react';
+import { Row, Col, Card, Typography, Spin, Button, theme } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
   RocketOutlined,
   ArrowLeftOutlined,
-  SearchOutlined,
   ArrowRightOutlined,
+  BulbOutlined
 } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;
 const { useToken } = theme;
 
-const PilotListPage: React.FC = () => {
+const QsiConceptsPage: React.FC = () => {
   const [pilots, setPilots] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
@@ -24,13 +24,17 @@ const PilotListPage: React.FC = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: React.FormEvent) => {
+      // safe cast or ignore
+      const event = e as unknown as React.MouseEvent;
       setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
+        x: (event.clientX / window.innerWidth) * 100,
+        y: (event.clientY / window.innerHeight) * 100,
       });
     };
 
+    // @ts-ignore
     window.addEventListener("mousemove", handleMouseMove);
+    // @ts-ignore
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
@@ -43,17 +47,18 @@ const PilotListPage: React.FC = () => {
         const baseURL =
           import.meta.env.VITE_API_BASE_URL ||
           "https://api.qsi.africa/api";
-        const response = await axios.get(`${baseURL}/submit/pilots?type=CONCEPT`);
+        // Call new endpoint
+        const response = await axios.get(`${baseURL}/submit/concepts`);
         if (Array.isArray(response.data)) {
           setPilots(response.data);
         } else {
-          console.error("Fetched pilot data is not an array:", response.data);
-          setError("Received invalid data format for pilots.");
+          console.error("Fetched concept data is not an array:", response.data);
+          setError("Received invalid data format for concepts.");
           setPilots([]);
         }
       } catch (err) {
-        console.error("Failed to fetch pilot projects:", err);
-        setError("Could not load pilot projects. Please try again later.");
+        console.error("Failed to fetch concepts:", err);
+        setError("Could not load concepts. Please try again later.");
         setPilots([]);
       } finally {
         setLoading(false);
@@ -71,13 +76,12 @@ const PilotListPage: React.FC = () => {
     return pilots.filter(
       (pilot) =>
         pilot.title?.toLowerCase().includes(lowerSearchTerm) ||
-        pilot.shortDescription?.toLowerCase().includes(lowerSearchTerm) ||
-        pilot.key?.toLowerCase().includes(lowerSearchTerm)
+        pilot.description?.toLowerCase().includes(lowerSearchTerm)
     );
   }, [pilots, searchTerm]);
 
-  const handleCardClick = (pilotKey) => {
-    navigate(`/pilots/${pilotKey}`);
+  const handleCardClick = (id: string) => {
+    navigate(`/concepts/${id}`);
   };
 
   const getBackgroundGradient = () => {
@@ -127,10 +131,10 @@ const PilotListPage: React.FC = () => {
         }}
       >
       <Title strong level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
-        QSI Powered Concepts
+        QSI Concepts
       </Title>
       <Title level={5} style={{ textAlign: "center", marginTop: "0px", padding:"0 20px", color: token.colorPrimary, fontWeight: "400" }}>
-        Proprietary Ventures Driving the New Cultural Economy
+        Culture engineered for the future
       </Title>
       <Paragraph
         style={{
@@ -142,9 +146,7 @@ const PilotListPage: React.FC = () => {
       >
         These are brand-anchored or investable innovation concepts that merge
         culture, technology, and consciousness. Each concept operates as a
-        unique franchise or collaborative venture under QSI governance —
-        blending profitability with higher purpose. Once assigned, ownership is
-        exclusive and non-replicable.
+        unique franchise or collaborative venture under QSI governance.
       </Paragraph>
 
       {/* Loading State */}
@@ -171,10 +173,10 @@ const PilotListPage: React.FC = () => {
         >
           {filteredPilots.length > 0 ? (
             filteredPilots.map((pilot) => (
-              <Col key={pilot.key || pilot.id} xs={24} sm={12} md={8}>
+              <Col key={pilot.id} xs={24} sm={12} md={8}>
                 <Card
                   hoverable
-                  onClick={() => handleCardClick(pilot.key)}
+                  onClick={() => handleCardClick(pilot.id)}
                   style={{
                     height: "100%",
                     display: "flex",
@@ -190,7 +192,7 @@ const PilotListPage: React.FC = () => {
                 >
                   <div>
                     <Title level={5} style={{ marginBottom: "8px" }}>
-                      <RocketOutlined
+                      <BulbOutlined
                         style={{
                           marginRight: "8px",
                           color: token.colorPrimary,
@@ -205,8 +207,10 @@ const PilotListPage: React.FC = () => {
                         flexGrow: 1,
                         marginBottom: "16px",
                       }}
+                      ellipsis={{ rows: 3 }}
                     >
-                      {pilot.shortDescription}
+                      {/* Concepts use description */}
+                      {pilot.description}
                     </Paragraph>
                   </div>
                   <Text
@@ -224,35 +228,15 @@ const PilotListPage: React.FC = () => {
           ) : (
             <Col span={24} style={{ textAlign: "center" }}>
               <Text type="secondary">
-                No pilot projects found matching your search.
+                No concepts found.
               </Text>
             </Col>
           )}
         </Row>
       )}
       </div>
-
-      <div
-        id="footer"
-        style={{
-          padding: "40px 20px",
-          background: "transparent",
-          borderRadius: token.borderRadiusLG,
-          marginTop: "0px",
-          textAlign: "center",
-        }}
-      >
-        <div
-          level={4}
-          style={{
-            color: token.colorTextHeading,
-            fontSize: "18px",
-            fontWeight: 600,
-          }}
-        ></div>
-      </div>
     </div>
   );
 };
 
-export default PilotListPage;
+export default QsiConceptsPage;

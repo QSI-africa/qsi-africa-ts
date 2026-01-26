@@ -50,7 +50,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Submissions
-  frequencyProfile          FrequencyProfile?
+  // Submissions
+  frequencyScans            FrequencyScan[]
   healingSubmissions        HealingSubmission[]
   visionSubmissions         VisionSubmission[]
   infrastructureSubmissions InfrastructureSubmission[]
@@ -68,14 +69,14 @@ model User {
   passwordResetExpires DateTime?
 }
 
-model FrequencyProfile {
+model FrequencyScan {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relation to User
   user   User   @relation(fields: [userId], references: [id])
-  userId String @unique // One-to-one relation
+  userId String // One-to-Many relation (Removed @unique)
 
   // --- Data collected from onboarding ---
   location        String?
@@ -85,7 +86,9 @@ model FrequencyProfile {
   challenges      String? @db.Text
 
   // --- AI-Generated Output ---
-  generatedProfile String? @db.Text // The "Frequency Profile"
+  frequencyScore    Int? // New requirement mentions score
+  frequencyArchetype String? // New requirement mentions archetype
+  generatedProfile  String? @db.Text // The "Frequency Profile"
 }
 
 // 2. UPDATED: Task Status
@@ -220,18 +223,37 @@ model VisionSubmission {
   @@index([userId])
 }
 
-model PilotProject {
-  id               String    @id @default(cuid())
-  key              String    @unique // Short key like 'udmp', 'glenview'
+model QsiConcept {
+  id               String   @id @default(cuid())
   title            String
-  subtext          String? // Optional subtext/theme
+  description      String   @db.Text
+  imageUrl         String?
+  category         String?  // Optional grouping
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relation to Demonstrators (Many-to-Many)
+  demonstrators    SmartCityDemonstrator[]
+}
+
+model SmartCityDemonstrator {
+  id               String   @id @default(cuid())
+  name             String
+  city             String
+  location         String?  // Detailed location if needed
+  status           String   @default("PROPOSED") // PROPOSED, ACTIVE, COMPLETED
   shortDescription String
-  expandedView     String?   @db.Text // Store the longer description (Markdown potentially)
-  imageUrl         String? // Optional image URL
-  isActive         Boolean   @default(true) // To control visibility
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  type             PilotType @default(CONCEPT)
+  fullDescription  String   @db.Text
+  imageUrl         String?
+  engagementEnabled Boolean @default(true)
+  
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Linked Concepts
+  concepts         QsiConcept[]
 }
 
 model HealingPackage {

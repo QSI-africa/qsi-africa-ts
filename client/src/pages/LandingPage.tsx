@@ -46,24 +46,11 @@ const { Title, Text, Paragraph, Link } = Typography;
 const { useToken } = theme;
 
 // Constants
-const MODULES = [
-  {
-    key: "pilots",
-    title: "QSI Concepts",
-    description: "Culture engineered for the future.",
-    icon: <RocketOutlined />,
-  },
   {
     key: "infrastructure",
     title: "Smart Infrastructure",
     description: "Where intention becomes structure.",
     icon: <ToolOutlined />,
-  },
-  {
-    key: "healing",
-    title: "Healing & Therapy",
-    description: "Fix the mind that builds.",
-    icon: <HeartOutlined />,
   },
   {
     key: "vision",
@@ -72,15 +59,27 @@ const MODULES = [
     icon: <EyeOutlined />,
   },
   {
-    key: "frequency",
-    title: "Frequency Scan",
-    description: "Know your frequency.",
-    icon: <LuAudioWaveform />,
+    key: "mobility",
+    title: "QSI Mobility",
+    description: "Mobility built for purpose.",
+    icon: <RocketOutlined />, // Using Rocket for Mobility
   },
   {
-    key: "frameworks",
-    title: "QSI Frameworks",
-    description: "Blueprints for a coherent continent.",
+    key: "concepts", // Renamed from pilots to concepts (will update routing matches)
+    title: "QSI Concepts",
+    description: "Culture engineered for the future.",
+    icon: <BulbOutlined />, // Changing icon to Bulb for Concepts/Ideas
+  },
+  {
+    key: "healing",
+    title: "Healing & Therapy",
+    description: "Fix the mind that builds.",
+    icon: <HeartOutlined />,
+  },
+  {
+    key: "demos", // Renamed from frameworks
+    title: "QSI Smart City Demos",
+    description: "Where the future is lived, not imagined.",
     icon: <LuFrame />,
   },
 ];
@@ -669,20 +668,22 @@ const LandingPage: React.FC = () => {
         navigate(`/chat/vision`);
         break;
 
-      case "pilots":
-        // Pilots list page is accessible to all
-        navigate("/pilots");
+      case "mobility":
+        // New Mobility Page
+        navigate(`/mobility`);
         break;
 
-      case "frameworks":
-        // frequency is accessible to all (but requires login for onboarding flow)
-        navigate(`/frameworks`);
+      case "concepts":
+        // Concepts (formerly pilots)
+        navigate("/concepts");
         break;
 
-      case "frequency":
-        // frequency page is accessible to all
-        navigate("/frequency");
+      case "demos":
+        // Smart City Demos (formerly frameworks)
+        navigate(`/demos`);
         break;
+        
+      // REMOVED FREQUENCY CASE (It is now internal to Healing)
 
       default:
         // Fallback for general modal open (e.g., from header)
