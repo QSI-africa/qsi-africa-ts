@@ -10,7 +10,7 @@ router.post("/profile", authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const profileData = req.body; // { fullName, location, ... }
 
-  const existingProfile = await prisma.frequencyScan.findUnique({
+  const existingProfile = await prisma.frequencyScan.findFirst({
     where: { userId },
   });
   if (existingProfile) {
