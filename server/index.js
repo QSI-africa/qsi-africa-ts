@@ -16,8 +16,10 @@ app.use(
       "http://localhost:5174",
       "http://165.22.130.156:9000",
       "http://165.22.130.156:9090",
-      "http://localhost:9000", // For local testing
+      "http://localhost:9000",
       "http://localhost:9090",
+      "https://qsi.africa",
+      "https://www.qsi.africa",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
