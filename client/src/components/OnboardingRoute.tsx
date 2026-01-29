@@ -28,8 +28,10 @@ const OnboardingRoute: React.FC = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // user.frequencyProfile is included from the /api/auth/me backend call
-  if (user && user.frequencyProfile) {
+  // Check if user has at least one frequency scan
+  const hasOnboarded = user?.frequencyScans && user.frequencyScans.length > 0;
+
+  if (user && hasOnboarded) {
     // User is authenticated AND already onboarded, redirect away
     return <Navigate to="/" replace />;
   }

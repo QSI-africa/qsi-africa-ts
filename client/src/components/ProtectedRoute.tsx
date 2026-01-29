@@ -30,7 +30,10 @@ const ProtectedRoute: React.FC = () => {
 
   // We need to update AuthContext to fetch the user *with* their profile
   // Add this check once the context is updated
-  if (user && !user.frequencyProfile) {
+  // Check if user has at least one frequency scan (completed onboarding)
+  const hasOnboarded = user?.frequencyScans && user.frequencyScans.length > 0;
+
+  if (user && !hasOnboarded) {
     // User is logged in but hasn't onboarded
     return <Navigate to="/onboarding" state={{ from: location }} replace />;
   }
