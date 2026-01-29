@@ -20,6 +20,7 @@ app.use(
       "http://localhost:9090",
       "https://qsi.africa",
       "https://www.qsi.africa",
+      "https://admin.qsi.africa",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
