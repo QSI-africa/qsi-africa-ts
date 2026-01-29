@@ -32,6 +32,7 @@ import {
   RocketOutlined,
   MenuOutlined,
   CloseOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
