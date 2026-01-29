@@ -223,6 +223,19 @@ model VisionSubmission {
   @@index([userId])
 }
 
+model PilotProject {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  title            String
+  subtext          String?
+  shortDescription String   @db.Text
+  expandedView     String   @db.Text
+  isActive         Boolean  @default(true)
+  type             String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
 model QsiConcept {
   id               String   @id @default(cuid())
   title            String
@@ -369,3 +382,4 @@ model InvoiceItem {
   unitPrice   Decimal @default(0.0)
   total       Decimal @default(0.0) // quantity * unitPrice
 }
+
