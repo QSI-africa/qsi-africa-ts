@@ -1,9 +1,10 @@
-import React, { useState,
+import React, {
+  useState,
   useRef,
   useEffect,
   useMemo,
   useCallback,
- } from 'react';
+} from 'react';
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   App as AntApp,
@@ -142,8 +143,8 @@ const SidebarContent = ({
           {moduleName === "infrastructure"
             ? "Building coherence..."
             : moduleName === "healing"
-            ? "Guiding you..."
-            : "Translate imagination..."}
+              ? "Guiding you..."
+              : "Translate imagination..."}
         </Paragraph>
       </div>
 
@@ -500,8 +501,7 @@ const ChatWindow: React.FC = () => {
     baseURL,
   ]);
 
-    [moduleName, navigate, handleSendMessage, fetchedPackages]
-  );
+
 
   const handlePackageClick = useCallback((packageItem) => {
     // Check if user has a frequency scan (Healing module only)
@@ -612,13 +612,12 @@ const ChatWindow: React.FC = () => {
   useEffect(() => {
     const initialMessage = {
       sender: "ai",
-      text: `Welcome, ${contactInfo.name}. ${
-        moduleName === "infrastructure"
+      text: `Welcome, ${contactInfo.name}. ${moduleName === "infrastructure"
           ? "What infrastructure project are you considering today?"
           : moduleName === "healing"
-          ? "What are you currently experiencing?"
-          : "I'm excited to help you create impact. What's your vision today?"
-      }`,
+            ? "What are you currently experiencing?"
+            : "I'm excited to help you create impact. What's your vision today?"
+        }`,
     };
     setMessages([initialMessage]);
   }, [contactInfo.name, moduleName]);
@@ -843,9 +842,8 @@ const ChatWindow: React.FC = () => {
                 type="primary"
                 onClick={() => setRightDrawerVisible(true)}
                 style={{ color: token.colorText, padding: 6 }}
-                aria-label={`Open ${
-                  moduleName === "healing" ? "packages" : "QSI concepts"
-                }`}
+                aria-label={`Open ${moduleName === "healing" ? "packages" : "QSI concepts"
+                  }`}
               >
                 {moduleName === "healing" ? "Packages" : "QSI Concepts"}
               </Button>
