@@ -10,7 +10,7 @@ router.post("/profile", authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const profileData = req.body; // { fullName, location, ... }
 
-  const existingProfile = await prisma.frequencyProfile.findUnique({
+  const existingProfile = await prisma.frequencyScan.findUnique({
     where: { userId },
   });
   if (existingProfile) {
@@ -18,7 +18,7 @@ router.post("/profile", authMiddleware, async (req, res) => {
   }
   try {
     const aiGeneratedProfile = await generateFrequencyProfile(profileData);
-    const newProfile = await prisma.frequencyProfile.create({
+    const newProfile = await prisma.frequencyScan.create({
       data: {
         userId: userId,
         location: profileData.location,
@@ -27,6 +27,7 @@ router.post("/profile", authMiddleware, async (req, res) => {
         lifeVision: profileData.lifeVision,
         challenges: profileData.challenges,
         generatedProfile: aiGeneratedProfile,
+        // frequencyScore and frequencyArchetype are optional in schema, relying on default or null is fine
       },
     });
     res.status(201).json(newProfile);
