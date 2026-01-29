@@ -1,9 +1,10 @@
-import React, { useState,
+import React, {
+  useState,
   useEffect,
   useRef,
   useCallback,
   useMemo,
- } from 'react';
+} from 'react';
 import {
   Row,
   Col,
@@ -46,6 +47,7 @@ const { Title, Text, Paragraph, Link } = Typography;
 const { useToken } = theme;
 
 // Constants
+const MODULES = [
   {
     key: "infrastructure",
     title: "Smart Infrastructure",
@@ -682,7 +684,7 @@ const LandingPage: React.FC = () => {
         // Smart City Demos (formerly frameworks)
         navigate(`/demos`);
         break;
-        
+
       // REMOVED FREQUENCY CASE (It is now internal to Healing)
 
       default:
@@ -712,11 +714,9 @@ const LandingPage: React.FC = () => {
 
   const backgroundGradient = useMemo(
     () =>
-      `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${
-        token.colorPrimary
+      `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
       }20 20%, ${token.colorBgContainer} 60%),
-     radial-gradient(circle at ${100 - mousePosition.x}% ${
-        100 - mousePosition.y
+     radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
       }%, ${token.colorSuccess}10 0%, ${token.colorBgContainer} 40%),
      ${token.colorBgContainer}`,
     [mousePosition, token]
