@@ -49,6 +49,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Optional client details for registration
+  phone        String?
+  location     String?
+  organization String?
+
   // Submissions
   // Submissions
   frequencyScans            FrequencyScan[]

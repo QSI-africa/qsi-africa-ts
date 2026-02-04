@@ -90,7 +90,6 @@ router.get("/pilots", async (req, res) => {
         subtext: true,
         shortDescription: true,
         expandedView: true, // Send full data for the detail page
-        imageUrl: true,
         type: true,
         isActive: true,
       },
@@ -148,7 +147,6 @@ router.post(
           subtext,
           shortDescription,
           expandedView, // <-- This now contains the extracted text
-          imageUrl,
           isActive,
           type,
         },
@@ -183,7 +181,6 @@ router.put(
     if (body.shortDescription)
       dataToUpdate.shortDescription = body.shortDescription;
     if (body.expandedView) dataToUpdate.expandedView = body.expandedView;
-    if (body.imageUrl) dataToUpdate.imageUrl = body.imageUrl;
     if (body.isActive !== undefined)
       dataToUpdate.isActive =
         body.isActive === "true" || body.isActive === true;
@@ -405,7 +402,7 @@ router.get("/clients", isSuperUserOrAdmin, async (req, res) => {
         name: true,
         email: true,
         createdAt: true,
-        frequencyProfile: {
+        frequencyScans: {
           // Include if the profile exists
           select: {
             id: true,
@@ -428,7 +425,7 @@ router.get("/clients", isSuperUserOrAdmin, async (req, res) => {
       name: client.name,
       email: client.email,
       createdAt: client.createdAt,
-      hasProfile: !!client.frequencyProfile, // Simple boolean
+      hasProfile: !!(client.frequencyScans && client.frequencyScans.length > 0), // Simple boolean
       submissionCount: client.healingSubmissions.length,
     }));
 
@@ -774,7 +771,244 @@ router.post(
   }
 );
 
+// =========================================================================
+// 10. QSI CONCEPTS MANAGEMENT (SUPER_USER/ADMIN ONLY)
+// =========================================================================
+
+// GET all QSI Concepts (Admin View)
+router.get("/qsi-concepts", isSuperUserOrAdmin, async (req, res) => {
+  console.log(`User ${req.user.id} requesting /api/admin/qsi-concepts`);
+  try {
+    const concepts = await prisma.qsiConcept.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        demonstrators: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+    console.log(`Found ${concepts.length} QSI concepts.`);
+    res.json(concepts);
+  } catch (error) {
+    console.error("Failed to fetch QSI concepts:", error);
+    res.status(500).json({ error: "Failed to fetch QSI concepts." });
+  }
+});
+
+// POST a new QSI Concept
+router.post("/qsi-concepts", isSuperUserOrAdmin, async (req, res) => {
+  const { title, description, imageUrl, category, isActive } = req.body;
+  if (!title || !description) {
+    return res.status(400).json({ error: "Title and description are required." });
+  }
+  try {
+    const newConcept = await prisma.qsiConcept.create({
+      data: { 
+        title, 
+        description, 
+        imageUrl, 
+        category, 
+        isActive: isActive !== undefined ? isActive : true 
+      },
+    });
+    res.status(201).json(newConcept);
+  } catch (error) {
+    console.error("Failed to create QSI concept:", error);
+    res.status(500).json({ error: "Failed to create QSI concept." });
+  }
+});
+
+// PUT (Update) a QSI Concept
+router.put("/qsi-concepts/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, imageUrl, category, isActive } = req.body;
+  try {
+    const updatedConcept = await prisma.qsiConcept.update({
+      where: { id: id },
+      data: { title, description, imageUrl, category, isActive },
+    });
+    res.json(updatedConcept);
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Concept not found." });
+    }
+    console.error(`Failed to update concept ${id}:`, error);
+    res.status(500).json({ error: "Failed to update concept." });
+  }
+});
+
+// DELETE a QSI Concept
+router.delete("/qsi-concepts/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.qsiConcept.delete({
+      where: { id: id },
+    });
+    res.status(204).send(); // No content
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Concept not found." });
+    }
+    console.error(`Failed to delete concept ${id}:`, error);
+    res.status(500).json({ error: "Failed to delete concept." });
+  }
+});
+
+// =========================================================================
+// 11. SMART CITY DEMOS MANAGEMENT (SUPER_USER/ADMIN ONLY)
+// =========================================================================
+
+// GET all Smart City Demonstrators (Admin View)
+router.get("/smart-city-demos", isSuperUserOrAdmin, async (req, res) => {
+  console.log(`User ${req.user.id} requesting /api/admin/smart-city-demos`);
+  try {
+    const demos = await prisma.smartCityDemonstrator.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        concepts: {
+          select: { id: true, title: true },
+        },
+      },
+    });
+    console.log(`Found ${demos.length} smart city demonstrators.`);
+    res.json(demos);
+  } catch (error) {
+    console.error("Failed to fetch smart city demos:", error);
+    res.status(500).json({ error: "Failed to fetch smart city demos." });
+  }
+});
+
+// POST a new Smart City Demonstrator
+router.post("/smart-city-demos", isSuperUserOrAdmin, async (req, res) => {
+  const {
+    name,
+    city,
+    location,
+    status,
+    shortDescription,
+    fullDescription,
+    imageUrl,
+    engagementEnabled,
+    isActive,
+    conceptIds, // Array of QSI Concept IDs to link
+  } = req.body;
+
+  if (!name || !city || !shortDescription || !fullDescription) {
+    return res.status(400).json({
+      error: "Name, city, short description, and full description are required.",
+    });
+  }
+
+  try {
+    const newDemo = await prisma.smartCityDemonstrator.create({
+      data: {
+        name,
+        city,
+        location,
+        status: status || "PROPOSED",
+        shortDescription,
+        fullDescription,
+        imageUrl,
+        engagementEnabled: engagementEnabled !== undefined ? engagementEnabled : true,
+        isActive: isActive !== undefined ? isActive : true,
+        concepts: conceptIds?.length > 0 
+          ? { connect: conceptIds.map(id => ({ id })) } 
+          : undefined,
+      },
+      include: {
+        concepts: true,
+      },
+    });
+    res.status(201).json(newDemo);
+  } catch (error) {
+    console.error("Failed to create smart city demo:", error);
+    res.status(500).json({ error: "Failed to create smart city demo." });
+  }
+});
+
+// PUT (Update) a Smart City Demonstrator
+router.put("/smart-city-demos/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    city,
+    location,
+    status,
+    shortDescription,
+    fullDescription,
+    imageUrl,
+    engagementEnabled,
+    isActive,
+    conceptIds, // If provided, will replace existing concept links
+  } = req.body;
+
+  try {
+    const dataToUpdate = {
+      name,
+      city,
+      location,
+      status,
+      shortDescription,
+      fullDescription,
+      imageUrl,
+      engagementEnabled,
+      isActive,
+    };
+
+    // If conceptIds is provided, update the many-to-many relationship
+    if (conceptIds !== undefined) {
+      // First, disconnect all existing concepts
+      await prisma.smartCityDemonstrator.update({
+        where: { id },
+        data: {
+          concepts: {
+            set: [], // Clear all existing relationships
+          },
+        },
+      });
+
+      // Then connect the new ones
+      dataToUpdate.concepts = conceptIds.length > 0
+        ? { connect: conceptIds.map(cid => ({ id: cid })) }
+        : undefined;
+    }
+
+    const updatedDemo = await prisma.smartCityDemonstrator.update({
+      where: { id: id },
+      data: dataToUpdate,
+      include: {
+        concepts: true,
+      },
+    });
+    res.json(updatedDemo);
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Demonstrator not found." });
+    }
+    console.error(`Failed to update demo ${id}:`, error);
+    res.status(500).json({ error: "Failed to update demo." });
+  }
+});
+
+// DELETE a Smart City Demonstrator
+router.delete("/smart-city-demos/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.smartCityDemonstrator.delete({
+      where: { id: id },
+    });
+    res.status(204).send(); // No content
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Demonstrator not found." });
+    }
+    console.error(`Failed to delete demo ${id}:`, error);
+    res.status(500).json({ error: "Failed to delete demo." });
+  }
+});
+
 // server/src/api/adminRoutes.js
+
 
 router.get("/pilot-engagements", async (req, res) => {
   try {

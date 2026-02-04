@@ -48,8 +48,18 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
+  // Enhanced logging for debugging
+  console.log(`[LOGIN] Attempt for email: ${email?.substring(0, 3)}***`);
+
   if (!email || !password) {
+    console.log("[LOGIN] Missing credentials");
     return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  // Check if JWT_SECRET is configured
+  if (!JWT_SECRET) {
+    console.error("[LOGIN] CRITICAL: JWT_SECRET is not configured!");
+    return res.status(500).json({ error: "Server configuration error. Please contact administrator." });
   }
 
   try {
@@ -58,12 +68,14 @@ router.post("/login", async (req, res) => {
     });
 
     if (!user) {
+      console.log(`[LOGIN] User not found: ${email}`);
       return res.status(401).json({ error: "Invalid credentials." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log(`[LOGIN] Invalid password for: ${email}`);
       return res.status(401).json({ error: "Invalid credentials." });
     }
 
@@ -71,6 +83,8 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
       expiresIn: "1d",
     });
+
+    console.log(`[LOGIN] Success for user: ${user.id}`);
 
     // --- FIX: Add Credentials Header for CORS ---
     res.header("Access-Control-Allow-Credentials", "true");
@@ -86,7 +100,12 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("[LOGIN] Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      email: email?.substring(0, 3) + "***"
+    });
     res.status(500).json({ error: "Internal server error." });
   }
 });
@@ -227,9 +246,9 @@ router.post("/reset-password/:token", async (req, res) => {
 
 // 6. Public Registration (General User)
 router.post("/register-user", async (req, res) => {
-  const { email, name, password } = req.body;
+  const { email, name, password, phone, location, organization } = req.body;
   if (!email || !name || !password) {
-    return res.status(400).json({ error: "All fields are required." });
+    return res.status(400).json({ error: "Email, name, and password are required." });
   }
   try {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -239,6 +258,9 @@ router.post("/register-user", async (req, res) => {
         name,
         password: hashedPassword,
         role: "GENERAL_USER",
+        phone: phone || null,
+        location: location || null,
+        organization: organization || null,
       },
     });
 

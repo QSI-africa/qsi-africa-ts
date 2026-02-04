@@ -1,5 +1,5 @@
 // client/src/pages/RegisterPage.jsx
-import React, { useState  } from 'react';
+import React, { useState } from 'react';
 import {
   Form,
   Input,
@@ -72,6 +72,23 @@ const RegisterPage: React.FC = () => {
               prefix={<LockOutlined />}
               placeholder="Password (min. 6 characters)"
             />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            rules={[
+              {
+                pattern: /^[+]?[\d\s\-()]+$/,
+                message: "Please enter a valid phone number"
+              }
+            ]}
+          >
+            <Input placeholder="Phone Number (optional)" />
+          </Form.Item>
+          <Form.Item name="location">
+            <Input placeholder="Location/City (optional)" />
+          </Form.Item>
+          <Form.Item name="organization">
+            <Input placeholder="Organization/Company (optional)" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>
