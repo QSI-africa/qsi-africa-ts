@@ -2,11 +2,22 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const prisma = require("./src/config/prisma");
 const path = require("path");
+const { apiLimiter } = require("./src/middleware/rateLimiter");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Security: Add helmet for security headers
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow serving uploads
+  contentSecurityPolicy: false, // Disable CSP for API server
+}));
+
+// Security: Apply rate limiting to all API requests
+app.use("/api", apiLimiter);
 
 // Enable CORS for specific origins
 app.use(
@@ -27,7 +38,7 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // Also limit JSON body size
 
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

@@ -6,12 +6,12 @@ const crypto = require("crypto");
 const prisma = require("../config/prisma");
 
 const router = express.Router();
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12; // Increased from 10 for better security
 const JWT_SECRET = process.env.JWT_SECRET || "YOUR_FALLBACK_SECRET_KEY";
 
 // --- IMPORT MIDDLEWARE ---
-// Ensure your server/src/middleware/authMiddleware.js exports { authMiddleware }
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { authLimiter, registrationLimiter, passwordResetLimiter } = require("../middleware/rateLimiter");
 // -------------------------
 
 // 1. User Registration (Admin/SuperUser Only)
@@ -44,8 +44,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// 2. User Login
-router.post("/login", async (req, res) => {
+// 2. User Login (Rate limited: 5 attempts per 15 minutes)
+router.post("/login", authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   // Enhanced logging for debugging
@@ -146,8 +146,8 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-// 4. Forgot Password
-router.post("/forgot-password", async (req, res) => {
+// 4. Forgot Password (Rate limited: 3 attempts per hour)
+router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required." });
 
@@ -244,8 +244,8 @@ router.post("/reset-password/:token", async (req, res) => {
   }
 });
 
-// 6. Public Registration (General User)
-router.post("/register-user", async (req, res) => {
+// 6. Public Registration (General User) - Rate limited: 3 registrations per hour
+router.post("/register-user", registrationLimiter, async (req, res) => {
   const { email, name, password, phone, location, organization } = req.body;
   if (!email || !name || !password) {
     return res.status(400).json({ error: "Email, name, and password are required." });
