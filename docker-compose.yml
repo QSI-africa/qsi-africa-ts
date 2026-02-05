@@ -14,8 +14,9 @@ services:
       POSTGRES_DB: ${DB_NAME:-qsi_africa}
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
+    # SECURITY: Database port NOT exposed to internet - only accessible within Docker network
+    # ports:
+    #   - "5434:5432"
 
   # ==================================
   # SERVER (Backend)
