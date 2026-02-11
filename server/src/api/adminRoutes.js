@@ -449,7 +449,10 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
         name: true,
         email: true,
         createdAt: true,
-        frequencyProfile: true, // Get the FULL profile object
+        frequencyScans: {
+          orderBy: { createdAt: "desc" },
+          take: 1
+        }, 
         healingSubmissions: {
           // Get their full submission history
           orderBy: { createdAt: "desc" },
@@ -466,7 +469,13 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
       return res.status(404).json({ error: "Client not found." });
     }
 
-    res.json(client);
+    // Map the first scan to 'frequencyProfile' for frontend compatibility
+    const clientData = {
+      ...client,
+      frequencyProfile: client.frequencyScans?.[0] || null
+    };
+
+    res.json(clientData);
   } catch (error) {
     console.error(`Failed to fetch client ${id}:`, error);
     res.status(500).json({ error: "Failed to fetch client details." });

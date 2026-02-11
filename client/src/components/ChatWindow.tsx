@@ -580,11 +580,8 @@ const ChatWindow: React.FC = () => {
       setFetchedPackages([]); // Clear if switching away from healing
     }
 
-    if (moduleName === "vision") {
-      fetchPilots();
-    } else {
-      setPilotProjects([]); // Clear if switching away from vision
-    }
+    // Vision no longer needs pilot projects sidebar
+    setPilotProjects([]);
   }, [moduleName, antMessage, baseURL]);
   // --- END: CONSOLIDATED DATA FETCHING ---
 
@@ -613,10 +610,10 @@ const ChatWindow: React.FC = () => {
     const initialMessage = {
       sender: "ai",
       text: `Welcome, ${contactInfo.name}. ${moduleName === "infrastructure"
-          ? "What infrastructure project are you considering today?"
-          : moduleName === "healing"
-            ? "What are you currently experiencing?"
-            : "I'm excited to help you create impact. What's your vision today?"
+        ? "What infrastructure project are you considering today?"
+        : moduleName === "healing"
+          ? "What are you currently experiencing?"
+          : "I'm excited to help you create impact. What's your vision today?"
         }`,
     };
     setMessages([initialMessage]);
@@ -630,7 +627,7 @@ const ChatWindow: React.FC = () => {
     () => ({ background: details.background(token) }),
     [details, token]
   );
-  const showRightSidebar = moduleName === "healing" || moduleName === "vision";
+  const showRightSidebar = moduleName === "healing";
 
   const MobileDrawer = useCallback(
     ({ placement, visible, onClose, children, title, width = 280 }) => (
@@ -738,7 +735,6 @@ const ChatWindow: React.FC = () => {
         <SidebarContent
           details={details}
           moduleName={moduleName}
-          pilotProjects={pilotProjects}
           fetchedSuggestions={fetchedSuggestions}
           handleSuggestionClick={handleSuggestionClick}
           token={token}
@@ -754,7 +750,6 @@ const ChatWindow: React.FC = () => {
         <SidebarContent
           details={details}
           moduleName={moduleName}
-          pilotProjects={pilotProjects}
           fetchedSuggestions={fetchedSuggestions}
           handleSuggestionClick={handleSuggestionClick}
           token={token}

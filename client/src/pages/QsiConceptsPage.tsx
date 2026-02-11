@@ -38,17 +38,17 @@ const QsiConceptsPage: React.FC = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Fetch pilots on component mount
+  // Fetch concepts on component mount
   useEffect(() => {
-    const fetchPilots = async () => {
+    const fetchConcepts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const baseURL =
-          import.meta.env.VITE_API_BASE_URL ||
-          "https://api.qsi.africa/api";
-        // Call new endpoint
+        // Use the configured API instance instead of direct axios
+        // This ensures the correct Base URL and interceptors are used
+        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
         const response = await axios.get(`${baseURL}/submit/concepts`);
+
         if (Array.isArray(response.data)) {
           setPilots(response.data);
         } else {
@@ -64,7 +64,7 @@ const QsiConceptsPage: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchPilots();
+    fetchConcepts();
   }, []);
 
   // Filter pilots based on search term (case-insensitive)
@@ -86,12 +86,10 @@ const QsiConceptsPage: React.FC = () => {
 
   const getBackgroundGradient = () => {
     return `
-      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${
-      token.colorPrimary
-    }20 20%,  ${token.colorBgContainer} 60%),
-      radial-gradient(circle at ${100 - mousePosition.x}% ${
-      100 - mousePosition.y
-    }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
+      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
+      }20 20%,  ${token.colorBgContainer} 60%),
+      radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
+      }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
       ${token.colorBgContainer}
     `;
   };
@@ -130,110 +128,110 @@ const QsiConceptsPage: React.FC = () => {
           margin: "0 auto"
         }}
       >
-      <Title strong level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
-        QSI Concepts
-      </Title>
-      <Title level={5} style={{ textAlign: "center", marginTop: "0px", padding:"0 20px", color: token.colorPrimary, fontWeight: "400" }}>
-        Culture engineered for the future
-      </Title>
-      <Paragraph
-        style={{
-          textAlign: "center",
-          marginBottom: "20px",
-          padding: "10px 20px",
-        }}
-        type="secondary"
-      >
-        These are brand-anchored or investable innovation concepts that merge
-        culture, technology, and consciousness. Each concept operates as a
-        unique franchise or collaborative venture under QSI governance.
-      </Paragraph>
-
-      {/* Loading State */}
-      {loading && (
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <Spin size="large" />
-        </div>
-      )}
-
-      {/* Error State */}
-      {!loading && error && (
-        <Text type="danger" style={{ display: "block", textAlign: "center" }}>
-          {error}
-        </Text>
-      )}
-
-      {/* Pilot Cards Grid */}
-      {!loading && !error && (
-        <Row
-          gutter={[12, 12]}
+        <Title strong level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
+          QSI Concepts
+        </Title>
+        <Title level={5} style={{ textAlign: "center", marginTop: "0px", padding: "0 20px", color: token.colorPrimary, fontWeight: "400" }}>
+          Culture engineered for the future
+        </Title>
+        <Paragraph
           style={{
-            marginBottom: "30px",
+            textAlign: "center",
+            marginBottom: "20px",
+            padding: "10px 20px",
           }}
+          type="secondary"
         >
-          {filteredPilots.length > 0 ? (
-            filteredPilots.map((pilot) => (
-              <Col key={pilot.id} xs={24} sm={12} md={8}>
-                <Card
-                  hoverable
-                  onClick={() => handleCardClick(pilot.id)}
-                  style={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    background: token.colorBgBase,
-                  }}
-                  bodyStyle={{
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <Title level={5} style={{ marginBottom: "8px" }}>
-                      <BulbOutlined
-                        style={{
-                          marginRight: "8px",
-                          color: token.colorPrimary,
-                        }}
-                      />
-                      {pilot.title}
-                    </Title>
-                    <Paragraph
-                      type="secondary"
-                      style={{
-                        fontSize: "14px",
-                        flexGrow: 1,
-                        marginBottom: "16px",
-                      }}
-                      ellipsis={{ rows: 3 }}
-                    >
-                      {/* Concepts use description */}
-                      {pilot.description}
-                    </Paragraph>
-                  </div>
-                  <Text
+          These are brand-anchored or investable innovation concepts that merge
+          culture, technology, and consciousness. Each concept operates as a
+          unique franchise or collaborative venture under QSI governance.
+        </Paragraph>
+
+        {/* Loading State */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "50px" }}>
+            <Spin size="large" />
+          </div>
+        )}
+
+        {/* Error State */}
+        {!loading && error && (
+          <Text type="danger" style={{ display: "block", textAlign: "center" }}>
+            {error}
+          </Text>
+        )}
+
+        {/* Pilot Cards Grid */}
+        {!loading && !error && (
+          <Row
+            gutter={[12, 12]}
+            style={{
+              marginBottom: "30px",
+            }}
+          >
+            {filteredPilots.length > 0 ? (
+              filteredPilots.map((pilot) => (
+                <Col key={pilot.id} xs={24} sm={12} md={8}>
+                  <Card
+                    hoverable
+                    onClick={() => handleCardClick(pilot.id)}
                     style={{
-                      color: token.colorPrimary,
-                      fontWeight: "500",
-                      alignSelf: "flex-start",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      background: token.colorBgBase,
+                    }}
+                    bodyStyle={{
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
                     }}
                   >
-                    View Details <ArrowRightOutlined />
-                  </Text>
-                </Card>
+                    <div>
+                      <Title level={5} style={{ marginBottom: "8px" }}>
+                        <BulbOutlined
+                          style={{
+                            marginRight: "8px",
+                            color: token.colorPrimary,
+                          }}
+                        />
+                        {pilot.title}
+                      </Title>
+                      <Paragraph
+                        type="secondary"
+                        style={{
+                          fontSize: "14px",
+                          flexGrow: 1,
+                          marginBottom: "16px",
+                        }}
+                        ellipsis={{ rows: 3 }}
+                      >
+                        {/* Concepts use description */}
+                        {pilot.description}
+                      </Paragraph>
+                    </div>
+                    <Text
+                      style={{
+                        color: token.colorPrimary,
+                        fontWeight: "500",
+                        alignSelf: "flex-start",
+                      }}
+                    >
+                      View Details <ArrowRightOutlined />
+                    </Text>
+                  </Card>
+                </Col>
+              ))
+            ) : (
+              <Col span={24} style={{ textAlign: "center" }}>
+                <Text type="secondary">
+                  No concepts found.
+                </Text>
               </Col>
-            ))
-          ) : (
-            <Col span={24} style={{ textAlign: "center" }}>
-              <Text type="secondary">
-                No concepts found.
-              </Text>
-            </Col>
-          )}
-        </Row>
-      )}
+            )}
+          </Row>
+        )}
       </div>
     </div>
   );

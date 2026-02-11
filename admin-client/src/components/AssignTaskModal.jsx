@@ -10,6 +10,7 @@ import {
   Space,
   Tag,
   theme,
+  Input,
 } from "antd";
 import { UserOutlined, TeamOutlined, RocketOutlined, ApartmentOutlined, BuildOutlined } from "@ant-design/icons";
 import api from "../api";
@@ -71,14 +72,15 @@ const AssignTaskModal = ({
   const handleAssign = async (values) => {
     setLoading(true);
     try {
+      const { note } = values;
       if (isReassign) {
          // Re-assignment logic (Individual)
          const { teamMemberId } = values;
-         await api.put(`/admin/tasks/${task.id}/reassign`, { teamMemberId });
+         await api.put(`/admin/tasks/${task.id}/reassign`, { teamMemberId, note });
       } else {
          // Initial Assignment Logic (Role/Department Broadcast)
          const { role } = values;
-         await api.put(`/admin/tasks/${task.id}/assign`, { role });
+         await api.put(`/admin/tasks/${task.id}/assign`, { role, note });
       }
 
       message.success(
@@ -265,6 +267,15 @@ const AssignTaskModal = ({
               </Select>
             </Form.Item>
         )}
+
+        {/* Notes Field */}
+        <Form.Item
+          name="note"
+          label="Notes (Optional)"
+          extra="Add any context or instructions for this assignment."
+        >
+          <Input.TextArea rows={3} placeholder="Enter notes here..." />
+        </Form.Item>
 
         {/* Form Actions */}
         <Form.Item

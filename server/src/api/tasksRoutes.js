@@ -149,7 +149,7 @@ router.get("/:taskId", async (req, res) => {
 // PUT /api/admin/tasks/:taskId/assign
 router.put("/:taskId/assign", isSuperUser, async (req, res) => {
   const { taskId } = req.params;
-  const { role } = req.body; // Expecting 'role' instead of 'teamMemberId'
+  const { role, note } = req.body; // Expecting 'role' instead of 'teamMemberId'
 
   if (!role) {
       return res.status(400).json({ error: "Target role is required." });
@@ -209,6 +209,7 @@ router.put("/:taskId/assign", isSuperUser, async (req, res) => {
           from: originalStatus,
           to: nextStatus,
           assignedRole: role,
+          note: note,
         },
       },
     });
@@ -225,7 +226,7 @@ router.put("/:taskId/assign", isSuperUser, async (req, res) => {
 // PUT /api/admin/tasks/:taskId/reassign
 router.put("/:taskId/reassign", isSuperUser, async (req, res) => {
   const { taskId } = req.params; // Use consistent param name
-  const { teamMemberId } = req.body;
+  const { teamMemberId, note } = req.body;
 
   try {
     const currentTask = await prisma.task.findUnique({ where: { id: taskId } });
@@ -254,7 +255,7 @@ router.put("/:taskId/reassign", isSuperUser, async (req, res) => {
     await prisma.auditLog.create({
       data: {
         action: "TASK_REASSIGNED",
-        details: { fromUser: currentTask.assignedToId, toUser: teamMemberId },
+        details: { fromUser: currentTask.assignedToId, toUser: teamMemberId, note: note },
         taskId: updatedTask.id,
         actorId: req.user.id,
       },
