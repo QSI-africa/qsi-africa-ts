@@ -459,7 +459,7 @@ const AboutUs: React.FC = () => {
         {/* Core Areas Grid */}
         <div style={styles.coreAreasSection}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>The QSI Framework</h2>
+            <h2 style={styles.sectionTitle}>The QSI Architecture and The QSI Framework</h2>
             <div style={styles.divider}></div>
           </div>
           <div style={styles.coreAreasGrid}>
