@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-} from 'react';
+} from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   App as AntApp,
@@ -83,7 +83,7 @@ const SidebarContent = ({
       width: "100%",
       display: "block",
     }),
-    [token]
+    [token],
   );
 
   const buttonHoverEnter = useCallback(
@@ -92,7 +92,7 @@ const SidebarContent = ({
       e.currentTarget.style.borderColor = token.colorPrimaryHover;
       e.currentTarget.style.transform = "translateX(4px)";
     },
-    [token]
+    [token],
   );
 
   const buttonHoverLeave = useCallback(
@@ -101,7 +101,7 @@ const SidebarContent = ({
       e.currentTarget.style.borderColor = token.colorBorder;
       e.currentTarget.style.transform = "translateX(0)";
     },
-    [token]
+    [token],
   );
 
   return (
@@ -209,19 +209,37 @@ const ChatWindow: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<any[]>([]);
 
-  const [contactInfo, setContactInfo] = useState(
-    location.state?.contactInfo || {
+  // Fix: Initialize contactInfo with proper values from user if available
+  const [contactInfo, setContactInfo] = useState(() => {
+    // Check if we have user data from location state
+    if (location.state?.contactInfo) {
+      return location.state.contactInfo;
+    }
+
+    // If user is authenticated, use their actual info
+    if (isAuthenticated && user) {
+      return {
+        name: user.name || user.email?.split("@")[0] || "Valued User",
+        email: user.email || "user@chat.com",
+        userId: user.id,
+      };
+    }
+
+    // Fallback to default
+    return {
       name: "Valued User",
       email: "user@chat.com",
-      userId: user?.id,
-    }
-  );
+      userId: user?.id || null,
+    };
+  });
+
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [leftDrawerVisible, setLeftDrawerVisible] = useState<boolean>(false);
   const [rightDrawerVisible, setRightDrawerVisible] = useState<boolean>(false);
   const [packageInquiry, setPackageInquiry] = useState<string>("");
-  const [inquiryModalVisible, setInquiryModalVisible] = useState<boolean>(false);
+  const [inquiryModalVisible, setInquiryModalVisible] =
+    useState<boolean>(false);
   const messagesEndRef = useRef(null);
   const [pilotProjects, setPilotProjects] = useState<any[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
@@ -237,6 +255,30 @@ const ChatWindow: React.FC = () => {
 
   const baseURL =
     import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+
+  // --- FIX: Update contactInfo whenever user data changes ---
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setContactInfo((prev) => {
+        // Only update if the values are different
+        const newContactInfo = {
+          name: user.name || user.email?.split("@")[0] || prev.name,
+          email: user.email || prev.email,
+          userId: user.id,
+        };
+
+        // Check if anything actually changed to avoid unnecessary re-renders
+        if (
+          prev.userId !== newContactInfo.userId ||
+          prev.name !== newContactInfo.name ||
+          prev.email !== newContactInfo.email
+        ) {
+          return newContactInfo;
+        }
+        return prev;
+      });
+    }
+  }, [isAuthenticated, user]);
 
   // --- 1. DEDICATED UPLOAD FUNCTION ---
   const handleFileUpload = useCallback(
@@ -257,8 +299,7 @@ const ChatWindow: React.FC = () => {
         formData.append("userId", user.id);
       }
 
-      // 3. Append Contextual Metadata (FIXED)
-      // This ensures files aren't just labeled "GENERAL" in the DB
+      // 3. Append Contextual Metadata
       formData.append("category", "INFRASTRUCTURE");
 
       // Optional: Add a tag to identify source
@@ -266,16 +307,14 @@ const ChatWindow: React.FC = () => {
       formData.append("tags", tags);
 
       try {
-        // console.log to debug file payload
         console.log(`[Upload] Sending ${files.length} file(s)`);
 
         const response = await axios.post(
-          `${baseURL}/submit/upload`, // Ensure this matches your route mount point
+          `${baseURL}/submit/upload`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
-            // timeout: 30000, // Optional: Increase timeout for large files
-          }
+          },
         );
 
         const uploadedIds = response.data.documents?.map((doc) => doc.id) || [];
@@ -295,23 +334,19 @@ const ChatWindow: React.FC = () => {
         // Handle specific status codes
         if (error.response) {
           if (error.response.status === 413) {
-            // Nginx or Express Body Parser limit hit
             errorMessage = "Total file size exceeds the server limit (50MB).";
           } else if (error.response.status === 400) {
-            // Backend validation error (e.g., 'No files uploaded')
             errorMessage = error.response.data.error || "Invalid file request.";
           } else if (error.response.status === 500) {
-            // Multer or Prisma error
             errorMessage = "Server error during file processing.";
           }
         }
 
         antMessage.error(errorMessage);
-        // Return empty array so the chat message can still try to send text
         return [];
       }
     },
-    [baseURL, isAuthenticated, user, antMessage] // setUploadedDocumentIds is stable, no need to add
+    [baseURL, isAuthenticated, user, antMessage],
   );
 
   // --- 2. MAIN SEND MESSAGE FUNCTION ---
@@ -354,10 +389,10 @@ const ChatWindow: React.FC = () => {
           currentDocumentIds = [...currentDocumentIds, ...newDocIds];
         }
 
-        // Step B: Send the Chat Request
+        // Step B: Send the Chat Request with updated contactInfo
         const payload = {
           messages: newMessages,
-          contactInfo: contactInfo,
+          contactInfo: contactInfo, // This now has the correct user data
           userId: isAuthenticated && user ? user.id : null,
           documentIds:
             currentDocumentIds.length > 0 ? currentDocumentIds : null,
@@ -403,28 +438,20 @@ const ChatWindow: React.FC = () => {
       uploadedDocumentIds,
       isAuthenticated,
       handleFileUpload,
-    ]
+    ],
   );
 
+  // --- FIX: Handle suggestion clicks to send directly to chat ---
   const handleSuggestionClick = useCallback(
     (suggestionText, isPilot = false) => {
       if (isPilot) {
         navigate(`/pilots/${suggestionText}`);
-      } else if (moduleName === "healing") {
-        const pkg = fetchedPackages.find((p) => p.cta === suggestionText);
-        if (pkg) {
-          setSelectedPackage(pkg);
-          setPackageInquiry("");
-          setSubmitAction("quote");
-          setInquiryModalVisible(true);
-        } else {
-          handleSendMessage(suggestionText);
-        }
       } else {
+        // For all suggestions (including healing), send directly to chat
         handleSendMessage(suggestionText);
       }
     },
-    [moduleName, navigate, handleSendMessage, fetchedPackages]
+    [navigate, handleSendMessage],
   );
 
   const handleSubmitToChat = useCallback(async () => {
@@ -501,25 +528,28 @@ const ChatWindow: React.FC = () => {
     baseURL,
   ]);
 
-
-
-  const handlePackageClick = useCallback((packageItem) => {
-    // Check if user has a frequency scan (Healing module only)
-    if (moduleName === "healing") {
-      if (!user?.frequencyScans || user.frequencyScans.length === 0) {
-        // No scan found, prompt to scan
-        setSelectedPackage(packageItem);
-        setShowFrequencyScan(true);
-        message.info("Please complete a Frequency Scan to ensure alignment with this package.");
-        return;
+  const handlePackageClick = useCallback(
+    (packageItem) => {
+      // Check if user has a frequency scan (Healing module only)
+      if (moduleName === "healing") {
+        if (!user?.frequencyScans || user.frequencyScans.length === 0) {
+          // No scan found, prompt to scan
+          setSelectedPackage(packageItem);
+          setShowFrequencyScan(true);
+          message.info(
+            "Please complete a Frequency Scan to ensure alignment with this package.",
+          );
+          return;
+        }
       }
-    }
 
-    setSelectedPackage(packageItem);
-    setPackageInquiry("");
-    setSubmitAction("quote");
-    setInquiryModalVisible(true);
-  }, [moduleName, user]);
+      setSelectedPackage(packageItem);
+      setPackageInquiry("");
+      setSubmitAction("quote");
+      setInquiryModalVisible(true);
+    },
+    [moduleName, user],
+  );
 
   // --- START: CONSOLIDATED DATA FETCHING ---
   useEffect(() => {
@@ -586,17 +616,6 @@ const ChatWindow: React.FC = () => {
   // --- END: CONSOLIDATED DATA FETCHING ---
 
   useEffect(() => {
-    if (user?.id && user.id !== contactInfo.userId) {
-      setContactInfo((prev) => ({
-        ...prev,
-        userId: user.id,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-      }));
-    }
-  }, [user, contactInfo.userId]);
-
-  useEffect(() => {
     const preventZoom = (e: React.FormEvent) => {
       if (e.touches && e.touches.length > 1) {
         e.preventDefault();
@@ -609,12 +628,13 @@ const ChatWindow: React.FC = () => {
   useEffect(() => {
     const initialMessage = {
       sender: "ai",
-      text: `Welcome, ${contactInfo.name}. ${moduleName === "infrastructure"
-        ? "What infrastructure project are you considering today?"
-        : moduleName === "healing"
-          ? "What are you currently experiencing?"
-          : "I'm excited to help you create impact. What's your vision today?"
-        }`,
+      text: `Welcome, ${contactInfo.name}. ${
+        moduleName === "infrastructure"
+          ? "What infrastructure project are you considering today?"
+          : moduleName === "healing"
+            ? "What are you currently experiencing?"
+            : "I'm excited to help you create impact. What's your vision today?"
+      }`,
     };
     setMessages([initialMessage]);
   }, [contactInfo.name, moduleName]);
@@ -625,7 +645,7 @@ const ChatWindow: React.FC = () => {
 
   const backgroundStyle = useMemo(
     () => ({ background: details.background(token) }),
-    [details, token]
+    [details, token],
   );
   const showRightSidebar = moduleName === "healing";
 
@@ -658,7 +678,7 @@ const ChatWindow: React.FC = () => {
         {children}
       </Drawer>
     ),
-    [token]
+    [token],
   );
 
   return (
@@ -837,8 +857,9 @@ const ChatWindow: React.FC = () => {
                 type="primary"
                 onClick={() => setRightDrawerVisible(true)}
                 style={{ color: token.colorText, padding: 6 }}
-                aria-label={`Open ${moduleName === "healing" ? "packages" : "QSI concepts"
-                  }`}
+                aria-label={`Open ${
+                  moduleName === "healing" ? "packages" : "QSI concepts"
+                }`}
               >
                 {moduleName === "healing" ? "Packages" : "QSI Concepts"}
               </Button>
@@ -1095,7 +1116,7 @@ const ChatWindow: React.FC = () => {
                     type="text"
                     onClick={() =>
                       setPackageInquiry((prev) =>
-                        prev ? `${prev}\n${suggestion}` : suggestion
+                        prev ? `${prev}\n${suggestion}` : suggestion,
                       )
                     }
                     style={{

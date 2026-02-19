@@ -13,9 +13,9 @@ router.use(authMiddleware);
 const getStatusesForRole = (role) => {
   switch (role) {
     case "ARCHITECT":
-      return ["PENDING_ARCHITECT_DESIGN"];
+      return ["PENDING_ARCHITECT_DESIGN", "PENDING_DESIGN"];
     case "ENGINEER":
-      return ["PENDING_ENGINEER_DESIGN"];
+      return ["PENDING_ENGINEER_DESIGN", "PENDING_DESIGN"];
     case "QUANTITY_SURVEYOR":
       return ["PENDING_QUANTIFYING"];
     default:

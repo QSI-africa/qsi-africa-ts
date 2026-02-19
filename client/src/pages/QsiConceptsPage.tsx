@@ -207,8 +207,8 @@ const QsiConceptsPage: React.FC = () => {
                         }}
                         ellipsis={{ rows: 3 }}
                       >
-                        {/* Concepts use description */}
-                        {pilot.description}
+                        {/* Pilot projects use shortDescription */}
+                        {pilot.shortDescription}
                       </Paragraph>
                     </div>
                     <Text

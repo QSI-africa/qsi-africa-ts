@@ -57,9 +57,6 @@ const visionTools = [
   },
 ];
 
-// server/src/services/aiService.js
-// ... (imports)
-
 // --- ADD NEW TOOLS FOR HEALING ---
 const healingTools = [
   {
@@ -227,7 +224,7 @@ async function continueInfrastructureChat(messages, contactInfo) {
     3.  Be concise. Keep your questions minimal. You must get all info in just 2-3 questions.
     4.  Once you have all three pieces of information, you MUST call the 'submit_infrastructure_request' tool.
     5.  Do not make small talk. Be professional and efficient.
-    6. Always inform them that they will receive a quotation within 24 to 48 hours.
+    6.  Always inform them that they will receive a quotation within 24 to 48 hours and their input will be reviewed and be friendly on the last response.
   `;
 
   const apiMessages = [
@@ -364,7 +361,7 @@ async function continueVisionChat(messages, contactInfo) {
   // Determine which model to use based on phase
   const selectedModel = getVisionModel(messages);
   console.log(
-    `🧩 Using model: ${selectedModel} for Vision Chat (User: ${name})`
+    `🧩 Using model: ${selectedModel} for Vision Chat (User: ${name})`,
   );
 
   try {
@@ -399,7 +396,7 @@ async function continueVisionChat(messages, contactInfo) {
             section: args.section_key,
             text: `Okay, here's a summary for '${args.section_key.replace(
               /_/g,
-              " "
+              " ",
             )}':\n\n${
               args.summary_text
             }\n\nDoes that sound right, or would you like to refine anything before we move on to ${nextDisplay}?`,

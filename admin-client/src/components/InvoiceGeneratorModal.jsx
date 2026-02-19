@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Modal,
   Form,
@@ -33,48 +33,52 @@ const InvoiceGeneratorModal = ({
   referenceType,
   onClose,
   initialClient = { name: "", email: "" },
-  invoice = null, // Prop for editing existing invoice
+  invoice = null,
 }) => {
   const { token } = useToken();
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const initialValuesSet = useRef(false);
 
   // Line items state
   const [items, setItems] = useState([
     { key: Date.now(), description: "", quantity: 1, unitPrice: 0 },
   ]);
 
-  // Sync initial client data or existing invoice data
+  // Set initial values only once when component mounts
   useEffect(() => {
-    if (invoice) {
-      // Edit Mode
-      form.setFieldsValue({
-        invoiceType: invoice.type,
-        clientName: invoice.clientName,
-        clientEmail: invoice.clientEmail,
-        clientAddress: invoice.clientAddress,
-        notes: invoice.notes,
-      });
+    if (!initialValuesSet.current) {
+      if (invoice) {
+        // Edit Mode
+        form.setFieldsValue({
+          invoiceType: invoice.type,
+          clientName: invoice.clientName,
+          clientEmail: invoice.clientEmail,
+          clientAddress: invoice.clientAddress,
+          notes: invoice.notes,
+        });
 
-      if (invoice.items && invoice.items.length > 0) {
-        setItems(
-          invoice.items.map((item) => ({
-            key: item.id || Date.now() + Math.random(),
-            description: item.description,
-            quantity: parseFloat(item.quantity),
-            unitPrice: parseFloat(item.unitPrice),
-          }))
-        );
+        if (invoice.items && invoice.items.length > 0) {
+          setItems(
+            invoice.items.map((item) => ({
+              key: item.id || Date.now() + Math.random(),
+              description: item.description,
+              quantity: parseFloat(item.quantity),
+              unitPrice: parseFloat(item.unitPrice),
+            })),
+          );
+        }
+      } else {
+        // Create Mode (Pre-fill client if provided)
+        form.setFieldsValue({
+          clientName: initialClient.name,
+          clientEmail: initialClient.email,
+          invoiceType: "QUOTATION",
+        });
       }
-    } else {
-      // Create Mode (Pre-fill client if provided)
-      form.setFieldsValue({
-        clientName: initialClient.name,
-        clientEmail: initialClient.email,
-        invoiceType: "QUOTATION",
-      });
+      initialValuesSet.current = true;
     }
-  }, [initialClient, invoice, form]);
+  }, []); // Empty dependency array - run only once on mount
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -83,8 +87,8 @@ const InvoiceGeneratorModal = ({
   const handleItemChange = (key, field, value) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.key === key ? { ...item, [field]: value } : item
-      )
+        item.key === key ? { ...item, [field]: value } : item,
+      ),
     );
   };
 
@@ -125,21 +129,41 @@ const InvoiceGeneratorModal = ({
     setIsSubmitting(true);
     try {
       const values = await form.validateFields();
+
+      // Check if items array is valid
+      const validItems = items.filter(
+        (item) =>
+          item.description &&
+          item.description.trim() !== "" &&
+          item.quantity > 0,
+      );
+
+      if (validItems.length === 0) {
+        message.error(
+          "At least one valid line item with description is required",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = preparePayload(values);
-      
+
       const response = await api.post("/invoicing/generate", payload);
-      // Adapted for different API response structures (axios vs fetch wrapper)
-      const success = response.data?.message || response.success; 
-      
+
+      const success =
+        response.data?.message || response.success || response.status === 200;
+
       if (success) {
-        message.success(`Successfully sent to ${values.clientEmail}`);
+        message.success(`Invoice generated and sent to ${values.clientEmail}`);
         onClose();
       } else {
         message.error("Failed to generate invoice.");
       }
     } catch (error) {
       console.error("Submission Error:", error);
-      message.error(error.response?.data?.details || "Failed to generate invoice.");
+      message.error(
+        error.response?.data?.details || "Failed to generate invoice.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -150,25 +174,23 @@ const InvoiceGeneratorModal = ({
     setIsSubmitting(true);
     try {
       const values = await form.validateFields();
-      const payload = preparePayload(values);
-      payload.status = "DRAFT"; // Force draft status on save
 
-      let response;
+      const payload = preparePayload(values);
+      payload.status = "DRAFT";
+
       if (invoice) {
-        // Update existing
-        response = await api.put(`/invoicing/${invoice.id}`, payload);
+        await api.put(`/invoicing/${invoice.id}`, payload);
         message.success("Invoice updated successfully.");
       } else {
-        // Create new draft
-        response = await api.post("/invoicing", payload);
+        await api.post("/invoicing", payload);
         message.success("Draft saved successfully.");
       }
       onClose();
     } catch (error) {
-        console.error("Save Error:", error);
-        message.error("Failed to save invoice.");
+      console.error("Save Error:", error);
+      message.error("Failed to save invoice.");
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -258,6 +280,7 @@ const InvoiceGeneratorModal = ({
         form={form}
         layout="vertical"
         initialValues={{ invoiceType: "QUOTATION" }}
+        preserve={true} // This ensures form values are preserved when fields unmount
       >
         <Card
           size="small"
@@ -368,9 +391,9 @@ const InvoiceGeneratorModal = ({
           <Button onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          
-          <Button 
-            onClick={onSave} 
+
+          <Button
+            onClick={onSave}
             loading={isSubmitting}
             icon={<SaveOutlined />}
           >
@@ -379,21 +402,21 @@ const InvoiceGeneratorModal = ({
 
           {!invoice && (
             <Popconfirm
-                title="Confirm Action"
-                description="This will generate a PDF and email the client. Continue?"
-                onConfirm={onGenerateAndSend}
-                okText="Yes, Send"
-                cancelText="No"
+              title="Confirm Action"
+              description="This will generate a PDF and email the client. Continue?"
+              onConfirm={onGenerateAndSend}
+              okText="Yes, Send"
+              cancelText="No"
             >
-                <Button
+              <Button
                 type="primary"
                 icon={<SendOutlined />}
                 loading={isSubmitting}
                 size="large"
                 style={{ paddingLeft: 40, paddingRight: 40 }}
-                >
+              >
                 Generate & Email
-                </Button>
+              </Button>
             </Popconfirm>
           )}
         </div>
@@ -411,4 +434,3 @@ const InvoiceGeneratorModal = ({
 };
 
 export default InvoiceGeneratorModal;
-

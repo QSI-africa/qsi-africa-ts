@@ -88,7 +88,7 @@ const MODULES = [
 ];
 
 // const NAV_LINKS = ["About Us", "Contact Us"];
-const NAV_LINKS = ["About Us"];
+const NAV_LINKS = ["About QSI"];
 
 const MOBILE_BREAKPOINT = 768;
 

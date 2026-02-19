@@ -4,8 +4,9 @@ import axios from "axios";
 // Create a central API instance
 const api = axios.create({
   baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://api.qsi.africa/api",
+    // import.meta.env.VITE_API_BASE_URL ||
+    // "https://api.qsi.africa/api",
+    "http://localhost:3001/api"
 });
 
 // This setup allows our AuthContext to tell the API instance

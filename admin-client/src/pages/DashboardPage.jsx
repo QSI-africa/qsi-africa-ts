@@ -185,7 +185,7 @@ const DashboardPage = () => {
 
   if (!isSuperUser) {
     filteredTasks = filteredTasks.filter(
-      (task) => task.assignedToId === user?.id
+      (task) => task.assignedToId === user?.id || task.assignedToId === null
     );
   }
 

@@ -1,5 +1,5 @@
 // src/pages/AboutUs.jsx
-import React, { useState  } from 'react';
+import React, { useState } from "react";
 import {
   MdInfo,
   MdFlashOn,
@@ -123,7 +123,7 @@ const AboutUs: React.FC = () => {
       marginBottom: "16px",
     },
     heading: {
-      fontSize: "clamp(2.25rem, 6vw, 4.5rem)",
+      fontSize: "clamp(1.25rem, 4vw, 3.5rem)",
       fontWeight: "bold",
       color: token.colorText,
       lineHeight: 1.2,
@@ -407,7 +407,7 @@ const AboutUs: React.FC = () => {
             </div>
 
             <h1 style={styles.heading}>
-              A Living Intelligence Framework
+              A living intelligence framework
               <span style={styles.gradientText}>
                 for the African Renaissance
               </span>
@@ -415,13 +415,17 @@ const AboutUs: React.FC = () => {
 
             <div style={{ maxWidth: "672px", margin: "0 auto" }}>
               <p style={styles.heroText}>
-                QSI is a field of coherence that unites human consciousness,
-                culture, and creation into one continuous system of progress.
+                QSI is a practical intelligence framework designed to help
+                Africans think, build, and organize systems more coherently. It
+                brings together human awareness, cultural knowledge, technology,
+                and design into one integrated way of creating progress.
               </p>
               <p style={styles.secondaryText}>
-                It views nations not as problems to be solved but as frequencies
-                to be tuned. When people, systems, and environments align,
-                transformation flows naturally.
+                Instead of treating African societies as broken systems that
+                need fixing, QSI approaches development as a process of
+                alignment. When people, institutions, and environments are
+                designed to work in harmony, progress becomes more efficient,
+                more sustainable, and more human.
               </p>
             </div>
           </div>
@@ -442,11 +446,10 @@ const AboutUs: React.FC = () => {
               <div>
                 <h2 style={styles.qsiTitle}>The QSI Architecture</h2>
                 <p style={styles.qsiDescription}>
-                  QSI exists within an unseen architecture — translating
-                  alignment into innovation, intention into infrastructure, and
-                  consciousness into progress. It is a return to the natural
-                  order of creation, where every idea, structure, and life form
-                  vibrates in harmony with purpose.
+                  QSI focuses on clarity over chaos, purpose over imitation, and
+                  systems that grow naturally rather than forcefully. Its goal
+                  is to help Africa move forward using intelligence that is
+                  rooted in its people, its culture, and its future potential.
                 </p>
               </div>
             </div>

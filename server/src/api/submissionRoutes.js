@@ -405,11 +405,14 @@ router.post("/vision", async (req, res) => {
 // 5. QSI Concepts & Smart City Demos Getters
 // =========================================================================
 
-// --- QSI Concepts ---
+// --- QSI Concepts (Now fetching from PilotProject where type='CONCEPT') ---
 router.get("/concepts", async (req, res) => {
   try {
-    const concepts = await prisma.qsiConcept.findMany({
-      where: { isActive: true },
+    const concepts = await prisma.pilotProject.findMany({
+      where: { 
+        isActive: true,
+        type: "CONCEPT"
+      },
       orderBy: { createdAt: "asc" },
     });
     res.json(concepts);
@@ -422,8 +425,11 @@ router.get("/concepts", async (req, res) => {
 router.get("/concepts/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const concept = await prisma.qsiConcept.findUnique({
-      where: { id: id },
+    const concept = await prisma.pilotProject.findUnique({
+      where: { 
+        id: id,
+        type: "CONCEPT"
+      },
     });
 
     if (!concept || !concept.isActive) {

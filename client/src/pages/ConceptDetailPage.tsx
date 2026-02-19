@@ -203,7 +203,7 @@ const ConceptDetailPage: React.FC = () => {
   }, []);
 
   // Simplified styles for brevity here, assuming token access
-    const styles = useMemo(() => {
+  const styles = useMemo(() => {
     const isMobile = !screens.md;
     const isTablet = screens.md && !screens.lg;
 
@@ -254,8 +254,8 @@ const ConceptDetailPage: React.FC = () => {
         fontSize: isMobile
           ? token.fontSizeHeading3
           : isTablet
-          ? token.fontSizeHeading2
-          : token.fontSizeHeading1,
+            ? token.fontSizeHeading2
+            : token.fontSizeHeading1,
       },
       pilotSubtitle: {
         fontSize: isMobile ? token.fontSize : token.fontSizeHeading4,
@@ -271,9 +271,8 @@ const ConceptDetailPage: React.FC = () => {
       contentHeadingH3: {
         color: token.colorText,
         fontSize: isMobile ? token.fontSizeHeading4 : token.fontSizeHeading3,
-        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${
-          token.margin
-        }px`,
+        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${token.margin
+          }px`,
         paddingBottom: `${token.paddingSM}px`,
         textDecoration: "underline",
         textDecorationColor: token.colorPrimary,
@@ -284,9 +283,8 @@ const ConceptDetailPage: React.FC = () => {
       contentHeadingH4: {
         color: token.colorText,
         fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${
-          token.marginSM
-        }px`,
+        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${token.marginSM
+          }px`,
         fontWeight: token.fontWeightStrong,
       },
       contentParagraph: {
@@ -397,7 +395,6 @@ const ConceptDetailPage: React.FC = () => {
       },
       engagementOptionCard: {
         border: `1px solid ${token.colorBorder}`,
-        borderRadius: token.borderRadiusLG,
         padding: `0px`,
         marginBottom: `${token.marginSM}px`,
         cursor: "pointer",
@@ -574,19 +571,19 @@ const ConceptDetailPage: React.FC = () => {
             {pilot.title}
           </Title>
 
-          {pilot.description && (
+          {pilot.subtext && (
             <Paragraph style={styles.pilotSubtitle}>
-              {/* Concept uses 'description' field in schema */}
-              {pilot.description.substring(0, 150)}...
+              {/* PilotProject uses 'subtext' */}
+              {pilot.subtext}
             </Paragraph>
           )}
         </header>
 
         {/* Content */}
         <article style={styles.pilotContent}>
-          {/* Concept schema has 'description' as text. Assuming it's markdown-capable */}
+          {/* PilotProject uses 'expandedView' for detail content */}
           <ReactMarkdown components={markdownComponents}>
-            {cleanMarkdown(pilot.description)}
+            {cleanMarkdown(pilot.expandedView)}
           </ReactMarkdown>
         </article>
 
@@ -615,9 +612,8 @@ const ConceptDetailPage: React.FC = () => {
                   height: screens.xs
                     ? token.controlHeight
                     : token.controlHeightLG,
-                  padding: `0 ${
-                    screens.xs ? token.padding : token.paddingLG
-                  }px`,
+                  padding: `0 ${screens.xs ? token.padding : token.paddingLG
+                    }px`,
                   minWidth: screens.xs ? "100%" : "auto",
                 }}
               >
@@ -635,9 +631,8 @@ const ConceptDetailPage: React.FC = () => {
                   height: screens.xs
                     ? token.controlHeight
                     : token.controlHeightLG,
-                  padding: `0 ${
-                    screens.xs ? token.padding : token.paddingLG
-                  }px`,
+                  padding: `0 ${screens.xs ? token.padding : token.paddingLG
+                    }px`,
                   minWidth: screens.xs ? "100%" : "auto",
                 }}
               >
