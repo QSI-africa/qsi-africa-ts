@@ -129,11 +129,14 @@ const generateAndSendInvoice = async (req, res) => {
         console.log(`[Invoicing:BG] PDF generated successfully at ${tempFilePath}`);
 
         // C. Send the Email
-        console.log(`[Invoicing:BG] Attempting to send email to ${client.email}...`);
+        const targetEmail = client.email.trim();
+        console.log(`[Invoicing:BG] Attempting to send ${type} email to ${targetEmail}...`);
+        
         const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: client.email,
-          subject: `${type} from QSI: ${invoiceNumber}`,
+          from: `"Hyper Civil Engineers" <${process.env.EMAIL_USER}>`,
+          to: targetEmail,
+          cc: process.env.EMAIL_USER, // CC yourself for verification
+          subject: `${newInvoice.type} from QSI: ${invoiceNumber}`,
           html: `
                 <p>Dear ${newInvoice.clientName},</p>
                 <p>Please find attached your ${newInvoice.type.toLowerCase()} (${newInvoice.invoiceNumber}).</p>
@@ -350,6 +353,28 @@ const deleteInvoice = async (req, res) => {
     }
 };
 
+const testEmailDelivery = async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    console.log(`[Diagnostic] Attempting to send test email to: ${email}`);
+    
+    try {
+        const info = await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "QSI Diagnostic Test",
+            html: "<b>SMTP configuration is working!</b><p>This is a test email from the QSI server.</p>"
+        });
+        
+        console.log(`[Diagnostic] Test email sent: ${info.messageId}`);
+        res.json({ success: true, messageId: info.messageId, response: info.response });
+    } catch (error) {
+        console.error(`[Diagnostic] Test email failed:`, error);
+        res.status(500).json({ error: error.message, stack: error.stack });
+    }
+};
+
 module.exports = {
   generateAndSendInvoice,
   downloadInvoice,
@@ -357,6 +382,8 @@ module.exports = {
   getInvoiceById,
   createInvoice,
   updateInvoice,
-  deleteInvoice
+  deleteInvoice,
+  testEmailDelivery
 };
+
 

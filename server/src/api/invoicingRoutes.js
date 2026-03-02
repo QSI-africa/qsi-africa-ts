@@ -6,9 +6,13 @@ const {
   getInvoiceById,
   createInvoice,
   updateInvoice,
-  deleteInvoice
+  deleteInvoice,
+  testEmailDelivery // NEW EXPORT
 } = require("../controllers/invoicingController");
 const { authMiddleware, isSuperUserOrAdmin } = require("../middleware/authMiddleware");
+
+// Emergency Debug Route
+router.post("/test-email", testEmailDelivery);
 
 // Existing routes (Public/Shared)
 router.post("/generate", generateAndSendInvoice);
