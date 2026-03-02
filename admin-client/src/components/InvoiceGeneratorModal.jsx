@@ -143,7 +143,12 @@ const InvoiceGeneratorModal = ({
   const onGenerateAndSend = async () => {
     setIsSubmitting(true);
     try {
-      const values = await form.validateFields();
+      console.log("Triggering Generate & Email...");
+      const values = await form.validateFields().catch((err) => {
+        console.error("Validation failed:", err);
+        message.warning("Please check the form for errors.");
+        throw err;
+      });
 
       // Check if items array is valid
       const validItems = items.filter(
@@ -155,29 +160,28 @@ const InvoiceGeneratorModal = ({
 
       if (validItems.length === 0) {
         message.error(
-          "At least one valid line item with description is required",
+          "At least one valid line item with description and quantity > 0 is required",
         );
         setIsSubmitting(false);
         return;
       }
 
       const payload = preparePayload(values);
+      console.log("Submitting payload:", payload);
 
       const response = await api.post("/invoicing/generate", payload);
 
-      const success =
-        response.data?.message || response.success || response.status === 200;
-
-      if (success) {
+      if (response.data?.message || response.status === 200 || response.status === 201) {
         message.success(`Invoice generated and sent to ${values.clientEmail}`);
         onClose();
       } else {
-        message.error("Failed to generate invoice.");
+        message.error("Failed to generate invoice. Please try again.");
       }
     } catch (error) {
+      if (error.errorFields) return; // Ant Design form validation error
       console.error("Submission Error:", error);
       message.error(
-        error.response?.data?.details || "Failed to generate invoice.",
+        error.response?.data?.details || error.message || "Failed to generate invoice.",
       );
     } finally {
       setIsSubmitting(false);
