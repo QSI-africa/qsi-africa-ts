@@ -95,6 +95,21 @@ const getExpectedRoleForAssignment = (taskStatus) => {
   }
 };
 
+// Maps each role to the task statuses they are responsible for acting on
+const ROLE_STATUS_MAP = {
+  ARCHITECT: ["PENDING_ARCHITECT_DESIGN"],
+  ENGINEER: ["PENDING_ENGINEER_DESIGN"],
+  QUANTITY_SURVEYOR: ["PENDING_QUANTIFYING"],
+};
+
+// Any user whose role matches the task's current required status can act on it
+const userCanActOnTask = (user, task) => {
+  if (!user || !task || task.status === "COMPLETED" || task.status === "REJECTED")
+    return false;
+  const allowedStatuses = ROLE_STATUS_MAP[user.role] || [];
+  return allowedStatuses.includes(task.status);
+};
+
 const getRoleIcon = (role) => {
   switch (role) {
     case "ARCHITECT":
@@ -420,8 +435,7 @@ const TaskDetailPage = () => {
   };
 
   const renderSubmitAction = () => {
-    if (!task || user.id !== task.assignedToId || task.status === "COMPLETED")
-      return null;
+    if (!userCanActOnTask(user, task)) return null;
 
     // ARCHITECT HAND-OFF: Goes to Engineer Design
     if (task.status === "PENDING_ARCHITECT_DESIGN") {
@@ -542,9 +556,8 @@ const TaskDetailPage = () => {
   };
 
   const renderTeamMemberUploader = () => {
-    if (user.role === "SUPER_USER" || !task || task.status === "COMPLETED")
-      return null;
-    if (user.id !== task.assignedToId) return null;
+    if (user.role === "SUPER_USER" || !task) return null;
+    if (!userCanActOnTask(user, task)) return null;
     let uploadType = null;
     if (task.status === "PENDING_ARCHITECT_DESIGN")
       uploadType = "ARCHITECT_DESIGN";
@@ -702,6 +715,18 @@ const TaskDetailPage = () => {
                 <Alert message="Awaiting Assignment" type="error" showIcon />
               )
             )}
+
+            {/* Role-based open task banner */}
+            {userCanActOnTask(user, task) && (
+              <Alert
+                style={{ marginTop: 12 }}
+                type="info"
+                showIcon
+                message="Open to your department"
+                description="This task is waiting for your department's action. You may upload documents and submit."
+              />
+            )}
+
             {user.role === "SUPER_USER" && canAssignTask(task) && (
               <Button
                 block

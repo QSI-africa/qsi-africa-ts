@@ -176,18 +176,14 @@ const DashboardPage = () => {
     fetchData();
   };
 
-  let filteredTasks = tasks.filter(
+  // Backend already scopes non-superuser results to their role's relevant tasks.
+  // We only need to apply the search filter here.
+  const filteredTasks = tasks.filter(
     (task) =>
       task.title?.toLowerCase().includes(searchText.toLowerCase()) ||
       task.status?.toLowerCase().includes(searchText.toLowerCase()) ||
       task.assignedTo?.name?.toLowerCase().includes(searchText.toLowerCase())
   );
-
-  if (!isSuperUser) {
-    filteredTasks = filteredTasks.filter(
-      (task) => task.assignedToId === user?.id || task.assignedToId === null
-    );
-  }
 
   const columns = [
     {
@@ -401,10 +397,16 @@ const DashboardPage = () => {
     },
   ];
 
-  // Updated Stats Calculation based on new logic
-  const pendingAssignedToMe = tasks.filter(
-    (task) =>
-      task.assignedToId === user?.id && PENDING_STATUSES.includes(task.status)
+  // Count tasks in my role's active status pool (for non-superusers)
+  const ROLE_ACTIVE_STATUSES = {
+    ARCHITECT: ["PENDING_ARCHITECT_DESIGN"],
+    ENGINEER: ["PENDING_ENGINEER_DESIGN"],
+    QUANTITY_SURVEYOR: ["PENDING_QUANTIFYING"],
+    SUPER_USER: PENDING_STATUSES,
+  };
+  const myRoleStatuses = ROLE_ACTIVE_STATUSES[user?.role] || [];
+  const myRoleTasks = tasks.filter(
+    (task) => myRoleStatuses.includes(task.status)
   ).length;
 
   // Count tasks in different stages
@@ -431,11 +433,11 @@ const DashboardPage = () => {
       tooltip: "All tasks in the system",
     },
     {
-      label: "Assigned to Me",
-      value: pendingAssignedToMe,
+      label: "My Role's Tasks",
+      value: myRoleTasks,
       color: token.colorWarning,
       icon: "👤",
-      tooltip: "Tasks currently assigned to you",
+      tooltip: isSuperUser ? "All pending tasks" : "Tasks in your role's active queue",
     },
     {
       label: "Pending Assignment",

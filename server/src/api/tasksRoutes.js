@@ -9,18 +9,23 @@ const fs = require("fs");
 // Apply auth middleware to all routes
 router.use(authMiddleware);
 
-// Helper to determine which statuses a role should see in the "pool"
+// Maps roles to the task statuses they are responsible for
 const getStatusesForRole = (role) => {
   switch (role) {
     case "ARCHITECT":
-      return ["PENDING_ARCHITECT_DESIGN", "PENDING_DESIGN"];
+      return ["PENDING_ARCHITECT_DESIGN"];
     case "ENGINEER":
-      return ["PENDING_ENGINEER_DESIGN", "PENDING_DESIGN"];
+      return ["PENDING_ENGINEER_DESIGN"];
     case "QUANTITY_SURVEYOR":
       return ["PENDING_QUANTIFYING"];
     default:
       return [];
   }
+};
+
+// Check if a user's role allows them to act on a task in its current status
+const userRoleMatchesTaskStatus = (userRole, taskStatus) => {
+  return getStatusesForRole(userRole).includes(taskStatus);
 };
 
 // GET /api/admin/tasks
@@ -34,15 +39,14 @@ router.get("/", async (req, res) => {
         req.user.role
       )
     ) {
-      // Show tasks explicitly assigned to me OR unassigned tasks in my role's queue
+      // Show tasks that are either:
+      // - Explicitly assigned to me (any status), OR
+      // - In a status that my role is responsible for (regardless of who is assigned)
       const roleStatuses = getStatusesForRole(req.user.role);
       whereClause = {
         OR: [
           { assignedToId: req.user.id },
-          {
-            assignedToId: null,
-            status: { in: roleStatuses },
-          },
+          { status: { in: roleStatuses } },
         ],
       };
     }
@@ -127,16 +131,15 @@ router.get("/:taskId", async (req, res) => {
       return res.status(404).json({ error: "Task not found." });
     }
 
-    // Security Check
+    // Security Check: role members can view tasks assigned to them OR matching their role's status
     const allowedRoles = ["TEAM_MEMBER", "ENGINEER", "ARCHITECT", "QUANTITY_SURVEYOR"];
     if (allowedRoles.includes(req.user.role)) {
-       const roleStatuses = getStatusesForRole(req.user.role);
-       const isAssignedToMe = task.assignedToId === req.user.id;
-       const isInMyPool = task.assignedToId === null && roleStatuses.includes(task.status);
-       
-       if (!isAssignedToMe && !isInMyPool) {
-          return res.status(403).json({ error: "Forbidden: You do not have access to this task." });
-       }
+      const isAssignedToMe = task.assignedToId === req.user.id;
+      const roleMatchesStatus = userRoleMatchesTaskStatus(req.user.role, task.status);
+
+      if (!isAssignedToMe && !roleMatchesStatus) {
+        return res.status(403).json({ error: "Forbidden: You do not have access to this task." });
+      }
     }
 
     res.json(task);
@@ -307,9 +310,12 @@ router.post(
         return res.status(404).json({ error: "Task not found." });
       }
 
-      // Authorization check
-      if (task.assignedToId !== req.user.id && req.user.role !== "SUPER_USER") {
-        // Clean up uploaded files
+      // Authorization check: the user must be SUPER_USER, explicitly assigned,
+      // OR have a role responsible for the task's current status
+      const isAssignedToMe = task.assignedToId === req.user.id;
+      const roleMatchesStatus = userRoleMatchesTaskStatus(req.user.role, task.status);
+
+      if (!isAssignedToMe && !roleMatchesStatus && req.user.role !== "SUPER_USER") {
         files.forEach((file) => {
           if (file.path) {
             fs.unlink(file.path, (err) => {
@@ -318,7 +324,7 @@ router.post(
           }
         });
         return res.status(403).json({
-          error: "Forbidden: You are not assigned to this task.",
+          error: "Forbidden: Your role does not have permission to upload to this task.",
         });
       }
 
@@ -340,30 +346,9 @@ router.post(
 
       const documents = await Promise.all(documentPromises);
 
-      // Update task status based on document type and current status
+      // Status is NOT changed on upload — the manual hand-off/submit buttons handle transitions.
+      // Upload is purely a document attachment. This prevents accidental status jumps.
       let nextStatus = task.status;
-
-      if (documentType === "ARCHITECT_DESIGN") {
-        // When an architect uploads, it stays in the Architect phase
-        // until they click the manual "Hand over to Engineer" button on the frontend.
-        nextStatus = "PENDING_ENGINEER_DESIGN";
-      } else if (documentType === "ENGINEER_DESIGN") {
-        // Only the Engineer's upload (or manual submit) moves it to Review.
-        nextStatus = "PENDING_DESIGN_APPROVAL";
-      } else if (
-        documentType === "QUOTATION" &&
-        task.status === "PENDING_QUANTIFYING"
-      ) {
-        nextStatus = "PENDING_FINAL_APPROVAL";
-      } else if (documentType === "REVISION") {
-        // If uploading revisions, move back to appropriate pending state
-        if (task.status.includes("APPROVAL")) {
-          const baseType = documentType.includes("ARCHITECT")
-            ? "ARCHITECT"
-            : "ENGINEER";
-          nextStatus = `PENDING_${baseType}_DESIGN`;
-        }
-      }
 
       // Only update task if status has changed
       if (nextStatus !== task.status) {
@@ -409,6 +394,64 @@ router.post(
     }
   }
 );
+
+// PUT /api/admin/tasks/:taskId/status  — Team member manual stage transition
+router.put("/:taskId/status", async (req, res) => {
+  const { taskId } = req.params;
+  const { status: nextStatus } = req.body;
+
+  if (!nextStatus) {
+    return res.status(400).json({ error: "'status' is required." });
+  }
+
+  try {
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) return res.status(404).json({ error: "Task not found." });
+
+    // Validate that the requesting user's role is responsible for the current status
+    const isSuperUserRole = req.user.role === "SUPER_USER";
+    const roleMatchesStatus = userRoleMatchesTaskStatus(req.user.role, task.status);
+
+    if (!isSuperUserRole && !roleMatchesStatus) {
+      return res.status(403).json({
+        error: "Forbidden: Your role cannot advance this task from its current status.",
+      });
+    }
+
+    // Define allowed transitions per current status
+    const allowedTransitions = {
+      PENDING_ARCHITECT_DESIGN: ["PENDING_ENGINEER_DESIGN"],
+      PENDING_ENGINEER_DESIGN: ["PENDING_DESIGN_APPROVAL"],
+      PENDING_QUANTIFYING: ["PENDING_FINAL_APPROVAL"],
+    };
+
+    const permitted = allowedTransitions[task.status] || [];
+    if (!permitted.includes(nextStatus)) {
+      return res.status(400).json({
+        error: `Cannot transition from ${task.status} to ${nextStatus}.`,
+      });
+    }
+
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: { status: nextStatus },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: "STATUS_ADVANCED",
+        details: { from: task.status, to: nextStatus },
+        taskId: taskId,
+        actorId: req.user.id,
+      },
+    });
+
+    res.json(updatedTask);
+  } catch (error) {
+    console.error("Failed to update task status:", error);
+    res.status(500).json({ error: "Failed to update task status." });
+  }
+});
 
 // PUT /api/admin/tasks/:taskId/approve
 router.put("/:taskId/approve", isSuperUser, async (req, res) => {
@@ -492,7 +535,7 @@ router.put("/:taskId/reject", isSuperUser, async (req, res) => {
     let rejectionRecipient = null;
 
     if (currentTask.status === "PENDING_DESIGN_APPROVAL") {
-      nextStatus = "PENDING_DESIGN"; // Send back to Engineer/Architect
+      nextStatus = "PENDING_ENGINEER_DESIGN"; // Send back to Engineer
       action = "DESIGN_REJECTED";
       rejectionRecipient = currentTask.assignedTo; // Notify the person whose work was rejected
       sendRejectionEmail = true;
