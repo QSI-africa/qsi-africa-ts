@@ -168,26 +168,29 @@ router.put("/:taskId/assign", isSuperUser, async (req, res) => {
     // =========================================
     // 🚀 MAIN STATUS TRANSITION ENGINE (ROLE BASED)
     // =========================================
-    switch (currentTask.status) {
-      case "PENDING_ASSIGNMENT":
-        if (role === "ARCHITECT") {
-          nextStatus = "PENDING_ARCHITECT_DESIGN";
-        } else if (role === "ENGINEER") {
-          nextStatus = "PENDING_ENGINEER_DESIGN";
-        } else if (role === "QUANTITY_SURVEYOR") {
-          nextStatus = "PENDING_QUANTIFYING";
-        } else {
-          return res.status(400).json({
-            error: "Only ARCHITECT, ENGINEER, or QUANTITY_SURVEYOR roles can be assigned initially.",
-          });
-        }
-        break;
+    const activeStates = [
+      "PENDING_ASSIGNMENT",
+      "PENDING_ARCHITECT_DESIGN",
+      "PENDING_ENGINEER_DESIGN",
+      "PENDING_QUANTIFYING",
+    ];
 
-      default:
-        // For now, only supporting initial assignment via this flow.
-        return res.status(400).json({
-          error: `Cannot assign task in ${currentTask.status} state.`,
-        });
+    if (!activeStates.includes(currentTask.status)) {
+      return res.status(400).json({
+        error: `Cannot assign task in ${currentTask.status} state.`,
+      });
+    }
+
+    if (role === "ARCHITECT") {
+      nextStatus = "PENDING_ARCHITECT_DESIGN";
+    } else if (role === "ENGINEER") {
+      nextStatus = "PENDING_ENGINEER_DESIGN";
+    } else if (role === "QUANTITY_SURVEYOR") {
+      nextStatus = "PENDING_QUANTIFYING";
+    } else {
+      return res.status(400).json({
+        error: "Only ARCHITECT, ENGINEER, or QUANTITY_SURVEYOR roles can be assigned.",
+      });
     }
 
     // =========================================
