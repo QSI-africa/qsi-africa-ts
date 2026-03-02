@@ -420,25 +420,16 @@ const InvoiceGeneratorModal = ({
           </Button>
 
           {!invoice && (
-            <Popconfirm
-              title="Confirm Action"
-              description="This will generate a PDF and email the client. Continue?"
-              onConfirm={onGenerateAndSend}
-              okText="Yes, Send"
-              cancelText="No"
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              loading={isSubmitting}
+              size="large"
+              style={{ paddingLeft: 40, paddingRight: 40 }}
+              onClick={onGenerateAndSend}
             >
-              <span style={{ cursor: 'pointer' }}>
-                <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  loading={isSubmitting}
-                  size="large"
-                  style={{ paddingLeft: 40, paddingRight: 40 }}
-                >
-                  Generate & Email
-                </Button>
-              </span>
-            </Popconfirm>
+              Generate & Email
+            </Button>
           )}
         </div>
       </Form>
