@@ -204,7 +204,7 @@ const SmartCityDemoDetail: React.FC = () => {
   }, []);
 
   // Simplified styles
-    const styles = useMemo(() => {
+  const styles = useMemo(() => {
     const isMobile = !screens.md;
     const isTablet = screens.md && !screens.lg;
 
@@ -255,8 +255,8 @@ const SmartCityDemoDetail: React.FC = () => {
         fontSize: isMobile
           ? token.fontSizeHeading3
           : isTablet
-          ? token.fontSizeHeading2
-          : token.fontSizeHeading1,
+            ? token.fontSizeHeading2
+            : token.fontSizeHeading1,
       },
       pilotSubtitle: {
         fontSize: isMobile ? token.fontSize : token.fontSizeHeading4,
@@ -272,9 +272,8 @@ const SmartCityDemoDetail: React.FC = () => {
       contentHeadingH3: {
         color: token.colorText,
         fontSize: isMobile ? token.fontSizeHeading4 : token.fontSizeHeading3,
-        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${
-          token.margin
-        }px`,
+        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${token.margin
+          }px`,
         paddingBottom: `${token.paddingSM}px`,
         textDecoration: "underline",
         textDecorationColor: token.colorPrimary,
@@ -285,9 +284,8 @@ const SmartCityDemoDetail: React.FC = () => {
       contentHeadingH4: {
         color: token.colorText,
         fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${
-          token.marginSM
-        }px`,
+        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${token.marginSM
+          }px`,
         fontWeight: token.fontWeightStrong,
       },
       contentParagraph: {
@@ -404,7 +402,6 @@ const SmartCityDemoDetail: React.FC = () => {
         cursor: "pointer",
         transition: "all 0.3s ease",
         background: token.colorBgContainer,
-        borderRadius: token.borderRadius,
       },
       engagementOptionCardSelected: {
         border: `2px solid ${token.colorPrimary}`,
@@ -433,7 +430,7 @@ const SmartCityDemoDetail: React.FC = () => {
         <Title level={4} style={styles.contentHeadingH4} {...props} />
       ),
       p: (props: any) => <Paragraph style={styles.contentParagraph} {...props} />,
-// ... (Shortened for brevity, use same components)
+      // ... (Shortened for brevity, use same components)
       code: ({ inline, ...props }: any) => {
         if (inline) {
           return <code style={styles.contentCodeInline} {...props} />;
@@ -537,7 +534,7 @@ const SmartCityDemoDetail: React.FC = () => {
         {/* Content */}
         <article style={styles.pilotContent}>
           <ReactMarkdown components={markdownComponents}>
-             {/* Uses fullDescription from schema */}
+            {/* Uses fullDescription from schema */}
             {cleanMarkdown(demo.fullDescription || demo.shortDescription)}
           </ReactMarkdown>
         </article>
@@ -546,27 +543,27 @@ const SmartCityDemoDetail: React.FC = () => {
         <Divider style={{ borderColor: token.colorBorderSecondary }} />
 
         {demo.engagementEnabled && (
-        <footer style={{ marginTop: `${token.marginXL}px` }}>
-          <Card style={styles.ctaCard}>
-            <Title level={screens.xs ? 5 : 4} style={styles.ctaTitle}>
-              Engage with this Demonstrator
-            </Title>
-            <div style={styles.ctaActions}>
-              <Button
-                type="primary"
-                size={screens.xs ? "middle" : "large"}
-                onClick={openEngagementModal}
-                icon={<MessageOutlined />}
-                style={{
-                  height: screens.xs ? token.controlHeight : token.controlHeightLG,
-                  padding: `0 ${screens.xs ? token.padding : token.paddingLG}px`,
-                }}
-              >
-                I am interested
-              </Button>
-            </div>
-          </Card>
-        </footer>
+          <footer style={{ marginTop: `${token.marginXL}px` }}>
+            <Card style={styles.ctaCard}>
+              <Title level={screens.xs ? 5 : 4} style={styles.ctaTitle}>
+                Engage with this Demonstrator
+              </Title>
+              <div style={styles.ctaActions}>
+                <Button
+                  type="primary"
+                  size={screens.xs ? "middle" : "large"}
+                  onClick={openEngagementModal}
+                  icon={<MessageOutlined />}
+                  style={{
+                    height: screens.xs ? token.controlHeight : token.controlHeightLG,
+                    padding: `0 ${screens.xs ? token.padding : token.paddingLG}px`,
+                  }}
+                >
+                  I am interested
+                </Button>
+              </div>
+            </Card>
+          </footer>
         )}
       </div>
 
@@ -608,11 +605,11 @@ const SmartCityDemoDetail: React.FC = () => {
                     onClick={() => handleEngagementTypeChange(option.value)}
                   >
                     <div style={{ display: "flex", gap: "12px", padding: "12px" }}>
-                       <div style={{ color: option.color, fontSize: "20px" }}>{option.icon}</div>
-                       <div>
-                         <Text strong>{option.label}</Text><br/>
-                         <Text type="secondary" style={{fontSize:"12px"}}>{option.description}</Text>
-                       </div>
+                      <div style={{ color: option.color, fontSize: "20px" }}>{option.icon}</div>
+                      <div>
+                        <Text strong>{option.label}</Text><br />
+                        <Text type="secondary" style={{ fontSize: "12px" }}>{option.description}</Text>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -622,14 +619,14 @@ const SmartCityDemoDetail: React.FC = () => {
 
           <Divider>Contact Details</Divider>
           <Form.Item name="contactName" label="Name" rules={[{ required: true }]}>
-             <Input prefix={<UserOutlined />} />
+            <Input prefix={<UserOutlined />} />
           </Form.Item>
           <Form.Item name="contactEmail" label="Email" rules={[{ required: true, type: 'email' }]}>
-             <Input prefix={<MailOutlined />} />
+            <Input prefix={<MailOutlined />} />
           </Form.Item>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
             <Button onClick={closeEngagementModal}>Cancel</Button>
-             <Button type="primary" htmlType="submit" loading={engagementLoading}>Submit</Button>
+            <Button type="primary" htmlType="submit" loading={engagementLoading}>Submit</Button>
           </div>
         </Form>
       </Modal>

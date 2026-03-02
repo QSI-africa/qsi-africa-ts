@@ -889,7 +889,7 @@ export const lightTheme = {
       withoutTimeCellHeight: 66,
       cellBorderRadius: 8,
       cellHoverBg: "rgba(46, 204, 113, 0.08)",
-      cellActiveWithRangeBg: "rgba(46, 204, 113, 0.12)",
+      cellActiveWithRangeBg: colors.vibrantGreenBg,
       cellHoverWithRangeBg: "rgba(46, 204, 113, 0.06)",
       cellRangeBorderColor: colors.vibrantGreen,
       cellBgDisabled: colors.lightGray,
@@ -900,7 +900,6 @@ export const lightTheme = {
       activeBg: colors.vibrantGreen,
       activeBorderColor: colors.vibrantGreen,
       activeShadow: "0 0 0 2px rgba(46, 204, 113, 0.1)",
-      cellActiveWithRangeBg: colors.vibrantGreenBg,
     },
 
     // Divider Component
@@ -1961,7 +1960,6 @@ export const darkTheme = {
       activeBg: colors.vibrantGreen,
       activeBorderColor: colors.vibrantGreen,
       activeShadow: "0 0 0 2px rgba(46, 204, 113, 0.15)",
-      cellActiveWithRangeBg: "rgba(46, 204, 113, 0.15)",
     },
 
     // Divider Component
