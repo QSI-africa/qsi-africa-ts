@@ -174,9 +174,11 @@ router.put("/:taskId/assign", isSuperUser, async (req, res) => {
           nextStatus = "PENDING_ARCHITECT_DESIGN";
         } else if (role === "ENGINEER") {
           nextStatus = "PENDING_ENGINEER_DESIGN";
+        } else if (role === "QUANTITY_SURVEYOR") {
+          nextStatus = "PENDING_QUANTIFYING";
         } else {
           return res.status(400).json({
-            error: "Only ARCHITECT or ENGINEER roles can be assigned initially.",
+            error: "Only ARCHITECT, ENGINEER, or QUANTITY_SURVEYOR roles can be assigned initially.",
           });
         }
         break;

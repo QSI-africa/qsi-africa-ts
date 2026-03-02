@@ -12,7 +12,7 @@ import {
   theme,
   Input,
 } from "antd";
-import { UserOutlined, TeamOutlined, RocketOutlined, ApartmentOutlined, BuildOutlined } from "@ant-design/icons";
+import { UserOutlined, TeamOutlined, RocketOutlined, ApartmentOutlined, BuildOutlined, CalculatorOutlined } from "@ant-design/icons";
 import api from "../api";
 
 const { Option } = Select;
@@ -109,6 +109,7 @@ const AssignTaskModal = ({
   const roleOptions = [
     { value: "ARCHITECT", label: "Architecture Department", icon: <ApartmentOutlined /> },
     { value: "ENGINEER", label: "Engineering Department", icon: <BuildOutlined /> },
+    { value: "QUANTITY_SURVEYOR", label: "Quantity Surveying Dept", icon: <CalculatorOutlined /> },
   ];
 
   return (
