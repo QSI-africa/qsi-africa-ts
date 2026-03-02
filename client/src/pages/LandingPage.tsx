@@ -223,6 +223,12 @@ const CustomHeader = React.memo(() => {
 
   const isMobile = windowWidth <= MOBILE_BREAKPOINT;
 
+  // Explicit map for nav links that don't match the auto-slug pattern
+  const NAV_ROUTE_MAP: Record<string, string> = {
+    "About QSI": "/about-us",
+    "Contact Us": "/contact-us",
+  };
+
   const handleNavClick = useCallback(
     (link) => {
       if (link === "Modules" || link === "Pilots") {
@@ -230,8 +236,10 @@ const CustomHeader = React.memo(() => {
         const element = document.getElementById(sectionId);
         element?.scrollIntoView({ behavior: "smooth" });
       } else {
-        const sectionId = link.toLowerCase().replace(" ", "-");
-        navigate(`/${sectionId}`);
+        // Use explicit route map first, fall back to auto-slug
+        const route =
+          NAV_ROUTE_MAP[link] || `/${link.toLowerCase().replace(/\s+/g, "-")}`;
+        navigate(route);
       }
       setDrawerOpen(false);
     },

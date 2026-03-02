@@ -105,8 +105,9 @@ const SidebarContent = ({
   );
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <div style={{ marginBottom: "24px", flexShrink: 0 }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Back button + Module header - fixed at top */}
+      <div style={{ flexShrink: 0 }}>
         <Link to="/">
           <Button
             type="text"
@@ -138,6 +139,7 @@ const SidebarContent = ({
             color: token.colorTextSecondary,
             fontSize: "13px",
             margin: 0,
+            marginBottom: "24px",
           }}
         >
           {moduleName === "infrastructure"
@@ -149,13 +151,15 @@ const SidebarContent = ({
       </div>
 
       {fetchedSuggestions && fetchedSuggestions.length > 0 && (
-        <div style={{ marginBottom: "24px", flexShrink: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+          {/* Suggestions label - fixed */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "8px",
               marginBottom: "16px",
+              flexShrink: 0,
             }}
           >
             <BulbOutlined
@@ -174,8 +178,16 @@ const SidebarContent = ({
               Suggestions
             </Paragraph>
           </div>
+          {/* Scrollable suggestions list */}
           <div
-            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              overflowY: "auto",
+              flex: 1,
+              paddingRight: "4px",
+            }}
           >
             {fetchedSuggestions.map((suggestion, index) => (
               <button
@@ -628,13 +640,12 @@ const ChatWindow: React.FC = () => {
   useEffect(() => {
     const initialMessage = {
       sender: "ai",
-      text: `Welcome, ${contactInfo.name}. ${
-        moduleName === "infrastructure"
+      text: `Welcome, ${contactInfo.name}. ${moduleName === "infrastructure"
           ? "What infrastructure project are you considering today?"
           : moduleName === "healing"
             ? "What are you currently experiencing?"
             : "I'm excited to help you create impact. What's your vision today?"
-      }`,
+        }`,
     };
     setMessages([initialMessage]);
   }, [contactInfo.name, moduleName]);
@@ -857,9 +868,8 @@ const ChatWindow: React.FC = () => {
                 type="primary"
                 onClick={() => setRightDrawerVisible(true)}
                 style={{ color: token.colorText, padding: 6 }}
-                aria-label={`Open ${
-                  moduleName === "healing" ? "packages" : "QSI concepts"
-                }`}
+                aria-label={`Open ${moduleName === "healing" ? "packages" : "QSI concepts"
+                  }`}
               >
                 {moduleName === "healing" ? "Packages" : "QSI Concepts"}
               </Button>
@@ -965,13 +975,13 @@ const ChatWindow: React.FC = () => {
             <HealingPackagesSidebar
               packages={fetchedPackages}
               onPackageClick={handlePackageClick}
-              isMobile={true}
+              isMobile={false}
             />
           ) : (
             <PilotProjectsSidebar
               pilots={pilotProjects}
               onPilotClick={handleSuggestionClick}
-              isMobile={true}
+              isMobile={false}
             />
           )}
         </div>

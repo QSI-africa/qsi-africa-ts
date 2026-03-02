@@ -1,5 +1,5 @@
 // client/src/pages/LoginPage.jsx
-import React, { useState  } from 'react';
+import React, { useState } from 'react';
 import {
   Form,
   Input,
@@ -10,7 +10,7 @@ import {
   Alert,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const { Title } = Typography;
@@ -21,6 +21,7 @@ const LoginPage: React.FC = () => {
   const { message } = AntApp.useApp();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -28,7 +29,9 @@ const LoginPage: React.FC = () => {
     try {
       await login(values.email, values.password);
       message.success("Login Successful!");
-      navigate(-1); // Redirect to homepage (App.jsx will handle onboarding check)
+      // Redirect to the page the user was trying to visit, or to home
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     } catch (err) {
       console.error("Login Failed:", err);
       setError(
