@@ -70,15 +70,30 @@ const InvoiceGeneratorModal = ({
         }
       } else {
         // Create Mode (Pre-fill client if provided)
+        let name = initialClient.name || "";
+        let email = initialClient.email || "";
+
+        // Robust parsing for "Name <email>" format if email field contains the combined string
+        if (email && email.includes("<") && email.includes(">")) {
+          const match = email.match(/^(.*)<(.*)>$/);
+          if (match) {
+            // Use the name from the string if name prop is empty
+            if (!name || name === "Client") {
+              name = match[1].trim();
+            }
+            email = match[2].trim();
+          }
+        }
+
         form.setFieldsValue({
-          clientName: initialClient.name,
-          clientEmail: initialClient.email,
+          clientName: name,
+          clientEmail: email,
           invoiceType: "QUOTATION",
         });
       }
       initialValuesSet.current = true;
     }
-  }, []); // Empty dependency array - run only once on mount
+  }, [initialClient, invoice, form]); // Added dependencies for clarity, though current logic runs once via ref
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);

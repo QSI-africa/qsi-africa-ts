@@ -776,7 +776,7 @@ const TaskDetailPage = () => {
             fetchTask();
           }}
           initialClient={{
-            name: task.submission?.contactName || "",
+            name: "", // Modal will parse from email field if empty
             email: task.submission?.contactInfo || "",
           }}
         />
