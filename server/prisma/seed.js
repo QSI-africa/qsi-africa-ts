@@ -10,13 +10,13 @@ const pilots = [
   // ========== FRAMEWORKS ==========
   {
     key: "udmp",
-    title: "Urban Decongestion & Mobility Planning (UDMP)",
+    title: "Urban Decongestion & Mobility Planning (UDMP) Demo",
     subtext: "Intelligent mobility for a coherent continent.",
     shortDescription:
-      "UDMP is a continental mobility framework that redefines urban motion as a field of coherence — integrating transport, spatial planning, and human behavior into a single intelligent system. It decentralizes congestion, optimizes citywide movement, and aligns infrastructure with dignity, ecology, and cultural identity.",
+      "UDMP is a continental mobility demo that redefines urban motion as a field of coherence — integrating transport, spatial planning, and human behavior into a single intelligent system. It decentralizes congestion, optimizes citywide movement, and aligns infrastructure with dignity, ecology, and cultural identity.",
     expandedView: `
 ### 1. Vision
-Across Africa's fast-growing cities, congestion is not just a traffic issue — it's a systems issue. UDMP re-engineers this by treating the city as a living organism, where roads, drainage, zoning, and human movement function as one interdependent ecosystem. Rooted in QSI principles — coherence, resonance, and least action — the framework enables urban transformation that mirrors nature's efficiency and balance.
+Across Africa's fast-growing cities, congestion is not just a traffic issue — it's a systems issue. UDMP re-engineers this by treating the city as a living organism, where roads, drainage, zoning, and human movement function as one interdependent ecosystem. Rooted in QSI principles — coherence, resonance, and least action — the demo enables urban transformation that mirrors nature's efficiency and balance.
 
 "When a city breathes coherently, its people move in harmony."
 
@@ -51,11 +51,14 @@ UDMP acts as the mobility backbone for other QSI frameworks — linking to:
 UDMP transforms motion into meaning — creating fluid, intelligent, and human-centered cities across Africa. It's more than traffic reform; it's a coherence model for the urban soul.
     `,
     isActive: true,
-    type: "FRAMEWORK",
+    type: "DEMO",
+    city: "Continental",
+    status: "ACTIVE",
+    engagementEnabled: true,
   },
   {
     key: "future_pavilion",
-    title: "The Future Pavilion Framework",
+    title: "The Future Pavilion Demo",
     subtext: "Sustainable Civic Architecture for Africa's New Identity",
     shortDescription:
       "The Future Pavilion is a replicable civic infrastructure framework that merges sustainability, education, and culture into one living system. Each Pavilion serves as a multi-use arena, green innovation hub, and cultural landmark — built to inspire youth, host communities, and symbolize Africa's conscious evolution.",
@@ -100,11 +103,14 @@ The Future Pavilion framework envisions a new class of civic architecture across
 The Future Pavilion Framework is not a single building — it's a continent-wide template for conscious infrastructure. It bridges education, innovation, and identity — proving that Africa's future is not only sustainable but also spiritually and culturally coherent.
     `,
     isActive: true,
-    type: "FRAMEWORK",
+    type: "DEMO",
+    city: "Continental",
+    status: "ACTIVE",
+    engagementEnabled: true,
   },
   {
     key: "workforce_remote",
-    title: "Workforce Remote Optimization Framework",
+    title: "Workforce Remote Optimization Demo",
     subtext: "Redesigning Productivity for a Decentralized Africa",
     shortDescription:
       "The Workforce Remote Optimization Framework transforms how Africa works, learns, and collaborates — shifting productivity from congested centers to localized, digitally connected innovation hubs. It integrates smart infrastructure, hybrid work systems, and consciousness-based management to create a balanced workforce model that saves energy, empowers talent, and aligns with the rhythm of nature.",
@@ -150,11 +156,14 @@ Africa's economic potential is vast — yet millions lose time, energy, and crea
 The Workforce Remote Optimization Framework is more than a productivity strategy — it is a shift in civilization logic. It replaces exhaustion with efficiency, noise with flow, and competition with coherence. Africa's future workforce will not be defined by location — but by alignment.
     `,
     isActive: true,
-    type: "FRAMEWORK",
+    type: "DEMO",
+    city: "Continental",
+    status: "ACTIVE",
+    engagementEnabled: true,
   },
   {
     key: "smart_city_framework",
-    title: "Smart City Demonstrators Framework",
+    title: "Smart City Demonstrators Demo",
     subtext: "Scalable smart city systems grounded in coherence.",
     shortDescription:
       "The Smart City Demonstrators Framework establishes scalable, regenerative prototypes that model how African settlements can evolve intelligently — where energy, waste, water, housing, and economy function as one living ecosystem. Each Demonstrator is a self-contained pilot city or district that blends QSI principles, digital systems, and cultural design to show how coherence can be built from the ground up.",
@@ -199,11 +208,14 @@ Across Africa, rapid urbanization often outpaces planning. The Smart City Demons
 Smart City Demonstrators are not projects — they are proofs of coherence. They show that Africa's next generation of cities will not just be smart — they will be spiritually intelligent, economically regenerative, and human at their core.
     `,
     isActive: true,
-    type: "FRAMEWORK",
+    type: "DEMO",
+    city: "Continental",
+    status: "ACTIVE",
+    engagementEnabled: true,
   },
   {
     key: "roots_architecture",
-    title: "Roots Architectural Framework",
+    title: "Roots Architectural Demo",
     subtext: "Building the Future from Tradition",
     shortDescription:
       "The Roots Framework redefines African architecture by returning to its ancestral intelligence — using local materials, natural geometry, and community planning to build sustainable, human-centered spaces. It merges indigenous wisdom with modern engineering to produce homes, schools, and civic spaces that breathe, balance, and belong.",
@@ -243,7 +255,10 @@ Modern architecture often disconnects people from land, culture, and climate. Ro
 The Roots Architectural Framework reconnects architecture with ancestry. It proves that Africa's path to sustainable development is not in imitation — it is in remembering.
     `,
     isActive: true,
-    type: "FRAMEWORK",
+    type: "DEMO",
+    city: "Continental",
+    status: "ACTIVE",
+    engagementEnabled: true,
   },
 
   // ========== CONCEPTS ==========
@@ -297,6 +312,7 @@ FutureCraft Cooperative is where design becomes consciousness in motion. It merg
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
   {
     key: "heritage_flame",
@@ -356,6 +372,7 @@ Heritage Flame is the taste of home — engineered for the world. It transforms 
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
   {
     key: "quantum_move",
@@ -411,6 +428,7 @@ Quantum Move is not a film to watch — it is a frequency to feel. It collapses 
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
   {
     key: "solarflame",
@@ -463,6 +481,7 @@ SolarFlame turns every journey into renewal — where energy, culture, and consc
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
   {
     key: "trail_coherence",
@@ -506,6 +525,7 @@ This system creates a mutual benefit loop: QSI and Pan African Engineers gain ef
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
   {
     key: "placebo",
@@ -562,6 +582,7 @@ Placebo is more than clothing — it's self-awareness woven into fabric. It brin
     `,
     isActive: true,
     type: "CONCEPT",
+    engagementEnabled: true,
   },
 ];
 
@@ -584,7 +605,7 @@ async function main() {
   });
   console.log(`Upserted super user: ${superUser.email}`);
 
-  // --- Seed Pilot Projects (Concepts & Frameworks) ---
+  // --- Seed Pilot Projects (Concepts & Demos) ---
   console.log(`Seeding ${pilots.length} pilot projects...`);
   for (const pilot of pilots) {
     const seededPilot = await prisma.pilotProject.upsert({
@@ -596,6 +617,9 @@ async function main() {
         expandedView: pilot.expandedView,
         isActive: pilot.isActive,
         type: pilot.type,
+        city: pilot.city || null,
+        status: pilot.status || "PROPOSED",
+        engagementEnabled: pilot.engagementEnabled || false,
       },
       create: {
         key: pilot.key,
@@ -605,6 +629,9 @@ async function main() {
         expandedView: pilot.expandedView,
         isActive: pilot.isActive,
         type: pilot.type,
+        city: pilot.city || null,
+        status: pilot.status || "PROPOSED",
+        engagementEnabled: pilot.engagementEnabled || false,
       },
     });
     console.log(
@@ -612,10 +639,10 @@ async function main() {
     );
   }
 
-  const frameworksCount = pilots.filter((p) => p.type === "FRAMEWORK").length;
+  const demosCount = pilots.filter((p) => p.type === "DEMO").length;
   const conceptsCount = pilots.filter((p) => p.type === "CONCEPT").length;
   console.log(
-    `Seeding completed: ${frameworksCount} frameworks, ${conceptsCount} concepts`
+    `Seeding completed: ${demosCount} demos, ${conceptsCount} concepts`
   );
 
   console.log("Seeding finished.");

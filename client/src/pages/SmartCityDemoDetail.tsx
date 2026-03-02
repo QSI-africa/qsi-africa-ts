@@ -1,6 +1,6 @@
 // src/pages/SmartCityDemoDetail.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Spin,
   Typography,
@@ -16,19 +16,14 @@ import {
   Input,
   message,
   Radio,
-  List,
-  Avatar,
 } from "antd";
 import {
   ArrowLeftOutlined,
-  CalendarOutlined,
   UserOutlined,
   MailOutlined,
-  PhoneOutlined,
   MessageOutlined,
   TeamOutlined,
   BulbOutlined,
-  SendOutlined,
   EnvironmentOutlined
 } from "@ant-design/icons";
 import axios from "axios";
@@ -39,7 +34,6 @@ import ReactMarkdown from "react-markdown";
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 const { useToken } = theme;
-const { TextArea } = Input;
 
 const SmartCityDemoDetail: React.FC = () => {
   const { id } = useParams(); // Using ID from URL
@@ -54,17 +48,6 @@ const SmartCityDemoDetail: React.FC = () => {
   const navigate = useNavigate();
   const [selectedEngagementType, setSelectedEngagementType] =
     useState<string>("partner");
-
-  // Theme mode detection - memoized
-  const { isDarkMode, mode } = useMemo(() => {
-    const isDarkMode =
-      token.colorBgBase === "#1a2332" || token.colorBgContainer === "#0f1621";
-    return {
-      isDarkMode,
-      isLightMode: !isDarkMode,
-      mode: isDarkMode ? "dark" : "light",
-    };
-  }, [token.colorBgBase, token.colorBgContainer]);
 
   // Engagement options - tailored for Demos
   const engagementOptions = useMemo(
@@ -141,7 +124,7 @@ const SmartCityDemoDetail: React.FC = () => {
 
         const payload = {
           pilotKey: id, // Sending ID as key
-          pilotTitle: demo?.name, // Use name as title
+          pilotTitle: demo?.title, // Use title as title
           engagementType: values.engagementType,
           customIntent: values.customIntent,
           message: values.message,
@@ -195,14 +178,6 @@ const SmartCityDemoDetail: React.FC = () => {
     }
   }, [fetchDemoDetail, id]);
 
-  const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }, []);
-
   // Simplified styles
   const styles = useMemo(() => {
     const isMobile = !screens.md;
@@ -228,14 +203,14 @@ const SmartCityDemoDetail: React.FC = () => {
         border: `1px solid ${token.colorBorder}`,
       },
       errorCard: {
-        textAlign: "center",
+        textAlign: "center" as any,
         padding: isMobile
           ? `${token.paddingXL}px ${token.padding}px`
           : `${token.paddingXL * 2}px ${token.paddingXL}px`,
       },
       pilotMeta: {
         display: "flex",
-        flexDirection: isMobile ? "column" : "row",
+        flexDirection: (isMobile ? "column" : "row") as any,
         alignItems: isMobile ? "flex-start" : "center",
         gap: `${token.marginSM}px`,
         marginBottom: `${token.marginLG}px`,
@@ -332,7 +307,7 @@ const SmartCityDemoDetail: React.FC = () => {
         padding: isMobile ? `${token.padding}px` : `${token.paddingLG}px`,
         borderRadius: token.borderRadius,
         margin: `${token.margin}px 0`,
-        overflowX: "auto",
+        overflowX: "auto" as any,
         fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
         fontSize: "0.85em",
         lineHeight: 1.5,
@@ -342,7 +317,7 @@ const SmartCityDemoDetail: React.FC = () => {
         border: "none",
         boxShadow: token.boxShadowTertiary,
         borderRadius: token.borderRadiusLG,
-        textAlign: "center",
+        textAlign: "center" as const,
         background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorInfo} 100%)`,
       },
       ctaTitle: {
@@ -359,7 +334,7 @@ const SmartCityDemoDetail: React.FC = () => {
       },
       ctaActions: {
         display: "flex",
-        flexDirection: isMobile ? "column" : "row",
+        flexDirection: (isMobile ? "column" : "row") as any,
         gap: `${token.marginSM}px`,
         justifyContent: "center",
         alignItems: "center",
@@ -389,7 +364,7 @@ const SmartCityDemoDetail: React.FC = () => {
           : token.colorFillSecondary,
         color: demo?.isActive ? token.colorSuccess : token.colorTextSecondary,
         border: "none",
-        fontWeight: token.fontWeightMedium,
+        fontWeight: 500,
         padding: "4px 12px",
         margin: 0,
         borderRadius: token.borderRadiusSM,
@@ -493,7 +468,7 @@ const SmartCityDemoDetail: React.FC = () => {
           size={screens.xs ? "middle" : "large"}
           style={{
             color: token.colorPrimary,
-            fontWeight: token.fontWeightMedium,
+            fontWeight: "500",
           }}
           onClick={() => navigate("/demos")}
         >
@@ -521,7 +496,7 @@ const SmartCityDemoDetail: React.FC = () => {
             level={screens.xs ? 4 : screens.md ? 2 : 1}
             style={styles.pilotTitle}
           >
-            {demo.name}
+            {demo.title}
           </Title>
 
           {demo.shortDescription && (
@@ -534,8 +509,8 @@ const SmartCityDemoDetail: React.FC = () => {
         {/* Content */}
         <article style={styles.pilotContent}>
           <ReactMarkdown components={markdownComponents}>
-            {/* Uses fullDescription from schema */}
-            {cleanMarkdown(demo.fullDescription || demo.shortDescription)}
+            {/* Uses expandedView from schema */}
+            {cleanMarkdown(demo.expandedView || demo.shortDescription)}
           </ReactMarkdown>
         </article>
 
@@ -569,7 +544,7 @@ const SmartCityDemoDetail: React.FC = () => {
 
       {/* Engagement Modal */}
       <Modal
-        title={`Engage with ${demo.name}`}
+        title={`Engage with ${demo.title}`}
         open={engagementModalVisible}
         onCancel={closeEngagementModal}
         footer={null}

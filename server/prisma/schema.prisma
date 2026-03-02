@@ -36,8 +36,8 @@ enum InvoiceStatus {
 }
 
 enum PilotType {
-  CONCEPT // Actionable case
-  FRAMEWORK // Template
+  CONCEPT
+  DEMO
 }
 
 model User {
@@ -236,9 +236,14 @@ model PilotProject {
   shortDescription String   @db.Text
   expandedView     String   @db.Text
   isActive         Boolean  @default(true)
-  type             String
+  type             PilotType @default(CONCEPT)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  // New fields for Demos
+  city              String?
+  status            String?  @default("PROPOSED")
+  engagementEnabled Boolean  @default(false)
 }
 
 model QsiConcept {

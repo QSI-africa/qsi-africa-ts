@@ -80,12 +80,10 @@ const SmartCityDemosPage: React.FC = () => {
 
   const getBackgroundGradient = () => {
     return `
-      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${
-      token.colorPrimary
-    }20 20%,  ${token.colorBgContainer} 60%),
-      radial-gradient(circle at ${100 - mousePosition.x}% ${
-      100 - mousePosition.y
-    }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
+      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
+      }20 20%,  ${token.colorBgContainer} 60%),
+      radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
+      }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
       ${token.colorBgContainer}
     `;
   };
@@ -125,7 +123,6 @@ const SmartCityDemosPage: React.FC = () => {
         }}
       >
         <Title
-          strong
           level={2}
           style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}
         >
@@ -192,24 +189,25 @@ const SmartCityDemosPage: React.FC = () => {
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
+                      padding: "12px",
                       justifyContent: "space-between",
                     }}
                   >
                     <div>
-                      <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                         <Title level={5} style={{ marginBottom: "8px" }}>
-                           <LuFrame
-                             style={{
-                               marginRight: "8px",
-                               color: token.colorPrimary,
-                             }}
-                           />
-                           {demo.name}
-                         </Title>
-                         {/* Status Icon could go here */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Title level={5} style={{ marginBottom: "8px" }}>
+                          <LuFrame
+                            style={{
+                              marginRight: "8px",
+                              color: token.colorPrimary,
+                            }}
+                          />
+                          {demo.title}
+                        </Title>
+                        {/* Status Icon could go here */}
                       </div>
-                      
-                      {demo.city && <Text type="secondary" style={{display:'block', marginBottom: 8}}>{demo.city}</Text>}
+
+                      {demo.city && <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>{demo.city}</Text>}
                       {demo.status && (
                         <Text style={{ fontSize: '12px', color: demo.status === 'ACTIVE' ? 'green' : 'orange' }}>
                           {demo.status === 'ACTIVE' ? <CheckCircleOutlined /> : <ClockCircleOutlined />} {demo.status}
@@ -224,7 +222,7 @@ const SmartCityDemosPage: React.FC = () => {
                           marginTop: "16px",
                           marginBottom: "16px",
                         }}
-                        ellipsis={{ rows: 3 }}
+                        ellipsis={{ rows: 5 }}
                       >
                         {demo.shortDescription}
                       </Paragraph>
@@ -251,7 +249,7 @@ const SmartCityDemosPage: React.FC = () => {
           </Row>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

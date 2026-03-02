@@ -440,11 +440,31 @@ router.get("/concepts/:id", async (req, res) => {
   }
 });
 
-// --- Smart City Demos ---
+// --- Smart City Demos (Now fetching from PilotProject where type='DEMO') ---
 router.get("/demos", async (req, res) => {
   try {
-    const demos = await prisma.smartCityDemonstrator.findMany({
-      where: { isActive: true },
+    const demos = await prisma.pilotProject.findMany({
+      where: { 
+        isActive: true,
+        type: "DEMO"
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json(demos);
+  } catch (error) {
+    console.error("Failed to fetch demos:", error);
+    res.status(500).json({ error: "Failed to fetch demos." });
+  }
+});
+
+// Alias for singular /demo
+router.get("/demo", async (req, res) => {
+  try {
+    const demos = await prisma.pilotProject.findMany({
+      where: { 
+        isActive: true,
+        type: "DEMO"
+      },
       orderBy: { createdAt: "asc" },
     });
     res.json(demos);
@@ -457,8 +477,32 @@ router.get("/demos", async (req, res) => {
 router.get("/demos/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const demo = await prisma.smartCityDemonstrator.findUnique({
-      where: { id: id },
+    const demo = await prisma.pilotProject.findUnique({
+      where: { 
+        id: id,
+        type: "DEMO"
+      },
+    });
+
+    if (!demo || !demo.isActive) {
+      return res.status(404).json({ error: "Demonstrator not found." });
+    }
+    res.json(demo);
+  } catch (error) {
+    console.error(`Failed to fetch demo ${id}:`, error);
+    res.status(500).json({ error: "Failed to fetch demonstrator details." });
+  }
+});
+
+// Alias for singular /demo/:id
+router.get("/demo/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const demo = await prisma.pilotProject.findUnique({
+      where: { 
+        id: id,
+        type: "DEMO"
+      },
     });
 
     if (!demo || !demo.isActive) {

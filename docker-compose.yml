@@ -27,6 +27,9 @@ services:
   # SERVER (Backend)
   # ==================================
   server:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
     image: qsidocker2026/qsi-server:latest
     container_name: qsi_server
     restart: always
@@ -54,6 +57,9 @@ services:
   # NGINX REVERSE PROXY
   # ==================================
   nginx-proxy:
+    build:
+      context: ./deploy/nginx
+      dockerfile: Dockerfile
     image: qsidocker2026/qsi-nginx-proxy:latest
     container_name: qsi_proxy
     restart: always
@@ -68,6 +74,9 @@ services:
   # CLIENT (Frontend)
   # ==================================
   client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     image: qsidocker2026/qsi-client:latest
     container_name: qsi_client
     restart: always
@@ -80,6 +89,9 @@ services:
   # ADMIN CLIENT
   # ==================================
   admin-client:
+    build:
+      context: ./admin-client
+      dockerfile: Dockerfile
     image: qsidocker2026/qsi-admin-client:latest
     container_name: qsi_admin
     restart: always

@@ -154,7 +154,7 @@ const AdminLayout = () => {
     {
       key: "/pilot-enquiries",
       icon: <UserOutlined />,
-      label: <Link to="/pilot-enquiries">Framework and Concept Enquiries</Link>,
+      label: <Link to="/pilot-enquiries">Demo and Concept Enquiries</Link>,
       roles: ["ADMIN", "SUPER_USER"],
     },
   ];

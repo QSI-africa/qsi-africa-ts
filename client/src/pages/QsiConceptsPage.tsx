@@ -4,7 +4,6 @@ import { Row, Col, Card, Typography, Spin, Button, theme } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
-  RocketOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   BulbOutlined
@@ -17,7 +16,7 @@ const QsiConceptsPage: React.FC = () => {
   const [pilots, setPilots] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm] = useState<string>("");
   const navigate = useNavigate();
   const { token } = useToken();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -128,7 +127,7 @@ const QsiConceptsPage: React.FC = () => {
           margin: "0 auto"
         }}
       >
-        <Title strong level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
+        <Title level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
           QSI Concepts
         </Title>
         <Title level={5} style={{ textAlign: "center", marginTop: "0px", padding: "0 20px", color: token.colorPrimary, fontWeight: "400" }}>
@@ -185,6 +184,7 @@ const QsiConceptsPage: React.FC = () => {
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
+                      padding: "12px",
                       justifyContent: "space-between",
                     }}
                   >
@@ -205,7 +205,7 @@ const QsiConceptsPage: React.FC = () => {
                           flexGrow: 1,
                           marginBottom: "16px",
                         }}
-                        ellipsis={{ rows: 3 }}
+                        ellipsis={{ rows: 5 }}
                       >
                         {/* Pilot projects use shortDescription */}
                         {pilot.shortDescription}

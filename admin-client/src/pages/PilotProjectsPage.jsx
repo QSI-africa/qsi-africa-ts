@@ -19,6 +19,7 @@ import {
   DeleteOutlined,
   ReloadOutlined,
   RocketOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import api from "../api";
 import AddEditPilotModal from "../components/AddEditPilotModal";
@@ -108,37 +109,60 @@ const PilotProjectsPage = () => {
       sorter: (a, b) => a.title.localeCompare(b.title),
     },
     {
-      title: "Key",
-      dataIndex: "key",
-      key: "key",
-      render: (key) => (
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => (
         <Tag
-          style={{
-            background: token.colorPrimaryBg,
-            border: `1px solid ${token.colorPrimaryBorder}`,
-            color: token.colorPrimaryText,
-            borderRadius: token.borderRadiusSM,
-            fontWeight: 500,
-          }}
+          color={type === "DEMO" ? "blue" : "purple"}
+          style={{ fontWeight: 500, borderRadius: token.borderRadiusSM }}
         >
-          {key}
+          {type}
         </Tag>
+      ),
+      filters: [
+        { text: "Concept", value: "CONCEPT" },
+        { text: "Demo", value: "DEMO" },
+      ],
+      onFilter: (value, record) => record.type === value,
+    },
+    {
+      title: "City/Status",
+      key: "cityStatus",
+      render: (_, record) => (
+        record.type === "DEMO" ? (
+          <Space direction="vertical" size={0}>
+            <Text style={{ fontSize: "12px", color: token.colorText }}>{record.city}</Text>
+            <Tag
+              size="small"
+              color="geekblue"
+              style={{ fontSize: "10px", lineHeight: "16px", borderRadius: "4px" }}
+            >
+              {record.status}
+            </Tag>
+          </Space>
+        ) : (
+          <Text type="secondary" style={{ fontSize: "12px" }}>-</Text>
+        )
       ),
     },
     {
-      title: "Short Description",
-      dataIndex: "shortDescription",
-      key: "shortDescription",
-      render: (text) => (
-        <Text
-          style={{
-            color: token.colorTextSecondary,
-            fontSize: token.fontSize,
-          }}
+      title: "Engagement",
+      dataIndex: "engagementEnabled",
+      key: "engagementEnabled",
+      render: (enabled) => (
+        <Tag
+          color={enabled ? "success" : "default"}
+          style={{ borderRadius: token.borderRadiusSM, fontWeight: 500 }}
         >
-          {text}
-        </Text>
+          {enabled ? "Enabled" : "Disabled"}
+        </Tag>
       ),
+      filters: [
+        { text: "Enabled", value: true },
+        { text: "Disabled", value: false },
+      ],
+      onFilter: (value, record) => record.engagementEnabled === value,
     },
     {
       title: "Status",
@@ -361,7 +385,7 @@ const PilotProjectsPage = () => {
                   display: "block",
                 }}
               >
-                Total Projects
+                Concepts
               </Text>
               <Text
                 style={{
@@ -371,7 +395,36 @@ const PilotProjectsPage = () => {
                   display: "block",
                 }}
               >
-                {totalPilots}
+                {pilots.filter(p => p.type === "CONCEPT").length}
+              </Text>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <BulbOutlined
+                style={{
+                  color: token.colorInfo,
+                  fontSize: "20px",
+                  marginBottom: token.marginXS,
+                  display: "block",
+                }}
+              />
+              <Text
+                style={{
+                  color: token.colorTextTertiary,
+                  fontSize: token.fontSizeSM,
+                  display: "block",
+                }}
+              >
+                Demos
+              </Text>
+              <Text
+                style={{
+                  color: token.colorInfo,
+                  fontSize: "24px",
+                  fontWeight: 700,
+                  display: "block",
+                }}
+              >
+                {pilots.filter(p => p.type === "DEMO").length}
               </Text>
             </div>
             <div style={{ textAlign: "center" }}>

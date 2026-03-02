@@ -71,8 +71,8 @@ router.get("/pilots", async (req, res) => {
     // Start with the base filter for active pilots
     let whereClause = {};
 
-    // If a valid type is provided (CONCEPT or FRAMEWORK), add it to the filter
-    if (type === "CONCEPT" || type === "FRAMEWORK") {
+    // If a valid type is provided (CONCEPT or DEMO), add it to the filter
+    if (type === "CONCEPT" || type === "DEMO") {
       whereClause.type = type;
     }
     // If no type is provided, it will fetch all active pilots (both types)
@@ -92,6 +92,9 @@ router.get("/pilots", async (req, res) => {
         expandedView: true, // Send full data for the detail page
         type: true,
         isActive: true,
+        city: true,
+        status: true,
+        engagementEnabled: true,
       },
     });
     res.json(pilots);
@@ -109,8 +112,9 @@ router.post(
   async (req, res) => {
     // Parse the body (multipart/form-data turns everything to strings, so we might need to parse booleans)
     const body = req.body;
-    const { key, title, subtext, shortDescription, imageUrl } = body;
+    const { key, title, subtext, shortDescription, city, status } = body;
     const isActive = body.isActive === "true" || body.isActive === true;
+    const engagementEnabled = body.engagementEnabled === "true" || body.engagementEnabled === true;
     const type = body.type || "CONCEPT";
 
     let expandedView = body.expandedView || "";
@@ -149,6 +153,9 @@ router.post(
           expandedView, // <-- This now contains the extracted text
           isActive,
           type,
+          city,
+          status,
+          engagementEnabled,
         },
       });
       res.status(201).json(newPilot);
@@ -184,7 +191,12 @@ router.put(
     if (body.isActive !== undefined)
       dataToUpdate.isActive =
         body.isActive === "true" || body.isActive === true;
+    if (body.engagementEnabled !== undefined)
+      dataToUpdate.engagementEnabled =
+        body.engagementEnabled === "true" || body.engagementEnabled === true;
     if (body.type) dataToUpdate.type = body.type;
+    if (body.city !== undefined) dataToUpdate.city = body.city;
+    if (body.status !== undefined) dataToUpdate.status = body.status;
 
     // 1. Handle File Upload for Update
     if (req.file) {

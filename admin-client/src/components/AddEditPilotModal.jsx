@@ -44,6 +44,9 @@ const AddEditPilotModal = ({ pilot, open, onCancel, onSuccess }) => {
           imageUrl: pilot.imageUrl,
           isActive: pilot.isActive,
           type: pilot.type,
+          city: pilot.city,
+          status: pilot.status,
+          engagementEnabled: pilot.engagementEnabled,
         });
       } else {
         form.resetFields();
@@ -127,6 +130,9 @@ const AddEditPilotModal = ({ pilot, open, onCancel, onSuccess }) => {
       values.isActive === undefined ? true : values.isActive
     );
     formData.append("type", values.type);
+    formData.append("city", values.city || "");
+    formData.append("status", values.status || "PROPOSED");
+    formData.append("engagementEnabled", values.engagementEnabled || false);
 
     try {
       if (isEditing) {
@@ -506,6 +512,34 @@ const AddEditPilotModal = ({ pilot, open, onCancel, onSuccess }) => {
               }}
             />
           </Form.Item>
+
+          <Form.Item
+            name="engagementEnabled"
+            label={
+              <Text style={{ color: token.colorText, fontWeight: 500 }}>
+                Engagement Enabled
+              </Text>
+            }
+            valuePropName="checked"
+            extra={
+              <Text
+                style={{
+                  color: token.colorTextTertiary,
+                  fontSize: token.fontSizeSM,
+                }}
+              >
+                Allows users to express interest or engage with this pilot.
+              </Text>
+            }
+          >
+            <Switch
+              checkedChildren="Enabled"
+              unCheckedChildren="Disabled"
+              style={{
+                background: token.colorPrimary,
+              }}
+            />
+          </Form.Item>
         </div>
 
         <div style={{ marginBottom: token.marginLG }}>
@@ -531,7 +565,7 @@ const AddEditPilotModal = ({ pilot, open, onCancel, onSuccess }) => {
                   fontSize: token.fontSizeSM,
                 }}
               >
-                Choose whether this pilot represents a Concept or a Framework.
+                Choose whether this pilot represents a Concept or a Demo.
               </Text>
             }
           >
@@ -545,9 +579,48 @@ const AddEditPilotModal = ({ pilot, open, onCancel, onSuccess }) => {
               }}
               options={[
                 { label: "Concept", value: "CONCEPT" },
-                { label: "Framework", value: "FRAMEWORK" },
+                { label: "Demo", value: "DEMO" },
               ]}
             />
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) => prevValues.type !== currentValues.type}
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("type") === "DEMO" ? (
+                <>
+                  <Form.Item
+                    name="city"
+                    label={
+                      <Text style={{ color: token.colorText, fontWeight: 500 }}>
+                        City
+                      </Text>
+                    }
+                    rules={[{ required: true, message: "City is required for Demos." }]}
+                  >
+                    <Input placeholder="e.g., Harare, Bulawayo..." />
+                  </Form.Item>
+                  <Form.Item
+                    name="status"
+                    label={
+                      <Text style={{ color: token.colorText, fontWeight: 500 }}>
+                        Status
+                      </Text>
+                    }
+                  >
+                    <Select
+                      options={[
+                        { label: "Proposed", value: "PROPOSED" },
+                        { label: "Active", value: "ACTIVE" },
+                        { label: "Completed", value: "COMPLETED" },
+                      ]}
+                    />
+                  </Form.Item>
+                </>
+              ) : null
+            }
           </Form.Item>
         </div>
 
