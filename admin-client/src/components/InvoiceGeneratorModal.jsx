@@ -427,15 +427,17 @@ const InvoiceGeneratorModal = ({
               okText="Yes, Send"
               cancelText="No"
             >
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                loading={isSubmitting}
-                size="large"
-                style={{ paddingLeft: 40, paddingRight: 40 }}
-              >
-                Generate & Email
-              </Button>
+              <span style={{ cursor: 'pointer' }}>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  loading={isSubmitting}
+                  size="large"
+                  style={{ paddingLeft: 40, paddingRight: 40 }}
+                >
+                  Generate & Email
+                </Button>
+              </span>
             </Popconfirm>
           )}
         </div>
