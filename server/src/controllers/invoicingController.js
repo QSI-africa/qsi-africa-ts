@@ -7,19 +7,14 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 const { initiatePayNowTransaction } = require("../services/paymentService"); // NEW IMPORT
-// Configure Nodemailer Transport (Explicit SMTP for reliability)
+// Configure Nodemailer Transport (Service-based for best reliability with Gmail)
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: 465,
-  secure: true, // Use SSL
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-// Increase timeouts for slow SMTP servers
-  connectionTimeout: 10000, 
-  greetingTimeout: 10000,
-  socketTimeout: 30000,
+  // Default timeouts are safer than short custom ones
 });
 
 // Explicitly verify transporter connection at startup
