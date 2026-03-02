@@ -7,59 +7,56 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 const { initiatePayNowTransaction } = require("../services/paymentService"); // NEW IMPORT
-// Configure Nodemailer Transport (Use your actual settings or secrets)
+// Configure Nodemailer Transport (Explicit SMTP for reliability)
 const transporter = nodemailer.createTransport({
-  service: "gmail", // Or use SMTP settings for DigitalOcean/SendGrid/etc.
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: 465,
+  secure: true, // Use SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // Increase timeouts for slow SMTP servers
+  connectionTimeout: 10000, 
+  greetingTimeout: 10000,
+  socketTimeout: 30000,
 });
 
 const generateAndSendInvoice = async (req, res) => {
-  try {
-    const { client, items, type, referenceId, referenceType, dueDate, notes } =
-      req.body;
+  const startTime = Date.now();
+  const { client, items, type, referenceId, referenceType, dueDate, notes } = req.body;
 
+  console.log(`[Invoicing] Starting generation for ${type} - Client: ${client?.email}`);
+
+  try {
     if (!client || !client.email || !items || items.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "Client email and line items are required." });
+      return res.status(400).json({ error: "Client email and line items are required." });
     }
 
     // 1. Calculate totals
-    const totalAmount = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0
-    );
-    const taxAmount = 0; // Simplified for now
+    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const taxAmount = 0;
     const finalTotal = totalAmount + taxAmount;
 
     // 2. Get the next invoice number
     const invoiceNumber = await getNextInvoiceNumber(type);
 
-    // 3. Create the Invoice in the database
+    // 3. Create the Invoice in the database (Immediate persistence)
     const newInvoice = await prisma.invoice.create({
       data: {
         invoiceNumber: invoiceNumber,
-        type: type, // 'QUOTATION' or 'INVOICE'
+        type: type,
         status: "SENT",
         totalAmount: finalTotal,
         taxAmount: taxAmount,
-        dueDate: dueDate
-          ? new Date(dueDate)
-          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
-
-        // Client snapshot
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         clientName: client.name || "Client",
         clientEmail: client.email,
         clientPhone: client.phone,
         clientAddress: client.address,
-
-        // Generic linking (for dashboard filtering)
         referenceId: referenceId,
         referenceType: referenceType,
-
+        notes: notes,
         items: {
           create: items.map((item) => ({
             description: item.description,
@@ -72,80 +69,92 @@ const generateAndSendInvoice = async (req, res) => {
       include: { items: true },
     });
 
-    let paymentLink = null;
-    if (newInvoice.type === "INVOICE") {
-      const payNowResult = await initiatePayNowTransaction(newInvoice);
-      if (payNowResult.success) {
-        paymentLink = payNowResult.paymentUrl;
-      } else {
-        // IMPORTANT: If link generation fails, log and proceed with only the PDF
-        console.error("Failed to generate PayNow link:", payNowResult.error);
-        // Optionally update invoice status to DRAFT if payment is mandatory
-      }
-    }
+    // 🚀 RESPOND IMMEDIATELY TO AVOID 504 TIMEOUT
+    // The background process will handle PDF generation and Email
+    res.status(202).json({
+      message: `${type} ${invoiceNumber} is being generated and will be sent to ${client.email}`,
+      invoiceId: newInvoice.id,
+      invoiceNumber: newInvoice.invoiceNumber,
+      status: 'PROCESSING'
+    });
 
-    // 4. Generate the PDF (using a temporary file)
-    const pdfFileName = `${invoiceNumber}.pdf`;
-    const tempFilePath = path.join("/tmp", pdfFileName); // Use /tmp for Docker safety
-    const stream = fs.createWriteStream(tempFilePath);
+    // --- BACKGROUND PROCESS START ---
+    // Start processing without awaiting so the response can be sent to Nginx/Gateway
+    (async () => {
+      let tempFilePath = null;
+      try {
+        console.log(`[Invoicing:BG] Starting background tasks for ${invoiceNumber}...`);
+        
+        // A. Generate PayNow Link (if applicable)
+        let paymentLink = null;
+        if (newInvoice.type === "INVOICE") {
+            const payNowResult = await initiatePayNowTransaction(newInvoice);
+            if (payNowResult.success) paymentLink = payNowResult.paymentUrl;
+        }
 
-    await generatePdf(newInvoice, stream);
+        // B. Generate the PDF
+        const pdfFileName = `${invoiceNumber}.pdf`;
+        tempFilePath = path.join("/tmp", pdfFileName);
+        
+        await new Promise(async (resolve, reject) => {
+          const stream = fs.createWriteStream(tempFilePath);
+          stream.on('finish', resolve);
+          stream.on('error', reject);
+          try {
+            await generatePdf(newInvoice, stream);
+          } catch (err) {
+            reject(err);
+          }
+        });
 
-    // 5. Send the Email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: client.email,
-      subject: `${type} from QSI: ${invoiceNumber}`,
-      html: `
+        // C. Send the Email
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: client.email,
+          subject: `${type} from QSI: ${invoiceNumber}`,
+          html: `
                 <p>Dear ${newInvoice.clientName},</p>
-                <p>Please find attached your ${newInvoice.type.toLowerCase()} (${
-        newInvoice.invoiceNumber
-      }).</p>
-                <p>Total Amount: ${
-                  newInvoice.currency
-                } ${newInvoice.totalAmount.toFixed(2)}</p>
+                <p>Please find attached your ${newInvoice.type.toLowerCase()} (${newInvoice.invoiceNumber}).</p>
+                <p>Total Amount: ${newInvoice.currency} ${parseFloat(newInvoice.totalAmount).toFixed(2)}</p>
                 
-                ${
-                  paymentLink
-                    ? `
+                ${paymentLink ? `
                     <div style="margin-top: 20px; text-align: center;">
                         <a href="${paymentLink}" 
-                           style="background-color: #5cb85c; color: white; padding: 15px 25px; text-decoration: none; border-radius: 5px;">
-                            Pay Now - ${
-                              newInvoice.currency
-                            } ${newInvoice.totalAmount.toFixed(2)}
+                           style="background-color: #003366; color: white; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Pay Now - ${newInvoice.currency} ${parseFloat(newInvoice.totalAmount).toFixed(2)}
                         </a>
                     </div>
-                `
-                    : "<p>Payment link could not be generated. Please use the bank transfer details in the attached PDF.</p>"
-                }
+                ` : "<p>You can find payment details in the attached PDF.</p>"}
                 
                 <p style="margin-top: 20px;">Thank you for your business.</p>
                 <p>The QSI Team</p>
             `,
-      attachments: [
-        {
-          filename: pdfFileName,
-          path: tempFilePath,
-        },
-      ],
-    };
+          attachments: [{ filename: pdfFileName, path: tempFilePath }],
+        };
 
-    await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+        console.log(`[Invoicing:BG] Email sent for ${invoiceNumber}`);
 
-    // 6. Clean up temporary file
-    fs.unlinkSync(tempFilePath);
+      } catch (bgError) {
+        console.error(`[Invoicing:BG] Fatal background error for ${invoiceNumber}:`, bgError.message);
+        // Optionally update invoice status to FAILED in the DB here
+      } finally {
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+        console.log(`[Invoicing:BG] Done. Total time: ${(Date.now() - startTime) / 1000}s`);
+      }
+    })();
+    // --- BACKGROUND PROCESS END ---
 
-    res.status(200).json({
-      message: `${type} ${invoiceNumber} successfully generated and sent to ${client.email}`,
-      invoice: newInvoice,
-    });
   } catch (error) {
-    console.error(`Invoicing Error: ${error.message}`);
-    res.status(500).json({
-      error: "Failed to generate and send invoice.",
-      details: error.message,
-    });
+    console.error(`[Invoicing] Initial Error: ${error.message}`);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: "Failed to initiate invoice generation.",
+        details: error.message,
+      });
+    }
   }
 };
 

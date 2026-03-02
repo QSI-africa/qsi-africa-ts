@@ -2,6 +2,7 @@
 
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const path = require('path');
 
 const generatePdf = async (invoice, stream) => {
     const doc = new PDFDocument({ 
@@ -23,11 +24,13 @@ const generatePdf = async (invoice, stream) => {
 
     // --- Logo and Company Info ---
     try {
+        const logoPath = path.join(__dirname, '..', 'assets', 'qsi_light_logo.png');
         doc.image(
-            'src/assets/qsi_light_logo.png',
+            logoPath,
             50, 35, { width: 60 }
         );
     } catch (e) {
+        console.error("PDF Logo Error:", e.message);
         // Fallback if logo is missing
         doc.fillColor('#FFFFFF')
            .fontSize(20)

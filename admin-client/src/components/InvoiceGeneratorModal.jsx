@@ -171,8 +171,12 @@ const InvoiceGeneratorModal = ({
 
       const response = await api.post("/invoicing/generate", payload);
 
-      if (response.data?.message || response.status === 200 || response.status === 201) {
-        message.success(`Invoice generated and sent to ${values.clientEmail}`);
+      if (response.data?.message || [200, 201, 202].includes(response.status)) {
+        const successMsg = response.status === 202 
+          ? `Invoice generation started. It will be sent to ${values.clientEmail} shortly.`
+          : `Invoice generated and sent to ${values.clientEmail}`;
+        
+        message.success(successMsg);
         onClose();
       } else {
         message.error("Failed to generate invoice. Please try again.");
