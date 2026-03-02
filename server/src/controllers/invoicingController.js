@@ -16,11 +16,22 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // Increase timeouts for slow SMTP servers
+// Increase timeouts for slow SMTP servers
   connectionTimeout: 10000, 
   greetingTimeout: 10000,
   socketTimeout: 30000,
 });
+
+// Explicitly verify transporter connection at startup
+(async () => {
+    try {
+        await transporter.verify();
+        console.log("✅ SMTP Connection: Verified and ready.");
+    } catch (error) {
+        console.error("❌ SMTP Connection Error:", error.message);
+        console.error("Please check your EMAIL_USER and EMAIL_PASS environment variables.");
+    }
+})();
 
 const generateAndSendInvoice = async (req, res) => {
   const startTime = Date.now();
@@ -93,21 +104,32 @@ const generateAndSendInvoice = async (req, res) => {
         }
 
         // B. Generate the PDF
+        console.log(`[Invoicing:BG] Generating PDF for ${invoiceNumber}...`);
         const pdfFileName = `${invoiceNumber}.pdf`;
         tempFilePath = path.join("/tmp", pdfFileName);
         
         await new Promise(async (resolve, reject) => {
           const stream = fs.createWriteStream(tempFilePath);
           stream.on('finish', resolve);
-          stream.on('error', reject);
+          stream.on('error', (err) => {
+            console.error(`[Invoicing:BG] Stream Error for ${invoiceNumber}:`, err);
+            reject(err);
+          });
           try {
             await generatePdf(newInvoice, stream);
           } catch (err) {
+            console.error(`[Invoicing:BG] PDF Gen Error for ${invoiceNumber}:`, err);
             reject(err);
           }
         });
 
+        if (!fs.existsSync(tempFilePath)) {
+          throw new Error(`PDF file not found at ${tempFilePath}`);
+        }
+        console.log(`[Invoicing:BG] PDF generated successfully at ${tempFilePath}`);
+
         // C. Send the Email
+        console.log(`[Invoicing:BG] Attempting to send email to ${client.email}...`);
         const mailOptions = {
           from: process.env.EMAIL_USER,
           to: client.email,
@@ -132,12 +154,11 @@ const generateAndSendInvoice = async (req, res) => {
           attachments: [{ filename: pdfFileName, path: tempFilePath }],
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`[Invoicing:BG] Email sent for ${invoiceNumber}`);
+        const mailInfo = await transporter.sendMail(mailOptions);
+        console.log(`[Invoicing:BG] Email sent for ${invoiceNumber}. MessageID: ${mailInfo.messageId}`);
 
       } catch (bgError) {
-        console.error(`[Invoicing:BG] Fatal background error for ${invoiceNumber}:`, bgError.message);
-        // Optionally update invoice status to FAILED in the DB here
+        console.error(`[Invoicing:BG] Fatal background error for ${invoiceNumber}:`, bgError);
       } finally {
         if (tempFilePath && fs.existsSync(tempFilePath)) {
           fs.unlinkSync(tempFilePath);

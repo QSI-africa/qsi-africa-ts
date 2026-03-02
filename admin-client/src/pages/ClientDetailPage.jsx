@@ -65,15 +65,16 @@ const ClientDetailPage = () => {
   const formatMarkdown = (text) => {
     if (!text) return "";
 
-    // Clean up common markdown formatting issues
     return text
-      .replace(/\*\*(.*?)\*\*/g, "**$1**") // Ensure bold markers
-      .replace(/\*(.*?)\*/g, "*$1*") // Ensure italic markers
-      .replace(/\n\s*\n\s*\n/g, "\n\n") // Remove excessive newlines
-      .replace(/^# (.*$)/gim, "# $1") // Ensure header formatting
-      .replace(/^## (.*$)/gim, "## $1")
-      .replace(/^### (.*$)/gim, "### $1")
-      .trim();
+      .trim()
+      // Fix cases where AI might put double newlines after headers
+      .replace(/^(#+ .*$)\n\n/gim, "$1\n")
+      // Ensure there is a newline BEFORE headers if there isn't one
+      .replace(/([^\n])\n(#+ )/g, "$1\n\n$2")
+      // Clean up common AI artifacts
+      .replace(/【.*?】/g, "") // Remove citations if they exist
+      .replace(/\s\s+/g, " ") // Reduce multiple spaces to single space within lines
+      .replace(/\n\s*\n\s*\n/g, "\n\n"); // Normalize paragraph spacing
   };
 
   // Custom markdown components with better styling

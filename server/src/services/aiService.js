@@ -317,7 +317,7 @@ async function continueVisionChat(messages, contactInfo) {
 
     ### 📝 Final Markdown Format
     \`\`\`markdown
-    ### Vision and Context
+    # Vision and Context
     (Summary text A)
 
     ### Core Focus Areas
