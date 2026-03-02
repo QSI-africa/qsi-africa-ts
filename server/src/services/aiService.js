@@ -224,7 +224,7 @@ async function continueInfrastructureChat(messages, contactInfo) {
     3.  Be concise. Keep your questions minimal. You must get all info in just 2-3 questions.
     4.  Once you have all three pieces of information, you MUST call the 'submit_infrastructure_request' tool.
     5.  Do not make small talk. Be professional and efficient.
-    6.  Always inform them that they will receive a quotation within 24 to 48 hours and their input will be reviewed and be friendly on the last response.
+    6.  Always inform them that they will receive a quotation within 24 to 48 hours and that we have received their details and will be in touch with them for the next steps.
   `;
 
   const apiMessages = [
@@ -503,7 +503,7 @@ async function continueHealingChat(messages, packages, contactInfo) {
     Available Packages:
     ${packageList}
 
-    IMPORTANT: Your job is ONLY to converse and recommend. You do NOT generate a 'Liberation Plan'. You do NOT save anything. Your final step is the recommendation.
+    IMPORTANT: Your job is ONLY to converse and recommend. You do NOT generate a 'Liberation Plan'. You do NOT save anything. Your final step is the recommendation. After recommending, kindly inform the user: "We have received your details and we will be in touch with you for the next steps."
   `;
 
   const apiMessages = [

@@ -239,11 +239,9 @@ router.post("/infrastructure", upload.none(), async (req, res) => {
 
         res.status(201).json({
           sender: "ai",
-          text: `Request received (Ref: ${
-            submission.id
-          }). We have your details and ${
+          text: `We have received your details (Ref: ${submission.id}) and ${
             docConnect ? docConnect.length : 0
-          } document(s).`,
+          } document(s), and we will be in touch with you for the next steps.`,
         });
       } else {
         res.status(500).json({ sender: "ai", text: "Unknown tool call." });
@@ -324,7 +322,7 @@ router.post("/healing", async (req, res) => {
     );
 
     const aiResponseText =
-      "Thank you for your inquiry. Our team has received your details and will contact you shortly with a personalized quote and next steps.";
+      "We have received your details and we will be in touch with you for the next steps.";
     res.status(201).json({ sender: "ai", text: aiResponseText });
   } catch (error) {
     console.error("Failed to process healing inquiry:", error);
