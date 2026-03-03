@@ -41,12 +41,17 @@ router.get("/", async (req, res) => {
     ) {
       // Show tasks that are either:
       // - Explicitly assigned to me (any status), OR
-      // - In a status that my role is responsible for (regardless of who is assigned)
+      // - In a status that my role is responsible for AND it's not assigned to anyone else
       const roleStatuses = getStatusesForRole(req.user.role);
       whereClause = {
         OR: [
           { assignedToId: req.user.id },
-          { status: { in: roleStatuses } },
+          { 
+            AND: [
+              { status: { in: roleStatuses } },
+              { assignedToId: null }
+            ]
+          },
         ],
       };
     }
@@ -277,6 +282,54 @@ router.put("/:taskId/reassign", isSuperUser, async (req, res) => {
   } catch (error) {
     console.error("Failed to reassign task:", error); // Log error
     res.status(500).json({ error: "Failed to reassign task." });
+  }
+});
+
+// PUT /api/admin/tasks/:taskId/claim
+router.put("/:taskId/claim", async (req, res) => {
+  const { taskId } = req.params;
+
+  try {
+    const task = await prisma.task.findUnique({
+      where: { id: taskId }
+    });
+
+    if (!task) {
+      return res.status(404).json({ error: "Task not found." });
+    }
+
+    // Check if the task is already assigned
+    if (task.assignedToId) {
+      return res.status(400).json({ error: "Task is already claimed or assigned to someone else." });
+    }
+
+    // Check if the user's role is responsible for the task's current status
+    if (!userRoleMatchesTaskStatus(req.user.role, task.status)) {
+      return res.status(403).json({ error: "Forbidden: You cannot claim this task at its current stage." });
+    }
+
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        assignedToId: req.user.id,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: "TASK_CLAIMED",
+        taskId: taskId,
+        actorId: req.user.id,
+        details: {
+          role: req.user.role,
+        },
+      },
+    });
+
+    res.json(updatedTask);
+  } catch (error) {
+    console.error("Failed to claim task:", error);
+    res.status(500).json({ error: "Failed to claim task." });
   }
 });
 

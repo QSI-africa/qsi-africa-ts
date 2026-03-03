@@ -253,6 +253,20 @@ const TaskDetailPage = () => {
     }
   };
 
+  const handleClaimTask = async () => {
+    setActionLoading(true);
+    try {
+      await api.put(`/admin/tasks/${taskId}/claim`);
+      message.success("Task claimed successfully!");
+      fetchTask();
+    } catch (error) {
+      console.error("Claim error:", error);
+      message.error(error.response?.data?.error || "Failed to claim task.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const WorkflowDeliverables = ({ docs, currentStatus }) => {
     if (!docs || docs.length === 0)
       return (
@@ -687,6 +701,50 @@ const TaskDetailPage = () => {
           >
             <TaskDocumentList documents={task.documents} />
           </Card>
+
+          <Card
+            title="Client Information"
+            style={{ marginBottom: token.margin }}
+            bodyStyle={{ padding: 20 }}
+          >
+            <Row gutter={[16, 16]}>
+              <Col span={24}>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>CONTACT INFO (Submission)</Text>
+                    <div style={{ fontSize: 16 }}>{task.submission?.contactInfo || "No contact info available"}</div>
+                  </div>
+                  
+                  {task.submission?.user && (
+                    <>
+                      <Divider style={{ margin: '8px 0' }} />
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12 }}>REGISTERED CLIENT</Text>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Avatar icon={<UserOutlined />} size="small" />
+                          <Text strong>{task.submission.user.name}</Text>
+                        </div>
+                        <Text type="secondary" style={{ marginLeft: 32 }}>{task.submission.user.email}</Text>
+                      </div>
+                    </>
+                  )}
+
+                  {task.submission?.generatedSolution && (
+                    <>
+                      <Divider style={{ margin: '8px 0' }} />
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 12 }}>INITIAL SYSTEM OUTPUT</Text>
+                        <Paragraph ellipsis={{ rows: 3, expandable: true, symbol: 'more' }} style={{ margin: 0 }}>
+                          {task.submission.generatedSolution}
+                        </Paragraph>
+                      </div>
+                    </>
+                  )}
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
           <Card title="Specifications" bodyStyle={{ padding: 20 }}>
             {task.description}
           </Card>
@@ -723,7 +781,19 @@ const TaskDetailPage = () => {
                 type="info"
                 showIcon
                 message="Open to your department"
-                description="This task is waiting for your department's action. You may upload documents and submit."
+                description="This task is waiting for your department's action. You may claim it to work on it exclusively."
+                action={
+                  !task.assignedToId && (
+                    <Button 
+                      size="small" 
+                      type="primary" 
+                      onClick={handleClaimTask}
+                      loading={actionLoading}
+                    >
+                      Claim Task
+                    </Button>
+                  )
+                }
               />
             )}
 

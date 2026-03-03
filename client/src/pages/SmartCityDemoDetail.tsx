@@ -24,7 +24,8 @@ import {
   MessageOutlined,
   TeamOutlined,
   BulbOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  PhoneOutlined
 } from "@ant-design/icons";
 import axios from "axios";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
@@ -598,6 +599,12 @@ const SmartCityDemoDetail: React.FC = () => {
           </Form.Item>
           <Form.Item name="contactEmail" label="Email" rules={[{ required: true, type: 'email' }]}>
             <Input prefix={<MailOutlined />} />
+          </Form.Item>
+          <Form.Item name="contactPhone" label="Phone Number">
+            <Input prefix={<PhoneOutlined />} placeholder="+263..." />
+          </Form.Item>
+          <Form.Item name="message" label="Additional Information" rules={[{ required: true, message: 'Please provide some details' }]}>
+            <Input.TextArea rows={4} placeholder="How can we help you?" />
           </Form.Item>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
             <Button onClick={closeEngagementModal}>Cancel</Button>

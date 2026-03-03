@@ -187,6 +187,9 @@ const AdminLayout = () => {
         zIndex: 1000,
         boxShadow: token.boxShadowSecondary,
         borderRight: `1px solid ${token.colorBorder}`,
+        overflowY: "auto",
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
       }}
       width={250}
     >
