@@ -125,9 +125,9 @@ const HealingInquiriesPage = () => {
             type="link"
             icon={<UserOutlined />}
             onClick={() => navigate(`/clients/${record.user.id}`)}
-            style={{ padding: 0, height: "auto" }}
+            style={{ padding: 0, height: "auto", whiteSpace: 'normal', textAlign: 'left' }}
           >
-            {record.user.name} ({record.user.email})
+            {record.user.name} ({record.user.email}){record.user.phone ? ` - ${record.user.phone}` : ""}
           </Button>
         ) : (
           <Space>

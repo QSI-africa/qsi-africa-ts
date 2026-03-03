@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import api from "../api";
 import ReactMarkdown from "react-markdown";
+import { Link } from "react-router-dom";
 
 const { Title, Paragraph, Text } = Typography;
 const { useToken } = theme;
@@ -96,7 +97,18 @@ const VisionSubmissionsPage = () => {
       title: "Contact Info",
       dataIndex: "contactInfo",
       key: "contactInfo",
-      render: (contactInfo) => (
+      render: (contactInfo, record) =>
+        record.user ? (
+          <Link to={`/clients/${record.user.id}`}>
+            <Button
+              type="link"
+              icon={<UserOutlined />}
+              style={{ padding: 0, height: "auto", whiteSpace: 'normal', textAlign: 'left' }}
+            >
+              {record.user.name} ({record.user.email}){record.user.phone ? ` - ${record.user.phone}` : ""}
+            </Button>
+          </Link>
+        ) : (
         <Space>
           <UserOutlined style={{ color: token.colorTextTertiary }} />
           <Text

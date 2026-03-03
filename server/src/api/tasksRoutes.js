@@ -71,6 +71,9 @@ router.get("/", async (req, res) => {
         submission: {
           include: {
             document: true,
+            user: {
+              select: { id: true, name: true, email: true, phone: true }
+            },
           },
         },
         // -----------------------------------------------------
@@ -102,6 +105,9 @@ router.get("/:taskId", async (req, res) => {
         submission: {
           include: {
             document: true,
+            user: {
+              select: { id: true, name: true, email: true, phone: true }
+            },
           },
         },
         assignedTo: {

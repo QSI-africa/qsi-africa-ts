@@ -43,6 +43,9 @@ router.get("/healing-submissions", isSuperUserOrAdmin, async (req, res) => {
   try {
     const submissions = await prisma.healingSubmission.findMany({
       orderBy: { createdAt: "desc" }, // Show newest first
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } }
+      }
     });
     res.json(submissions);
   } catch (error) {
@@ -56,6 +59,9 @@ router.get("/vision-submissions", isSuperUserOrAdmin, async (req, res) => {
   try {
     const submissions = await prisma.visionSubmission.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } }
+      }
     });
     console.log(`Found ${submissions.length} vision submissions.`); // Check the count here
     res.json(submissions);
@@ -437,6 +443,7 @@ router.get("/clients", isSuperUserOrAdmin, async (req, res) => {
       id: client.id,
       name: client.name,
       email: client.email,
+      phone: client.phone,
       createdAt: client.createdAt,
       hasProfile: !!(client.frequencyScans && client.frequencyScans.length > 0), // Simple boolean
       submissionCount: client.healingSubmissions.length,
