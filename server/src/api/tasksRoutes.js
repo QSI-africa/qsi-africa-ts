@@ -50,7 +50,7 @@ router.get("/", async (req, res) => {
       whereClause = {
         OR: [
           { assignedToId: req.user.id },
-          { 
+          {
             AND: [
               { status: { in: roleStatuses } },
               { assignedToId: null }
@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
       };
     } else {
       // Any other role (e.g., CLIENT, GENERAL_USER) should not see ANY admin tasks
-      whereClause = { id: 'none' }; 
+      whereClause = { id: 'none' };
     }
 
     const tasks = await prisma.task.findMany({
@@ -75,7 +75,7 @@ router.get("/", async (req, res) => {
         },
         // -----------------------------------------------------
         assignedTo: {
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, phone: true, role: true },
         },
         // Internal documents (Engineer uploads)
         taskDocuments: true,
@@ -105,10 +105,10 @@ router.get("/:taskId", async (req, res) => {
           },
         },
         assignedTo: {
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, phone: true, role: true },
         },
         assignedBy: {
-          select: { name: true, email: true },
+          select: { name: true, email: true, phone: true },
         },
         auditLogs: {
           // REMOVED: orderBy clause
@@ -146,7 +146,7 @@ router.get("/:taskId", async (req, res) => {
     // SUPER_USER and ADMIN bypass this check
     if (req.user.role !== "SUPER_USER" && req.user.role !== "ADMIN") {
       const allowedRoles = ["TEAM_MEMBER", "ENGINEER", "ARCHITECT", "QUANTITY_SURVEYOR"];
-      
+
       if (!allowedRoles.includes(req.user.role)) {
         return res.status(403).json({ error: "Forbidden: You do not have permission to view tasks." });
       }
@@ -172,7 +172,7 @@ router.put("/:taskId/assign", isSuperUser, async (req, res) => {
   const { role, note } = req.body; // Expecting 'role' instead of 'teamMemberId'
 
   if (!role) {
-      return res.status(400).json({ error: "Target role is required." });
+    return res.status(400).json({ error: "Target role is required." });
   }
 
   try {
@@ -638,12 +638,12 @@ router.put("/:taskId/reject", isSuperUser, async (req, res) => {
     if (sendRejectionEmail && rejectionRecipient) {
       // Assuming sendTaskRejectionEmail is properly imported and implemented
       if (typeof sendTaskRejectionEmail === 'function') {
-           sendTaskRejectionEmail(
-            updatedTask,
-            rejectionRecipient,
-            req.user,
-            reason
-          ).catch(console.error);
+        sendTaskRejectionEmail(
+          updatedTask,
+          rejectionRecipient,
+          req.user,
+          reason
+        ).catch(console.error);
       }
     }
 

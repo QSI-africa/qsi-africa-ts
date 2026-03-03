@@ -413,6 +413,7 @@ router.get("/clients", isSuperUserOrAdmin, async (req, res) => {
         id: true,
         name: true,
         email: true,
+        phone: true,
         createdAt: true,
         frequencyScans: {
           // Include if the profile exists
@@ -460,11 +461,12 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
         id: true,
         name: true,
         email: true,
+        phone: true,
         createdAt: true,
         frequencyScans: {
           orderBy: { createdAt: "desc" },
           take: 1
-        }, 
+        },
         healingSubmissions: {
           // Get their full submission history
           orderBy: { createdAt: "desc" },
@@ -598,7 +600,7 @@ router.get(
           task: true, // Link to the task
           user: {
             // Info about the registered user (if applicable)
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true, email: true, phone: true },
           },
         },
       });
@@ -773,9 +775,8 @@ router.post(
       errorOccurred = true;
       console.error(`Extraction failed for ${mimeType}:`, e);
       // Provide a more helpful error message in the field
-      extractedText = `--- ERROR: Failed to process file content. Reason: ${
-        e.message || "Check server logs for details."
-      } ---`;
+      extractedText = `--- ERROR: Failed to process file content. Reason: ${e.message || "Check server logs for details."
+        } ---`;
     } finally {
       // Crucial: Clean up the temporary file immediately
       if (fs.existsSync(filePath)) {
@@ -824,12 +825,12 @@ router.post("/qsi-concepts", isSuperUserOrAdmin, async (req, res) => {
   }
   try {
     const newConcept = await prisma.qsiConcept.create({
-      data: { 
-        title, 
-        description, 
-        imageUrl, 
-        category, 
-        isActive: isActive !== undefined ? isActive : true 
+      data: {
+        title,
+        description,
+        imageUrl,
+        category,
+        isActive: isActive !== undefined ? isActive : true
       },
     });
     res.status(201).json(newConcept);
@@ -932,8 +933,8 @@ router.post("/smart-city-demos", isSuperUserOrAdmin, async (req, res) => {
         imageUrl,
         engagementEnabled: engagementEnabled !== undefined ? engagementEnabled : true,
         isActive: isActive !== undefined ? isActive : true,
-        concepts: conceptIds?.length > 0 
-          ? { connect: conceptIds.map(id => ({ id })) } 
+        concepts: conceptIds?.length > 0
+          ? { connect: conceptIds.map(id => ({ id })) }
           : undefined,
       },
       include: {

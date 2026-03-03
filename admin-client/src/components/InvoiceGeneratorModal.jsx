@@ -54,6 +54,7 @@ const InvoiceGeneratorModal = ({
           invoiceType: invoice.type,
           clientName: invoice.clientName,
           clientEmail: invoice.clientEmail,
+          clientPhone: invoice.clientPhone,
           clientAddress: invoice.clientAddress,
           notes: invoice.notes,
         });
@@ -72,6 +73,7 @@ const InvoiceGeneratorModal = ({
         // Create Mode (Pre-fill client if provided)
         let name = initialClient.name || "";
         let email = initialClient.email || "";
+        let phone = initialClient.phone || "";
 
         // Robust parsing for "Name <email>" format if email field contains the combined string
         if (email && email.includes("<") && email.includes(">")) {
@@ -88,6 +90,7 @@ const InvoiceGeneratorModal = ({
         form.setFieldsValue({
           clientName: name,
           clientEmail: email,
+          clientPhone: phone,
           invoiceType: "QUOTATION",
         });
       }
@@ -125,6 +128,7 @@ const InvoiceGeneratorModal = ({
       client: {
         name: values.clientName,
         email: values.clientEmail,
+        phone: values.clientPhone,
         address: values.clientAddress,
       },
       items: items.map(({ description, quantity, unitPrice }) => ({
@@ -312,7 +316,7 @@ const InvoiceGeneratorModal = ({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
+              gridTemplateColumns: "1fr 1fr 1fr 1fr",
               gap: 16,
             }}
           >
@@ -343,6 +347,13 @@ const InvoiceGeneratorModal = ({
               rules={[{ required: true, type: "email" }]}
             >
               <Input placeholder="email@address.com" />
+            </Form.Item>
+
+            <Form.Item
+              name="clientPhone"
+              label="Client Phone"
+            >
+              <Input placeholder="+1234567890" />
             </Form.Item>
           </div>
           <Form.Item name="clientAddress" label="Billing Address">

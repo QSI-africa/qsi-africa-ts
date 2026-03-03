@@ -725,6 +725,11 @@ const TaskDetailPage = () => {
                           <Text strong>{task.submission.user.name}</Text>
                         </div>
                         <Text type="secondary" style={{ marginLeft: 32 }}>{task.submission.user.email}</Text>
+                        {task.submission.user.phone && (
+                          <div style={{ marginLeft: 32 }}>
+                            <Text type="secondary">{task.submission.user.phone}</Text>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

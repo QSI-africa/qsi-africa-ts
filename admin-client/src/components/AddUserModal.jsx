@@ -57,6 +57,7 @@ const AddUserModal = ({ open, onCancel, onUserAdded }) => {
       await api.post("/admin/users", {
         email: values.email,
         name: values.name,
+        phone: values.phone,
         password: values.password,
         role: values.role,
       });
@@ -173,6 +174,31 @@ const AddUserModal = ({ open, onCancel, onUserAdded }) => {
         >
           <Input
             placeholder="Enter email address"
+            style={{
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`,
+              color: token.colorText,
+              borderRadius: token.borderRadius,
+            }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          label={
+            <Text style={{ color: token.colorText, fontWeight: 500 }}>
+              <UserOutlined
+                style={{
+                  marginRight: token.marginXS,
+                  color: token.colorTextTertiary,
+                }}
+              />
+              Phone Number
+            </Text>
+          }
+        >
+          <Input
+            placeholder="Enter phone number"
             style={{
               background: token.colorBgContainer,
               border: `1px solid ${token.colorBorder}`,

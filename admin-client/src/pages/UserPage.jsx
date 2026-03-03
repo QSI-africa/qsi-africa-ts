@@ -140,6 +140,21 @@ const UserPage = () => {
       ),
     },
     {
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      render: (phone) => (
+        <Text
+          style={{
+            color: token.colorTextSecondary,
+            fontSize: token.fontSize,
+          }}
+        >
+          {phone || "-"}
+        </Text>
+      ),
+    },
+    {
       title: "Role",
       dataIndex: "role",
       key: "role",

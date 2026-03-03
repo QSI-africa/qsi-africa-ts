@@ -45,7 +45,7 @@ const visionTools = [
     function: {
       name: "submit_vision_document",
       description:
-        "Submit the final, fully structured vision document in Markdown format once all sections (A-G) are complete. Make sure to inform the user of the next steps which include: QSI will further refine and align with their document for potential partnerships and investments from various institutions",
+        "Submit the final, fully structured vision document in Markdown format once all sections (A-G) are complete. Make sure to inform the user of the next steps which include: QSI will further refine and align with their document for potential partnerships and investments from various institutions as a conclusion to the whole session",
       parameters: {
         type: "object",
         properties: {
@@ -237,7 +237,7 @@ async function continueInfrastructureChat(messages, contactInfo) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       messages: apiMessages,
       tools: [infrastructureTool],
       tool_choice: "auto",
@@ -397,9 +397,8 @@ async function continueVisionChat(messages, contactInfo) {
             text: `Okay, here's a summary for '${args.section_key.replace(
               /_/g,
               " ",
-            )}':\n\n${
-              args.summary_text
-            }\n\nDoes that sound right, or would you like to refine anything before we move on to ${nextDisplay}?`,
+            )}':\n\n${args.summary_text
+              }\n\nDoes that sound right, or would you like to refine anything before we move on to ${nextDisplay}?`,
           };
 
         case "submit_vision_document":

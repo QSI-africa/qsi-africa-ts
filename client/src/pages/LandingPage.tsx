@@ -648,7 +648,7 @@ const LandingPage: React.FC = () => {
         // if (isAuthenticated) {
         // Logged-in: Bypass modal, pass user info
         navigate(`/chat/infrastructure`, {
-          state: { contactInfo: { name: user?.name, email: user?.email } },
+          state: { contactInfo: { name: user?.name, email: user?.email, phone: user?.phone } },
         });
         // } else {
         //   // Guest: Show modal
@@ -661,7 +661,7 @@ const LandingPage: React.FC = () => {
         if (isAuthenticated) {
           // Logged-in: Bypass modal, pass user info
           navigate(`/chat/healing`, {
-            state: { contactInfo: { name: user.name, email: user.email } },
+            state: { contactInfo: { name: user.name, email: user.email, phone: user.phone } },
           });
         } else {
           // Guest: Force login/register

@@ -233,6 +233,7 @@ const ChatWindow: React.FC = () => {
       return {
         name: user.name || user.email?.split("@")[0] || "Valued User",
         email: user.email || "user@chat.com",
+        phone: user.phone || "",
         userId: user.id,
       };
     }
@@ -241,6 +242,7 @@ const ChatWindow: React.FC = () => {
     return {
       name: "Valued User",
       email: "user@chat.com",
+      phone: "",
       userId: user?.id || null,
     };
   });
@@ -276,6 +278,7 @@ const ChatWindow: React.FC = () => {
         const newContactInfo = {
           name: user.name || user.email?.split("@")[0] || prev.name,
           email: user.email || prev.email,
+          phone: user.phone || prev.phone,
           userId: user.id,
         };
 
@@ -283,7 +286,8 @@ const ChatWindow: React.FC = () => {
         if (
           prev.userId !== newContactInfo.userId ||
           prev.name !== newContactInfo.name ||
-          prev.email !== newContactInfo.email
+          prev.email !== newContactInfo.email ||
+          prev.phone !== newContactInfo.phone
         ) {
           return newContactInfo;
         }
@@ -510,7 +514,7 @@ const ChatWindow: React.FC = () => {
         contactInfo:
           contactInfo.email === "user@chat.com"
             ? "user@chat.com"
-            : `${contactInfo.name} <${contactInfo.email}>`,
+            : `${contactInfo.name} <${contactInfo.email}>${contactInfo.phone ? ` - ${contactInfo.phone}` : ''}`,
         userId: isAuthenticated && user ? user.id : null,
       };
       await axios.post(endpoint, payload);
@@ -641,10 +645,10 @@ const ChatWindow: React.FC = () => {
     const initialMessage = {
       sender: "ai",
       text: `Welcome, ${contactInfo.name}. ${moduleName === "infrastructure"
-          ? "What infrastructure project are you considering today?"
-          : moduleName === "healing"
-            ? "What are you currently experiencing?"
-            : "I'm excited to help you create impact. What's your vision today?"
+        ? "What infrastructure project are you considering today?"
+        : moduleName === "healing"
+          ? "What are you currently experiencing?"
+          : "I'm excited to help you create impact. What's your vision today?"
         }`,
     };
     setMessages([initialMessage]);

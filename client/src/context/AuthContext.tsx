@@ -1,10 +1,11 @@
 // client/src/context/AuthContext.jsx
-import React, { createContext,
+import React, {
+  createContext,
   useContext,
   useState,
   useEffect,
   useCallback,
- } from 'react';
+} from 'react';
 import { Spin } from "antd";
 import api, { setOnUnauthorizedCallback } from "../api";
 
@@ -73,11 +74,12 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, phone) => {
     const response = await api.post("/auth/register-user", {
       name,
       email,
       password,
+      phone,
     });
     const { token, user } = response.data;
     localStorage.setItem("token", token);

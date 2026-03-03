@@ -26,7 +26,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await register(values.name, values.email, values.password);
+      await register(values.name, values.email, values.password, values.phone);
       message.success("Registration Successful!");
       navigate("/onboarding", { replace: true });
     } catch (err) {

@@ -57,6 +57,7 @@ const EditUserModal = ({ user, open, onCancel, onUserUpdated }) => {
     if (open && user) {
       form.setFieldsValue({
         name: user.name,
+        phone: user.phone,
         role: user.role,
       });
     }
@@ -67,6 +68,7 @@ const EditUserModal = ({ user, open, onCancel, onUserUpdated }) => {
     try {
       await api.put(`/admin/users/${user.id}`, {
         name: values.name,
+        phone: values.phone,
         role: values.role,
       });
       message.success("User updated successfully!");
@@ -229,6 +231,31 @@ const EditUserModal = ({ user, open, onCancel, onUserUpdated }) => {
         >
           <Input
             placeholder="Enter user's full name"
+            style={{
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`,
+              color: token.colorText,
+              borderRadius: token.borderRadius,
+            }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          label={
+            <Text style={{ color: token.colorText, fontWeight: 500 }}>
+              <UserOutlined
+                style={{
+                  marginRight: token.marginXS,
+                  color: token.colorTextTertiary,
+                }}
+              />
+              Phone Number
+            </Text>
+          }
+        >
+          <Input
+            placeholder="Enter phone number"
             style={{
               background: token.colorBgContainer,
               border: `1px solid ${token.colorBorder}`,

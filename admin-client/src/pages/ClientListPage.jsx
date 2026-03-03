@@ -67,6 +67,12 @@ const ClientListPage = () => {
       key: "email",
     },
     {
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      render: (phone) => phone || "-",
+    },
+    {
       title: "Has Profile",
       dataIndex: "frequencyProfile",
       key: "frequencyProfile",

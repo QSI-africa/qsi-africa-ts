@@ -24,7 +24,7 @@ router.get("/", isSuperUser, async (req, res) => {
           ],
         },
       },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, phone: true, role: true },
       orderBy: { name: "asc" }, // Optional: Order users alphabetically
     });
     res.json(users);
@@ -67,6 +67,7 @@ router.post("/", isSuperUser, async (req, res) => {
       select: {
         id: true,
         email: true,
+        phone: true,
         name: true,
         role: true,
         createdAt: true,
@@ -119,6 +120,7 @@ router.put("/:userId", isSuperUser, async (req, res) => {
       select: {
         id: true,
         email: true,
+        phone: true,
         name: true,
         role: true,
         updatedAt: true,

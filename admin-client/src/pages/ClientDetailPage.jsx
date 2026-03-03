@@ -288,6 +288,11 @@ const ClientDetailPage = () => {
                   {client.name}
                 </Title>
                 <Text type="secondary">{client.email}</Text>
+                {client.phone && (
+                  <div>
+                    <Text type="secondary">{client.phone}</Text>
+                  </div>
+                )}
               </div>
             </Space>
             <Space>
