@@ -34,14 +34,18 @@ router.get("/", async (req, res) => {
     let whereClause = {};
 
     // 1. Role-Based Filtering
-    if (
+    if (req.user.role === "SUPER_USER" || req.user.role === "ADMIN") {
+      // Super Users and Admins see all tasks
+      whereClause = {};
+    } else if (
       ["TEAM_MEMBER", "ENGINEER", "ARCHITECT", "QUANTITY_SURVEYOR"].includes(
         req.user.role
       )
     ) {
+      // Departmental Filtering:
       // Show tasks that are either:
       // - Explicitly assigned to me (any status), OR
-      // - In a status that my role is responsible for AND it's not assigned to anyone else
+      // - In a status that my department is responsible for AND it's not yet claimed (assignedToId: null)
       const roleStatuses = getStatusesForRole(req.user.role);
       whereClause = {
         OR: [
@@ -54,8 +58,10 @@ router.get("/", async (req, res) => {
           },
         ],
       };
+    } else {
+      // Any other role (e.g., CLIENT, GENERAL_USER) should not see ANY admin tasks
+      whereClause = { id: 'none' }; 
     }
-    // SUPER_USER sees all (empty whereClause)
 
     const tasks = await prisma.task.findMany({
       where: whereClause,
@@ -137,8 +143,14 @@ router.get("/:taskId", async (req, res) => {
     }
 
     // Security Check: role members can view tasks assigned to them OR matching their role's status
-    const allowedRoles = ["TEAM_MEMBER", "ENGINEER", "ARCHITECT", "QUANTITY_SURVEYOR"];
-    if (allowedRoles.includes(req.user.role)) {
+    // SUPER_USER and ADMIN bypass this check
+    if (req.user.role !== "SUPER_USER" && req.user.role !== "ADMIN") {
+      const allowedRoles = ["TEAM_MEMBER", "ENGINEER", "ARCHITECT", "QUANTITY_SURVEYOR"];
+      
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view tasks." });
+      }
+
       const isAssignedToMe = task.assignedToId === req.user.id;
       const roleMatchesStatus = userRoleMatchesTaskStatus(req.user.role, task.status);
 
