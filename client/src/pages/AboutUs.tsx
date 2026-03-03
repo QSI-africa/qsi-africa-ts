@@ -427,82 +427,10 @@ const AboutUs: React.FC = () => {
                 designed to work in harmony, progress becomes more efficient,
                 more sustainable, and more human.
               </p>
+              <p style={styles.secondaryText}>
+                QSI focuses on clarity over chaos, purpose over imitation and systems that grow naturally rather than forcefully. Its goal is to help Africa move foward using intelligence that is rooted in its people, its culture and its future potential
+              </p>
             </div>
-          </div>
-        </div>
-
-        {/* QSI Definition Section */}
-        <div style={styles.qsiSection}>
-          <div style={styles.qsiCard}>
-            <div style={styles.qsiGradient}></div>
-
-            <div style={styles.qsiContent}>
-              <div style={styles.qsiIcon}>
-                <MdAutoAwesome
-                  size={32}
-                  style={{ color: token.colorTextLightSolid }}
-                />
-              </div>
-              <div>
-                <h2 style={styles.qsiTitle}>The QSI Architecture</h2>
-                <p style={styles.qsiDescription}>
-                  QSI focuses on clarity over chaos, purpose over imitation, and
-                  systems that grow naturally rather than forcefully. Its goal
-                  is to help Africa move forward using intelligence that is
-                  rooted in its people, its culture, and its future potential.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Core Areas Grid */}
-        <div style={styles.coreAreasSection}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>The QSI Architecture and The QSI Framework</h2>
-            <div style={styles.divider}></div>
-          </div>
-          <div style={styles.coreAreasGrid}>
-            {coreAreas.map((area, index) => (
-              <div
-                key={index}
-                style={{
-                  ...styles.coreAreaCard,
-                  ...(activeCard === index && styles.coreAreaCardHover),
-                  borderColor: area.borderColor,
-                }}
-                onMouseEnter={() => setActiveCard(index)}
-                onMouseLeave={() => setActiveCard(null)}
-              >
-                <div
-                  style={{
-                    ...styles.coreAreaIcon,
-                    background: area.color,
-                    ...(activeCard === index && styles.coreAreaIconHover),
-                  }}
-                >
-                  <div
-                    style={{
-                      color: token.colorTextLightSolid,
-                      fontSize: "32px",
-                    }}
-                  >
-                    {area.icon}
-                  </div>
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      ...styles.coreAreaTitle,
-                      ...(activeCard === index && styles.coreAreaTitleHover),
-                    }}
-                  >
-                    {area.title}
-                  </h3>
-                  <p style={styles.coreAreaDescription}>{area.description}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
