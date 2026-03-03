@@ -45,7 +45,7 @@ const visionTools = [
     function: {
       name: "submit_vision_document",
       description:
-        "Submit the final, fully structured vision document in Markdown format once all sections (A-G) are complete.",
+        "Submit the final, fully structured vision document in Markdown format once all sections (A-G) are complete. Make sure to inform the user of the next steps which include: QSI will further refine and align with their document for potential partnerships and investments from various institutions",
       parameters: {
         type: "object",
         properties: {
@@ -130,7 +130,7 @@ const visionExample1 = `### Vision and Context
   * Positions Harare as a continental model for mobility coherence
   * Builds confidence through visible, measurable transformation
 
-  ### Role of Pan African Engineers
+  ### Role of QSI
   * Lead the technical architecture and project delivery
   * Coordinate national and municipal stakeholders
   * Mentor students and young professionals
@@ -138,7 +138,7 @@ const visionExample1 = `### Vision and Context
   * Define continental standards for coherent city planning
 
   ### Institutional Engagement
-  Pan African Engineers has initiated formal communication and engagement with the following key institutions:
+  QSI has initiated formal communication and engagement with the following key institutions:
   * Ministry of Transport and Infrastructural Development
   * Ministry of Local Government and Public Works
   * Zimbabwe Anti-Corruption Commission (ZACC)
@@ -155,7 +155,7 @@ const visionExample1 = `### Vision and Context
   * Engage innovators, universities, and developers for scalable pilot solutions.
 
   ### Strategic Invitation
-  Pan African Engineers invites developers, businesses, and visionary thinkers to align their projects with this initiative — contributing to national progress through structured collaboration, mentorship, and sustainable engineering.`;
+  QSI invites developers, businesses, and visionary thinkers to align their projects with this initiative — contributing to national progress through structured collaboration, mentorship, and sustainable engineering.`;
 
 /* -------------------------------------------
    MODEL SELECTION LOGIC (HYBRID)
