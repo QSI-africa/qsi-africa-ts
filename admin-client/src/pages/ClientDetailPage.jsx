@@ -81,13 +81,14 @@ const ClientDetailPage = () => {
   const markdownComponents = {
     h1: ({ children }) => (
       <Title
-        level={2}
+        level={3}
         style={{
           color: token.colorPrimary,
           marginTop: token.marginLG,
           marginBottom: token.margin,
-          borderBottom: `2px solid ${token.colorPrimaryBorder}`,
           paddingBottom: token.paddingXS,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          fontWeight: 600,
         }}
       >
         {children}
@@ -95,11 +96,12 @@ const ClientDetailPage = () => {
     ),
     h2: ({ children }) => (
       <Title
-        level={3}
+        level={4}
         style={{
           color: token.colorTextHeading,
           marginTop: token.marginLG,
           marginBottom: token.marginSM,
+          fontWeight: 600,
         }}
       >
         {children}
@@ -107,34 +109,38 @@ const ClientDetailPage = () => {
     ),
     h3: ({ children }) => (
       <Title
-        level={4}
+        level={5}
         style={{
           color: token.colorText,
-          marginTop: token.margin,
+          marginTop: token.marginMD,
           marginBottom: token.marginXS,
+          fontWeight: 600,
         }}
       >
         {children}
       </Title>
     ),
     h4: ({ children }) => (
-      <Title
-        level={5}
+      <Text
+        strong
         style={{
+          display: "block",
+          fontSize: token.fontSizeLG,
           color: token.colorTextSecondary,
-          marginTop: token.margin,
-          marginBottom: token.marginXS,
+          marginTop: token.marginMD,
+          marginBottom: token.marginXXS,
         }}
       >
         {children}
-      </Title>
+      </Text>
     ),
     p: ({ children }) => (
       <Paragraph
         style={{
-          marginBottom: token.margin,
-          lineHeight: 1.6,
+          marginBottom: token.marginMD,
+          lineHeight: 1.8,
           color: token.colorText,
+          fontSize: token.fontSize,
         }}
       >
         {children}
@@ -156,6 +162,7 @@ const ClientDetailPage = () => {
           marginBottom: token.marginLG,
           paddingLeft: token.marginLG,
           color: token.colorText,
+          lineHeight: 1.8,
         }}
       >
         {children}
@@ -167,6 +174,7 @@ const ClientDetailPage = () => {
           marginBottom: token.marginLG,
           paddingLeft: token.marginLG,
           color: token.colorText,
+          lineHeight: 1.8,
         }}
       >
         {children}
@@ -176,7 +184,7 @@ const ClientDetailPage = () => {
       <li
         style={{
           marginBottom: token.marginXS,
-          lineHeight: 1.6,
+          lineHeight: 1.8,
         }}
       >
         {children}
@@ -186,8 +194,8 @@ const ClientDetailPage = () => {
       <blockquote
         style={{
           borderLeft: `4px solid ${token.colorPrimary}`,
-          padding: `${token.padding}px ${token.paddingLG}px`,
-          margin: `${token.margin}px 0`,
+          padding: `${token.paddingSM}px ${token.paddingLG}px`,
+          margin: `${token.marginMD}px 0`,
           background: token.colorFillAlter,
           borderRadius: `0 ${token.borderRadius}px ${token.borderRadius}px 0`,
           fontStyle: "italic",
@@ -232,6 +240,46 @@ const ClientDetailPage = () => {
         </pre>
       );
     },
+    table: ({ children }) => (
+      <div style={{ overflowX: "auto", marginBottom: token.marginLG }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            border: `1px solid ${token.colorBorderSecondary}`,
+          }}
+        >
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead style={{ background: token.colorFillAlter }}>{children}</thead>
+    ),
+    th: ({ children }) => (
+      <th
+        style={{
+          padding: token.paddingSM,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          textAlign: "left",
+          fontWeight: "600",
+          color: token.colorTextHeading,
+        }}
+      >
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td
+        style={{
+          padding: token.paddingSM,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          color: token.colorText,
+        }}
+      >
+        {children}
+      </td>
+    ),
   };
 
   if (loading) {
@@ -360,23 +408,48 @@ const ClientDetailPage = () => {
               )}
             </Descriptions>
 
-            {/* AI Analysis */}
-            <Divider>AI Frequency Scan Analysis</Divider>
-            <Card
-              type="inner"
-              style={{
-                background: token.colorFillAlter,
-                border: `1px solid ${token.colorBorderSecondary}`,
-              }}
-            >
-              {profile.generatedProfile ? (
-                <ReactMarkdown components={markdownComponents}>
-                  {formatMarkdown(profile.generatedProfile)}
-                </ReactMarkdown>
-              ) : (
-                <Text type="secondary">No AI analysis available.</Text>
-              )}
-            </Card>
+            {/* Custom styled AI Analysis Box */}
+            <div style={{ marginTop: token.marginLG }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: token.marginSM,
+                  marginBottom: token.marginMD,
+                  padding: `${token.paddingSM}px ${token.padding}px`,
+                  background: token.colorInfoBg,
+                  borderLeft: `4px solid ${token.colorInfo}`,
+                  borderRadius: `0 ${token.borderRadiusSM}px ${token.borderRadiusSM}px 0`,
+                }}
+              >
+                <BulbOutlined style={{ color: token.colorInfo, fontSize: 20 }} />
+                <Text strong style={{ color: token.colorInfoText, fontSize: 16 }}>
+                  AI Frequency Scan Analysis
+                </Text>
+              </div>
+              
+              <div
+                style={{
+                  background: token.colorBgContainer,
+                  border: `1px solid ${token.colorBorderSecondary}`,
+                  borderRadius: token.borderRadiusLG,
+                  padding: token.paddingLG,
+                  boxShadow: token.boxShadowTertiary,
+                }}
+              >
+                {profile.generatedProfile ? (
+                  <div className="markdown-body">
+                    <ReactMarkdown components={markdownComponents}>
+                      {formatMarkdown(profile.generatedProfile)}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: token.paddingXL }}>
+                    <Text type="secondary">No AI analysis available at this time.</Text>
+                  </div>
+                )}
+              </div>
+            </div>
           </Space>
         ) : (
           <div style={{ textAlign: "center", padding: token.paddingXL }}>
