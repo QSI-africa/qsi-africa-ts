@@ -36,6 +36,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import animationData from "../assets/animations/meditate_animation.json";
 import lightLogo from "../assets/images/qsi_light_logo.png";
 import darkLogo from "../assets/images/QSI.png";
@@ -450,7 +451,7 @@ const HeroSection = React.memo(() => {
             textAlign: isMobile ? "center" : "left",
           }}
         >
-          <ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
             One interface. Three paths: **Smart Infrastructure**, **Healing &
             Therapy**, and **Vision Space**. Powered by one **Quantum Spiritual
             Intelligence** to bring coherence and alignment to your challenges.

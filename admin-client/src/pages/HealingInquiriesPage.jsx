@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import api from "../api";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useNavigate, Link } from "react-router-dom";
 // 1. IMPORT THE INVOICING MODAL
 import InvoiceGeneratorModal from "../components/InvoiceGeneratorModal";
@@ -605,6 +606,7 @@ const HealingInquiriesPage = () => {
               >
                 {selectedSubmission.generatedPlan ? (
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       p: (props) => (
                         <p

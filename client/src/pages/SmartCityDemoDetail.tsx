@@ -31,6 +31,7 @@ import axios from "axios";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -509,7 +510,10 @@ const SmartCityDemoDetail: React.FC = () => {
 
         {/* Content */}
         <article style={styles.pilotContent}>
-          <ReactMarkdown components={markdownComponents}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
             {/* Uses expandedView from schema */}
             {cleanMarkdown(demo.expandedView || demo.shortDescription)}
           </ReactMarkdown>

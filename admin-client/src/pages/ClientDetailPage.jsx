@@ -26,6 +26,7 @@ import {
 } from "@ant-design/icons";
 import api from "../api";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 const { useToken } = theme;
 
 const { Title, Paragraph, Text } = Typography;
@@ -439,7 +440,10 @@ const ClientDetailPage = () => {
               >
                 {profile.generatedProfile ? (
                   <div className="markdown-body">
-                    <ReactMarkdown components={markdownComponents}>
+                    <ReactMarkdown 
+                      components={markdownComponents}
+                      remarkPlugins={[remarkGfm]}
+                    >
                       {formatMarkdown(profile.generatedProfile)}
                     </ReactMarkdown>
                   </div>
@@ -511,7 +515,10 @@ const ClientDetailPage = () => {
                           border: `1px solid ${token.colorPrimaryBorder}`,
                         }}
                       >
-                        <ReactMarkdown components={markdownComponents}>
+                        <ReactMarkdown 
+                          components={markdownComponents}
+                          remarkPlugins={[remarkGfm]}
+                        >
                           {formatMarkdown(submission.generatedPlan)}
                         </ReactMarkdown>
                       </Card>

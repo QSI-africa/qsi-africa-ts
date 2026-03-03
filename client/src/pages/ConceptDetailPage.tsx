@@ -34,6 +34,7 @@ import axios from "axios";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -582,7 +583,10 @@ const ConceptDetailPage: React.FC = () => {
         {/* Content */}
         <article style={styles.pilotContent}>
           {/* PilotProject uses 'expandedView' for detail content */}
-          <ReactMarkdown components={markdownComponents}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
             {cleanMarkdown(pilot.expandedView)}
           </ReactMarkdown>
         </article>

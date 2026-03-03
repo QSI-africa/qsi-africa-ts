@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import api from "../api";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Link } from "react-router-dom";
 
 const { Title, Paragraph, Text } = Typography;
@@ -573,6 +574,7 @@ const VisionSubmissionsPage = () => {
               >
                 {selectedSubmission.generatedVisionOutput ? (
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       h3: ({ ...props }) => (
                         <h3
