@@ -3,9 +3,9 @@ import axios from "axios";
 
 // Use environment variable or fallback
 const baseURL =
-  // import.meta.env.VITE_API_BASE_URL ||
-  // "https://api.qsi.africa/api";
-  "http://localhost:3001/api";
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://api.qsi.africa/api";
+  // "http://localhost:3001";
 
 const api = axios.create({
   baseURL: baseURL,

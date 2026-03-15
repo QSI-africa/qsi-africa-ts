@@ -269,8 +269,8 @@ const ChatWindow: React.FC = () => {
     setSelectedModule(moduleName);
   }, [moduleName]);
 
-  const baseURL = "http://localhost:3001/api";
-    // import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+  const baseURL =
+    import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
 
   // --- FIX: Update contactInfo whenever user data changes ---
   useEffect(() => {
