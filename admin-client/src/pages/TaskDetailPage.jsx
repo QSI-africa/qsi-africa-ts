@@ -21,6 +21,7 @@ import {
   Badge,
   List,
   Alert,
+  Drawer,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -39,7 +40,10 @@ import {
   DollarCircleOutlined,
   SwapOutlined,
   UserAddOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import TaskDocumentUploader from "../components/TaskDocumentUploader";
@@ -160,6 +164,7 @@ const TaskDetailPage = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isConversationDrawerVisible, setIsConversationDrawerVisible] = useState(false);
 
   const { message } = AntApp.useApp();
   const { user } = useAuth();
@@ -695,6 +700,8 @@ const TaskDetailPage = () => {
           {renderSubmitAction()}
           {renderTeamMemberUploader()}
 
+
+
           <Card
             title="Original Submission"
             style={{ marginBottom: token.margin }}
@@ -821,6 +828,23 @@ const TaskDetailPage = () => {
               </Button>
             )}
           </Card>
+
+          <Button
+            block
+            icon={<MessageOutlined />}
+            size="large"
+            onClick={() => setIsConversationDrawerVisible(true)}
+            style={{ 
+              marginBottom: token.margin,
+              height: 50,
+              fontSize: 16,
+              background: token.colorBgContainer,
+              border: `1px solid ${token.colorBorder}`
+            }}
+          >
+            View AI Conversation Context
+          </Button>
+
           <Card title="History" bodyStyle={{ padding: 0 }}>
             <TaskAuditLog logs={task.auditLogs} />
           </Card>
@@ -864,6 +888,57 @@ const TaskDetailPage = () => {
           }}
         />
       )}
+
+      <Drawer
+        title="AI Conversation History"
+        placement="right"
+        onClose={() => setIsConversationDrawerVisible(false)}
+        open={isConversationDrawerVisible}
+        width={isMobile ? '100%' : 500}
+        styles={{
+          body: { padding: 0, background: token.colorBgLayout }
+        }}
+      >
+        <div style={{ padding: 24 }}>
+          {task.submission?.conversationHistory && Array.isArray(task.submission.conversationHistory) ? (
+            <List
+              dataSource={task.submission.conversationHistory}
+              split={false}
+              renderItem={(item) => (
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: item.sender === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: 20
+                }}>
+                  <div style={{ 
+                    maxWidth: '90%', 
+                    padding: '12px 16px', 
+                    borderRadius: 16,
+                    backgroundColor: item.sender === 'user' ? token.colorPrimary : token.colorBgContainer,
+                    color: item.sender === 'user' ? '#fff' : token.colorText,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                    border: item.sender === 'user' ? 'none' : `1px solid ${token.colorBorder}`
+                  }}>
+                    <div style={{ fontSize: 11, marginBottom: 4, opacity: 0.7, fontWeight: 600, textTransform: 'uppercase' }}>
+                      {item.sender === 'user' ? 'User' : 'AI Assistant'}
+                    </div>
+                    <div className="markdown-content" style={{ fontSize: 14, lineHeight: 1.6 }}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {item.text}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <Text type="secondary">No conversation history available for this task.</Text>
+            </div>
+          )}
+        </div>
+      </Drawer>
     </div>
   );
 };
