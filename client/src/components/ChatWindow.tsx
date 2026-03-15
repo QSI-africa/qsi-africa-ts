@@ -230,6 +230,7 @@ const ChatWindow: React.FC = () => {
 
     // If user is authenticated, use their actual info
     if (isAuthenticated && user) {
+
       return {
         name: user.name || user.email?.split("@")[0] || "Valued User",
         email: user.email || "user@chat.com",
@@ -247,6 +248,7 @@ const ChatWindow: React.FC = () => {
     };
   });
 
+  console.log("contact info", contactInfo)
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [leftDrawerVisible, setLeftDrawerVisible] = useState<boolean>(false);
@@ -267,8 +269,8 @@ const ChatWindow: React.FC = () => {
     setSelectedModule(moduleName);
   }, [moduleName]);
 
-  const baseURL =
-    import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+  const baseURL = "http://localhost:3001/api";
+    // import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
 
   // --- FIX: Update contactInfo whenever user data changes ---
   useEffect(() => {

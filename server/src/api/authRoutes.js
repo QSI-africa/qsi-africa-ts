@@ -97,6 +97,7 @@ router.post("/login", authLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
       },
     });
   } catch (error) {
@@ -122,6 +123,7 @@ router.get("/me", authMiddleware, async (req, res) => {
         email: true,
         name: true,
         role: true,
+        phone: true,
         frequencyScans: {
           select: {
             id: true,
@@ -276,6 +278,7 @@ router.post("/register-user", registrationLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
       },
     });
   } catch (error) {

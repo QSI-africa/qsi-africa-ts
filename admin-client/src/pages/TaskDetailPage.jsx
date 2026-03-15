@@ -707,47 +707,55 @@ const TaskDetailPage = () => {
             style={{ marginBottom: token.margin }}
             bodyStyle={{ padding: 20 }}
           >
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>CONTACT INFO (Submission)</Text>
-                    <div style={{ fontSize: 16 }}>{task.submission?.contactInfo || "No contact info available"}</div>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              {task.submission?.user ? (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <Avatar icon={<UserOutlined />} style={{ backgroundColor: token.colorPrimary }} />
+                    <div>
+                      <Text strong style={{ fontSize: 16 }}>{task.submission.user.name}</Text>
+                      <br />
+                      <Text type="secondary">{task.submission.user.email}</Text>
+                    </div>
                   </div>
-                  
-                  {task.submission?.user && (
-                    <>
-                      <Divider style={{ margin: '8px 0' }} />
-                      <div>
-                        <Text type="secondary" style={{ fontSize: 12 }}>REGISTERED CLIENT</Text>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <Avatar icon={<UserOutlined />} size="small" />
-                          <Text strong>{task.submission.user.name}</Text>
-                        </div>
-                        <Text type="secondary" style={{ marginLeft: 32 }}>{task.submission.user.email}</Text>
-                        {task.submission.user.phone && (
-                          <div style={{ marginLeft: 32 }}>
-                            <Text type="secondary">{task.submission.user.phone}</Text>
-                          </div>
-                        )}
-                      </div>
-                    </>
+                  {task.submission.user.phone && (
+                    <div>
+                      <Text type="secondary" style={{ width: 80, display: 'inline-block' }}>Phone:</Text>
+                      <Text>{task.submission.user.phone}</Text>
+                    </div>
                   )}
+                  {task.submission.user.location && (
+                    <div>
+                      <Text type="secondary" style={{ width: 80, display: 'inline-block' }}>Location:</Text>
+                      <Text>{task.submission.user.location}</Text>
+                    </div>
+                  )}
+                  {task.submission.user.organization && (
+                    <div>
+                      <Text type="secondary" style={{ width: 80, display: 'inline-block' }}>Company:</Text>
+                      <Text>{task.submission.user.organization}</Text>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12 }}>CONTACT INFO</Text>
+                  <div style={{ fontSize: 16 }}>{task.submission?.contactInfo || "No contact info available"}</div>
+                </div>
+              )}
 
-                  {task.submission?.generatedSolution && (
-                    <>
-                      <Divider style={{ margin: '8px 0' }} />
-                      <div>
-                        <Text type="secondary" style={{ fontSize: 12 }}>INITIAL SYSTEM OUTPUT</Text>
-                        <Paragraph ellipsis={{ rows: 3, expandable: true, symbol: 'more' }} style={{ margin: 0 }}>
-                          {task.submission.generatedSolution}
-                        </Paragraph>
-                      </div>
-                    </>
-                  )}
-                </Space>
-              </Col>
-            </Row>
+              {task.submission?.generatedSolution && (
+                <>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>INITIAL SYSTEM OUTPUT</Text>
+                    <Paragraph ellipsis={{ rows: 3, expandable: true, symbol: 'more' }} style={{ margin: 0 }}>
+                      {task.submission.generatedSolution}
+                    </Paragraph>
+                  </div>
+                </>
+              )}
+            </Space>
           </Card>
 
           <Card title="Specifications" bodyStyle={{ padding: 20 }}>
