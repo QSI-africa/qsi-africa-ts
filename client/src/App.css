@@ -119,3 +119,41 @@ body {
 .loading-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* QSI TV Specific Premium Styles */
+.tv-glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.video-participant {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  transition: transform 0.3s ease;
+}
+
+.video-participant:hover {
+  transform: scale(1.02);
+}
+
+.control-bar {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 12px 24px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}

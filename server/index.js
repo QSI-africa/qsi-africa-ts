@@ -5,7 +5,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const prisma = require("./src/config/prisma");
 const path = require("path");
+const http = require("http");
 const { apiLimiter } = require("./src/middleware/rateLimiter");
+const setupVideoSignaling = require("./src/services/videoSignaling");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,11 +53,21 @@ app.use("/api/admin/users", require("./src/api/usersRoutes"));
 app.use("/api/admin", require("./src/api/adminRoutes"));
 app.use("/api/onboarding", require("./src/api/onboardingRoutes"));
 app.use("/api/invoicing", require("./src/api/invoicingRoutes"));
+app.use("/api/mobility", require("./src/api/mobilityRoutes"));
+app.use("/api/network", require("./src/api/networkRoutes"));
+app.use("/api/upload", require("./src/api/uploadRoutes"));
+app.use("/api/logic", require("./src/api/logicRoutes"));
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "Server is running" });
 });
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Initialize Socket.io signaling
+const io = setupVideoSignaling(server);
+app.set("io", io);
+
+server.listen(PORT, () => {
   console.log(`QSI server listening on port ${PORT}`);
 });

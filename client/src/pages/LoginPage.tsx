@@ -19,11 +19,11 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
   const { message } = AntApp.useApp();
-  const { login } = useAuth();
+  const { login } = useAuth()!;
   const navigate = useNavigate();
   const location = useLocation();
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
     setError(null);
     try {
@@ -32,7 +32,7 @@ const LoginPage: React.FC = () => {
       // Redirect to the page the user was trying to visit, or to home
       const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login Failed:", err);
       setError(
         err.response?.data?.error || "Login failed. Please check credentials."
@@ -76,7 +76,7 @@ const LoginPage: React.FC = () => {
             </Button>
           </Form.Item>
           <div style={{ textAlign: "center" }}>
-            Don't have an account? <Link to="/register">Sign up now</Link>
+            Don't have an account? <Link to="/register" state={{ from: location.state?.from }}>Sign up now</Link>
           </div>
         </Form>
       </Card>

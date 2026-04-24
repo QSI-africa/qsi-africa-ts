@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Select, Steps, message, Spin, Grid } from 'antd';
+import { Form, Input, Button, Card, Typography, Select, Steps, message, Grid } from 'antd';
 import { ArrowRightOutlined, CheckOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -130,54 +130,62 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
           location: user?.location || '', // Optional prefill
         }}
       >
-        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
-          <Form.Item
-            name="location"
-            label="Current Location"
-            rules={[{ required: true, message: 'Please enter your location' }]}
-          >
-            <Input placeholder="City, Country" size="large" />
-          </Form.Item>
-          <Paragraph type="secondary">
-            Your environment plays a key role in your frequency. Where are you anchored?
-          </Paragraph>
-        </div>
+        {currentStep === 0 && (
+          <div>
+            <Form.Item
+              name="location"
+              label="Current Location"
+              rules={[{ required: true, message: 'Please enter your location' }]}
+            >
+              <Input placeholder="City, Country" size="large" />
+            </Form.Item>
+            <Paragraph type="secondary">
+              Your environment plays a key role in your frequency. Where are you anchored?
+            </Paragraph>
+          </div>
+        )}
 
-        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-          <Form.Item
-            name="personalBeliefs"
-            label="Key Personal Beliefs"
-            rules={[{ required: true, message: 'Please share a core belief' }]}
-          >
-            <TextArea rows={screens.md ? 4 : 3} placeholder="What do you believe to be true about yourself and the world?" />
-          </Form.Item>
-        </div>
+        {currentStep === 1 && (
+          <div>
+            <Form.Item
+              name="personalBeliefs"
+              label="Key Personal Beliefs"
+              rules={[{ required: true, message: 'Please share a core belief' }]}
+            >
+              <TextArea rows={screens.md ? 4 : 3} placeholder="What do you believe to be true about yourself and the world?" />
+            </Form.Item>
+          </div>
+        )}
 
-        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-          <Form.Item
-            name="background"
-            label="Background & Context"
-            rules={[{ required: true, message: 'Please share your background' }]}
-          >
-            <TextArea rows={screens.md ? 4 : 3} placeholder="Briefly describe your professional or personal background..." />
-          </Form.Item>
-        </div>
+        {currentStep === 2 && (
+          <div>
+            <Form.Item
+              name="background"
+              label="Background & Context"
+              rules={[{ required: true, message: 'Please share your background' }]}
+            >
+              <TextArea rows={screens.md ? 4 : 3} placeholder="Briefly describe your professional or personal background..." />
+            </Form.Item>
+          </div>
+        )}
 
-        <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-          <Form.Item
-            name="lifeVision"
-            label="Life Vision"
-            rules={[{ required: true, message: 'Please share your vision' }]}
-          >
-            <TextArea rows={screens.md ? 4 : 3} placeholder="What is the highest vision for your life?" />
-          </Form.Item>
-          <Form.Item
-            name="challenges"
-            label="Current Challenges"
-          >
-            <TextArea rows={3} placeholder="What is currently blocking your flow?" />
-          </Form.Item>
-        </div>
+        {currentStep === 3 && (
+          <div>
+            <Form.Item
+              name="lifeVision"
+              label="Life Vision"
+              rules={[{ required: true, message: 'Please share your vision' }]}
+            >
+              <TextArea rows={screens.md ? 4 : 3} placeholder="What is the highest vision for your life?" />
+            </Form.Item>
+            <Form.Item
+              name="challenges"
+              label="Current Challenges"
+            >
+              <TextArea rows={3} placeholder="What is currently blocking your flow?" />
+            </Form.Item>
+          </div>
+        )}
 
         <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between' }}>
           {currentStep > 0 && (

@@ -9,9 +9,20 @@ import React, {
 import { Spin } from "antd";
 import api, { setOnUnauthorizedCallback } from "../api";
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+  user: any;
+  token: string | null;
+  login: (email: string, password: string) => Promise<any>;
+  register: (name: string, email: string, password: string, phone?: string) => Promise<any>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+  refetchUser: () => Promise<void>;
+}
 
-export const AuthProvider = ({ children }) => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState<boolean>(true);

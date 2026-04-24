@@ -8,9 +8,10 @@ import {
   Typography,
   App as AntApp,
   Alert,
+  Checkbox,
 } from "antd";
 import { UserOutlined, MailOutlined, LockOutlined } from "@ant-design/icons";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const { Title } = Typography;
@@ -19,17 +20,20 @@ const RegisterPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
   const { message } = AntApp.useApp();
-  const { register } = useAuth();
+  const { register } = useAuth()!;
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
     setError(null);
     try {
       await register(values.name, values.email, values.password, values.phone);
       message.success("Registration Successful!");
-      navigate("/onboarding", { replace: true });
-    } catch (err) {
+      // Redirect to intended destination or onboarding
+      const from = location.state?.from?.pathname || "/onboarding";
+      navigate(from, { replace: true });
+    } catch (err: any) {
       console.error("Registration Failed:", err);
       setError(
         err.response?.data?.error || "Registration failed. Please try again."
@@ -89,6 +93,22 @@ const RegisterPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="organization">
             <Input placeholder="Organization/Company (optional)" />
+          </Form.Item>
+          <Form.Item
+            name="agreement"
+            valuePropName="checked"
+            rules={[
+              {
+                validator: (_, value) =>
+                  value
+                    ? Promise.resolve()
+                    : Promise.reject(new Error("Please accept the terms and conditions")),
+              },
+            ]}
+          >
+            <Checkbox>
+              I agree to the <Link to="/terms">terms and conditions</Link>
+            </Checkbox>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>

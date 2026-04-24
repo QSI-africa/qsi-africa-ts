@@ -17,6 +17,14 @@ import ConceptDetailPage from "./pages/ConceptDetailPage";
 import SmartCityDemoDetail from "./pages/SmartCityDemoDetail";
 import QsiConceptsPage from "./pages/QsiConceptsPage";
 import SmartCityDemosPage from "./pages/SmartCityDemosPage";
+import QsiTvPage from "./pages/QsiTvPage";
+import LogicAssistant from "./components/LogicAssistant";
+import MobilityPage from "./pages/MobilityPage";
+import SovereignMindsPage from "./pages/SovereignMindsPage";
+import EngineerDashboard from "./pages/EngineerDashboard";
+import HealingPage from "./pages/HealingPage";
+import MyRequestsPage from "./pages/MyRequestsPage";
+import GlobalNavbar from "./components/GlobalNavbar";
 
 // Theme & Auth Imports
 import { lightTheme, darkTheme } from './components/theme/theme-config';
@@ -25,8 +33,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingRoute from "./components/OnboardingRoute";
 import PublicRoute from "./components/PublicRoute";
 import "./App.css";
-// import FrameWorkPage from "./pages/FrameworkPage"; // Removed
-// import FrequencyScan from "./pages/FrequencyScan"; // Removed
 import TermsAndConditions from "./pages/TermsAndConditions";
 import InvoicesPage from "./pages/InvoicesPage";
 
@@ -153,6 +159,9 @@ const App: React.FC = () => {
                 </span>
               </div>
 
+              <GlobalNavbar />
+              <LogicAssistant />
+
               <Content
                 style={{
                   display: "flex",
@@ -180,6 +189,9 @@ const App: React.FC = () => {
                   <Route element={<ProtectedRoute />}>
                     <Route path="/chat/:moduleName" element={<ChatWindow />} />
                     <Route path="/invoices" element={<InvoicesPage />} />
+                    <Route path="/engineer/dashboard" element={<EngineerDashboard />} />
+                    <Route path="/healing" element={<HealingPage />} />
+                    <Route path="/dashboard" element={<MyRequestsPage />} />
                   </Route>
 
                   {/* === Fully Public Routes (Visible to all) === */}
@@ -196,7 +208,9 @@ const App: React.FC = () => {
                     path="/demos/:id"
                     element={<SmartCityDemoDetail />}
                   />
-                  <Route path="/mobility" element={<div style={{padding: 100, textAlign: 'center'}}><h2>QSI Mobility</h2><p>Coming Soon</p></div>} />
+                  <Route path="/mobility" element={<MobilityPage />} />
+                  <Route path="/network" element={<SovereignMindsPage />} />
+                  <Route path="/tv" element={<QsiTvPage />} />
                   
                   {/* Frequency Route REMOVED - Internal to Healing */}
 

@@ -72,6 +72,12 @@ model User {
 
   passwordResetToken   String?
   passwordResetExpires DateTime?
+
+  // Mobility & Network Relations
+  siteVisitRequests    SiteVisitRequest[]   @relation("UserSiteVisit")
+  vehicleHireRequests  VehicleHireRequest[] @relation("EngineerVehicleHire")
+  vehicleHireAccepts   VehicleHireRequest[] @relation("UserVehicleHireAccept")
+  engineerProfile      EngineerProfile?
 }
 
 model FrequencyScan {
@@ -318,10 +324,85 @@ model Document {
   user   User?   @relation(fields: [userId], references: [id]) // <-- FIX 2: Inverse relation is now on User model
   userId String?
 
-taskId String?
+  taskId String?
   task   Task?   @relation(fields: [taskId], references: [id])
   @@index([userId])
 }
+
+// --- NEW MOBLITY & NETWORK MODELS ---
+
+model EngineerProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  bio             String?  @db.Text
+  specialization  String?
+  skills          String[]
+  avatarUrl       String?
+  resumeUrl       String?  // New field for Resume
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  projects        ProjectShowcase[]
+}
+
+model ProjectShowcase {
+  id               String   @id @default(cuid())
+  engineerProfileId String
+  engineerProfile   EngineerProfile @relation(fields: [engineerProfileId], references: [id])
+  title            String
+  description      String   @db.Text
+  imageUrl         String?  // Main/Cover image
+  status           String   @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  images           ProjectImage[]    // Multiple high-res images
+  siteVisitRequests SiteVisitRequest[]
+}
+
+model ProjectImage {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          ProjectShowcase @relation(fields: [projectId], references: [id])
+  imageUrl         String
+  caption          String?
+  createdAt        DateTime @default(now())
+}
+
+model SiteVisitRequest {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation("UserSiteVisit", fields: [userId], references: [id])
+  projectId        String
+  project          ProjectShowcase @relation(fields: [projectId], references: [id])
+  status           String   @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED
+  message          String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model VehicleHireRequest {
+  id               String   @id @default(cuid())
+  engineerId       String
+  engineer         User     @relation("EngineerVehicleHire", fields: [engineerId], references: [id])
+  location         String
+  duration         String
+  price            Decimal
+  details          String?  @db.Text
+  status           String   @default("BROADCASTING") // BROADCASTING, ACCEPTED, COMPLETED, CANCELLED
+  acceptedById     String?
+  acceptedBy       User?    @relation("UserVehicleHireAccept", fields: [acceptedById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Update User model relation links (to be added to User model)
+// siteVisitRequests    SiteVisitRequest[]  @relation("UserSiteVisit")
+// vehicleHireRequests  VehicleHireRequest[] @relation("EngineerVehicleHire")
+// vehicleHireAccepts   VehicleHireRequest[] @relation("UserVehicleHireAccept")
+// engineerProfile      EngineerProfile?
 
 // --- NEW: Infrastructure Suggestions ---
 model InfrastructureSuggestion {

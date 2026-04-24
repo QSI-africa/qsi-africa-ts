@@ -86,6 +86,12 @@ const MODULES = [
     description: "Where the future is lived, not imagined.",
     icon: <LuFrame />,
   },
+  {
+    key: "tv",
+    title: "QSI TV",
+    description: "Live streams and real-time video calls.",
+    icon: <ToolOutlined />, // Will update to Video icon later
+  },
 ];
 
 // const NAV_LINKS = ["About Us", "Contact Us"];
@@ -693,6 +699,11 @@ const LandingPage: React.FC = () => {
       case "demos":
         // Smart City Demos (formerly frameworks)
         navigate(`/demos`);
+        break;
+
+      case "tv":
+        // QSI TV
+        navigate(`/tv`);
         break;
 
       // REMOVED FREQUENCY CASE (It is now internal to Healing)
