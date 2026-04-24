@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-default-secret-change-me";
 
 const setupVideoSignaling = (server) => {
   const io = new Server(server, {
-    path: "/api/socket.io",
+    path: "/socket.io",
     cors: {
       origin: [
         "http://localhost:5173",

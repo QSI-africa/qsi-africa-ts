@@ -2,7 +2,7 @@
 import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://api.qsi.africa');
+  (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://api.qsi.africa/api');
 
 class SocketService {
   private socket: Socket | null = null;
@@ -19,9 +19,9 @@ class SocketService {
     
     this.socket = io(SOCKET_URL, {
       withCredentials: true,
-      transports: window.location.hostname === 'localhost' ? ['polling', 'websocket'] : ['polling'],
+      transports: window.location.hostname === 'localhost' ? ['websocket', 'polling'] : ['polling'],
       auth: { token },
-      path: '/api/socket.io'
+      path: '/socket.io'
     });
 
     this.socket.on('connect', () => {
