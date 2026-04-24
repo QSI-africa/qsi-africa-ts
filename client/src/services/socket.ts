@@ -19,7 +19,7 @@ class SocketService {
     
     this.socket = io(SOCKET_URL, {
       withCredentials: true,
-      transports: ['polling', 'websocket'],
+      transports: window.location.hostname === 'localhost' ? ['polling', 'websocket'] : ['polling'],
       auth: { token },
       path: '/api/socket.io'
     });
