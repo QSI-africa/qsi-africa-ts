@@ -74,14 +74,31 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
           socketService.emit('answer', { targetUserId: senderUserId, answer });
         });
 
+        const pendingCandidates = new Map<string, RTCIceCandidate[]>();
+
         socketService.on('answer', async ({ answer, senderUserId }) => {
           const pc = peerConnections.current.get(senderUserId);
-          if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          if (pc) {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            const queue = pendingCandidates.get(senderUserId) || [];
+            while (queue.length > 0) {
+              const cand = queue.shift();
+              if (cand) await pc.addIceCandidate(cand);
+            }
+            pendingCandidates.delete(senderUserId);
+          }
         });
 
         socketService.on('ice-candidate', async ({ candidate, senderUserId }) => {
           const pc = peerConnections.current.get(senderUserId);
-          if (pc) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          const iceCand = new RTCIceCandidate(candidate);
+          if (pc?.remoteDescription) {
+            await pc.addIceCandidate(iceCand);
+          } else {
+            const queue = pendingCandidates.get(senderUserId) || [];
+            queue.push(iceCand);
+            pendingCandidates.set(senderUserId, queue);
+          }
         });
 
         socketService.on('user-disconnected', ({ socketId }) => {

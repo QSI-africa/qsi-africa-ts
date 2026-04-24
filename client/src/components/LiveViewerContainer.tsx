@@ -51,6 +51,8 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
         }
       };
 
+      const candidateQueue: RTCIceCandidate[] = [];
+
       socketService.on('offer', async ({ offer, senderUserId }) => {
         if (pc.current) {
           broadcasterId.current = senderUserId;
@@ -58,11 +60,23 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           const answer = await pc.current.createAnswer();
           await pc.current.setLocalDescription(answer);
           socketService.emit('answer', { targetUserId: senderUserId, answer });
+          
+          while(candidateQueue.length > 0) {
+            const cand = candidateQueue.shift();
+            if (cand) await pc.current.addIceCandidate(cand);
+          }
         }
       });
 
       socketService.on('ice-candidate', async ({ candidate }) => {
-        if (pc.current) await pc.current.addIceCandidate(new RTCIceCandidate(candidate));
+        if (pc.current) {
+          const iceCand = new RTCIceCandidate(candidate);
+          if (pc.current.remoteDescription) {
+            await pc.current.addIceCandidate(iceCand);
+          } else {
+            candidateQueue.push(iceCand);
+          }
+        }
       });
 
       // Notify the broadcaster that we are here and want the stream
