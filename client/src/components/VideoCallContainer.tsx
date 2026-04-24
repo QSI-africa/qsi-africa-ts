@@ -35,6 +35,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
 
   const isMobile = windowWidth <= 768;
@@ -54,6 +55,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
+        streamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
         socketService.on('user-connected', async ({ socketId }) => {
@@ -100,7 +102,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     startCall();
 
     return () => {
-      localStream?.getTracks().forEach(track => track.stop());
+      streamRef.current?.getTracks().forEach(track => track.stop());
       peerConnections.current.forEach(pc => pc.close());
       socketService.off('user-connected');
       socketService.off('offer');

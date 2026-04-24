@@ -79,6 +79,7 @@ const setupVideoSignaling = (server) => {
     socket.on("request-join-broadcast", (roomId) => {
       const broadcast = activeBroadcasts.get(roomId);
       if (broadcast) {
+        socket.join(roomId);
         io.to(broadcast.broadcasterId).emit("viewer-joined", { 
           viewerId: socket.id, 
           viewerName: socket.user?.name || "Guest",

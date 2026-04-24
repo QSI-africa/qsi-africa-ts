@@ -28,6 +28,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const roomId = useRef(`live-${Math.random().toString(36).substring(7)}`);
 
@@ -48,6 +49,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
+        streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
 
         // Register broadcast on server
@@ -100,7 +102,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
     startBroadcasting();
 
     return () => {
-      localStream?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach(t => t.stop());
       peerConnections.current.forEach(pc => pc.close());
       socketService.emit('stop-broadcast', roomId.current);
       socketService.off('viewer-joined');
