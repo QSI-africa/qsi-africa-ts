@@ -56,33 +56,40 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
         socketService.emit('start-broadcast', roomId.current, { title });
 
         // Listen for new viewers
-        socketService.on('viewer-joined', async ({ viewerId }) => {
-          console.log('New viewer joined:', viewerId);
+      socketService.on('viewer-joined', async ({ viewerId, viewerName }) => {
+          console.log(`[Broadcaster] Viewer joined: ${viewerName} (${viewerId})`);
           setViewerCount(prev => prev + 1);
           
           const pc = new RTCPeerConnection(servers);
           peerConnections.current.set(viewerId, pc);
 
-          stream.getTracks().forEach(track => pc.addTrack(track, stream));
+          stream.getTracks().forEach(track => {
+            console.log(`[Broadcaster] Adding track: ${track.kind} to viewer: ${viewerId}`);
+            pc.addTrack(track, stream);
+          });
 
           pc.onicecandidate = (event) => {
             if (event.candidate) {
+              console.log(`[Broadcaster] Sending ICE candidate to: ${viewerId}`);
               socketService.emit('ice-candidate', { targetUserId: viewerId, candidate: event.candidate });
             }
           };
 
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
+          console.log(`[Broadcaster] Sending offer to viewer: ${viewerId}`);
           socketService.emit('offer', { targetUserId: viewerId, offer });
         });
 
         const pendingCandidates = new Map<string, RTCIceCandidate[]>();
 
         socketService.on('answer', async ({ senderUserId, answer }) => {
+          console.log(`[Broadcaster] Received answer from: ${senderUserId}`);
           const pc = peerConnections.current.get(senderUserId);
           if (pc) {
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
             const queue = pendingCandidates.get(senderUserId) || [];
+            console.log(`[Broadcaster] Processing ${queue.length} buffered candidates for: ${senderUserId}`);
             while (queue.length > 0) {
               const cand = queue.shift();
               if (cand) await pc.addIceCandidate(cand);
@@ -92,6 +99,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
         });
 
         socketService.on('ice-candidate', async ({ senderUserId, candidate }) => {
+          console.log(`[Broadcaster] Received ICE candidate from: ${senderUserId}`);
           const pc = peerConnections.current.get(senderUserId);
           const iceCand = new RTCIceCandidate(candidate);
           if (pc?.remoteDescription) {
@@ -105,6 +113,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
 
         socketService.on('user-disconnected', ({ socketId }) => {
           if (peerConnections.current.has(socketId)) {
+            console.log(`[Broadcaster] Viewer disconnected: ${socketId}`);
             peerConnections.current.get(socketId)?.close();
             peerConnections.current.delete(socketId);
             setViewerCount(prev => Math.max(0, prev - 1));

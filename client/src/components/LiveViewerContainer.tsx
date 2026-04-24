@@ -41,12 +41,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       pc.current = new RTCPeerConnection(servers);
 
       pc.current.ontrack = (event) => {
+        console.log('[Viewer] Received remote track:', event.track.kind);
         setRemoteStream(event.streams[0]);
         if (videoRef.current) videoRef.current.srcObject = event.streams[0];
       };
 
       pc.current.onicecandidate = (event) => {
         if (event.candidate && broadcasterId.current) {
+          console.log('[Viewer] Sending ICE candidate to broadcaster');
           socketService.emit('ice-candidate', { targetUserId: broadcasterId.current, candidate: event.candidate, roomId });
         }
       };
@@ -54,16 +56,21 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       const candidateQueue: RTCIceCandidate[] = [];
 
       socketService.on('offer', async ({ offer, senderUserId }) => {
+        console.log('[Viewer] Received offer from broadcaster:', senderUserId);
         if (pc.current) {
           broadcasterId.current = senderUserId;
           await pc.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pc.current.createAnswer();
           await pc.current.setLocalDescription(answer);
+          console.log('[Viewer] Sending answer back to broadcaster');
           socketService.emit('answer', { targetUserId: senderUserId, answer });
           
-          while(candidateQueue.length > 0) {
-            const cand = candidateQueue.shift();
-            if (cand) await pc.current.addIceCandidate(cand);
+          if (candidateQueue.length > 0) {
+            console.log(`[Viewer] Processing ${candidateQueue.length} buffered candidates`);
+            while(candidateQueue.length > 0) {
+              const cand = candidateQueue.shift();
+              if (cand) await pc.current.addIceCandidate(cand);
+            }
           }
         }
       });
@@ -74,12 +81,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           if (pc.current.remoteDescription) {
             await pc.current.addIceCandidate(iceCand);
           } else {
+            console.log('[Viewer] Buffering incoming ICE candidate (no remote description yet)');
             candidateQueue.push(iceCand);
           }
         }
       });
 
       // Notify the broadcaster that we are here and want the stream
+      console.log('[Viewer] Requesting join for broadcast:', roomId);
       socketService.emit('request-join-broadcast', roomId);
     };
 
