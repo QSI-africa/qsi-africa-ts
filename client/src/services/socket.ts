@@ -1,7 +1,8 @@
 // client/src/services/socket.ts
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_API_URL || 
+  (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://api.qsi.africa');
 
 class SocketService {
   private socket: Socket | null = null;
