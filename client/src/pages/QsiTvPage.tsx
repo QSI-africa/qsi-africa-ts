@@ -24,26 +24,42 @@ const QsiTvPage: React.FC = () => {
     const [activeRoomId, setActiveRoomId] = React.useState<string | null>(null);
     const [isBroadcasting, setIsBroadcasting] = React.useState<boolean>(false);
     const [activeViewerRoom, setActiveViewerRoom] = React.useState<{id: string, title: string} | null>(null);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isMobile = windowWidth <= 768;
 
     useEffect(() => {
         socketService.connect(token || undefined);
         
-        // Check for call param on mount
+        // Check for direct join links on mount
         const callRoomId = searchParams.get('call');
+        const viewRoomId = searchParams.get('view');
+        
         if (callRoomId) {
             setActiveRoomId(callRoomId);
+        } else if (viewRoomId) {
+            // Join as viewer even before list returns, update title later if found
+            setActiveViewerRoom({ id: viewRoomId, title: "Connecting..." });
         }
 
         socketService.on('broadcast-list-updated', (updatedStreams: any[]) => {
             setStreams(updatedStreams);
             setIsLoading(false);
             
-            // Check for view param if not already viewing or in a call
-            const viewRoomId = searchParams.get('view');
-            if (viewRoomId && !activeViewerRoom && !activeRoomId && !isBroadcasting) {
+            // If we're waiting for a stream's title, update it
+            if (viewRoomId && activeViewerRoom?.title === "Connecting...") {
                 const stream = updatedStreams.find(s => s.roomId === viewRoomId);
                 if (stream) {
                     setActiveViewerRoom({ id: stream.roomId, title: stream.title });
+                } else if (!isLoading) {
+                    // If list is loaded and stream not found, it might be ended
+                    // But we stay in viewer container so they see the "connecting" state or eventually a failure
                 }
             }
         });
@@ -54,13 +70,13 @@ const QsiTvPage: React.FC = () => {
         // Safety timeout to prevent infinite loading state
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 8000); // 8 seconds safety
+        }, 8000);
 
         return () => {
             clearTimeout(timer);
             socketService.off('broadcast-list-updated');
         };
-    }, [token]);
+    }, [token, searchParams]);
 
     const handleCreateRoom = () => {
         const roomId = Math.random().toString(36).substring(2, 9);
@@ -85,11 +101,11 @@ const QsiTvPage: React.FC = () => {
     };
 
     return (
-        <Layout style={{ minHeight: '100vh', background: 'transparent', padding: '100px 20px 20px' }}>
+        <Layout style={{ minHeight: '100vh', background: 'transparent', padding: isMobile ? '80px 12px 20px' : '100px 20px 20px' }}>
             <Content style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-                <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                    <Title level={1} style={{ color: '#fff' }}>QSI TV</Title>
-                    <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 18 }}>
+                <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
+                    <Title level={isMobile ? 2 : 1} style={{ color: '#fff' }}>QSI TV</Title>
+                    <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: isMobile ? 14 : 18 }}>
                         Experience live intelligence through real-time video and streams.
                     </Text>
                 </div>

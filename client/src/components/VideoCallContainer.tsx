@@ -32,9 +32,18 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+
+  const isMobile = windowWidth <= 768;
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const servers = {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
@@ -184,12 +193,14 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   return (
     <div className="tv-glass-panel" style={{ 
       display: 'grid', 
-      gridTemplateColumns: showChat ? '1fr 350px' : '1fr', 
-      height: 'calc(100vh - 200px)',
+      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 350px' : '1fr'), 
+      gridTemplateRows: isMobile && showChat ? '1fr 300px' : 'auto',
+      height: isMobile ? 'auto' : 'calc(100vh - 200px)',
+      minHeight: isMobile ? '100vh' : 'auto',
       overflow: 'hidden'
     }}>
       {/* Video Grid */}
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ padding: isMobile ? '12px' : '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="video-grid" style={{ flex: 1, overflowY: 'auto' }}>
           {/* Local Participant */}
           <div className="video-participant">
@@ -212,26 +223,28 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         </div>
 
         {/* Controls */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <div className="control-bar">
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 12 : 20 }}>
+          <div className="control-bar" style={{ padding: '8px', gap: isMobile ? '8px' : '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Tooltip title={isMuted ? "Unmute" : "Mute"}>
-              <Button shape="circle" size="large" icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />} onClick={toggleMute} danger={isMuted} />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />} onClick={toggleMute} danger={isMuted} />
             </Tooltip>
             <Tooltip title={isVideoOff ? "Camera On" : "Camera Off"}>
-              <Button shape="circle" size="large" icon={isVideoOff ? <VideoCameraAddOutlined /> : <VideoCameraOutlined />} onClick={toggleVideo} danger={isVideoOff} />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={isVideoOff ? <VideoCameraAddOutlined /> : <VideoCameraOutlined />} onClick={toggleVideo} danger={isVideoOff} />
             </Tooltip>
-            <Tooltip title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
-              <Button shape="circle" size="large" icon={<DesktopOutlined />} onClick={toggleScreenShare} type={isScreenSharing ? "primary" : "default"} />
-            </Tooltip>
-            <Divider type="vertical" style={{ height: 40, borderColor: 'rgba(255,255,255,0.2)' }} />
+            {!isMobile && (
+              <Tooltip title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
+                <Button shape="circle" size="large" icon={<DesktopOutlined />} onClick={toggleScreenShare} type={isScreenSharing ? "primary" : "default"} />
+              </Tooltip>
+            )}
+            <Divider type="vertical" style={{ height: isMobile ? 24 : 40, borderColor: 'rgba(255,255,255,0.2)' }} />
             <Tooltip title="Toggle Chat">
-              <Button shape="circle" size="large" icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
             </Tooltip>
             <Tooltip title="Copy Share Link">
-              <Button shape="circle" size="large" icon={<ShareAltOutlined />} onClick={copyShareLink} />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<ShareAltOutlined />} onClick={copyShareLink} />
             </Tooltip>
             <Tooltip title="Leave Call">
-              <Button shape="circle" size="large" icon={<PhoneOutlined rotate={225} />} onClick={onLeave} danger type="primary" />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<PhoneOutlined rotate={225} />} onClick={onLeave} danger type="primary" />
             </Tooltip>
           </div>
         </div>
@@ -239,7 +252,14 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
       {/* Chat Sidebar */}
       {showChat && (
-        <RoomChat roomId={roomId} userName={user?.name || "Participant"} />
+        <div style={{ 
+          height: isMobile ? '300px' : 'auto',
+          borderLeft: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)',
+          borderTop: isMobile ? '1px solid rgba(255,255,255,0.1)' : 'none',
+          overflow: 'hidden'
+        }}>
+          <RoomChat roomId={roomId} userName={user?.name || "Participant"} />
+        </div>
       )}
     </div>
   );

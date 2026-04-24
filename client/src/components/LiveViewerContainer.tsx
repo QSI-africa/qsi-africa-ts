@@ -20,6 +20,15 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = windowWidth <= 768;
 
   const servers = {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
@@ -69,20 +78,23 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   return (
     <div className="tv-glass-panel" style={{ 
       display: 'grid', 
-      gridTemplateColumns: showChat ? '1fr 350px' : '1fr', 
-      height: 'calc(100vh - 200px)',
+      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 350px' : '1fr'), 
+      gridTemplateRows: isMobile && showChat ? '1fr 300px' : 'auto',
+      height: isMobile ? 'auto' : 'calc(100vh - 200px)',
+      minHeight: isMobile ? '80vh' : 'auto',
       overflow: 'hidden'
     }}>
       {/* Video Content */}
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' }}>{title}</Text>
+        <div style={{ padding: isMobile ? '12px' : '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold' }}>{title}</Text>
           <Space>
             <Button 
                 icon={<MessageOutlined />} 
                 onClick={() => setShowChat(!showChat)} 
                 type={showChat ? "primary" : "default"}
                 ghost={!showChat}
+                size={isMobile ? "small" : "middle"}
             />
           </Space>
         </div>
@@ -103,7 +115,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
       {/* Chat Sidebar */}
       {showChat && (
-        <RoomChat roomId={roomId} userName={user?.name || "Viewer"} />
+        <div style={{ 
+          height: isMobile ? '300px' : 'auto',
+          borderLeft: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)',
+          borderTop: isMobile ? '1px solid rgba(255,255,255,0.1)' : 'none',
+          overflow: 'hidden'
+        }}>
+          <RoomChat roomId={roomId} userName={user?.name || "Viewer"} />
+        </div>
       )}
     </div>
   );

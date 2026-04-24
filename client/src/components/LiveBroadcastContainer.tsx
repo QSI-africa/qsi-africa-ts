@@ -25,10 +25,19 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
   const [showChat, setShowChat] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
   const [title, setTitle] = useState("My Live Broadcast");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const roomId = useRef(`live-${Math.random().toString(36).substring(7)}`);
+
+  const isMobile = windowWidth <= 768;
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const servers = {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
@@ -165,26 +174,34 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
   return (
     <div className="tv-glass-panel" style={{ 
       display: 'grid', 
-      gridTemplateColumns: showChat ? '1fr 350px' : '1fr', 
-      height: 'calc(100vh - 200px)',
+      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 350px' : '1fr'), 
+      gridTemplateRows: isMobile && showChat ? '1fr 300px' : 'auto',
+      height: isMobile ? 'auto' : 'calc(100vh - 200px)',
+      minHeight: isMobile ? '100vh' : 'auto',
       overflow: 'hidden'
     }}>
-      {/* Video Content */}
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <Space direction="vertical">
+      <div style={{ padding: isMobile ? '12px' : '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between', 
+          alignItems: isMobile ? 'flex-start' : 'center', 
+          marginBottom: 20,
+          gap: 12
+        }}>
+          <Space direction="vertical" style={{ width: '100%' }}>
             <Input 
               value={title} 
               onChange={e => setTitle(e.target.value)} 
               placeholder="Stream Title" 
               variant="borderless"
-              style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold' }}
+              style={{ color: '#fff', fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: 'bold', padding: 0 }}
             />
             <Badge status="processing" text={<Text style={{ color: '#10b981' }}>LIVE</Text>} />
           </Space>
-          <Space size="large">
-            <Text style={{ color: 'rgba(255,255,255,0.6)' }}><EyeOutlined /> {viewerCount} Viewers</Text>
-            <Button type="primary" danger icon={<StopOutlined />} onClick={onStop}>Stop Broadcast</Button>
+          <Space size="large" style={{ width: isMobile ? '100%' : 'auto', justifyContent: 'space-between' }}>
+            <Text style={{ color: 'rgba(255,255,255,0.6)' }}><EyeOutlined /> {viewerCount}</Text>
+            <Button type="primary" danger icon={<StopOutlined />} onClick={onStop} size={isMobile ? "small" : "middle"}>Stop</Button>
           </Space>
         </div>
 
@@ -192,23 +209,25 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
           <video ref={videoRef} autoPlay playsInline muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           
           {/* Controls Overlay */}
-          <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center' }}>
-            <div className="control-bar">
+          <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', width: '90%' }}>
+            <div className="control-bar" style={{ padding: '8px', gap: isMobile ? '8px' : '12px' }}>
                 <Tooltip title={isMuted ? "Unmute" : "Mute"}>
-                <Button shape="circle" size="large" icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />} onClick={toggleMute} danger={isMuted} />
+                <Button shape="circle" size={isMobile ? "middle" : "large"} icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />} onClick={toggleMute} danger={isMuted} />
                 </Tooltip>
                 <Tooltip title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}>
-                <Button shape="circle" size="large" icon={isVideoOff ? <VideoCameraAddOutlined /> : <VideoCameraOutlined />} onClick={toggleVideo} danger={isVideoOff} />
+                <Button shape="circle" size={isMobile ? "middle" : "large"} icon={isVideoOff ? <VideoCameraAddOutlined /> : <VideoCameraOutlined />} onClick={toggleVideo} danger={isVideoOff} />
                 </Tooltip>
-                <Tooltip title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
-                <Button shape="circle" size="large" icon={<DesktopOutlined />} onClick={toggleScreenShare} type={isScreenSharing ? "primary" : "default"} />
-                </Tooltip>
-                <Divider type="vertical" style={{ height: 40, borderColor: 'rgba(255,255,255,0.2)' }} />
+                {!isMobile && (
+                  <Tooltip title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
+                  <Button shape="circle" size="large" icon={<DesktopOutlined />} onClick={toggleScreenShare} type={isScreenSharing ? "primary" : "default"} />
+                  </Tooltip>
+                )}
+                <Divider type="vertical" style={{ height: isMobile ? 24 : 40, borderColor: 'rgba(255,255,255,0.2)' }} />
                 <Tooltip title="Toggle Chat">
-                <Button shape="circle" size="large" icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
+                <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
                 </Tooltip>
                 <Tooltip title="Copy Share Link">
-                <Button shape="circle" size="large" icon={<ShareAltOutlined />} onClick={copyShareLink} />
+                <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<ShareAltOutlined />} onClick={copyShareLink} />
                 </Tooltip>
             </div>
           </div>
@@ -217,7 +236,14 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
 
       {/* Chat Sidebar */}
       {showChat && (
-        <RoomChat roomId={roomId.current} userName="Broadcaster" />
+        <div style={{ 
+          height: isMobile ? '300px' : 'auto',
+          borderLeft: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)',
+          borderTop: isMobile ? '1px solid rgba(255,255,255,0.1)' : 'none',
+          overflow: 'hidden'
+        }}>
+          <RoomChat roomId={roomId.current} userName="Broadcaster" />
+        </div>
       )}
     </div>
   );
