@@ -11,12 +11,14 @@ import { useAuth } from '../context/AuthContext';
 import VideoCallContainer from '../components/VideoCallContainer';
 import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
+import { useSearchParams } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 const QsiTvPage: React.FC = () => {
     const { token } = useAuth() || { token: null };
+    const [searchParams] = useSearchParams();
     const [streams, setStreams] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
     const [activeRoomId, setActiveRoomId] = React.useState<string | null>(null);
@@ -26,19 +28,39 @@ const QsiTvPage: React.FC = () => {
     useEffect(() => {
         socketService.connect(token || undefined);
         
+        // Check for call param on mount
+        const callRoomId = searchParams.get('call');
+        if (callRoomId) {
+            setActiveRoomId(callRoomId);
+        }
+
         socketService.on('broadcast-list-updated', (updatedStreams: any[]) => {
             setStreams(updatedStreams);
             setIsLoading(false);
+            
+            // Check for view param if not already viewing or in a call
+            const viewRoomId = searchParams.get('view');
+            if (viewRoomId && !activeViewerRoom && !activeRoomId && !isBroadcasting) {
+                const stream = updatedStreams.find(s => s.roomId === viewRoomId);
+                if (stream) {
+                    setActiveViewerRoom({ id: stream.roomId, title: stream.title });
+                }
+            }
         });
 
         // Request initial list
         socketService.emit('get-active-broadcasts');
 
+        // Safety timeout to prevent infinite loading state
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 8000); // 8 seconds safety
+
         return () => {
-            socketService.disconnect();
+            clearTimeout(timer);
             socketService.off('broadcast-list-updated');
         };
-    }, []);
+    }, [token]);
 
     const handleCreateRoom = () => {
         const roomId = Math.random().toString(36).substring(2, 9);

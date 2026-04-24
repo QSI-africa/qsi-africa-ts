@@ -22,9 +22,10 @@ const setupVideoSignaling = (server) => {
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     
+    // If no token, allow connection but marked as guest (socket.user will be undefined)
     if (!token) {
-      console.warn(`[Socket.io] Connection attempt without token from ${socket.id}`);
-      return next(new Error("Authentication error: No token provided"));
+      console.log(`[Socket.io] Guest connection established: ${socket.id}`);
+      return next();
     }
 
     try {
@@ -34,7 +35,10 @@ const setupVideoSignaling = (server) => {
       next();
     } catch (err) {
       console.error(`[Socket.io] Invalid token attempt from ${socket.id}:`, err.message);
-      return next(new Error("Authentication error: Invalid token"));
+      // Even with invalid token, we might want to allow them as a guest instead of rejecting?
+      // For now, let's just let them in as a guest if the token is invalid but provided.
+      // But it's safer to just proceed without setting socket.user.
+      next();
     }
   });
 

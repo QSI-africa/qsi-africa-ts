@@ -1,11 +1,11 @@
 // client/src/components/LiveBroadcastContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Space, Typography, Card, Tooltip, Input, Badge, Divider } from 'antd';
+import { Button, Space, Typography, Card, Tooltip, Input, Badge, Divider, App } from 'antd';
 import { 
   AudioOutlined, AudioMutedOutlined, 
   VideoCameraOutlined, VideoCameraAddOutlined,
   StopOutlined, EyeOutlined, DesktopOutlined,
-  MessageOutlined
+  MessageOutlined, ShareAltOutlined
 } from '@ant-design/icons';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
@@ -17,6 +17,7 @@ interface LiveBroadcastProps {
 }
 
 const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
+  const { message } = App.useApp();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -155,6 +156,12 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
     }
   };
 
+  const copyShareLink = () => {
+    const shareUrl = `${window.location.origin}/tv?view=${roomId.current}`;
+    navigator.clipboard.writeText(shareUrl);
+    message.success('Join link copied to clipboard!');
+  };
+
   return (
     <div className="tv-glass-panel" style={{ 
       display: 'grid', 
@@ -199,6 +206,9 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
                 <Divider type="vertical" style={{ height: 40, borderColor: 'rgba(255,255,255,0.2)' }} />
                 <Tooltip title="Toggle Chat">
                 <Button shape="circle" size="large" icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
+                </Tooltip>
+                <Tooltip title="Copy Share Link">
+                <Button shape="circle" size="large" icon={<ShareAltOutlined />} onClick={copyShareLink} />
                 </Tooltip>
             </div>
           </div>

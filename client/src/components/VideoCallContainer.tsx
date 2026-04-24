@@ -1,11 +1,11 @@
 // client/src/components/VideoCallContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Space, Typography, Card, Tooltip, Divider, Badge } from 'antd';
+import { Button, Space, Typography, Card, Tooltip, Divider, Badge, App } from 'antd';
 import { 
   AudioOutlined, AudioMutedOutlined, 
   VideoCameraOutlined, VideoCameraAddOutlined,
   PhoneOutlined, DesktopOutlined, MessageOutlined,
-  UserOutlined
+  UserOutlined, ShareAltOutlined
 } from '@ant-design/icons';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +24,7 @@ interface RemoteParticipant {
 }
 
 const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
+  const { message } = App.useApp();
   const { user } = useAuth();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteParticipants, setRemoteParticipants] = useState<RemoteParticipant[]>([]);
@@ -174,6 +175,12 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     }
   };
 
+  const copyShareLink = () => {
+    const shareUrl = `${window.location.origin}/tv?call=${roomId}`;
+    navigator.clipboard.writeText(shareUrl);
+    message.success('Join link copied to clipboard!');
+  };
+
   return (
     <div className="tv-glass-panel" style={{ 
       display: 'grid', 
@@ -219,6 +226,9 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
             <Divider type="vertical" style={{ height: 40, borderColor: 'rgba(255,255,255,0.2)' }} />
             <Tooltip title="Toggle Chat">
               <Button shape="circle" size="large" icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
+            </Tooltip>
+            <Tooltip title="Copy Share Link">
+              <Button shape="circle" size="large" icon={<ShareAltOutlined />} onClick={copyShareLink} />
             </Tooltip>
             <Tooltip title="Leave Call">
               <Button shape="circle" size="large" icon={<PhoneOutlined rotate={225} />} onClick={onLeave} danger type="primary" />

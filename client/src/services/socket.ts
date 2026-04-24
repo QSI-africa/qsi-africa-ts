@@ -7,9 +7,15 @@ class SocketService {
   private socket: Socket | null = null;
 
   connect(token?: string) {
-    // If already connected, do nothing unless we have a new token
-    if (this.socket?.connected) return;
+    // If already connected and token matches, do nothing
+    // @ts-ignore - access internal auth for comparison
+    if (this.socket?.connected && this.socket.auth?.token === token) return;
 
+    // If token changed or not connected, disconnect existing and reconnect
+    if (this.socket) {
+      this.socket.disconnect();
+    }
+    
     this.socket = io(SOCKET_URL, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
