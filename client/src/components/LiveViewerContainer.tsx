@@ -34,6 +34,8 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
   };
 
+  const broadcasterId = useRef<string | null>(null);
+
   useEffect(() => {
     const initPC = async () => {
       pc.current = new RTCPeerConnection(servers);
@@ -44,13 +46,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       };
 
       pc.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socketService.emit('ice-candidate', { targetUserId: 'broadcaster', candidate: event.candidate, roomId });
+        if (event.candidate && broadcasterId.current) {
+          socketService.emit('ice-candidate', { targetUserId: broadcasterId.current, candidate: event.candidate, roomId });
         }
       };
 
       socketService.on('offer', async ({ offer, senderUserId }) => {
         if (pc.current) {
+          broadcasterId.current = senderUserId;
           await pc.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pc.current.createAnswer();
           await pc.current.setLocalDescription(answer);
