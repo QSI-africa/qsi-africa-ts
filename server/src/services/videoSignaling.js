@@ -54,11 +54,9 @@ const setupVideoSignaling = (server) => {
       activeBroadcasts.set(roomId, {
         broadcasterId: socket.id,
         broadcasterName: socket.user?.name || "Anonymous",
-        title: broadcastInfo.title || "Untitled Stream",
-        startTime: new Date(),
-        ...broadcastInfo
+        title: broadcastInfo?.title || "Untitled Live",
+        startTime: new Date().toISOString()
       });
-      // Global update for the hub
       io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
       console.log(`[Broadcast] Started: ${roomId} by ${socket.id}`);
     });
@@ -78,14 +76,18 @@ const setupVideoSignaling = (server) => {
 
     // --- WebRTC signaling for viewers ---
     socket.on("request-join-broadcast", (roomId) => {
+      console.log(`[Viewer] Requesting join for broadcast: ${roomId} from ${socket.id}`);
       const broadcast = activeBroadcasts.get(roomId);
       if (broadcast) {
+        console.log(`[Viewer] Found broadcast. Notifying broadcaster: ${broadcast.broadcasterId}`);
         socket.join(roomId);
         io.to(broadcast.broadcasterId).emit("viewer-joined", { 
           viewerId: socket.id, 
           viewerName: socket.user?.name || "Guest",
           roomId 
         });
+      } else {
+        console.log(`[Viewer] Broadcast not found: ${roomId}. Active IDs:`, Array.from(activeBroadcasts.keys()));
       }
     });
 
