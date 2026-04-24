@@ -94,8 +94,16 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
     initPC();
 
+    const retryInterval = setInterval(() => {
+      if (!remoteStream && pc.current) {
+        console.log('[Viewer] Retrying join request...');
+        socketService.emit('request-join-broadcast', roomId);
+      }
+    }, 3000);
+
     return () => {
       pc.current?.close();
+      clearInterval(retryInterval);
       socketService.off('offer');
       socketService.off('ice-candidate');
     };
