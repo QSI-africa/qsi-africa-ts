@@ -1,11 +1,11 @@
 // admin-client/src/components/HealingPackagesSidebar.jsx
 import React from "react";
-import { Typography, theme, Input } from "antd";
+import { Typography, theme, Space } from "antd";
 import { ShoppingOutlined } from "@ant-design/icons";
 
 const { Paragraph, Text } = Typography;
 const { useToken } = theme;
-const { TextArea } = Input;
+
 const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
   const { token } = useToken();
 
@@ -14,42 +14,23 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
   }
 
   const buttonStyle = {
-    background: `linear-gradient(135deg, ${token.colorPrimaryBg} 0%, ${token.colorFillTertiary} 100%)`,
-    border: `1px solid ${token.colorBorder}`,
-    borderRadius: token.borderRadiusLG,
-    padding: `${token.paddingLG}px ${token.padding}px`,
-    color: token.colorText,
-    fontSize: token.fontSize,
+    background: "var(--canvas-white)",
+    border: "3px solid var(--onyx-black)",
+    borderRadius: 0,
+    padding: "24px 20px",
+    color: "var(--onyx-black)",
     textAlign: "left",
     cursor: "pointer",
-    transition: `all ${token.motionDurationMid} ${token.motionEaseInOut}`,
-    lineHeight: token.lineHeight,
     width: "100%",
-    maxWidth: "320px",
+    maxWidth: "340px",
     display: "block",
-    marginBottom: token.margin,
-    boxShadow: token.boxShadow,
-    backdropFilter: "blur(10px)",
+    marginBottom: "20px",
+    boxShadow: "6px 6px 0px var(--onyx-black)",
     position: "relative",
-    overflow: "hidden",
-  };
-
-  const buttonHoverEnter = (e: React.FormEvent) => {
-    e.currentTarget.style.background = `linear-gradient(135deg, ${token.colorPrimaryBgHover} 0%, ${token.colorFillSecondary} 100%)`;
-    e.currentTarget.style.borderColor = token.colorPrimaryHover;
-    e.currentTarget.style.transform = "translateY(-2px)";
-    e.currentTarget.style.boxShadow = token.boxShadowSecondary;
-  };
-
-  const buttonHoverLeave = (e: React.FormEvent) => {
-    e.currentTarget.style.background = `linear-gradient(135deg, ${token.colorPrimaryBg} 0%, ${token.colorFillTertiary} 100%)`;
-    e.currentTarget.style.borderColor = token.colorBorder;
-    e.currentTarget.style.transform = "translateY(0)";
-    e.currentTarget.style.boxShadow = token.boxShadow;
+    transition: "transform 0.1s ease",
   };
 
   const handlePackageClick = (pkg) => {
-    // Call the parent's onPackageClick function instead of opening own modal
     if (onPackageClick) {
       onPackageClick(pkg);
     }
@@ -58,137 +39,138 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
   return (
     <div
       style={{
-        padding: `${token.paddingLG}px ${token.paddingXS}px ${token.paddingXS}px ${token.paddingSM}px`,
+        padding: "40px 16px 16px 16px",
         overflowY: "auto",
-        height: isMobile ? "auto" : "95%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "start",
+        backgroundColor: "var(--papyrus-off-white)",
+        backgroundImage: `
+          linear-gradient(135deg, var(--onyx-black) 25%, transparent 25%),
+          linear-gradient(225deg, var(--onyx-black) 25%, transparent 25%),
+          linear-gradient(315deg, var(--onyx-black) 25%, transparent 25%),
+          linear-gradient(45deg, var(--onyx-black) 25%, transparent 25%)
+        `,
+        backgroundSize: '32px 32px',
+        backgroundPosition: '16px 0, 16px 0, 0 0, 0 0',
+        backgroundAttachment: 'fixed',
       }}
     >
+      {/* Pattern Overlay to soften it and add African mudcloth character */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'var(--papyrus-off-white)',
+        backgroundImage: `radial-gradient(var(--onyx-black) 1px, transparent 1px)`,
+        backgroundSize: '16px 16px',
+        opacity: 0.94,
+        zIndex: 0,
+        pointerEvents: 'none'
+      }} />
+
+      {/* Content wrapper to stay above overlay */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Header Section */}
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          gap: token.marginSM,
-          marginBottom: token.marginLG,
-          paddingLeft: token.paddingXXS,
+          gap: "8px",
+          marginBottom: "40px",
+          width: "100%",
         }}
       >
         <div
           style={{
-            background: `linear-gradient(135deg, ${token.colorPrimaryBg}, ${token.colorPrimaryBg}dd)`,
-            borderRadius: token.borderRadius,
-            padding: token.paddingSM,
+            background: "var(--savanna-moss)",
+            border: "3px solid var(--onyx-black)",
+            padding: "12px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: `1px solid ${token.colorPrimaryBorder}`,
+            marginBottom: "12px",
           }}
         >
           <ShoppingOutlined
             style={{
-              color: token.colorPrimary,
-              fontSize: token.fontSizeLG,
+              color: "var(--canvas-white)",
+              fontSize: "24px",
             }}
           />
         </div>
-        <div>
-          <Paragraph
-            style={{
-              margin: 0,
-              color: token.colorText,
-              fontSize: token.fontSizeLG,
-              fontWeight: token.fontWeightStrong,
-              letterSpacing: "0.5px",
-            }}
-          >
-            Healing Packages
-          </Paragraph>
-          <Text
-            style={{
-              color: token.colorTextSecondary,
-              fontSize: token.fontSizeSM,
-              opacity: 0.8,
-            }}
-          >
-            Select a package to get started
-          </Text>
-        </div>
+        <Title level={4} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
+          Healing Packages
+        </Title>
+        <Text
+          style={{
+            color: "var(--onyx-black)",
+            fontSize: "12px",
+            fontWeight: 700,
+            fontFamily: "var(--font-accent)",
+            textTransform: "uppercase",
+            opacity: 0.7,
+            letterSpacing: "0.1em",
+          }}
+        >
+          Select your journey
+        </Text>
       </div>
 
       {/* Package Cards */}
-      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", alignItems: "center" }}>
         {packages.map((pkg) => (
           <button
             key={pkg.key}
             onClick={() => handlePackageClick(pkg)}
             style={buttonStyle}
-            onMouseEnter={buttonHoverEnter}
-            onMouseLeave={buttonHoverLeave}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "8px 8px 0px var(--onyx-black)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "6px 6px 0px var(--onyx-black)";
+            }}
           >
-            {/* Accent Line */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "4px",
-                height: "100%",
-                background: `linear-gradient(180deg, ${token.colorPrimary}, transparent)`,
-                borderRadius: `${token.borderRadiusLG}px 0 0 ${token.borderRadiusLG}px`,
-              }}
-            />
-
             {/* Content */}
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <div
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Text
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: token.marginXS,
+                  color: "var(--onyx-black)",
+                  fontWeight: 900,
+                  fontSize: "14px",
+                  fontFamily: "var(--font-accent)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}
               >
-                <Text
-                  style={{
-                    color: token.colorText,
-                    fontWeight: token.fontWeightStrong,
-                    fontSize: token.fontSize,
-                    lineHeight: token.lineHeightHeading4,
-                    flex: 1,
-                  }}
-                >
-                  {pkg.title}
-                </Text>
-              </div>
-
-              <div
+                {pkg.title}
+              </Text>
+              <Text
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: token.marginXS,
+                  color: "var(--onyx-black)",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-body)",
+                  lineHeight: 1.4,
+                  opacity: 0.8,
                 }}
               >
-                <Text
-                  style={{
-                    color: token.colorTextSecondary,
-                    fontSize: token.fontSizeSM,
-                    lineHeight: token.lineHeight,
-                    flex: 1,
-                  }}
-                >
-                  {pkg.shortPreview}
-                </Text>
-              </div>
+                {pkg.shortPreview}
+              </Text>
             </div>
           </button>
         ))}
       </div>
+      </div>
     </div>
   );
 };
+
+const Title = Typography.Title;
 
 export default HealingPackagesSidebar;

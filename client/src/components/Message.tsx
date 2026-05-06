@@ -42,18 +42,20 @@ const Message: React.FC<MessageProps> = ({ sender, text }) => {
     >
       <div
         style={{
-          maxWidth: "min(75%, 600px)",
+          maxWidth: "min(85%, 700px)",
           background: isUser
-            ? `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`
-            : token.colorBgContainer,
-          border: isUser ? "none" : `1px solid ${token.colorBorder}`,
-          borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-          padding: `${token.paddingSM}px ${token.padding}px`,
-          boxShadow: isUser ? token.boxShadowSecondary : token.boxShadowTertiary,
+            ? "var(--baobab-emerald)"
+            : "var(--papyrus-off-white)",
+          border: "3px solid var(--onyx-black)",
+          borderRadius: 0,
+          padding: "20px 24px",
+          boxShadow: "6px 6px 0px var(--onyx-black)",
           position: "relative",
-          color: isUser ? token.colorWhite : token.colorText,
-          fontSize: token.fontSize,
-          lineHeight: 1.5,
+          color: isUser ? "var(--canvas-white)" : "var(--onyx-black)",
+          fontSize: "14px",
+          lineHeight: 1.6,
+          fontWeight: 500,
+          fontFamily: "var(--font-body)",
         }}
       >
         <ReactMarkdown

@@ -103,9 +103,9 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
       }}
       bodyStyle={{ padding: screens.md ? 24 : 0 }}
     >
-      <div style={{ marginBottom: screens.md ? 40 : 24 }}>
-        <Title level={screens.md ? 2 : 3} style={{ textAlign: 'center' }}>Frequency Scan</Title>
-        <Paragraph style={{ textAlign: 'center', fontSize: screens.md ? 16 : 14, padding: '0 10px' }}>
+      <div style={{ marginBottom: screens.md ? 40 : 24, position: 'relative', zIndex: 1 }}>
+        <Title level={screens.md ? 2 : 3} style={{ textAlign: 'center', color: 'var(--onyx-black)', textTransform: 'uppercase' }}>Frequency Scan</Title>
+        <Paragraph style={{ textAlign: 'center', fontSize: screens.md ? 16 : 14, padding: '0 10px', color: 'var(--ash-grey)', fontFamily: 'var(--font-accent)' }}>
           Aligning your internal resonance with your external reality.
         </Paragraph>
       </div>
@@ -134,12 +134,16 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
           <div>
             <Form.Item
               name="location"
-              label="Current Location"
+              label={<span className="eyebrow" style={{ fontSize: '10px' }}>Current Location</span>}
               rules={[{ required: true, message: 'Please enter your location' }]}
             >
-              <Input placeholder="City, Country" size="large" />
+              <Input 
+                placeholder="City, Country" 
+                size="large" 
+                style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', color: 'var(--onyx-black)' }} 
+              />
             </Form.Item>
-            <Paragraph type="secondary">
+            <Paragraph style={{ color: 'var(--ash-grey)', fontSize: '12px', fontFamily: 'var(--font-accent)' }}>
               Your environment plays a key role in your frequency. Where are you anchored?
             </Paragraph>
           </div>
@@ -173,16 +177,24 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
           <div>
             <Form.Item
               name="lifeVision"
-              label="Life Vision"
+              label={<span className="eyebrow" style={{ fontSize: '10px' }}>Life Vision</span>}
               rules={[{ required: true, message: 'Please share your vision' }]}
             >
-              <TextArea rows={screens.md ? 4 : 3} placeholder="What is the highest vision for your life?" />
+              <TextArea 
+                rows={screens.md ? 4 : 3} 
+                placeholder="What is the highest vision for your life?" 
+                style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', color: 'var(--onyx-black)' }}
+              />
             </Form.Item>
             <Form.Item
               name="challenges"
-              label="Current Challenges"
+              label={<span className="eyebrow" style={{ fontSize: '10px' }}>Current Challenges</span>}
             >
-              <TextArea rows={3} placeholder="What is currently blocking your flow?" />
+              <TextArea 
+                rows={3} 
+                placeholder="What is currently blocking your flow?" 
+                style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', color: 'var(--onyx-black)' }}
+              />
             </Form.Item>
           </div>
         )}

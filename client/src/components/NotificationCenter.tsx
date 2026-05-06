@@ -64,23 +64,23 @@ const NotificationCenter: React.FC = () => {
   };
 
   const notificationList = (
-    <div style={{ width: 350 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <Title level={5} style={{ margin: 0, color: '#fff' }}>Notifications</Title>
-        <Button type="link" size="small" onClick={markAllRead}>Mark all read</Button>
+    <div style={{ width: 380, background: 'var(--canvas-white)', border: '4px solid var(--onyx-black)', boxShadow: '10px 10px 0px var(--onyx-black)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '2px solid var(--onyx-black)', background: 'var(--papyrus-off-white)' }}>
+        <Title level={5} style={{ margin: 0, color: 'var(--onyx-black)', textTransform: 'uppercase', fontFamily: 'var(--font-accent)', fontWeight: 900 }}>Notifications</Title>
+        <Button type="link" size="small" onClick={markAllRead} style={{ color: 'var(--baobab-emerald)', fontWeight: 700, padding: 0 }}>MARK ALL READ</Button>
       </div>
       <List
         dataSource={notifications}
         style={{ maxHeight: 400, overflowY: 'auto' }}
         renderItem={item => (
-          <List.Item className="premium-hover" style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}>
+          <List.Item className="notification-item" style={{ padding: '20px 24px', borderBottom: '1px solid var(--papyrus-off-white)', cursor: 'pointer' }}>
             <List.Item.Meta
-              avatar={<div style={{ padding: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>{item.icon}</div>}
-              title={<Text style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{item.title}</Text>}
+              avatar={<div style={{ padding: 12, background: 'var(--papyrus-off-white)', border: '1px solid var(--onyx-black)', borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>}
+              title={<Text style={{ color: 'var(--onyx-black)', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', fontFamily: 'var(--font-accent)' }}>{item.title}</Text>}
               description={
                 <Space direction="vertical" size={2}>
-                  <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>{item.description}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>{new Date(item.time).toLocaleTimeString()}</Text>
+                  <Text style={{ color: 'var(--ash-grey)', fontSize: 12, lineHeight: 1.4 }}>{item.description}</Text>
+                  <Text style={{ color: 'rgba(0,0,0,0.2)', fontSize: 10, fontFamily: 'var(--font-accent)' }}>{new Date(item.time).toLocaleTimeString()}</Text>
                 </Space>
               }
             />
@@ -88,12 +88,12 @@ const NotificationCenter: React.FC = () => {
         )}
       />
       {notifications.length === 0 && (
-        <div style={{ padding: 40, textAlign: 'center' }}>
-          <Text style={{ color: 'rgba(255,255,255,0.2)' }}>No recent activity</Text>
+        <div style={{ padding: 60, textAlign: 'center', background: 'var(--canvas-white)' }}>
+          <Text style={{ color: 'var(--ash-grey)', opacity: 0.3, textTransform: 'uppercase', fontSize: '10px', fontWeight: 700 }}>No recent activity</Text>
         </div>
       )}
-      <div style={{ padding: 8, textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-         <Button type="link" block>View all history</Button>
+      <div style={{ padding: '12px', textAlign: 'center', borderTop: '2px solid var(--onyx-black)', background: 'var(--papyrus-off-white)' }}>
+         <Button type="link" block style={{ color: 'var(--onyx-black)', fontWeight: 900, fontSize: '11px', textTransform: 'uppercase' }}>View all history</Button>
       </div>
     </div>
   );
@@ -109,8 +109,8 @@ const NotificationCenter: React.FC = () => {
       <Badge count={unreadCount} overflowCount={9} offset={[-2, 10]}>
         <Button 
           type="text" 
-          icon={<BellOutlined style={{ fontSize: 20, color: 'rgba(255,255,255,0.85)' }} />} 
-          style={{ height: 40, width: 40 }}
+          icon={<BellOutlined style={{ fontSize: 22, color: 'var(--onyx-black)' }} />} 
+          style={{ height: 44, width: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         />
       </Badge>
     </Popover>

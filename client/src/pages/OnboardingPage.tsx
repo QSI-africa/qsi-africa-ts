@@ -100,16 +100,20 @@ const OnboardingPage: React.FC = () => {
     minHeight: "100vh",
     width: "100vw",
     padding: screens.xs ? "16px" : "20px",
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    background: "var(--papyrus-off-white)",
+    position: "relative",
+    overflow: "hidden"
   };
 
   const cardStyle = {
     width: "100%",
     maxWidth: screens.xs ? "100%" : screens.sm ? "90%" : "800px",
     margin: "0 auto",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-    border: "none",
-    borderRadius: "12px",
+    boxShadow: "10px 10px 0px var(--onyx-black)",
+    border: "3px solid var(--onyx-black)",
+    borderRadius: "0px",
+    background: "var(--canvas-white)",
+    zIndex: 1
   };
 
   const titleStyle = {
@@ -151,6 +155,7 @@ const OnboardingPage: React.FC = () => {
 
   return (
     <div style={containerStyle}>
+      <div className="pattern-mudcloth" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.1, pointerEvents: 'none', zIndex: 0 }}></div>
       <Card style={cardStyle}>
         <Title level={screens.xs ? 4 : 3} style={titleStyle}>
           Welcome to QSI

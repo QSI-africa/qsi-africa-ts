@@ -1,13 +1,14 @@
 // src/pages/SmartCityDemosPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Typography, Spin, Button, theme } from "antd";
+import { Row, Col, Card, Typography, Spin, Button, theme, Tag } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  EnvironmentOutlined
 } from "@ant-design/icons";
 import { LuFrame } from "react-icons/lu";
 
@@ -20,23 +21,6 @@ const SmartCityDemosPage: React.FC = () => {
   const [error, setError] = useState<any>(null);
   const navigate = useNavigate();
   const { token } = useToken();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: React.FormEvent) => {
-      // @ts-ignore
-      setMousePosition({
-        // @ts-ignore
-        x: (e.clientX / window.innerWidth) * 100,
-        // @ts-ignore
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-    // @ts-ignore
-    window.addEventListener("mousemove", handleMouseMove);
-    // @ts-ignore
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   // Fetch demos on component mount
   useEffect(() => {
@@ -48,23 +32,15 @@ const SmartCityDemosPage: React.FC = () => {
           import.meta.env.VITE_API_BASE_URL ||
           "https://api.qsi.africa/api";
 
-        // Call new endpoint for demos
-        const response = await axios.get(
-          `${baseURL}/submit/demos`
-        );
+        const response = await axios.get(`${baseURL}/submit/demos`);
 
         if (Array.isArray(response.data)) {
           setFrameworks(response.data);
         } else {
-          console.error(
-            "Fetched demo data is not an array:",
-            response.data
-          );
           setError("Received invalid data format for demonstrators.");
           setFrameworks([]);
         }
       } catch (err) {
-        console.error("Failed to fetch demonstrators:", err);
         setError("Could not load demonstrators. Please try again later.");
         setFrameworks([]);
       } finally {
@@ -78,178 +54,170 @@ const SmartCityDemosPage: React.FC = () => {
     navigate(`/demos/${id}`);
   };
 
-  const getBackgroundGradient = () => {
-    return `
-      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
-      }20 20%,  ${token.colorBgContainer} 60%),
-      radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
-      }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
-      ${token.colorBgContainer}
-    `;
-  };
-
   return (
     <div
       style={{
-        padding: "clamp(15px, 4vw, 30px)",
-        background: getBackgroundGradient(),
-        overflowY: "auto",
-        height: "100vh",
+        background: "var(--canvas-white)",
+        minHeight: "100vh",
         width: "100%",
-        margin: "0px auto 0 auto",
+        padding: "0",
       }}
     >
-      {/* Back Button */}
-      <Link to="/">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          style={{
-            marginBottom: "20px",
-            position: "absolute",
-            top: "20px",
-            left: "20px",
-            background: token.colorBgBase,
-          }}
-        >
-          Back to Home
-        </Button>
-      </Link>
-
-      {/* Main Content */}
-      <div
+      {/* Hero Section with Pattern */}
+      <div 
+        className="pattern-dots"
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
+          padding: "100px 5% 60px 5%",
+          borderBottom: "2px solid var(--onyx-black)",
+          textAlign: "left",
+          position: "relative"
         }}
       >
-        <Title
-          level={2}
-          style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}
-        >
-          QSI Smart City Demos
-        </Title>
-        <Title
-          level={5}
-          style={{
-            textAlign: "center",
-            marginTop: "0px",
-            padding: "0 20px",
-            color: token.colorPrimary,
-            fontWeight: "400",
-          }}
-        >
-          Where the future is lived, not imagined
-        </Title>
-        <Paragraph
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            padding: "10px 20px",
-          }}
-          type="secondary"
-        >
-          These are real or proposed physical Smart City demonstrators.
-        </Paragraph>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <span className="eyebrow reveal-up">Physical Infrastructure</span>
+          <Title
+            level={1}
+            className="reveal-up"
+            style={{ 
+              fontSize: "clamp(48px, 8vw, 120px)", 
+              margin: "0 0 24px 0",
+              color: "var(--onyx-black)"
+            }}
+          >
+            SMART <br /> CITY DEMOS
+          </Title>
+          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '600px' }}>
+            <Paragraph
+              className="reveal-up"
+              style={{
+                fontSize: "18px",
+                color: "var(--onyx-black)",
+                maxWidth: "600px",
+                fontFamily: "var(--font-body)"
+              }}
+            >
+              These are physical Smart City demonstrators. Where the future of African urbanism is lived, not just imagined.
+            </Paragraph>
+          </div>
+        </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="container" style={{ paddingTop: "60px", paddingBottom: "100px" }}>
         {/* Loading State */}
         {loading && (
-          <div style={{ textAlign: "center", padding: "50px" }}>
+          <div className="flex-center" style={{ padding: "100px 0" }}>
             <Spin size="large" />
           </div>
         )}
 
         {/* Error State */}
         {!loading && error && (
-          <Text type="danger" style={{ display: "block", textAlign: "center" }}>
-            {error}
-          </Text>
+          <div className="flex-center" style={{ padding: "100px 0", flexDirection: 'column' }}>
+            <Text type="danger" style={{ fontSize: '18px', marginBottom: '24px' }}>{error}</Text>
+            <Button className="afro-button" onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
         )}
 
         {/* Demo Cards Grid */}
         {!loading && !error && (
-          <Row
-            gutter={[12, 12]}
-            style={{
-              marginBottom: "30px",
-            }}
-          >
+          <Row gutter={[32, 32]}>
             {frameworks.length > 0 ? (
               frameworks.map((demo) => (
-                <Col key={demo.id} xs={24} sm={12} md={8}>
+                <Col key={demo.id} xs={24} md={12} lg={8}>
                   <Card
-                    hoverable
+                    className="geometric-card reveal-up"
+                    style={{ height: "100%", borderRadius: 0 }}
                     onClick={() => handleCardClick(demo.id)}
-                    style={{
+                    bodyStyle={{
                       height: "100%",
                       display: "flex",
                       flexDirection: "column",
-                      background: token.colorBgBase,
-                    }}
-                    bodyStyle={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      padding: "12px",
+                      padding: "0",
                       justifyContent: "space-between",
                     }}
                   >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Title level={5} style={{ marginBottom: "8px" }}>
-                          <LuFrame
-                            style={{
-                              marginRight: "8px",
-                              color: token.colorPrimary,
+                    <div style={{ paddingBottom: '32px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                        <div style={{ 
+                          width: '40px', 
+                          height: '40px', 
+                          background: 'var(--baobab-emerald)', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          color: 'white'
+                        }}>
+                          <LuFrame size={20} />
+                        </div>
+                        {demo.status && (
+                          <Tag 
+                            style={{ 
+                              margin: 0, 
+                              borderRadius: 0, 
+                              border: '1px solid var(--onyx-black)',
+                              background: demo.status === 'ACTIVE' ? 'var(--baobab-emerald)' : 'var(--ochre-yellow)',
+                              color: 'white',
+                              fontFamily: 'var(--font-accent)',
+                              fontSize: '10px'
                             }}
-                          />
-                          {demo.title}
-                        </Title>
-                        {/* Status Icon could go here */}
+                          >
+                            {demo.status}
+                          </Tag>
+                        )}
                       </div>
 
-                      {demo.city && <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>{demo.city}</Text>}
-                      {demo.status && (
-                        <Text style={{ fontSize: '12px', color: demo.status === 'ACTIVE' ? 'green' : 'orange' }}>
-                          {demo.status === 'ACTIVE' ? <CheckCircleOutlined /> : <ClockCircleOutlined />} {demo.status}
-                        </Text>
+                      <Title level={3} style={{ marginBottom: "16px", textTransform: 'uppercase' }}>
+                        {demo.title}
+                      </Title>
+
+                      {demo.city && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                          <EnvironmentOutlined style={{ color: 'var(--terracotta-clay)' }} />
+                          <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px', textTransform: 'uppercase' }}>
+                            {demo.city}
+                          </Text>
+                        </div>
                       )}
 
                       <Paragraph
-                        type="secondary"
                         style={{
-                          fontSize: "14px",
-                          flexGrow: 1,
-                          marginTop: "16px",
-                          marginBottom: "16px",
+                          fontSize: "16px",
+                          color: "var(--onyx-black)",
+                          marginBottom: "0",
+                          fontFamily: "var(--font-body)",
+                          opacity: 0.8
                         }}
-                        ellipsis={{ rows: 5 }}
+                        ellipsis={{ rows: 3 }}
                       >
                         {demo.shortDescription}
                       </Paragraph>
                     </div>
-                    <Text
-                      style={{
-                        color: token.colorPrimary,
-                        fontWeight: "500",
-                        alignSelf: "flex-start",
+
+                    <div 
+                      className="grid-border-t" 
+                      style={{ 
+                        paddingTop: '24px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center' 
                       }}
                     >
-                      View Details <ArrowRightOutlined />
-                    </Text>
+                      <span className="eyebrow" style={{ margin: 0 }}>View Prototype</span>
+                      <ArrowRightOutlined style={{ fontSize: '20px', color: 'var(--baobab-emerald)' }} />
+                    </div>
                   </Card>
                 </Col>
               ))
             ) : (
-              <Col span={24} style={{ textAlign: "center" }}>
-                <Text type="secondary">
-                  No demonstrators found.
-                </Text>
+              <Col span={24} className="flex-center" style={{ padding: "100px 0" }}>
+                <Text className="eyebrow">No demonstrators found.</Text>
               </Col>
             )}
           </Row>
         )}
       </div>
-    </div >
+    </div>
   );
 };
 

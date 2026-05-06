@@ -44,6 +44,13 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
   };
 
+  const handleStopBroadcast = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    onStop();
+  };
+
   useEffect(() => {
     const startBroadcasting = async () => {
       try {
@@ -128,7 +135,9 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
     startBroadcasting();
 
     return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
       peerConnections.current.forEach(pc => pc.close());
       socketService.emit('stop-broadcast', roomId.current);
       socketService.off('viewer-joined');
@@ -160,7 +169,6 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = screenStream.getVideoTracks()[0];
         
-        // Replace video track for all peer connections
         peerConnections.current.forEach(pc => {
           const sender = pc.getSenders().find(s => s.track?.kind === 'video');
           if (sender) sender.replaceTrack(screenTrack);
@@ -200,12 +208,13 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
   };
 
   return (
-    <div className="tv-glass-panel" style={{ 
+    <div style={{ 
       display: 'grid', 
-      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 350px' : '1fr'), 
-      gridTemplateRows: isMobile && showChat ? '1fr 300px' : 'auto',
-      height: isMobile ? 'auto' : 'calc(100vh - 200px)',
-      minHeight: isMobile ? '100vh' : 'auto',
+      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 400px' : '1fr'), 
+      gridTemplateRows: isMobile && showChat ? '1fr 350px' : 'auto',
+      height: '100%',
+      minHeight: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 180px)',
+      background: 'var(--canvas-white)',
       overflow: 'hidden'
     }}>
       <div style={{ padding: isMobile ? '12px' : '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -223,22 +232,22 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
               onChange={e => setTitle(e.target.value)} 
               placeholder="Stream Title" 
               variant="borderless"
-              style={{ color: '#fff', fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: 'bold', padding: 0 }}
+              style={{ color: 'var(--onyx-black)', fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: 'bold', padding: 0 }}
             />
             <Badge status="processing" text={<Text style={{ color: '#10b981' }}>LIVE</Text>} />
           </Space>
           <Space size="large" style={{ width: isMobile ? '100%' : 'auto', justifyContent: 'space-between' }}>
-            <Text style={{ color: 'rgba(255,255,255,0.6)' }}><EyeOutlined /> {viewerCount}</Text>
-            <Button type="primary" danger icon={<StopOutlined />} onClick={onStop} size={isMobile ? "small" : "middle"}>Stop</Button>
+            <Text style={{ color: 'var(--onyx-black)', opacity: 0.6 }}><EyeOutlined /> {viewerCount}</Text>
+            <Button type="primary" danger icon={<StopOutlined />} onClick={handleStopBroadcast} size={isMobile ? "small" : "middle"}>Stop</Button>
           </Space>
         </div>
 
-        <div style={{ position: 'relative', flex: 1, borderRadius: '12px', overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, borderRadius: 0, border: '3px solid var(--onyx-black)', overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '8px 8px 0px var(--onyx-black)' }}>
           <video ref={videoRef} autoPlay playsInline muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           
           {/* Controls Overlay */}
           <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', width: '90%' }}>
-            <div className="control-bar" style={{ padding: '8px', gap: isMobile ? '8px' : '12px' }}>
+            <div className="control-bar" style={{ padding: '8px', gap: isMobile ? '8px' : '12px', background: 'rgba(255,255,255,0.9)', border: '2px solid var(--onyx-black)', boxShadow: '4px 4px 0px var(--onyx-black)' }}>
                 <Tooltip title={isMuted ? "Unmute" : "Mute"}>
                 <Button shape="circle" size={isMobile ? "middle" : "large"} icon={isMuted ? <AudioMutedOutlined /> : <AudioOutlined />} onClick={toggleMute} danger={isMuted} />
                 </Tooltip>
@@ -250,7 +259,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
                   <Button shape="circle" size="large" icon={<DesktopOutlined />} onClick={toggleScreenShare} type={isScreenSharing ? "primary" : "default"} />
                   </Tooltip>
                 )}
-                <Divider type="vertical" style={{ height: isMobile ? 24 : 40, borderColor: 'rgba(255,255,255,0.2)' }} />
+                <Divider type="vertical" style={{ height: isMobile ? 24 : 40, borderColor: 'var(--onyx-black)' }} />
                 <Tooltip title="Toggle Chat">
                 <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<MessageOutlined />} onClick={() => setShowChat(!showChat)} type={showChat ? "primary" : "default"} />
                 </Tooltip>
@@ -266,8 +275,8 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
       {showChat && (
         <div style={{ 
           height: isMobile ? '300px' : 'auto',
-          borderLeft: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)',
-          borderTop: isMobile ? '1px solid rgba(255,255,255,0.1)' : 'none',
+          borderLeft: isMobile ? 'none' : '3px solid var(--onyx-black)',
+          borderTop: isMobile ? '3px solid var(--onyx-black)' : 'none',
           overflow: 'hidden'
         }}>
           <RoomChat roomId={roomId.current} userName="Broadcaster" />

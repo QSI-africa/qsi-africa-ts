@@ -12,9 +12,9 @@ import {
   Tooltip,
   Badge,
 } from "antd";
+import type { UploadFile } from "antd/es/upload/interface";
 import {
   SendOutlined,
-  PaperClipOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
   UploadOutlined,
@@ -24,7 +24,7 @@ const { useToken } = theme;
 const { Text } = Typography;
 
 // Helper function to format file size
-const formatFileSize = (bytes) => {
+const formatFileSize = (bytes: number) => {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
@@ -33,7 +33,7 @@ const formatFileSize = (bytes) => {
 };
 
 // Helper function to get file icon
-const getFileIcon = (fileType) => {
+const getFileIcon = (fileType: string | undefined) => {
   if (fileType?.includes("pdf")) return "📄";
   if (fileType?.includes("image")) return "🖼️";
   if (fileType?.includes("document") || fileType?.includes("word")) return "📝";
@@ -42,7 +42,7 @@ const getFileIcon = (fileType) => {
 };
 
 // Helper function to display file type
-const getFileTypeDisplay = (fileType) => {
+const getFileTypeDisplay = (fileType: string | undefined) => {
   if (fileType?.includes("pdf")) return "PDF";
   if (fileType?.includes("jpeg") || fileType?.includes("jpg")) return "JPG";
   if (fileType?.includes("png")) return "PNG";
@@ -55,7 +55,16 @@ const getFileTypeDisplay = (fileType) => {
 const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB total
 const MAX_FILES = 10;
 
-const ChatInput = ({
+interface ChatInputProps {
+  onSendMessage: (message: string, files: File[]) => void;
+  loading: boolean;
+  isMobile: boolean;
+  moduleName: string;
+  selectedFiles: UploadFile[];
+  setSelectedFiles: React.Dispatch<React.SetStateAction<UploadFile[]>>;
+}
+
+const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   loading,
   isMobile,
@@ -85,7 +94,7 @@ const ChatInput = ({
    * No duplicate issues anymore.
    */
   const handleFileChange = useCallback(
-    ({ fileList }) => {
+    ({ fileList }: { fileList: UploadFile[] }) => {
       // Validate count
       if (fileList.length > MAX_FILES) {
         antMessage.error(`You can upload a maximum of ${MAX_FILES} files.`);
@@ -112,7 +121,7 @@ const ChatInput = ({
           "text/plain",
         ];
 
-        if (!allowed.includes(file.type)) {
+        if (!allowed.includes(file.type || "")) {
           antMessage.error(`${file.name} is not a supported file type.`);
           return;
         }
@@ -124,8 +133,8 @@ const ChatInput = ({
   );
 
   const handleRemoveFile = useCallback(
-    (fileToRemove) => {
-      setSelectedFiles((prev) =>
+    (fileToRemove: UploadFile) => {
+      setSelectedFiles((prev: UploadFile[]) =>
         prev.filter((f) => f.uid !== fileToRemove.uid)
       );
     },
@@ -152,7 +161,9 @@ const ChatInput = ({
     }
 
     // IMPORTANT: convert AntD fileList → raw File objects
-    const rawFiles = selectedFiles.map((f) => f.originFileObj);
+    const rawFiles = selectedFiles
+      .map((f) => f.originFileObj)
+      .filter((f): f is File => !!f);
 
     onSendMessage(messageText, rawFiles);
 
@@ -177,7 +188,7 @@ const ChatInput = ({
     disabled: loading || !isInfrastructure,
   };
 
-  const handleKeyDown = (e: React.FormEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -235,7 +246,7 @@ const ChatInput = ({
             size="small"
             dataSource={selectedFiles}
             style={{ maxHeight: "150px", overflowY: "auto" }}
-            renderItem={(file) => (
+            renderItem={(file: UploadFile) => (
               <List.Item
                 actions={[
                   <Button
@@ -269,7 +280,7 @@ const ChatInput = ({
                     <Space size="small">
                       <Tag>{getFileTypeDisplay(file.type)}</Tag>
                       <Text type="secondary">
-                        {formatFileSize(file.originFileObj?.size || file.size)}
+                        {formatFileSize(file.originFileObj?.size || file.size || 0)}
                       </Text>
                     </Space>
                   }
@@ -278,7 +289,7 @@ const ChatInput = ({
             )}
           />
 
-          <Text type="secondary" style={{ fontSize: token.fontSizeXS }}>
+          <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
             Max 10 files, 10MB each. Supported: PDF, DOC, DOCX, JPG, PNG, TXT
           </Text>
         </div>
@@ -288,20 +299,31 @@ const ChatInput = ({
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: token.marginSM,
+          alignItems: "stretch",
+          gap: "12px",
+          background: "var(--canvas-white)",
+          border: "3px solid var(--onyx-black)",
+          boxShadow: "8px 8px 0px var(--onyx-black)",
+          padding: "8px",
         }}
       >
         {isInfrastructure && (
           <Upload {...uploadProps}>
             <Button
               type="primary"
-              icon={<UploadOutlined />}
+              icon={<UploadOutlined style={{ fontSize: '20px' }} />}
               disabled={loading}
               style={{
-                height: isMobile ? "36px" : "48px",
-                width: isMobile ? "36px" : "48px",
-                borderRadius: token.borderRadiusLG,
+                height: "100%",
+                minHeight: "56px",
+                width: "56px",
+                borderRadius: 0,
+                backgroundColor: "var(--savanna-moss)",
+                borderColor: "var(--onyx-black)",
+                borderWidth: "0 3px 0 0",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             />
           </Upload>
@@ -323,21 +345,35 @@ const ChatInput = ({
           disabled={loading}
           style={{
             flexGrow: 1,
-            borderRadius: token.borderRadiusLG,
+            borderRadius: 0,
+            border: "none",
+            fontSize: "16px",
+            padding: "12px",
+            background: "transparent",
+            boxShadow: "none",
+            fontFamily: "var(--font-body)",
+            color: "var(--onyx-black)",
           }}
         />
 
         {/* Send */}
         <Button
           type="primary"
-          icon={<SendOutlined />}
+          icon={<SendOutlined style={{ fontSize: '20px' }} />}
           onClick={handleSend}
           loading={loading}
           disabled={!userInput.trim() && selectedFiles.length === 0}
           style={{
-            height: isMobile ? "36px" : "48px",
-            width: isMobile ? "36px" : "48px",
-            borderRadius: token.borderRadiusLG,
+            height: "100%",
+            minHeight: "56px",
+            width: "56px",
+            borderRadius: 0,
+            backgroundColor: "var(--baobab-emerald)",
+            borderColor: "var(--onyx-black)",
+            borderWidth: "0 0 0 3px",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         />
       </div>

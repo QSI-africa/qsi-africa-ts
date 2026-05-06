@@ -19,23 +19,6 @@ const QsiConceptsPage: React.FC = () => {
   const [searchTerm] = useState<string>("");
   const navigate = useNavigate();
   const { token } = useToken();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: React.FormEvent) => {
-      // safe cast or ignore
-      const event = e as unknown as React.MouseEvent;
-      setMousePosition({
-        x: (event.clientX / window.innerWidth) * 100,
-        y: (event.clientY / window.innerHeight) * 100,
-      });
-    };
-
-    // @ts-ignore
-    window.addEventListener("mousemove", handleMouseMove);
-    // @ts-ignore
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   // Fetch concepts on component mount
   useEffect(() => {
@@ -43,21 +26,18 @@ const QsiConceptsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        // Use the configured API instance instead of direct axios
-        // This ensures the correct Base URL and interceptors are used
         const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
         const response = await axios.get(`${baseURL}/submit/concepts`);
 
         if (Array.isArray(response.data)) {
           setPilots(response.data);
         } else {
-          console.error("Fetched concept data is not an array:", response.data);
           setError("Received invalid data format for concepts.");
           setPilots([]);
         }
       } catch (err) {
         console.error("Failed to fetch concepts:", err);
-        setError("Could not load concepts. Please try again later.");
+        setError("Could not load concepts.");
         setPilots([]);
       } finally {
         setLoading(false);
@@ -66,7 +46,7 @@ const QsiConceptsPage: React.FC = () => {
     fetchConcepts();
   }, []);
 
-  // Filter pilots based on search term (case-insensitive)
+  // Filter pilots based on search term
   const filteredPilots = useMemo(() => {
     if (!searchTerm) {
       return pilots;
@@ -83,156 +63,128 @@ const QsiConceptsPage: React.FC = () => {
     navigate(`/concepts/${id}`);
   };
 
-  const getBackgroundGradient = () => {
-    return `
-      radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
-      }20 20%,  ${token.colorBgContainer} 60%),
-      radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
-      }%, ${token.colorSuccess}10 0%,  ${token.colorBgContainer} 40%),
-      ${token.colorBgContainer}
-    `;
-  };
-
   return (
-    <div
-      style={{
-        padding: "clamp(15px, 4vw, 30px)",
-        background: getBackgroundGradient(),
-        overflowY: "auto",
-        height: "100vh",
-        width: "100%",
-        margin: "0px auto 0 auto",
-      }}
-    >
-      {/* Back Button */}
-      <Link to="/">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          style={{
-            marginBottom: "20px",
-            position: "absolute",
-            top: "20px",
-            left: "20px",
-            background: token.colorBgBase,
-          }}
-        >
-          Back to Home
-        </Button>
-      </Link>
-
-      {/* Main Content */}
-      <div
+    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
+      {/* Hero Section */}
+      <div 
+        className="pattern-mudcloth"
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto"
+          padding: "120px 5% 60px 5%",
+          borderBottom: "2px solid var(--onyx-black)",
+          position: "relative"
         }}
       >
-        <Title level={2} style={{ textAlign: "center", marginTop: "60px", marginBottom: "0" }}>
-          QSI Concepts
-        </Title>
-        <Title level={5} style={{ textAlign: "center", marginTop: "0px", padding: "0 20px", color: token.colorPrimary, fontWeight: "400" }}>
-          Culture engineered for the future
-        </Title>
-        <Paragraph
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            padding: "10px 20px",
-          }}
-          type="secondary"
-        >
-          These are brand-anchored or investable innovation concepts that merge
-          culture, technology, and consciousness. Each concept operates as a
-          unique franchise or collaborative venture under QSI governance.
-        </Paragraph>
+        <div className="container" style={{ padding: 0 }}>
+          <span className="eyebrow reveal-up">Culture Engineered</span>
+          <Title
+            level={1}
+            className="reveal-up"
+            style={{ 
+              fontSize: "clamp(48px, 8vw, 100px)", 
+              margin: "0 0 24px 0",
+              color: "var(--onyx-black)",
+              textTransform: 'uppercase'
+            }}
+          >
+            QSI <br /> CONCEPTS
+          </Title>
+          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '800px' }}>
+            <Paragraph
+              className="reveal-up"
+              style={{
+                fontSize: "18px",
+                color: "var(--onyx-black)",
+                maxWidth: "600px",
+                fontFamily: "var(--font-body)",
+                fontWeight: 500
+              }}
+            >
+              These are brand-anchored or investable innovation concepts that merge culture, technology, and consciousness. Each concept operates as a unique franchise or collaborative venture.
+            </Paragraph>
+          </div>
+        </div>
+      </div>
 
-        {/* Loading State */}
+      <div className="container section-py">
         {loading && (
-          <div style={{ textAlign: "center", padding: "50px" }}>
+          <div style={{ textAlign: "center", padding: "100px" }}>
             <Spin size="large" />
           </div>
         )}
 
-        {/* Error State */}
-        {!loading && error && (
-          <Text type="danger" style={{ display: "block", textAlign: "center" }}>
-            {error}
-          </Text>
+        {error && (
+          <div style={{ textAlign: "center", padding: "40px", border: '2px solid var(--onyx-black)' }}>
+            <Text type="danger" className="eyebrow">{error}</Text>
+          </div>
         )}
 
-        {/* Pilot Cards Grid */}
         {!loading && !error && (
-          <Row
-            gutter={[12, 12]}
-            style={{
-              marginBottom: "30px",
-            }}
-          >
+          <Row gutter={[32, 32]}>
             {filteredPilots.length > 0 ? (
               filteredPilots.map((pilot) => (
                 <Col key={pilot.id} xs={24} sm={12} md={8}>
                   <Card
-                    hoverable
+                    className="geometric-card reveal-up"
                     onClick={() => handleCardClick(pilot.id)}
-                    style={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      background: token.colorBgBase,
-                    }}
                     bodyStyle={{
-                      flexGrow: 1,
+                      padding: "32px",
                       display: "flex",
                       flexDirection: "column",
-                      padding: "12px",
+                      height: "100%",
                       justifyContent: "space-between",
+                    }}
+                    style={{ 
+                      height: "100%", 
+                      border: '2px solid var(--onyx-black)',
+                      borderRadius: 0,
+                      cursor: 'pointer'
                     }}
                   >
                     <div>
-                      <Title level={5} style={{ marginBottom: "8px" }}>
-                        <BulbOutlined
-                          style={{
-                            marginRight: "8px",
-                            color: token.colorPrimary,
-                          }}
-                        />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <BulbOutlined style={{ color: 'var(--baobab-emerald)', fontSize: '20px' }} />
+                        <span className="eyebrow" style={{ margin: 0 }}>INNOVATION</span>
+                      </div>
+                      <Title level={4} style={{ marginBottom: "16px", textTransform: 'uppercase' }}>
                         {pilot.title}
                       </Title>
                       <Paragraph
-                        type="secondary"
                         style={{
-                          fontSize: "14px",
-                          flexGrow: 1,
-                          marginBottom: "16px",
+                          fontSize: "15px",
+                          color: "var(--onyx-black)",
+                          opacity: 0.8,
+                          marginBottom: "24px",
+                          lineHeight: 1.8
                         }}
-                        ellipsis={{ rows: 5 }}
+                        ellipsis={{ rows: 4 }}
                       >
-                        {/* Pilot projects use shortDescription */}
                         {pilot.shortDescription}
                       </Paragraph>
                     </div>
-                    <Text
-                      style={{
-                        color: token.colorPrimary,
-                        fontWeight: "500",
-                        alignSelf: "flex-start",
-                      }}
-                    >
-                      View Details <ArrowRightOutlined />
-                    </Text>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                      <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, fontFamily: 'var(--font-accent)', fontSize: '12px' }}>
+                        EXPLORE CONCEPT
+                      </Text>
+                      <ArrowRightOutlined style={{ color: 'var(--baobab-emerald)' }} />
+                    </div>
                   </Card>
                 </Col>
               ))
             ) : (
-              <Col span={24} style={{ textAlign: "center" }}>
-                <Text type="secondary">
-                  No concepts found.
-                </Text>
+              <Col span={24}>
+                <Empty description={<Text className="eyebrow">No concepts found</Text>} />
               </Col>
             )}
           </Row>
         )}
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .geometric-card:hover {
+          border-color: var(--baobab-emerald) !important;
+          transform: translateY(-4px);
+        }
+      `}} />
     </div>
   );
 };

@@ -50,6 +50,13 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
   };
 
+  const handleLeaveCall = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    onLeave();
+  };
+
   useEffect(() => {
     const startCall = async () => {
       try {
@@ -210,12 +217,13 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   };
 
   return (
-    <div className="tv-glass-panel" style={{ 
+    <div style={{ 
       display: 'grid', 
-      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 350px' : '1fr'), 
-      gridTemplateRows: isMobile && showChat ? '1fr 300px' : 'auto',
-      height: isMobile ? 'auto' : 'calc(100vh - 200px)',
-      minHeight: isMobile ? '100vh' : 'auto',
+      gridTemplateColumns: isMobile ? '1fr' : (showChat ? '1fr 400px' : '1fr'), 
+      gridTemplateRows: isMobile && showChat ? '1fr 350px' : 'auto',
+      height: '100%',
+      minHeight: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 180px)',
+      background: 'var(--canvas-white)',
       overflow: 'hidden'
     }}>
       {/* Video Grid */}
@@ -263,7 +271,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
               <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<ShareAltOutlined />} onClick={copyShareLink} />
             </Tooltip>
             <Tooltip title="Leave Call">
-              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<PhoneOutlined rotate={225} />} onClick={onLeave} danger type="primary" />
+              <Button shape="circle" size={isMobile ? "middle" : "large"} icon={<PhoneOutlined rotate={225} />} onClick={handleLeaveCall} danger type="primary" />
             </Tooltip>
           </div>
         </div>

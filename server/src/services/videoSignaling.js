@@ -52,13 +52,14 @@ const setupVideoSignaling = (server) => {
     socket.on("start-broadcast", (roomId, broadcastInfo) => {
       socket.join(roomId);
       activeBroadcasts.set(roomId, {
+        roomId,
         broadcasterId: socket.id,
         broadcasterName: socket.user?.name || "Anonymous",
         title: broadcastInfo?.title || "Untitled Live",
         startTime: new Date().toISOString()
       });
+      console.log(`[Broadcast] Registered on server: ${roomId} (Broadcaster: ${socket.id})`);
       io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
-      console.log(`[Broadcast] Started: ${roomId} by ${socket.id}`);
     });
 
     socket.on("get-active-broadcasts", () => {
@@ -69,8 +70,9 @@ const setupVideoSignaling = (server) => {
       const broadcast = activeBroadcasts.get(roomId);
       if (broadcast && broadcast.broadcasterId === socket.id) {
         activeBroadcasts.delete(roomId);
+        io.to(roomId).emit("broadcast-ended", { roomId }); // Notify specifically
         io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
-        console.log(`[Broadcast] Stopped: ${roomId}`);
+        console.log(`[Broadcast] Stopped and room notified: ${roomId}`);
       }
     });
 
@@ -112,12 +114,18 @@ const setupVideoSignaling = (server) => {
         if (broadcast.broadcasterId === socket.id) {
           activeBroadcasts.delete(roomId);
           wasBroadcasting = true;
-          console.log(`[Broadcast] Cleanup: ${roomId} removed due to broadcaster disconnect`);
+          io.to(roomId).emit("broadcast-ended", { roomId });
+          console.log(`[Broadcast] Cleanup: ${roomId} removed and room notified due to broadcaster disconnect`);
         }
       }
       if (wasBroadcasting) {
         io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
       }
+      
+      // Notify rooms participant was in
+      socket.rooms.forEach(room => {
+        socket.to(room).emit("user-disconnected", { socketId: socket.id });
+      });
     });
 
     // --- Standard Room Joining ---

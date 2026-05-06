@@ -24,7 +24,6 @@ const MobilityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [projects, setProjects] = useState<any[]>([]);
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
-  const [mySiteVisits, setMySiteVisits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -32,14 +31,13 @@ const MobilityPage: React.FC = () => {
   useEffect(() => {
     fetchProjects();
     fetchBroadcasts();
-    if (isAuthenticated) fetchMyVisits();
 
     socketService.on('new-vehicle-hire', (data) => {
       setBroadcasts(prev => [data, ...prev]);
       notification.info({
         message: 'New Vehicle Hire Opportunity',
         description: `${data.engineerName} needs a car at ${data.location}. Price: ${data.price}`,
-        icon: <CarOutlined style={{ color: '#10b981' }} />,
+        icon: <CarOutlined style={{ color: 'var(--baobab-emerald)' }} />,
       });
     });
 
@@ -75,10 +73,6 @@ const MobilityPage: React.FC = () => {
     }
   };
 
-  const fetchMyVisits = async () => {
-    // Note: No backend endpoint yet for my-visits, skipping for now
-  };
-
   const handleRequestSiteVisit = (project: any) => {
     setSelectedProject(project);
     setRequestModalVisible(true);
@@ -94,7 +88,7 @@ const MobilityPage: React.FC = () => {
       });
       notification.success({ 
         message: 'Request Sent', 
-        description: `Your request to visit ${selectedProject.title} has been sent to the lead engineer.` 
+        description: `Your request to visit ${selectedProject.title} has been sent.` 
       });
       setRequestModalVisible(false);
     } catch (error) {
@@ -110,7 +104,7 @@ const MobilityPage: React.FC = () => {
       await api.post('/mobility/vehicle-hire', values);
       notification.success({
         message: 'Broadcast Active',
-        description: 'Your vehicle request is now live for all users.',
+        description: 'Your vehicle request is now live.',
       });
     } catch (error) {
       notification.error({ message: 'Broadcast Failed' });
@@ -133,178 +127,260 @@ const MobilityPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: 1200, margin: '0 auto', minHeight: '100vh' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <Title level={2} style={{ color: '#fff' }}>QSI Mobility</Title>
-        <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>
-          Coherence in motion. Connecting users with visionary sites and engineers with reliable logistics.
-        </Paragraph>
+    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
+      {/* Hero Section */}
+      <div 
+        className="pattern-dots"
+        style={{
+          padding: "120px 5% 60px 5%",
+          borderBottom: "2px solid var(--onyx-black)",
+          position: "relative"
+        }}
+      >
+        <div className="container" style={{ padding: 0 }}>
+          <span className="eyebrow reveal-up">Logistics & Infrastructure</span>
+          <Title
+            level={1}
+            className="reveal-up"
+            style={{ 
+              fontSize: "clamp(48px, 8vw, 100px)", 
+              margin: "0 0 24px 0",
+              color: "var(--onyx-black)",
+              textTransform: 'uppercase'
+            }}
+          >
+            MOBILITY <br /> SYSTEMS
+          </Title>
+          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '600px' }}>
+            <Paragraph
+              className="reveal-up"
+              style={{
+                fontSize: "18px",
+                color: "var(--onyx-black)",
+                maxWidth: "600px",
+                fontFamily: "var(--font-body)",
+                fontWeight: 500
+              }}
+            >
+              Coherence in motion. Connecting visionary sites with reliable logistics and sustainable transport solutions.
+            </Paragraph>
+          </div>
+        </div>
       </div>
 
-      <Card className="glass-card" style={{ borderRadius: 16 }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
+      <div className="container section-py">
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={setActiveTab} 
+          centered 
+          className="afro-tabs"
+        >
           {/* USER TAB: SITE VISITS */}
-          <TabPane tab={<span><EnvironmentOutlined /> Site Viewings</span>} key="1">
-            <div style={{ padding: '20px 0' }}>
-              <Title level={4} style={{ color: '#fff', marginBottom: 24 }}>Explore Projects for Site Visits</Title>
-              {projects.length > 0 ? (
-                <Row gutter={[20, 20]}>
-                  {projects.map(project => (
-                    <Col xs={24} sm={12} key={project.id}>
+          <TabPane tab={<span>SITE VIEWINGS</span>} key="1">
+            <div style={{ padding: '48px 0' }}>
+              <Row gutter={[32, 32]}>
+                {projects.length > 0 ? (
+                  projects.map(project => (
+                    <Col xs={24} md={12} key={project.id}>
                       <Card 
-                        className="glass-card" 
+                        className="geometric-card reveal-up" 
                         hoverable 
-                        bodyStyle={{ padding: 20 }}
-                        cover={project.imageUrl && <img alt={project.title} src={project.imageUrl} style={{ height: 180, objectFit: 'cover' }} />}
+                        bodyStyle={{ padding: 0 }}
+                        style={{ border: '2px solid var(--onyx-black)', borderRadius: 0, overflow: 'hidden' }}
                       >
-                        <Title level={5} style={{ margin: 0, color: '#fff' }}>{project.title}</Title>
-                        <Text style={{ color: '#10b981', display: 'block', marginBottom: 12 }}>
-                          {project.engineerProfile.user.name} 
-                          {project.engineerProfile.isVerified && <SafetyCertificateOutlined style={{ marginLeft: 4 }} />}
-                        </Text>
-                        <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          {project.description}
-                        </Paragraph>
-                        <Button 
-                          type="primary" 
-                          block 
-                          icon={<SendOutlined />} 
-                          onClick={() => handleRequestSiteVisit(project)}
-                        >
-                          Request Site Visit
-                        </Button>
+                        <div style={{ height: '240px', borderBottom: '2px solid var(--onyx-black)' }}>
+                          <img alt={project.title} src={project.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div style={{ padding: '32px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                            <Title level={4} style={{ margin: 0, textTransform: 'uppercase' }}>{project.title}</Title>
+                            <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white' }}>ACTIVE</Tag>
+                          </div>
+                          <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, display: 'block', marginBottom: 16, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontSize: '12px' }}>
+                            {project.engineerProfile.user.name} 
+                            {project.engineerProfile.isVerified && <SafetyCertificateOutlined style={{ marginLeft: 8 }} />}
+                          </Text>
+                          <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '15px' }}>
+                            {project.description}
+                          </Paragraph>
+                          <Button 
+                            className="afro-button primary" 
+                            block 
+                            style={{ marginTop: '24px' }}
+                            icon={<SendOutlined />} 
+                            onClick={() => handleRequestSiteVisit(project)}
+                          >
+                            REQUEST SITE VISIT
+                          </Button>
+                        </div>
                       </Card>
                     </Col>
-                  ))}
-                </Row>
-              ) : (
-                <Empty description={<Text style={{ color: 'rgba(255,255,255,0.45)' }}>No active projects for viewing</Text>} />
-              )}
+                  ))
+                ) : (
+                  <Empty description={<Text className="eyebrow">No active projects</Text>} />
+                )}
+              </Row>
             </div>
           </TabPane>
 
           {/* ENGINEER TAB: LOGISTICS */}
           {(user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') && (
-            <TabPane tab={<span><CarOutlined /> Vehicle Hire (Engineer)</span>} key="2">
-                <Row gutter={[32, 32]} style={{ padding: '20px 0' }}>
+            <TabPane tab={<span>LOGISTICS (ENGINEER)</span>} key="2">
+                <Row gutter={[64, 64]} style={{ padding: '48px 0' }}>
                   <Col xs={24} md={10}>
-                    <Title level={4} style={{ color: '#fff', marginBottom: 24 }}>Request Logistics</Title>
-                    <div style={{ marginBottom: 24 }}>
-                      <Button 
-                        icon={<UserOutlined />} 
-                        onClick={() => navigate('/engineer/dashboard')}
-                        style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
-                      >
-                        Go to Professional Dashboard
-                      </Button>
-                    </div>
-                    <Form layout="vertical" onFinish={handleHireVehicle}>
-                      <Form.Item name="location" label={<Text style={{ color: '#fff' }}>Pickup Location</Text>} rules={[{ required: true }]}>
-                        <Input placeholder="Enter location" />
+                    <span className="eyebrow">Deployment</span>
+                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Request Logistics</Title>
+                    
+                    <Form layout="vertical" onFinish={handleHireVehicle} className="afro-form">
+                      <Form.Item name="location" label={<span className="eyebrow">Pickup Location</span>} rules={[{ required: true }]}>
+                        <Input className="afro-input" placeholder="e.g. Harare North" />
                       </Form.Item>
-                      <Form.Item name="duration" label={<Text style={{ color: '#fff' }}>Duration</Text>} rules={[{ required: true }]}>
-                        <Input placeholder="e.g., 4 Hours, 1 Day" />
+                      <Form.Item name="duration" label={<span className="eyebrow">Duration</span>} rules={[{ required: true }]}>
+                        <Input className="afro-input" placeholder="e.g. 4 Hours" />
                       </Form.Item>
-                      <Form.Item name="price" label={<Text style={{ color: '#fff' }}>Proposed Price ($)</Text>} rules={[{ required: true }]}>
-                        <Input type="number" placeholder="Enter amount" prefix="$" />
+                      <Form.Item name="price" label={<span className="eyebrow">Proposed Price (USD)</span>} rules={[{ required: true }]}>
+                        <Input type="number" className="afro-input" placeholder="0.00" prefix="$" />
                       </Form.Item>
-                      <Form.Item name="details" label={<Text style={{ color: '#fff' }}>Task Details</Text>}>
-                        <Input.TextArea rows={4} placeholder="What is the mission?" />
+                      <Form.Item name="details" label={<span className="eyebrow">Mission Details</span>}>
+                        <Input.TextArea rows={4} className="afro-input" placeholder="Describe the task..." />
                       </Form.Item>
-                      <Button type="primary" htmlType="submit" size="large" loading={loading} block icon={<RocketOutlined />}>
-                        Broadcast Request
+                      <Button className="afro-button primary" htmlType="submit" size="large" loading={loading} block icon={<RocketOutlined />}>
+                        BROADCAST REQUEST
                       </Button>
                     </Form>
                   </Col>
                   <Col xs={24} md={14}>
-                    <Title level={4} style={{ color: '#fff', marginBottom: 24 }}>My Active Requests</Title>
-                    {/* List of my hire requests could go here */}
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: 40, borderRadius: 12, textAlign: 'center' }}>
-                       <HistoryOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />
-                       <Text style={{ display: 'block', color: 'rgba(255,255,255,0.2)' }}>Your request history will appear here</Text>
+                    <span className="eyebrow">Active Missions</span>
+                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Request History</Title>
+                    <div 
+                      className="pattern-lines" 
+                      style={{ 
+                        background: 'var(--papyrus-off-white)', 
+                        padding: '64px', 
+                        border: '2px solid var(--onyx-black)',
+                        textAlign: 'center' 
+                      }}
+                    >
+                       <HistoryOutlined style={{ fontSize: 40, color: 'var(--onyx-black)', opacity: 0.1, marginBottom: 16 }} />
+                       <Text className="eyebrow" style={{ display: 'block', opacity: 0.4 }}>History will appear here</Text>
                     </div>
                   </Col>
                 </Row>
             </TabPane>
           )}
 
-          {/* BROADCAST FEED: FOR DRIVERS/USERS */}
-          <TabPane tab={<span><Badge count={broadcasts.length} offset={[10, 0]} size="small">Marketplace</Badge></span>} key="3">
-            <div style={{ padding: '20px 0' }}>
-              <Title level={4} style={{ color: '#fff', marginBottom: 24 }}>Vehicle Opportunities</Title>
-              {broadcasts.length > 0 ? (
-                <Row gutter={[16, 16]}>
-                  {broadcasts.map(req => (
+          {/* BROADCAST FEED */}
+          <TabPane tab={<span>MARKETPLACE <Badge count={broadcasts.length} offset={[10, -5]} /></span>} key="3">
+            <div style={{ padding: '48px 0' }}>
+              <Row gutter={[32, 32]}>
+                {broadcasts.length > 0 ? (
+                  broadcasts.map(req => (
                     <Col xs={24} key={req.id}>
-                      <Card className="glass-card" bodyStyle={{ padding: 20 }}>
+                      <Card className="geometric-card" bodyStyle={{ padding: '32px' }} style={{ border: '2px solid var(--onyx-black)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <Tag color="green" style={{ marginBottom: 12 }}>ACTIVE BROADCAST</Tag>
-                            <Title level={5} style={{ margin: 0, color: '#fff' }}>{req.location}</Title>
-                            <Text style={{ color: 'rgba(255,255,255,0.6)' }}><CarOutlined /> {req.duration} mission</Text>
-                            <div style={{ marginTop: 12 }}>
-                              <Text style={{ color: 'rgba(255,255,255,0.45)' }}>Engineer: {req.engineer.name}</Text>
+                            <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white', marginBottom: '16px' }}>ACTIVE OPPORTUNITY</Tag>
+                            <Title level={3} style={{ margin: '0 0 8px 0', textTransform: 'uppercase' }}>{req.location}</Title>
+                            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                              <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><CarOutlined /> {req.duration} MISSION</Text>
+                              <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><UserOutlined /> ENG: {req.engineer.name}</Text>
                             </div>
                             {req.details && (
-                              <Paragraph style={{ color: 'rgba(255,255,255,0.6)', marginTop: 10, background: 'rgba(255,255,255,0.05)', padding: 10, borderRadius: 8 }}>
+                              <Paragraph style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '14px', background: 'var(--papyrus-off-white)', padding: '16px', border: '1px solid var(--onyx-black)' }}>
                                 {req.details}
                               </Paragraph>
                             )}
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <Title level={3} style={{ margin: 0, color: '#10b981' }}>${req.price}</Title>
+                            <Title level={2} style={{ margin: '0 0 24px 0', color: 'var(--baobab-emerald)' }}>${req.price}</Title>
                             <Button 
-                              type="primary" 
-                              style={{ marginTop: 20, background: '#10b981', borderColor: '#10b981' }} 
+                              className="afro-button primary"
                               icon={<CheckCircleOutlined />}
                               onClick={() => handleAcceptHire(req.id)}
                             >
-                              Accept Task
+                              ACCEPT TASK
                             </Button>
                           </div>
                         </div>
                       </Card>
                     </Col>
-                  ))}
-                </Row>
-              ) : (
-                <Empty 
-                  image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                  description={<Text style={{ color: 'rgba(255,255,255,0.45)' }}>No active hire requests in your area</Text>} 
-                />
-              )}
+                  ))
+                ) : (
+                  <Empty description={<Text className="eyebrow">No active requests</Text>} />
+                )}
+              </Row>
             </div>
           </TabPane>
         </Tabs>
-      </Card>
+      </div>
 
-      {/* Site Visit Request Modal */}
+      {/* Modal Refinement */}
       <Modal
-        title={`Request Site Visit: ${selectedProject?.title}`}
+        title={null}
         open={requestModalVisible}
         onCancel={() => setRequestModalVisible(false)}
         footer={null}
-        className="glass-card"
+        width={500}
+        centered
+        className="bauhaus-modal"
       >
-        <Form layout="vertical" onFinish={handleSubmitVisit}>
-          <Paragraph style={{ color: 'rgba(0,0,0,0.6)' }}>
-            Your details will be shared with <b>{selectedProject?.engineerProfile.user.name}</b>. 
-            They will contact you to finalize the schedule.
+        <div style={{ padding: '40px', border: '2px solid var(--onyx-black)' }}>
+          <span className="eyebrow">Site Visit Request</span>
+          <Title level={3} style={{ margin: '8px 0 24px 0', textTransform: 'uppercase' }}>{selectedProject?.title}</Title>
+          <Paragraph style={{ marginBottom: '32px', fontSize: '15px' }}>
+            Requesting access to visit this site. The lead engineer will contact you via email or phone.
           </Paragraph>
-          <Form.Item 
-            name="message" 
-            label="Why do you want to visit this site?" 
-            rules={[{ required: true, message: 'Please provide a short reason' }]}
-          >
-            <Input.TextArea rows={4} placeholder="Tell the engineer why you are interested in this project..." />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
-              Send Request
-            </Button>
-          </Form.Item>
-        </Form>
+          <Form layout="vertical" onFinish={handleSubmitVisit}>
+            <Form.Item 
+              name="message" 
+              label={<span className="eyebrow">Interest & Purpose</span>} 
+              rules={[{ required: true }]}
+            >
+              <Input.TextArea rows={4} className="afro-input" placeholder="Explain your interest..." />
+            </Form.Item>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <Button className="afro-button primary" htmlType="submit" block loading={loading}>
+                SEND REQUEST
+              </Button>
+              <Button className="afro-button" onClick={() => setRequestModalVisible(false)} block>
+                CANCEL
+              </Button>
+            </div>
+          </Form>
+        </div>
       </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .afro-tabs .ant-tabs-nav-list {
+          width: 100%;
+          justify-content: center;
+        }
+        .afro-tabs .ant-tabs-tab {
+          font-family: var(--font-accent) !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.15em !important;
+          font-size: 12px !important;
+          font-weight: 800 !important;
+          padding: 16px 32px !important;
+          margin: 0 !important;
+        }
+        .afro-tabs .ant-tabs-tab-active {
+          color: var(--baobab-emerald) !important;
+        }
+        .afro-tabs .ant-tabs-ink-bar {
+          background: var(--baobab-emerald) !important;
+          height: 4px !important;
+        }
+        .afro-input {
+          border: 2px solid var(--onyx-black) !important;
+          border-radius: 0 !important;
+          padding: 12px 16px !important;
+        }
+        .bauhaus-modal .ant-modal-content {
+          border-radius: 0 !important;
+          padding: 0 !important;
+        }
+      `}} />
     </div>
   );
 };

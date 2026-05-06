@@ -14,126 +14,128 @@ const PilotProjectsSidebar = ({ pilots }) => {
     return null;
   }
 
-  // Button Styles using tokens
-  const buttonStyle = {
-    background: token.colorFillTertiary,
-    border: `1px solid ${token.colorBorder}`,
-    borderRadius: token.borderRadius,
-    padding: `${token.paddingSM}px ${token.padding}px`,
-    color: token.colorText,
-    fontSize: token.fontSizeSM,
-    textAlign: "left",
-    cursor: "pointer",
-    transition: `all ${token.motionDurationMid} ${token.motionEaseInOut}`,
-    lineHeight: token.lineHeight,
-    width: "250px",
+  const linkStyle = {
+    background: "var(--canvas-white)",
+    border: "3px solid var(--onyx-black)",
+    borderRadius: 0,
+    padding: "20px",
+    color: "var(--onyx-black)",
+    textDecoration: "none",
+    width: "100%",
+    maxWidth: "340px",
     display: "block",
-    marginBottom: token.marginSM,
-    boxShadow: token.boxShadow,
-    backdropFilter: "blur(8px)",
-  };
-
-  const buttonHoverEnter = (e: React.FormEvent) => {
-    e.currentTarget.style.background = token.colorFillSecondary;
-    e.currentTarget.style.borderColor = token.colorPrimaryHover;
-    e.currentTarget.style.transform = "translateX(-4px) scale(1.03)";
-    e.currentTarget.style.boxShadow = token.boxShadowSecondary;
-  };
-
-  const buttonHoverLeave = (e: React.FormEvent) => {
-    e.currentTarget.style.background = token.colorFillTertiary;
-    e.currentTarget.style.borderColor = token.colorBorder;
-    e.currentTarget.style.transform = "translateX(0) scale(1)";
-    e.currentTarget.style.boxShadow = token.boxShadow;
+    marginBottom: "20px",
+    boxShadow: "6px 6px 0px var(--onyx-black)",
+    position: "relative",
+    transition: "transform 0.1s ease",
   };
 
   return (
     <div
       style={{
-        padding: `${token.paddingLG}px ${token.paddingXXS}px ${token.paddingXXS}px ${token.paddingSM}px`,
+        padding: "16px",
         overflowY: "auto",
-        height: "95%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "start",
       }}
     >
       {/* Title */}
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          gap: token.marginXS,
-          marginBottom: token.margin,
-          paddingLeft: token.padding,
+          gap: "8px",
+          marginBottom: "40px",
+          width: "100%",
         }}
       >
-        <RocketOutlined
+        <div
           style={{
-            color: token.colorPrimary,
-            fontSize: token.fontSizeLG,
-          }}
-        />
-        <Paragraph
-          style={{
-            margin: 0,
-            color: token.colorTextSecondary,
-            fontSize: token.fontSizeSM,
-            fontWeight: token.fontWeightMedium,
-            textTransform: "uppercase",
-            letterSpacing: "1px",
+            background: "var(--savanna-moss)",
+            border: "3px solid var(--onyx-black)",
+            padding: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "12px",
           }}
         >
-          Explore Pilot Projects
-        </Paragraph>
+          <RocketOutlined
+            style={{
+              color: "var(--canvas-white)",
+              fontSize: "24px",
+            }}
+          />
+        </div>
+        <Title level={4} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
+          Explore Projects
+        </Title>
+        <Text
+          style={{
+            color: "var(--onyx-black)",
+            fontSize: "12px",
+            fontWeight: 700,
+            fontFamily: "var(--font-accent)",
+            textTransform: "uppercase",
+            opacity: 0.7,
+            letterSpacing: "0.1em",
+          }}
+        >
+          Visionary Pilots
+        </Text>
       </div>
 
       {/* Pilot List */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 0,
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", alignItems: "center" }}>
         {pilots.map((pilot) => (
           <Link
             key={pilot.key || pilot.id}
             to={`/pilots/${pilot.key}`}
-            style={{
-              ...buttonStyle,
-              textDecoration: "none",
+            style={linkStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "8px 8px 0px var(--onyx-black)";
             }}
-            onMouseEnter={buttonHoverEnter}
-            onMouseLeave={buttonHoverLeave}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "6px 6px 0px var(--onyx-black)";
+            }}
           >
-            <Text
-              style={{
-                color: token.colorText,
-                fontWeight: token.fontWeightMedium,
-                fontSize: token.fontSizeSM,
-                display: "block",
-                marginBottom: token.marginXXS,
-              }}
-            >
-              {pilot.title}
-            </Text>
-            <Text
-              style={{
-                color: token.colorTextSecondary,
-                fontSize: token.fontSizeSM,
-                display: "block",
-                lineHeight: token.lineHeightSM,
-              }}
-            >
-              {pilot.shortDescription}
-            </Text>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Text
+                style={{
+                  color: "var(--onyx-black)",
+                  fontWeight: 900,
+                  fontSize: "14px",
+                  fontFamily: "var(--font-accent)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {pilot.title}
+              </Text>
+              <Text
+                style={{
+                  color: "var(--onyx-black)",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-body)",
+                  lineHeight: 1.4,
+                  opacity: 0.8,
+                }}
+              >
+                {pilot.shortDescription}
+              </Text>
+            </div>
           </Link>
         ))}
       </div>
     </div>
   );
 };
+
+const Title = Typography.Title;
 
 export default PilotProjectsSidebar;

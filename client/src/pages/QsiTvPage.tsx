@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Layout, Row, Col, Typography, Button, 
-  Empty, Badge, Card, Space as AntSpace 
+  Empty, Badge, Card, Space as AntSpace, theme
 } from 'antd';
 import { 
-  VideoCameraOutlined, PlaySquareOutlined, RocketOutlined 
+  VideoCameraOutlined, PlaySquareOutlined, RocketOutlined, ArrowLeftOutlined 
 } from '@ant-design/icons';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
@@ -13,8 +13,9 @@ import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
 import { useSearchParams } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Content } = Layout;
+const { useToken } = theme;
 
 const QsiTvPage: React.FC = () => {
     const { token } = useAuth() || { token: null };
@@ -25,6 +26,7 @@ const QsiTvPage: React.FC = () => {
     const [isBroadcasting, setIsBroadcasting] = React.useState<boolean>(false);
     const [activeViewerRoom, setActiveViewerRoom] = React.useState<{id: string, title: string} | null>(null);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const { token: antdToken } = useToken();
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
@@ -37,14 +39,12 @@ const QsiTvPage: React.FC = () => {
     useEffect(() => {
         socketService.connect(token || undefined);
         
-        // Check for direct join links on mount
         const callRoomId = searchParams.get('call');
         const viewRoomId = searchParams.get('view');
         
         if (callRoomId) {
             setActiveRoomId(callRoomId);
         } else if (viewRoomId) {
-            // Join as viewer even before list returns, update title later if found
             setActiveViewerRoom({ id: viewRoomId, title: "Connecting..." });
         }
 
@@ -52,22 +52,16 @@ const QsiTvPage: React.FC = () => {
             setStreams(updatedStreams);
             setIsLoading(false);
             
-            // If we're waiting for a stream's title, update it
             if (viewRoomId && activeViewerRoom?.title === "Connecting...") {
                 const stream = updatedStreams.find(s => s.roomId === viewRoomId);
                 if (stream) {
                     setActiveViewerRoom({ id: stream.roomId, title: stream.title });
-                } else if (!isLoading) {
-                    // If list is loaded and stream not found, it might be ended
-                    // But we stay in viewer container so they see the "connecting" state or eventually a failure
                 }
             }
         });
 
-        // Request initial list
         socketService.emit('get-active-broadcasts');
 
-        // Safety timeout to prevent infinite loading state
         const timer = setTimeout(() => {
             setIsLoading(false);
         }, 8000);
@@ -81,7 +75,6 @@ const QsiTvPage: React.FC = () => {
     const handleCreateRoom = () => {
         const roomId = Math.random().toString(36).substring(2, 9);
         setActiveRoomId(roomId);
-        console.log('Creating room:', roomId);
     };
 
     const handleLeaveCall = () => {
@@ -101,121 +94,231 @@ const QsiTvPage: React.FC = () => {
     };
 
     return (
-        <Layout style={{ minHeight: '100vh', background: 'transparent', padding: isMobile ? '80px 12px 20px' : '100px 20px 20px' }}>
-            <Content style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-                <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
-                    <Title level={isMobile ? 2 : 1} style={{ color: '#fff' }}>QSI TV</Title>
-                    <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: isMobile ? 14 : 18 }}>
-                        Experience live intelligence through real-time video and streams.
-                    </Text>
-                </div>
+        <Layout style={{ minHeight: '100vh', background: 'var(--canvas-white)' }}>
+            {/* Hero Section */}
+            <div 
+                className="pattern-dots"
+                style={{
+                    padding: isMobile ? "100px 5% 40px" : "120px 5% 60px",
+                    borderBottom: "3px solid var(--onyx-black)",
+                    position: "relative",
+                    background: "var(--canvas-white)"
+                }}
+            >
+                <div className="container" style={{ maxWidth: 1200, margin: '0 auto' }}>
+                    <span className="eyebrow reveal-up" style={{ color: 'var(--baobab-emerald)' }}>Live Intelligence</span>
+                    <Title level={1} className="reveal-up" style={{ 
+                        fontSize: isMobile ? "48px" : "80px", 
+                        margin: "12px 0", 
+                        color: "var(--onyx-black)",
+                        textTransform: 'uppercase',
+                        fontWeight: 900
+                    }}>
+                        QSI TV
+                    </Title>
+                    
+                    {/* Colourful Brand Accent Line */}
+                    <div 
+                        style={{ 
+                            height: '8px', 
+                            width: isMobile ? '100%' : '300px', 
+                            background: 'repeating-linear-gradient(to right, #0B6138 0, #0B6138 24px, #D15B35 24px, #D15B35 48px, #E2B142 48px, #E2B142 72px, #4D7A51 72px, #4D7A51 96px, #111111 96px, #111111 120px)',
+                            border: '1px solid var(--onyx-black)',
+                            margin: '24px 0'
+                        }} 
+                    />
 
+                    <Paragraph className="reveal-up" style={{ 
+                        fontSize: isMobile ? "16px" : "20px", 
+                        color: "var(--onyx-black)", 
+                        maxWidth: 600,
+                        opacity: 0.8,
+                        fontFamily: 'var(--font-body)'
+                    }}>
+                        Real-time video infrastructure for sovereign African insights. Experience live technical broadcasts and collaborative video sessions.
+                    </Paragraph>
+                </div>
+            </div>
+
+            <Content style={{ 
+                padding: (activeRoomId || isBroadcasting || activeViewerRoom) ? '0' : '60px 5%', 
+                maxWidth: (activeRoomId || isBroadcasting || activeViewerRoom) ? '100%' : 1400, 
+                margin: '0 auto', 
+                width: '100%',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
                 {activeRoomId ? (
-                    <div style={{ marginBottom: 40 }}>
-                        <Title level={3} style={{ color: '#fff' }}>Room: {activeRoomId}</Title>
-                        <VideoCallContainer roomId={activeRoomId} onLeave={handleLeaveCall} />
+                    <div className="reveal-up" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 40px', borderBottom: '3px solid var(--onyx-black)', background: 'var(--canvas-white)' }}>
+                            <Button 
+                                onClick={handleLeaveCall} 
+                                className="afro-button"
+                                icon={<ArrowLeftOutlined />}
+                            >
+                                Leave
+                            </Button>
+                            <span className="eyebrow" style={{ margin: 0 }}>Active Room: {activeRoomId}</span>
+                        </div>
+                        <div style={{ flex: 1, borderBottom: '3px solid var(--onyx-black)' }}>
+                            <VideoCallContainer roomId={activeRoomId} onLeave={handleLeaveCall} />
+                        </div>
                     </div>
                 ) : isBroadcasting ? (
-                    <div style={{ marginBottom: 40 }}>
-                        <LiveBroadcastContainer onStop={handleStopBroadcast} />
+                    <div className="reveal-up" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 40px', borderBottom: '3px solid var(--onyx-black)', background: 'var(--canvas-white)' }}>
+                            <Button 
+                                onClick={handleStopBroadcast} 
+                                className="afro-button"
+                                icon={<ArrowLeftOutlined />}
+                            >
+                                Stop
+                            </Button>
+                            <span className="eyebrow" style={{ margin: 0 }}>Live Transmission</span>
+                        </div>
+                        <div style={{ flex: 1, borderBottom: '3px solid var(--onyx-black)' }}>
+                            <LiveBroadcastContainer onStop={handleStopBroadcast} />
+                        </div>
                     </div>
                 ) : activeViewerRoom ? (
-                    <div style={{ marginBottom: 40 }}>
-                        <Button style={{ marginBottom: 20 }} onClick={() => setActiveViewerRoom(null)}>Back to Hub</Button>
-                        <LiveViewerContainer 
-                            roomId={activeViewerRoom.id} 
-                            title={activeViewerRoom.title} 
-                            onClose={() => setActiveViewerRoom(null)} 
-                        />
+                    <div className="reveal-up" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 40px', borderBottom: '3px solid var(--onyx-black)', background: 'var(--canvas-white)' }}>
+                            <Button 
+                                onClick={() => setActiveViewerRoom(null)} 
+                                className="afro-button"
+                                icon={<ArrowLeftOutlined />}
+                            >
+                                Hub
+                            </Button>
+                            <span className="eyebrow" style={{ margin: 0 }}>Viewing: {activeViewerRoom.title}</span>
+                        </div>
+                        <div style={{ flex: 1, borderBottom: '3px solid var(--onyx-black)' }}>
+                            <LiveViewerContainer 
+                                roomId={activeViewerRoom.id} 
+                                title={activeViewerRoom.title} 
+                                onClose={() => setActiveViewerRoom(null)} 
+                            />
+                        </div>
                     </div>
                 ) : (
-                    <Row gutter={[24, 24]}>
+                    <Row gutter={[40, 40]}>
                         {/* Live Streams Section */}
                         <Col xs={24} lg={16}>
-                            <Card 
-                                title={<AntSpace><PlaySquareOutlined /> Live Streams</AntSpace>}
-                                extra={
+                            <div 
+                                className="geometric-card pattern-mudcloth"
+                                style={{ 
+                                    padding: '40px',
+                                    border: '3px solid var(--onyx-black)',
+                                    boxShadow: '10px 10px 0px var(--onyx-black)',
+                                    background: 'var(--canvas-white)',
+                                    height: '500px',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <PlaySquareOutlined style={{ fontSize: '24px', color: 'var(--baobab-emerald)' }} />
+                                        <Title level={3} style={{ margin: 0, textTransform: 'uppercase', fontWeight: 900 }}>Live Streams</Title>
+                                    </div>
                                     <Button 
-                                        type="primary" 
+                                        className="afro-button primary"
                                         icon={<RocketOutlined />} 
                                         onClick={handleStartBroadcast}
-                                        size="small"
                                     >
-                                        Go Live
+                                        GO LIVE
                                     </Button>
-                                }
-                                loading={isLoading}
-                                style={{ 
-                                    background: 'rgba(30, 41, 59, 0.7)', 
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    backdropFilter: 'blur(10px)',
-                                    minHeight: 300,
-                                    borderRadius: 16
-                                }}
-                                headStyle={{ color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
-                            >
-                                {streams.length === 0 ? (
-                                    <Empty 
-                                        image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                                        description={<span style={{ color: 'rgba(255,255,255,0.45)' }}>No live streams at the moment</span>} 
-                                    />
-                                ) : (
-                                    <Row gutter={[16, 16]}>
-                                        {streams.map((stream, idx) => (
-                                            <Col key={idx} xs={24} sm={12}>
-                                                <Card
-                                                    hoverable
-                                                    style={{ 
-                                                        background: 'rgba(255,255,255,0.05)', 
-                                                        border: '1px solid rgba(255,255,255,0.1)',
-                                                        borderRadius: 12
-                                                    }}
-                                                    onClick={() => handleJoinViewer(stream)}
-                                                >
-                                                    <Card.Meta 
-                                                        title={<span style={{ color: '#fff' }}>{stream.title}</span>}
-                                                        description={<span style={{ color: 'rgba(255,255,255,0.45)' }}>Broadcaster: {stream.broadcasterId.substring(0,6)}...</span>}
-                                                    />
-                                                    <div style={{ marginTop: 10 }}>
-                                                        <Badge status="processing" text={<Text style={{ color: '#10b981' }}>Live Now</Text>} />
+                                </div>
+
+                                <div style={{ flex: 1, overflowY: 'auto' }}>
+                                    {isLoading ? (
+                                        <div className="flex-center" style={{ minHeight: 200 }}>
+                                            <div className="loading-spinner" />
+                                        </div>
+                                    ) : streams.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                            <Empty 
+                                                image={Empty.PRESENTED_IMAGE_SIMPLE} 
+                                                description={<span className="eyebrow">No active broadcasts</span>} 
+                                            />
+                                        </div>
+                                    ) : (
+                                        <Row gutter={[24, 24]}>
+                                            {streams.map((stream, idx) => (
+                                                <Col key={idx} xs={24} sm={12}>
+                                                    <div
+                                                        className="geometric-card"
+                                                        style={{ 
+                                                            background: 'var(--papyrus-off-white)', 
+                                                            border: '2px solid var(--onyx-black)',
+                                                            padding: '24px',
+                                                            cursor: 'pointer',
+                                                            transition: 'transform 0.1s ease',
+                                                            boxShadow: '4px 4px 0px var(--onyx-black)'
+                                                        }}
+                                                        onClick={() => handleJoinViewer(stream)}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.transform = "translateY(-4px)";
+                                                            e.currentTarget.style.boxShadow = "8px 8px 0px var(--onyx-black)";
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.transform = "translateY(0)";
+                                                            e.currentTarget.style.boxShadow = "4px 4px 0px var(--onyx-black)";
+                                                        }}
+                                                    >
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                                            <Badge status="processing" text={<span className="eyebrow" style={{ color: '#10b981', margin: 0 }}>LIVE</span>} />
+                                                            <div style={{ padding: '4px 8px', border: '1px solid var(--onyx-black)', fontSize: '10px', fontWeight: 900, background: 'var(--savanna-moss)', color: 'white' }}>
+                                                                TRANS
+                                                            </div>
+                                                        </div>
+                                                        <Title level={4} style={{ margin: '0 0 8px 0', textTransform: 'uppercase', fontSize: '16px' }}>{stream.title}</Title>
+                                                        <Text style={{ fontSize: '12px', fontFamily: 'var(--font-accent)', opacity: 0.7 }}>
+                                                            BROADCASTER: {stream.broadcasterId.substring(0,8).toUpperCase()}
+                                                        </Text>
                                                     </div>
-                                                </Card>
-                                            </Col>
-                                        ))}
-                                    </Row>
-                                )}
-                            </Card>
+                                                </Col>
+                                            ))}
+                                        </Row>
+                                    )}
+                                </div>
+                            </div>
                         </Col>
 
                         {/* Video Calls Section */}
                         <Col xs={24} lg={8}>
-                            <Card 
-                                title={<AntSpace><VideoCameraOutlined /> Quick Video Call</AntSpace>}
-                                loading={isLoading}
+                            <div 
+                                className="geometric-card pattern-lines"
                                 style={{ 
-                                    background: 'rgba(30, 41, 59, 0.7)', 
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    backdropFilter: 'blur(10px)',
-                                    borderRadius: 16
+                                    padding: '40px',
+                                    border: '3px solid var(--onyx-black)',
+                                    boxShadow: '10px 10px 0px var(--onyx-black)',
+                                    background: 'var(--canvas-white)',
+                                    height: '500px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center'
                                 }}
-                                headStyle={{ color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
                             >
-                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                    <Text style={{ color: 'rgba(255,255,255,0.65)', display: 'block', marginBottom: 20 }}>
-                                        Start or join a private video session.
-                                    </Text>
-                                    <Button 
-                                        type="primary" 
-                                        icon={<VideoCameraOutlined />} 
-                                        size="large" 
-                                        block 
-                                        onClick={handleCreateRoom}
-                                        style={{ borderRadius: 8, height: 48 }}
-                                    >
-                                        Create New Room
-                                    </Button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+                                    <VideoCameraOutlined style={{ fontSize: '24px', color: 'var(--terracotta-clay)' }} />
+                                    <Title level={3} style={{ margin: 0, textTransform: 'uppercase', fontWeight: 900 }}>Video Sessions</Title>
                                 </div>
-                            </Card>
+                                
+                                <Paragraph style={{ color: 'var(--onyx-black)', opacity: 0.8, marginBottom: '40px', fontSize: '16px' }}>
+                                    Initiate or join a private real-time collaborative video session. Encrypted and sovereign.
+                                </Paragraph>
+                                
+                                <Button 
+                                    className="afro-button primary" 
+                                    icon={<VideoCameraOutlined />} 
+                                    onClick={handleCreateRoom}
+                                    style={{ width: '100%', height: '64px', fontSize: '16px' }}
+                                >
+                                    CREATE SESSION
+                                </Button>
+                            </div>
                         </Col>
                     </Row>
                 )}

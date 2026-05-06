@@ -1,23 +1,20 @@
-// src/pages/ConceptDetailPage.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Spin,
   Typography,
-  Button,
   Tag,
-  Card,
   Divider,
   Grid,
   Space,
-  theme,
   Modal,
   Form,
   Input,
-  message,
   Radio,
   List,
   Avatar,
+  message,
+  Alert
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -29,826 +26,305 @@ import {
   TeamOutlined,
   BulbOutlined,
   SendOutlined,
+  RocketOutlined
 } from "@ant-design/icons";
 import axios from "axios";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { GeometricCard, CornerAccent, AfroButton } from "../components/AfroBauhausComponents";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
-const { useToken } = theme;
 const { TextArea } = Input;
 
 const ConceptDetailPage: React.FC = () => {
-  const { id } = useParams(); // Using ID from URL
+  const { id } = useParams();
   const [pilot, setPilot] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [engagementModalVisible, setEngagementModalVisible] = useState<boolean>(false);
   const [engagementLoading, setEngagementLoading] = useState<boolean>(false);
   const [form] = Form.useForm();
   const screens = useBreakpoint();
-  const { token } = useToken();
   const navigate = useNavigate();
-  const [selectedEngagementType, setSelectedEngagementType] =
-    useState<string>("partner");
+  const [selectedEngagementType, setSelectedEngagementType] = useState<string>("partner");
 
-  // Theme mode detection - memoized
-  const { isDarkMode, mode } = useMemo(() => {
-    const isDarkMode =
-      token.colorBgBase === "#1a2332" || token.colorBgContainer === "#0f1621";
-    return {
-      isDarkMode,
-      isLightMode: !isDarkMode,
-      mode: isDarkMode ? "dark" : "light",
-    };
-  }, [token.colorBgBase, token.colorBgContainer]);
+  const engagementOptions = useMemo(() => [
+    {
+      value: "partner",
+      label: "Partnership",
+      description: "Collaborate on this concept as a partner",
+      icon: <FaRegHandshake />,
+      color: "var(--baobab-emerald)",
+    },
+    {
+      value: "invest",
+      label: "Investment",
+      description: "Invest in this concept",
+      icon: <FaMoneyBillTrendUp />,
+      color: "var(--terracotta-clay)",
+    },
+    {
+      value: "meeting",
+      label: "Request Meeting",
+      description: "Schedule a meeting to discuss further",
+      icon: <TeamOutlined />,
+      color: "var(--ochre-yellow)",
+    },
+    {
+      value: "custom",
+      label: "Other Intentions",
+      description: "Describe your specific interests",
+      icon: <BulbOutlined />,
+      color: "var(--onyx-black)",
+    },
+  ], []);
 
-  // Engagement options - memoized
-  const engagementOptions = useMemo(
-    () => [
-      {
-        value: "partner",
-        label: "Partnership",
-        description: "Collaborate on this concept as a partner",
-        icon: <FaRegHandshake />,
-        color: "#52c41a",
-      },
-      {
-        value: "invest",
-        label: "Investment",
-        description: "Invest in this concept",
-        icon: <FaMoneyBillTrendUp />,
-        color: "#1890ff",
-      },
-      {
-        value: "meeting",
-        label: "Request Meeting",
-        description: "Schedule a meeting to discuss further",
-        icon: <TeamOutlined />,
-        color: "#722ed1",
-      },
-      {
-        value: "custom",
-        label: "Other Intentions",
-        description: "Describe your specific interests",
-        icon: <BulbOutlined />,
-        color: "#fa8c16",
-      },
-    ],
-    []
-  );
-
-  // Fetch concept detail
   const fetchPilotDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setPilot(null);
-
     try {
-      const baseURL =
-        import.meta.env.VITE_API_BASE_URL ||
-        "https://api.qsi.africa/api";
-      // Update endpoint to /submit/concepts/:id
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
       const response = await axios.get(`${baseURL}/submit/concepts/${id}`);
       setPilot(response.data);
     } catch (err: any) {
       console.error("Failed to fetch concept details:", err);
-      let errorMessage = "Could not load concept details.";
-      if (err.response?.status === 404) {
-        errorMessage = `Concept not found.`;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (!err.response) {
-        errorMessage = "Network error. Please check your connection.";
-      }
-      setError(errorMessage);
+      setError(err.response?.data?.error || "Could not load concept details.");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  // Handle engagement form submission
-  const handleEngagementSubmit = useCallback(
-    async (values: any) => {
-      setEngagementLoading(true);
-      try {
-        const baseURL =
-          import.meta.env.VITE_API_BASE_URL ||
-          "https://api.qsi.africa/api";
-
-        const payload = {
-          pilotKey: id, // Sending ID as key
-          pilotTitle: pilot?.title,
-          engagementType: values.engagementType,
-          customIntent: values.customIntent,
-          message: values.message,
-          contactName: values.contactName,
-          contactEmail: values.contactEmail,
-          contactPhone: values.contactPhone,
-          timestamp: new Date().toISOString(),
-        };
-
-        await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
-
-        message.success(
-          "Your engagement request has been submitted successfully! We'll contact you shortly."
-        );
-        setEngagementModalVisible(false);
-        form.resetFields();
-      } catch (error) {
-        console.error("Engagement submission error:", error);
-        message.error(
-          "Failed to submit your request. Please try again or contact us directly."
-        );
-      } finally {
-        setEngagementLoading(false);
-      }
-    },
-    [id, pilot?.title, form]
-  );
-
-  const openEngagementModal = useCallback(() => {
-    setEngagementModalVisible(true);
-  }, []);
-
-  const closeEngagementModal = useCallback(() => {
-    setEngagementModalVisible(false);
-    form.resetFields();
-    setSelectedEngagementType("partner");
-  }, [form]);
-
-  // Handle engagement type change
-  const handleEngagementTypeChange = useCallback(
-    (optionValue: string) => {
-      setSelectedEngagementType(optionValue);
-      form.setFieldValue("engagementType", optionValue);
-    },
-    [form]
-  );
-
   useEffect(() => {
-    if (id) {
-      fetchPilotDetail();
-    }
+    if (id) fetchPilotDetail();
   }, [fetchPilotDetail, id]);
 
-  const formatDate = useCallback((dateString: string) => {
+  const handleEngagementSubmit = async (values: any) => {
+    setEngagementLoading(true);
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+      const payload = {
+        pilotKey: id,
+        pilotTitle: pilot?.title,
+        ...values,
+        timestamp: new Date().toISOString(),
+      };
+      await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
+      message.success("Engagement request submitted successfully!");
+      setEngagementModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Engagement submission error:", error);
+      message.error("Failed to submit request.");
+    } finally {
+      setEngagementLoading(true);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-  }, []);
+  };
 
-  // Simplified styles for brevity here, assuming token access
-  const styles = useMemo(() => {
-    const isMobile = !screens.md;
-    const isTablet = screens.md && !screens.lg;
-
-    return {
-      container: {
-        minHeight: "100vh",
-        background: token.colorBgLayout,
-        padding: isMobile ? `${token.paddingSM}px` : `${token.paddingLG}px`,
-      },
-      navSection: {
-        maxWidth: isMobile ? "95%" : isTablet ? "90%" : "80%",
-        margin: `0 auto ${isMobile ? token.marginSM : token.margin}px`,
-      },
-      contentCard: {
-        maxWidth: isMobile ? "95%" : isTablet ? "90%" : "80%",
-        margin: "0 auto",
-        background: token.colorBgContainer,
-        borderRadius: token.borderRadiusLG,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingXL}px`,
-        boxShadow: token.boxShadowSecondary,
-        border: `1px solid ${token.colorBorder}`,
-      },
-      errorCard: {
-        textAlign: "center",
-        padding: isMobile
-          ? `${token.paddingXL}px ${token.padding}px`
-          : `${token.paddingXL * 2}px ${token.paddingXL}px`,
-      },
-      pilotMeta: {
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "flex-start" : "center",
-        gap: `${token.marginSM}px`,
-        marginBottom: `${token.marginLG}px`,
-      },
-      dateInfo: {
-        display: "flex",
-        alignItems: "center",
-        gap: `${token.paddingSM}px`,
-        color: token.colorTextSecondary,
-      },
-      pilotTitle: {
-        fontWeight: token.fontWeightStrong,
-        lineHeight: token.lineHeightHeading1,
-        marginBottom: `${token.margin}px`,
-        background: `transparent`,
-        color: token.colorSuccess,
-        fontSize: isMobile
-          ? token.fontSizeHeading3
-          : isTablet
-            ? token.fontSizeHeading2
-            : token.fontSizeHeading1,
-      },
-      pilotSubtitle: {
-        fontSize: isMobile ? token.fontSize : token.fontSizeHeading4,
-        lineHeight: token.lineHeight,
-        color: token.colorTextSecondary,
-        marginBottom: 0,
-      },
-      pilotContent: {
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-        color: token.colorText,
-      },
-      contentHeadingH3: {
-        color: token.colorText,
-        fontSize: isMobile ? token.fontSizeHeading4 : token.fontSizeHeading3,
-        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${token.margin
-          }px`,
-        paddingBottom: `${token.paddingSM}px`,
-        textDecoration: "underline",
-        textDecorationColor: token.colorPrimary,
-        textDecorationThickness: "2px",
-        textUnderlineOffset: "4px",
-        fontWeight: token.fontWeightStrong,
-      },
-      contentHeadingH4: {
-        color: token.colorText,
-        fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${token.marginSM
-          }px`,
-        fontWeight: token.fontWeightStrong,
-      },
-      contentParagraph: {
-        marginBottom: `${token.marginLG}px`,
-        lineHeight: token.lineHeight,
-        color: token.colorText,
-      },
-      contentList: {
-        marginBottom: `${token.marginLG}px`,
-        paddingLeft: isMobile ? `${token.margin}px` : `${token.marginLG}px`,
-      },
-      contentListItem: {
-        marginBottom: `${token.marginXS}px`,
-        lineHeight: token.lineHeight,
-      },
-      contentStrong: {
-        color: token.colorText,
-        fontWeight: token.fontWeightStrong,
-      },
-      contentEmphasis: {
-        color: token.colorTextSecondary,
-        fontStyle: "italic",
-      },
-      contentBlockquote: {
-        borderLeft: `4px solid ${token.colorPrimary}`,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingLG}px`,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0`,
-        background: token.colorFillAlter || token.colorBgContainer,
-        borderRadius: `0 ${token.borderRadius}px ${token.borderRadius}px 0`,
-        fontStyle: "italic",
-        border: `1px solid ${token.colorBorder}`,
-      },
-      contentCodeInline: {
-        background: token.colorFillSecondary,
-        padding: `2px ${token.paddingXS}px`,
-        borderRadius: token.borderRadiusSM,
-        fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
-        fontSize: "0.85em",
-        color: token.colorInfo,
-      },
-      contentCodeBlock: {
-        background: token.colorFillSecondary,
-        color: token.colorText,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingLG}px`,
-        borderRadius: token.borderRadius,
-        margin: `${token.margin}px 0`,
-        overflowX: "auto",
-        fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
-        fontSize: "0.85em",
-        lineHeight: 1.5,
-        border: `1px solid ${token.colorBorder}`,
-      },
-      ctaCard: {
-        border: "none",
-        boxShadow: token.boxShadowTertiary,
-        borderRadius: token.borderRadiusLG,
-        textAlign: "center",
-        background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorInfo} 100%)`,
-      },
-      ctaTitle: {
-        color: `${token.colorTextLightSolid} !important`,
-        marginBottom: `${token.margin}px`,
-        fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        fontWeight: token.fontWeightStrong,
-      },
-      ctaDescription: {
-        color: "rgba(255, 255, 255, 0.9)",
-        marginBottom: `${token.marginLG}px`,
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-      },
-      ctaActions: {
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        gap: `${token.marginSM}px`,
-        justifyContent: "center",
-        alignItems: "center",
-      },
-      loadingContainer: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        minWidth: "100vw",
-        background: token.colorBgLayout,
-      },
-      errorTitle: {
-        color: token.colorError,
-        marginBottom: `${token.margin}px`,
-        fontSize: isMobile ? token.fontSizeHeading3 : token.fontSizeHeading2,
-        fontWeight: token.fontWeightStrong,
-      },
-      errorMessage: {
-        color: token.colorTextSecondary,
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-      },
-      tagStyle: {
-        background: pilot?.isActive
-          ? `${token.colorSuccessBg}`
-          : token.colorFillSecondary,
-        color: pilot?.isActive ? token.colorSuccess : token.colorTextSecondary,
-        border: "none",
-        fontWeight: token.fontWeightMedium,
-        padding: "4px 12px",
-        margin: 0,
-        borderRadius: token.borderRadiusSM,
-      },
-      engagementOptionCard: {
-        border: `1px solid ${token.colorBorder}`,
-        padding: `0px`,
-        marginBottom: `${token.marginSM}px`,
-        cursor: "pointer",
-        transition: "all 0.3s ease",
-        background: token.colorBgContainer,
-        borderRadius: token.borderRadius,
-      },
-      engagementOptionCardSelected: {
-        border: `2px solid ${token.colorPrimary}`,
-        background: token.colorPrimaryBg,
-      },
-      contactInfoCard: {
-        background: token.colorFillAlter,
-        border: `1px solid ${token.colorBorder}`,
-        borderRadius: token.borderRadiusLG,
-        padding: `12px`,
-      },
-    };
-  }, [screens, token, pilot?.isActive]);
-
-  const cleanMarkdown = useCallback((text: string) => {
+  const cleanMarkdown = (text: string) => {
     if (!text) return "";
+    return text.trim();
+  };
 
-    return text
-      .split("\n")
-      .map((line) => {
-        if (
-          line.trim().startsWith("*") ||
-          line.trim().startsWith("-") ||
-          /^\d+./.test(line.trim())
-        ) {
-          return line.trim();
-        }
-        return line.replace(/^\s+/, "");
-      })
-      .join("\n")
-      .trim();
-  }, []);
+  const markdownComponents = {
+    h1: (props: any) => <Title level={1} style={{ textTransform: 'uppercase', marginTop: '40px', color: 'var(--onyx-black)' }} {...props} />,
+    h2: (props: any) => <Title level={2} style={{ textTransform: 'uppercase', marginTop: '32px', color: 'var(--onyx-black)' }} {...props} />,
+    h3: (props: any) => <Title level={3} style={{ textTransform: 'uppercase', marginTop: '24px', color: 'var(--onyx-black)' }} {...props} />,
+    p: (props: any) => <Paragraph style={{ fontSize: '18px', lineHeight: 1.8, marginBottom: '24px', color: 'var(--onyx-black)' }} {...props} />,
+    li: (props: any) => <li style={{ fontSize: '18px', lineHeight: 1.8, marginBottom: '8px', color: 'var(--onyx-black)' }} {...props} />,
+    blockquote: (props: any) => (
+      <blockquote style={{ 
+        borderLeft: '4px solid var(--baobab-emerald)', 
+        padding: '24px', 
+        background: 'var(--papyrus-off-white)',
+        margin: '32px 0',
+        fontStyle: 'italic'
+      }} {...props} />
+    ),
+  };
 
-  const markdownComponents = useMemo(
-    () => ({
-      h3: (props: any) => (
-        <Title level={3} style={styles.contentHeadingH3} {...props} />
-      ),
-      h4: (props: any) => (
-        <Title level={4} style={styles.contentHeadingH4} {...props} />
-      ),
-      p: (props: any) => <Paragraph style={styles.contentParagraph} {...props} />,
-      strong: (props: any) => (
-        <Text strong style={styles.contentStrong} {...props} />
-      ),
-      em: (props: any) => <Text italic style={styles.contentEmphasis} {...props} />,
-      ul: (props: any) => <ul style={styles.contentList} {...props} />,
-      ol: (props: any) => <ol style={styles.contentList} {...props} />,
-      li: (props: any) => <li style={styles.contentListItem} {...props} />,
-      blockquote: (props: any) => (
-        <blockquote style={styles.contentBlockquote} {...props} />
-      ),
-      code: ({ inline, ...props }: any) => {
-        if (inline) {
-          return <code style={styles.contentCodeInline} {...props} />;
-        }
-        return (
-          <pre style={styles.contentCodeBlock}>
-            <code {...props} />
-          </pre>
-        );
-      },
-    }),
-    [styles]
+  if (loading) return <div className="flex-center" style={{ height: '100vh' }}><Spin size="large" /></div>;
+
+  if (error || !pilot) return (
+    <div className="container section-py" style={{ textAlign: 'center' }}>
+      <Alert message={error || "Concept not found"} type="error" showIcon style={{ marginBottom: 40 }} />
+      <AfroButton onClick={() => navigate('/concepts')}>Back to Concepts</AfroButton>
+    </div>
   );
 
-  if (loading) {
-    return (
-      <div style={styles.loadingContainer}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !pilot) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.navSection}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            type="default"
-            size={screens.xs ? "middle" : "large"}
-            style={{
-              borderColor: token.colorBorder,
-              color: token.colorTextSecondary,
-            }}
-            onClick={() => navigate("/concepts")}
-          >
-            Back to Concepts
-          </Button>
-        </div>
-        <div style={{ ...styles.contentCard, ...styles.errorCard }}>
-          <Title level={2} style={styles.errorTitle}>
-            {error ? "Error Loading Concept" : "Concept Not Found"}
-          </Title>
-          <Paragraph style={styles.errorMessage}>
-            {error || "Concept data could not be loaded."}
-          </Paragraph>
-          <Button
-            type="primary"
-            onClick={fetchPilotDetail}
-            style={{
-              marginTop: token.marginLG,
-              background: token.colorPrimary,
-              borderColor: token.colorPrimary,
-            }}
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.container}>
-      {/* Navigation */}
-      <div style={styles.navSection}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          type="link"
-          size={screens.xs ? "middle" : "large"}
-          style={{
-            color: token.colorPrimary,
-            fontWeight: token.fontWeightMedium,
-          }}
-          onClick={() => navigate("/concepts")}
-        >
-          Back to Concepts
-        </Button>
-      </div>
-
-      {/* Main Content */}
-      <div style={styles.contentCard}>
-        {/* Header */}
-        <header style={{ marginBottom: `${token.marginXL}px` }}>
-          <div style={styles.pilotMeta}>
-            <Space
-              direction={screens.xs ? "vertical" : "horizontal"}
-              align={screens.xs ? "start" : "center"}
-              size={screens.xs ? "small" : "middle"}
-            >
-              <Tag style={styles.tagStyle}>
-                {pilot.isActive ? "Active" : "Inactive"}
-              </Tag>
-              <div style={styles.dateInfo}>
-                <CalendarOutlined />
-                <Text type="secondary">
-                  Created {formatDate(pilot.createdAt)}
-                </Text>
-              </div>
-              <Tag
-                color={isDarkMode ? "blue" : "cyan"}
-                style={{
-                  fontSize: token.fontSizeSM,
-                  fontWeight: token.fontWeightMedium,
-                }}
-              >
-                {/* {mode} mode */} Concept
-              </Tag>
-            </Space>
+    <div style={{ background: 'var(--canvas-white)', minHeight: '100vh' }}>
+      {/* Hero Header */}
+      <section className="pattern-mudcloth" style={{ paddingTop: '140px', paddingBottom: '80px', borderBottom: '2px solid var(--onyx-black)' }}>
+        <div className="container">
+          <div style={{ marginBottom: '24px' }}>
+            <AfroButton onClick={() => navigate('/concepts')} style={{ padding: '8px 16px', height: 'auto', fontSize: '12px' }}>
+              <ArrowLeftOutlined /> BACK TO CONCEPTS
+            </AfroButton>
           </div>
-
-          <Title
-            level={screens.xs ? 4 : screens.md ? 2 : 1}
-            style={styles.pilotTitle}
-          >
+          
+          <span className="eyebrow">Strategic Architecture</span>
+          <Title style={{ fontSize: 'clamp(32px, 5vw, 64px)', textTransform: 'uppercase', margin: '16px 0 32px 0' }}>
             {pilot.title}
           </Title>
 
-          {pilot.subtext && (
-            <Paragraph style={styles.pilotSubtitle}>
-              {/* PilotProject uses 'subtext' */}
-              {pilot.subtext}
-            </Paragraph>
-          )}
-        </header>
-
-        {/* Content */}
-        <article style={styles.pilotContent}>
-          {/* PilotProject uses 'expandedView' for detail content */}
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={markdownComponents}
-          >
-            {cleanMarkdown(pilot.expandedView)}
-          </ReactMarkdown>
-        </article>
-
-        {/* Footer */}
-        <Divider style={{ borderColor: token.colorBorderSecondary }} />
-
-        <footer style={{ marginTop: `${token.marginXL}px` }}>
-          <Card style={styles.ctaCard}>
-            <Title level={screens.xs ? 5 : 4} style={styles.ctaTitle}>
-              Ready to collaborate?
-            </Title>
-            <Paragraph style={styles.ctaDescription}>
-              Interested in partnering, investing, or learning more about this concept? Let us know your intentions and we'll get back to you.
-            </Paragraph>
-            <div style={styles.ctaActions}>
-              <Button
-                type="primary"
-                size={screens.xs ? "middle" : "large"}
-                onClick={openEngagementModal}
-                icon={<MessageOutlined />}
-                style={{
-                  background: token.colorBgContainer,
-                  color: token.colorPrimary,
-                  border: `1px solid ${token.colorBgContainer}`,
-                  fontWeight: token.fontWeightStrong,
-                  height: screens.xs
-                    ? token.controlHeight
-                    : token.controlHeightLG,
-                  padding: `0 ${screens.xs ? token.padding : token.paddingLG
-                    }px`,
-                  minWidth: screens.xs ? "100%" : "auto",
-                }}
-              >
-                Express Interest
-              </Button>
-
-              <Button
-                type="default"
-                size={screens.xs ? "middle" : "large"}
-                onClick={() => navigate("/concepts")}
-                style={{
-                  background: "rgba(255, 255, 255, 0.1)",
-                  color: token.colorTextLightSolid,
-                  border: `1px solid rgba(255, 255, 255, 0.3)`,
-                  height: screens.xs
-                    ? token.controlHeight
-                    : token.controlHeightLG,
-                  padding: `0 ${screens.xs ? token.padding : token.paddingLG
-                    }px`,
-                  minWidth: screens.xs ? "100%" : "auto",
-                }}
-              >
-                View More Concepts
-              </Button>
+          <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CalendarOutlined style={{ color: 'var(--baobab-emerald)' }} />
+              <span className="eyebrow" style={{ margin: 0 }}>Published: {formatDate(pilot.createdAt)}</span>
             </div>
-          </Card>
-        </footer>
-      </div>
+            <Tag style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', background: 'var(--onyx-black)', color: 'white', fontFamily: 'var(--font-accent)', textTransform: 'uppercase', padding: '4px 12px' }}>
+              CONCEPT ID: {id?.substring(0, 8).toUpperCase()}
+            </Tag>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Section */}
+      <section className="container section-py">
+        <div style={{ display: 'grid', gridTemplateColumns: screens.lg ? '1fr 350px' : '1fr', gap: '64px', alignItems: 'start' }}>
+          
+          <div className="reveal-up">
+            <GeometricCard style={{ padding: screens.xs ? '24px' : '64px', position: 'relative' }}>
+              <CornerAccent position="tl" />
+              <CornerAccent position="br" color="var(--baobab-emerald)" />
+              
+              <article className="concept-article">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {cleanMarkdown(pilot.expandedView)}
+                </ReactMarkdown>
+              </article>
+            </GeometricCard>
+          </div>
+
+          <aside className="reveal-up" style={{ position: screens.lg ? 'sticky' : 'static', top: '120px' }}>
+            <GeometricCard style={{ padding: '32px', background: 'var(--papyrus-off-white)' }}>
+              <span className="eyebrow">Engagement</span>
+              <Title level={3} style={{ textTransform: 'uppercase', marginBottom: '24px', color: 'var(--onyx-black)' }}>Collaborate</Title>
+              <Paragraph style={{ marginBottom: '32px', color: 'var(--onyx-black)' }}>
+                This concept represents a strategic blueprint for African sovereignty. We are actively seeking partners and visionaries to actualize this framework.
+              </Paragraph>
+              
+              <AfroButton primary style={{ width: '100%', marginBottom: '16px' }} onClick={() => setEngagementModalVisible(true)}>
+                EXPRESS INTEREST
+              </AfroButton>
+              <AfroButton style={{ width: '100%' }} onClick={() => navigate('/contact-us')}>
+                GET IN TOUCH
+              </AfroButton>
+
+              <Divider style={{ borderColor: 'var(--onyx-black)', opacity: 0.2 }} />
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Avatar icon={<RocketOutlined />} style={{ background: 'var(--baobab-emerald)', borderRadius: 0 }} />
+                <div>
+                  <Text strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', fontFamily: 'var(--font-accent)' }}>Status</Text>
+                  <Text style={{ fontSize: '14px' }}>Framework Validation</Text>
+                </div>
+              </div>
+            </GeometricCard>
+
+            <div style={{ marginTop: '32px', padding: '0 12px' }}>
+              <span className="eyebrow" style={{ fontSize: '10px' }}>Share this concept</span>
+              <Space size="large" style={{ marginTop: '8px' }}>
+                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>TWITTER</Text>
+                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>LINKEDIN</Text>
+                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>COPY LINK</Text>
+              </Space>
+            </div>
+          </aside>
+
+        </div>
+      </section>
 
       {/* Engagement Modal */}
       <Modal
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <MessageOutlined style={{ color: token.colorPrimary }} />
-            <span>Express Interest in {pilot.title}</span>
-          </div>
-        }
+        title={null}
         open={engagementModalVisible}
-        onCancel={closeEngagementModal}
+        onCancel={() => setEngagementModalVisible(false)}
         footer={null}
-        width={screens.xs ? "95%" : screens.md ? "70%" : "50%"}
+        width={700}
+        styles={{ body: { padding: 0 } }}
+        centered
         destroyOnClose
-        style={{
-          top: "10px",
-        }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleEngagementSubmit}
-          initialValues={{ engagementType: selectedEngagementType }}
-        >
-          {/* Engagement Type Selection */}
-          <Form.Item
-            name="engagementType"
-            label="What is your primary intention?"
-            rules={[
-              { required: true, message: "Please select your intention" },
-            ]}
-          >
-            <Radio.Group style={{ width: "100%" }}>
-              <Space direction="vertical" style={{ width: "100%" }}>
-                {engagementOptions.map((option) => (
-                  <Card
-                    key={option.value}
-                    style={{
-                      ...styles.engagementOptionCard,
-                      ...(selectedEngagementType === option.value
-                        ? styles.engagementOptionCardSelected
-                        : {}),
-                    }}
-                    onClick={() => handleEngagementTypeChange(option.value)}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        padding: "16px"
+        <div style={{ padding: '48px', position: 'relative' }}>
+          <CornerAccent position="tr" color="var(--baobab-emerald)" />
+          <span className="eyebrow">Expression of Interest</span>
+          <Title level={2} style={{ textTransform: 'uppercase', marginBottom: '32px' }}>Collaborate on this Concept</Title>
+          
+          <Form form={form} layout="vertical" onFinish={handleEngagementSubmit}>
+            <Form.Item name="engagementType" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Intention</span>}>
+              <Radio.Group style={{ width: "100%" }} onChange={(e) => setSelectedEngagementType(e.target.value)}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {engagementOptions.map((option) => (
+                    <div 
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedEngagementType(option.value);
+                        form.setFieldValue('engagementType', option.value);
+                      }}
+                      style={{ 
+                        padding: '16px', 
+                        border: '2px solid var(--onyx-black)',
+                        background: selectedEngagementType === option.value ? 'var(--papyrus-off-white)' : 'white',
+                        cursor: 'pointer',
+                        borderColor: selectedEngagementType === option.value ? 'var(--baobab-emerald)' : 'var(--onyx-black)'
                       }}
                     >
-                      <div
-                        style={{
-                          color: option.color,
-                          fontSize: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        {option.icon}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <Text
-                          strong
-                          style={{ color: token.colorText, display: "block" }}
-                        >
-                          {option.label}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: "12px" }}>
-                          {option.description}
-                        </Text>
-                      </div>
-                      <Radio value={option.value} />
+                      <div style={{ fontSize: '20px', color: option.color, marginBottom: '8px' }}>{option.icon}</div>
+                      <Text strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase' }}>{option.label}</Text>
+                      <Radio value={option.value} style={{ display: 'none' }} />
                     </div>
-                  </Card>
-                ))}
-              </Space>
-            </Radio.Group>
-          </Form.Item>
+                  ))}
+                </div>
+              </Radio.Group>
+            </Form.Item>
 
-          {/* Custom Intent Field */}
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.engagementType !== currentValues.engagementType
-            }
-          >
-            {({ getFieldValue }) =>
-              getFieldValue("engagementType") === "custom" ? (
-                <Form.Item
-                  name="customIntent"
-                  label="Please describe your intentions"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please describe your intentions",
-                    },
-                  ]}
-                >
-                  <Input.TextArea
-                    placeholder="Tell us what you'd like to do with this concept..."
-                    rows={3}
-                  />
-                </Form.Item>
-              ) : null
-            }
-          </Form.Item>
+            <Form.Item name="contactName" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Full Name</span>} rules={[{ required: true }]}>
+              <Input style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', height: '48px' }} />
+            </Form.Item>
 
-          {/* Contact Information */}
-          <Divider>Your Contact Information</Divider>
+            <Form.Item name="contactEmail" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Email Address</span>} rules={[{ required: true, type: 'email' }]}>
+              <Input style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', height: '48px' }} />
+            </Form.Item>
 
-          <Form.Item
-            name="contactName"
-            label="Full Name"
-            rules={[{ required: true, message: "Please enter your name" }]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Enter your full name"
-            />
-          </Form.Item>
+            <Form.Item name="message" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Additional Context</span>}>
+              <TextArea rows={4} style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
+            </Form.Item>
 
-          <Form.Item
-            name="contactEmail"
-            label="Email Address"
-            rules={[
-              { required: true, message: "Please enter your email" },
-              { type: "email", message: "Please enter a valid email" },
-            ]}
-          >
-            <Input
-              prefix={<MailOutlined />}
-              placeholder="your.email@example.com"
-            />
-          </Form.Item>
-
-          <Form.Item name="contactPhone" label="Phone Number">
-            <Input prefix={<PhoneOutlined />} placeholder="+1 (555) 123-4567" />
-          </Form.Item>
-
-          <Form.Item name="message" label="Additional Message (Optional)">
-            <TextArea
-              rows={4}
-              placeholder="Any additional information you'd like to share..."
-            />
-          </Form.Item>
-
-          {/* Contact Information Display */}
-          <Card style={styles.contactInfoCard}>
-            <Title level={5} style={{ marginBottom: token.margin }}>
-              <TeamOutlined style={{ marginRight: "8px" }} />
-              Quick Contact Options
-            </Title>
-            <List
-              size="small"
-              dataSource={[
-                { icon: <PhoneOutlined />, text: "Call: +263 77 109 9675" },
-                { icon: <MailOutlined />, text: "Email: info@qsi.com" },
-                {
-                  icon: <MessageOutlined />,
-                  text: "WhatsApp: +263 77 109 9675",
-                },
-              ]}
-              renderItem={(item) => (
-                <List.Item style={{ border: "none", padding: "4px 0" }}>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        size="small"
-                        icon={item.icon}
-                        style={{ background: token.colorPrimary }}
-                      />
-                    }
-                    description={<Text type="secondary">{item.text}</Text>}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-
-          {/* Form Actions */}
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              justifyContent: "flex-end",
-              marginTop: token.marginLG,
-            }}
-          >
-            <Button onClick={closeEngagementModal}>Cancel</Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={engagementLoading}
-              icon={<SendOutlined />}
-            >
-              Submit Interest
-            </Button>
-          </div>
-        </Form>
+            <div style={{ marginTop: '32px', display: 'flex', gap: '16px' }}>
+              <AfroButton primary style={{ flex: 1 }} onClick={() => form.submit()}>SUBMIT INTEREST</AfroButton>
+              <AfroButton style={{ flex: 1 }} onClick={() => setEngagementModalVisible(false)}>CANCEL</AfroButton>
+            </div>
+          </Form>
+        </div>
       </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .concept-article h1, .concept-article h2, .concept-article h3 {
+          font-family: var(--font-heading);
+          color: var(--onyx-black);
+          letter-spacing: -0.01em;
+        }
+        .concept-article p, .concept-article li {
+          font-family: var(--font-body);
+          color: var(--onyx-black);
+          opacity: 0.9;
+        }
+        .concept-article strong {
+          color: var(--baobab-emerald);
+        }
+      `}} />
     </div>
   );
 };

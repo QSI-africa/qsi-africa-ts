@@ -26,12 +26,12 @@ import {
   SendOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import Message from "../components/Message";
-import ChatInput from "../components/ChatInput";
-import HealingPackagesSidebar from "../components/HealingPackagesSidebar";
-import PilotProjectsSidebar from "../components/PilotProjectsSidebar";
+import Message from "./Message";
+import ChatInput from "./ChatInput";
+import HealingPackagesSidebar from "./HealingPackagesSidebar";
+import PilotProjectsSidebar from "./PilotProjectsSidebar";
 import { useAuth } from "../context/AuthContext";
-import FrequencyScanForm from "../components/FrequencyScanForm";
+import FrequencyScanForm from "./FrequencyScanForm";
 
 const { Title, Paragraph } = Typography;
 const { useToken } = theme;
@@ -41,22 +41,19 @@ const moduleDetails = {
   infrastructure: {
     title: "Smart Infrastructure",
     endpoint: "/infrastructure",
-    background: (token) =>
-      `linear-gradient(180deg, ${token.colorBgContainer} 0%, ${token.colorBgContainer} 50%, ${token.colorBgContainer} 100%)`,
+    background: "var(--canvas-white)",
     icon: "🛠️",
   },
   healing: {
     title: "Healing & Therapy",
     endpoint: "/healing-chat",
-    background: (token) =>
-      `linear-gradient(180deg, ${token.colorBgContainer} 0%, ${token.colorBgContainer} 50%, ${token.colorBgContainer} 100%)`,
+    background: "var(--canvas-white)",
     icon: "🌿",
   },
   vision: {
     title: "Vision Space",
     endpoint: "/vision",
-    background: (token) =>
-      `linear-gradient(180deg, ${token.colorBgContainer} 0%, ${token.colorBgContainer} 50%, ${token.colorBgContainer} 100%)`,
+    background: "var(--canvas-white)",
     icon: "🔭",
   },
 };
@@ -68,42 +65,6 @@ const SidebarContent = ({
   handleSuggestionClick,
   token,
 }) => {
-  const buttonStyle = useMemo(
-    () => ({
-      background: token.colorFillTertiary,
-      border: `1px solid ${token.colorBorder}`,
-      borderRadius: token.borderRadius,
-      padding: `${token.paddingSM}px ${token.padding}px`,
-      color: token.colorText,
-      fontSize: token.fontSizeSM,
-      textAlign: "left",
-      cursor: "pointer",
-      transition: `all ${token.motionDurationMid} ${token.motionEaseInOut}`,
-      lineHeight: 1.4,
-      width: "100%",
-      display: "block",
-    }),
-    [token],
-  );
-
-  const buttonHoverEnter = useCallback(
-    (e: React.FormEvent) => {
-      e.currentTarget.style.background = token.colorFillSecondary;
-      e.currentTarget.style.borderColor = token.colorPrimaryHover;
-      e.currentTarget.style.transform = "translateX(4px)";
-    },
-    [token],
-  );
-
-  const buttonHoverLeave = useCallback(
-    (e: React.FormEvent) => {
-      e.currentTarget.style.background = token.colorFillTertiary;
-      e.currentTarget.style.borderColor = token.colorBorder;
-      e.currentTarget.style.transform = "translateX(0)";
-    },
-    [token],
-  );
-
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Back button + Module header - fixed at top */}
@@ -126,20 +87,27 @@ const SidebarContent = ({
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            marginBottom: "8px",
+            marginBottom: "12px",
           }}
         >
           <span style={{ fontSize: "32px" }}>{details.icon}</span>
-          <Title level={4} style={{ margin: 0, color: token.colorText }}>
+          <Title level={4} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase' }}>
             {details.title}
           </Title>
         </div>
         <Paragraph
           style={{
-            color: token.colorTextSecondary,
-            fontSize: "13px",
+            color: "var(--onyx-black)",
+            fontSize: "12px",
             margin: 0,
             marginBottom: "24px",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            fontFamily: "var(--font-accent)",
+            borderBottom: `4px solid ${moduleName === 'infrastructure' ? 'var(--savanna-moss)' : 'var(--baobab-emerald)'}`,
+            paddingBottom: "8px",
+            display: "inline-block"
           }}
         >
           {moduleName === "infrastructure"
@@ -168,14 +136,14 @@ const SidebarContent = ({
             <Paragraph
               style={{
                 margin: 0,
-                color: token.colorTextSecondary,
+                color: "var(--onyx-black)",
                 fontSize: "13px",
-                fontWeight: 500,
+                fontWeight: 900,
                 textTransform: "uppercase",
-                letterSpacing: "1px",
+                letterSpacing: "2px",
               }}
             >
-              Suggestions
+              {moduleName === 'infrastructure' ? 'Schematics' : 'Suggestions'}
             </Paragraph>
           </div>
           {/* Scrollable suggestions list */}
@@ -193,12 +161,10 @@ const SidebarContent = ({
               <button
                 key={suggestion.id || `sugg-${index}`}
                 onClick={() => handleSuggestionClick(suggestion.text, false)}
-                style={buttonStyle}
-                onMouseEnter={buttonHoverEnter}
-                onMouseLeave={buttonHoverLeave}
+                className="suggestion-card"
                 aria-label={`Select suggestion: ${suggestion.text}`}
               >
-                {suggestion.text}
+                <span>{suggestion.text}</span>
               </button>
             ))}
           </div>
@@ -660,10 +626,7 @@ const ChatWindow: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const backgroundStyle = useMemo(
-    () => ({ background: details.background(token) }),
-    [details, token],
-  );
+  const backgroundStyle = { backgroundColor: 'var(--canvas-white)' };
   const showRightSidebar = moduleName === "healing";
 
   const MobileDrawer = useCallback(
@@ -702,66 +665,57 @@ const ChatWindow: React.FC = () => {
     <div
       style={{
         width: "100vw",
-        height: "100%",
+        height: "calc(100vh - 80px)",
         display: "flex",
         ...backgroundStyle,
         position: "fixed",
-        top: 0,
+        top: "80px",
         left: 0,
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
-          zIndex: 0,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: "400px",
-            height: "400px",
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${token.colorPrimary}25 0%, transparent 70%)`,
-            filter: "blur(60px)",
-            top: "10%",
-            left: "5%",
-            animation: "float1 20s ease-in-out infinite",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: "300px",
-            height: "300px",
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${token.colorInfo}20 0%, transparent 70%)`,
-            filter: "blur(50px)",
-            top: "60%",
-            right: "10%",
-            animation: "float2 18s ease-in-out infinite",
-          }}
-        />
-      </div>
+      {/* Pattern Overlay - Dynamic based on module */}
+      <div 
+        className={moduleName === 'infrastructure' ? "pattern-mudcloth" : "pattern-dots"} 
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.2, pointerEvents: 'none', zIndex: 0 }} 
+      />
+
+      {/* Infrastructure Blueprint Grid */}
+      {moduleName === 'infrastructure' && (
+        <>
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: `
+              linear-gradient(rgba(11, 97, 56, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(11, 97, 56, 0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: '100px 100px',
+            zIndex: 0,
+            pointerEvents: 'none'
+          }} />
+          {/* Technical Markings */}
+          <div style={{ position: 'absolute', top: '20px', right: '40px', fontSize: '10px', fontFamily: 'var(--font-accent)', opacity: 0.3, zIndex: 0 }}>
+            COORD: 17.8248° S, 31.0530° E <br />
+            STRUCTURAL COHERENCE: OPTIMAL <br />
+            FRN: QSI-INFRA-802
+          </div>
+          <div style={{ position: 'absolute', bottom: '100px', left: '40px', fontSize: '10px', fontFamily: 'var(--font-accent)', opacity: 0.3, zIndex: 0, transform: 'rotate(-90deg)', transformOrigin: 'left' }}>
+            PROJECT SCALE: PAN-AFRICAN ARCHITECTURE
+          </div>
+        </>
+      )}
 
       <div
         className="desktop-sidebar"
         style={{
           width: "15%",
-          minWidth: "250px",
-          maxWidth: "360px",
-          borderRight: `1px solid ${token.colorBorder}`,
+          minWidth: "300px",
+          maxWidth: "400px",
+          borderRight: "3px solid var(--onyx-black)",
           display: "flex",
           flexDirection: "column",
-          backdropFilter: "blur(10px)",
-          background: token.colorBgContainer,
+          background: "var(--papyrus-off-white)",
           padding: "24px",
           overflowY: "auto",
           position: "relative",
@@ -838,10 +792,9 @@ const ChatWindow: React.FC = () => {
           className="mobile-header"
           style={{
             display: "none",
-            padding: "16px",
-            borderBottom: `1px solid ${token.colorBorder}`,
-            background: token.colorBgContainer,
-            backdropFilter: "blur(10px)",
+            padding: "20px",
+            borderBottom: "3px solid var(--onyx-black)",
+            background: "var(--canvas-white)",
             position: "sticky",
             top: 0,
             zIndex: 10,
@@ -861,11 +814,11 @@ const ChatWindow: React.FC = () => {
                 type="text"
                 icon={<MenuOutlined />}
                 onClick={() => setLeftDrawerVisible(true)}
-                style={{ color: token.colorText }}
+                style={{ color: "var(--onyx-black)" }}
                 aria-label="Open menu"
               />
               <span style={{ fontSize: "24px" }}>{details.icon}</span>
-              <Title level={5} style={{ margin: 0, color: token.colorText }}>
+              <Title level={5} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase' }}>
                 {details.title}
               </Title>
             </div>
@@ -937,12 +890,21 @@ const ChatWindow: React.FC = () => {
             </div>
           </div>
 
+          {/* Colourful Brand Accent Line */}
+          <div 
+            style={{ 
+              height: '8px', 
+              width: '100%', 
+              background: 'repeating-linear-gradient(to right, #0B6138 0, #0B6138 24px, #D15B35 24px, #D15B35 48px, #E2B142 48px, #E2B142 72px, #4D7A51 72px, #4D7A51 96px, #111111 96px, #111111 120px)',
+              borderTop: '3px solid var(--onyx-black)',
+              borderBottom: '3px solid var(--onyx-black)',
+            }} 
+          />
+
           <div
             style={{
-              borderTop: `1px solid ${token.colorBorder}`,
-              padding: "clamp(16px, 3vw, 20px)",
-              background: token.colorBgContainer,
-              backdropFilter: "blur(10px)",
+              padding: "32px",
+              background: "var(--papyrus-off-white)",
               flexShrink: 0,
             }}
           >
@@ -965,31 +927,32 @@ const ChatWindow: React.FC = () => {
           className="desktop-sidebar-right"
           style={{
             width: "18%",
-            minWidth: "250px",
-            maxWidth: "360px",
-            borderLeft: `1px solid ${token.colorBorder}`,
-            backdropFilter: "blur(10px)",
-            background: token.colorBgContainer,
+            minWidth: "300px",
+            maxWidth: "400px",
+            borderLeft: "3px solid var(--onyx-black)",
+            background: "var(--papyrus-off-white)",
             position: "relative",
             zIndex: 1,
             flexShrink: 0,
-            height: "100vh",
+            height: "100%",
             overflowY: "auto",
           }}
         >
-          {moduleName === "healing" ? (
-            <HealingPackagesSidebar
-              packages={fetchedPackages}
-              onPackageClick={handlePackageClick}
-              isMobile={false}
-            />
-          ) : (
-            <PilotProjectsSidebar
-              pilots={pilotProjects}
-              onPilotClick={handleSuggestionClick}
-              isMobile={false}
-            />
-          )}
+          <div style={{ padding: "40px 24px" }}>
+            {moduleName === "healing" ? (
+              <HealingPackagesSidebar
+                packages={fetchedPackages}
+                onPackageClick={handlePackageClick}
+                isMobile={false}
+              />
+            ) : (
+              <PilotProjectsSidebar
+                pilots={pilotProjects}
+                onPilotClick={handleSuggestionClick}
+                isMobile={false}
+              />
+            )}
+          </div>
         </div>
       )}
 

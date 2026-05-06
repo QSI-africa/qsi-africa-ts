@@ -126,42 +126,46 @@ const EngineerDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: 1200, margin: '0 auto', minHeight: '100vh' }}>
-      <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+    <div style={{ padding: '80px 20px', maxWidth: 1400, margin: '0 auto', minHeight: '100vh', background: 'var(--canvas-white)' }}>
+      <div style={{ marginBottom: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
         <div>
-          <Title level={2} style={{ color: '#fff', margin: 0 }}>Professional Dashboard</Title>
-          <Paragraph style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <span className="eyebrow" style={{ color: 'var(--baobab-emerald)', fontWeight: 900 }}>Network Operations</span>
+          <Title level={1} style={{ color: 'var(--onyx-black)', margin: 0, textTransform: 'uppercase', fontSize: '3rem' }}>Professional Dashboard</Title>
+          <Paragraph style={{ color: 'var(--ash-grey)', marginTop: 8, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Orchestrating infrastructure milestones and professional documentation.
           </Paragraph>
         </div>
-        <Badge count={siteVisits.length} offset={[-10, 10]}>
-          <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setIsProjectModalVisible(true)}>
-             Post New Project
-          </Button>
+        <Badge count={siteVisits.length} offset={[-5, 5]}>
+          <AfroButton primary size="large" icon={<PlusOutlined />} onClick={() => setIsProjectModalVisible(true)}>
+             POST NEW PROJECT
+          </AfroButton>
         </Badge>
       </div>
 
       <Row gutter={[24, 24]}>
         {/* Profile & Document Management */}
         <Col xs={24} lg={8}>
-          <Card className="glass-card" style={{ marginBottom: 24 }}>
+          <div className="geometric-card" style={{ marginBottom: 24, padding: '32px' }}>
+            <CornerAccent position="tl" />
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <Avatar size={120} icon={<UserOutlined />} src={getServerUrl(profile?.avatarUrl)} style={{ border: '4px solid rgba(255,255,255,0.1)', background: '#1A3D63' }} />
-              <Title level={4} style={{ color: '#fff', marginTop: 16, marginBottom: 4 }}>{user?.name}</Title>
-              <Tag color="green">{profile?.specialization || 'Strategic Engineer'}</Tag>
+              <Avatar size={120} icon={<UserOutlined />} src={getServerUrl(profile?.avatarUrl)} style={{ border: '4px solid var(--onyx-black)', background: 'var(--papyrus-off-white)', borderRadius: 0 }} />
+              <Title level={4} style={{ color: 'var(--onyx-black)', marginTop: 24, marginBottom: 8, textTransform: 'uppercase' }}>{user?.name}</Title>
+              <Tag style={{ borderRadius: 0, background: 'var(--baobab-emerald)', color: 'white', border: 'none', padding: '2px 12px', fontWeight: 700 }}>
+                {profile?.specialization?.toUpperCase() || 'STRATEGIC ENGINEER'}
+              </Tag>
             </div>
             
-            <Divider style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+            <Divider style={{ borderColor: 'var(--onyx-black)', opacity: 0.1 }} />
             
-            <Title level={5} style={{ color: '#fff', marginBottom: 16 }}>Professional Files</Title>
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: 20, borderRadius: 12 }}>
+            <Title level={5} style={{ color: 'var(--onyx-black)', marginBottom: 16, textTransform: 'uppercase', fontFamily: 'var(--font-accent)' }}>Professional Files</Title>
+            <div style={{ background: 'var(--papyrus-off-white)', padding: 20, border: '2px solid var(--onyx-black)' }}>
                {profile?.resumeUrl ? (
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <Space><FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 24 }} /><Text style={{ color: '#fff' }}>Official Resume</Text></Space>
-                   <Button type="link" icon={<EditOutlined />} href={getServerUrl(profile.resumeUrl)} target="_blank" />
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                   <Space><FilePdfOutlined style={{ color: 'var(--terracotta-clay)', fontSize: 24 }} /><Text style={{ color: 'var(--onyx-black)', fontWeight: 700 }}>Official Resume</Text></Space>
+                   <Button type="link" icon={<EditOutlined />} href={getServerUrl(profile.resumeUrl)} target="_blank" style={{ color: 'var(--baobab-emerald)' }} />
                  </div>
                ) : (
-                 <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, display: 'block', marginBottom: 12 }}>No resume uploaded yet.</Text>
+                 <Text style={{ color: 'var(--ash-grey)', fontSize: 13, display: 'block', marginBottom: 12 }}>No resume uploaded yet.</Text>
                )}
                
                <Upload 
@@ -172,151 +176,175 @@ const EngineerDashboard: React.FC = () => {
                  showUploadList={false}
                  onChange={handleResumeUpload}
                >
-                 <Button icon={<UploadOutlined />} block style={{ marginTop: 10 }}>
-                   {profile?.resumeUrl ? 'Update Resume' : 'Upload Resume (PDF)'}
-                 </Button>
+                 <AfroButton style={{ width: '100%', fontSize: '11px', height: '40px' }} icon={<UploadOutlined />}>
+                   {profile?.resumeUrl ? 'UPDATE RESUME' : 'UPLOAD RESUME (PDF)'}
+                 </AfroButton>
                </Upload>
             </div>
-          </Card>
+          </div>
 
-          <Card className="glass-card" title={<span style={{ color: '#fff' }}>Profile Details</span>}>
-            <Form form={form} layout="vertical" onFinish={onProfileFinish}>
-              <Form.Item name="specialization" label={<Text style={{ color: 'rgba(255,255,255,0.6)' }}>Expertise</Text>}>
-                <Input placeholder="e.g. Structural Systems" />
+          <div className="geometric-card" style={{ padding: '32px' }}>
+            <span className="eyebrow" style={{ fontSize: '10px' }}>Profile Details</span>
+            <Form form={form} layout="vertical" onFinish={onProfileFinish} requiredMark={false}>
+              <Form.Item name="specialization" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Expertise</span>}>
+                <Input placeholder="e.g. Structural Systems" style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
               </Form.Item>
-              <Form.Item name="bio" label={<Text style={{ color: 'rgba(255,255,255,0.6)' }}>Professional Bio</Text>}>
-                <Input.TextArea rows={3} />
+              <Form.Item name="bio" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Professional Bio</span>}>
+                <Input.TextArea rows={3} style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
               </Form.Item>
-              <Form.Item name="skills" label={<Text style={{ color: 'rgba(255,255,255,0.6)' }}>Key Competencies</Text>}>
-                <Select mode="tags" />
+              <Form.Item name="skills" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Key Competencies</span>}>
+                <Select mode="tags" style={{ width: '100%' }} />
               </Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} block>Update Profile</Button>
+              <AfroButton primary htmlType="submit" loading={loading} style={{ width: '100%' }}>UPDATE PROFILE</AfroButton>
             </Form>
-          </Card>
+          </div>
         </Col>
 
         {/* Project Showcase & Site Visits */}
         <Col xs={24} lg={16}>
-          <Tabs defaultActiveKey="1" className="glass-card" style={{ padding: '0 20px 20px' }}>
-            <TabPane tab={<span><ProjectOutlined /> Infrastructure Showcase</span>} key="1">
-              <List
-                dataSource={projects}
-                renderItem={item => (
-                  <Card key={item.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 20 }}>
-                     <Row gutter={20}>
-                       <Col xs={24} md={6}>
-                          <img src={getServerUrl(item.imageUrl)} style={{ width: '100%', borderRadius: 8, height: 120, objectFit: 'cover' }} fallback="https://via.placeholder.com/150" />
-                          <div style={{ marginTop: 10 }}>
-                            <Upload
-                              action="http://localhost:3001/api/upload/project-image"
-                              headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
-                              data={{ projectId: item.id }}
-                              name="image"
-                              showUploadList={false}
-                              onChange={(info) => handleProjectImageUpload(item.id, info)}
-                            >
-                              <Button size="small" icon={<PlusOutlined />} block>Add Gallery Image</Button>
-                            </Upload>
-                          </div>
-                       </Col>
-                       <Col xs={24} md={18}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Title level={4} style={{ color: '#fff', margin: 0 }}>{item.title}</Title>
-                            <Tag color={item.status === 'COMPLETED' ? 'green' : 'blue'}>{item.status}</Tag>
-                          </div>
-                          <Paragraph style={{ color: 'rgba(255,255,255,0.45)', marginTop: 8 }}>{item.description}</Paragraph>
-                          
-                          {item.images && item.images.length > 0 && (
-                            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                              {item.images.map((img: any) => (
-                                <Avatar key={img.id} shape="square" size={40} src={getServerUrl(img.imageUrl)} />
-                              ))}
+          <div className="geometric-card" style={{ padding: '0', background: 'var(--canvas-white)', position: 'relative' }}>
+            <CornerAccent position="tr" color="var(--baobab-emerald)" />
+            <Tabs 
+              defaultActiveKey="1" 
+              style={{ padding: '24px 32px 32px' }}
+              tabBarStyle={{ borderBottom: '2px solid var(--onyx-black)', marginBottom: '32px' }}
+            >
+              <TabPane tab={<span style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 900, fontSize: '12px' }}><ProjectOutlined /> Infrastructure Showcase</span>} key="1">
+                <List
+                  dataSource={projects}
+                  renderItem={item => (
+                    <div key={item.id} style={{ background: 'var(--papyrus-off-white)', border: '2px solid var(--onyx-black)', padding: '24px', marginBottom: '24px', boxShadow: '6px 6px 0px var(--onyx-black)' }}>
+                       <Row gutter={24} align="middle">
+                         <Col xs={24} md={6}>
+                            <img src={getServerUrl(item.imageUrl)} style={{ width: '100%', border: '2px solid var(--onyx-black)', height: 140, objectFit: 'cover' }} fallback="https://via.placeholder.com/150" />
+                            <div style={{ marginTop: 12 }}>
+                              <Upload
+                                action="http://localhost:3001/api/upload/project-image"
+                                headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
+                                data={{ projectId: item.id }}
+                                name="image"
+                                showUploadList={false}
+                                onChange={(info) => handleProjectImageUpload(item.id, info)}
+                              >
+                                <AfroButton style={{ width: '100%', fontSize: '10px', height: '32px', padding: 0 }} icon={<PlusOutlined />}>ADD IMAGE</AfroButton>
+                              </Upload>
                             </div>
-                          )}
-                       </Col>
-                     </Row>
-                  </Card>
-                )}
-              />
-            </TabPane>
-
-            <TabPane tab={<span><CalendarOutlined /> Site Visit Requests</span>} key="2">
-              <List
-                dataSource={siteVisits}
-                renderItem={visit => (
-                  <Card style={{ background: 'rgba(0,0,0,0.2)', border: 'none', marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <Text strong style={{ color: '#fff', fontSize: 16 }}>{visit.user.name}</Text>
-                        <div style={{ marginTop: 4 }}>
-                          <Tag icon={<RocketOutlined />}>{visit.project.title}</Tag>
-                          <Text style={{ color: 'rgba(255,255,255,0.45)', marginLeft: 12 }}>{new Date(visit.createdAt).toLocaleDateString()}</Text>
-                        </div>
-                        <Paragraph style={{ color: 'rgba(255,255,255,0.6)', marginTop: 10, fontStyle: 'italic' }}>
-                          "{visit.message}"
-                        </Paragraph>
-                      </div>
-                      <Space direction="vertical" align="end">
-                         <div style={{ display: 'flex', gap: 12 }}>
-                            <Tooltip title={visit.user.email}><Button icon={<MailOutlined />} href={`mailto:${visit.user.email}`} /></Tooltip>
-                            {visit.user.phone && <Tooltip title={visit.user.phone}><Button icon={<PhoneOutlined />} href={`tel:${visit.user.phone}`} /></Tooltip>}
-                         </div>
-                         {visit.status === 'PENDING' ? (
-                           <Space>
-                             <Button 
-                               type="primary" 
-                               size="small" 
-                               icon={<CheckCircleOutlined />} 
-                               onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')}
-                             >
-                               Approve
-                             </Button>
-                             <Button 
-                               danger 
-                               size="small" 
-                               onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')}
-                             >
-                               Reject
-                             </Button>
-                           </Space>
-                         ) : (
-                           <Tag color={visit.status === 'APPROVED' ? 'green' : 'red'}>{visit.status}</Tag>
-                         )}
-                      </Space>
+                         </Col>
+                         <Col xs={24} md={18}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <Title level={4} style={{ color: 'var(--onyx-black)', margin: 0, textTransform: 'uppercase' }}>{item.title}</Title>
+                              <Tag style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', background: item.status === 'COMPLETED' ? 'var(--baobab-emerald)' : 'var(--ochre-yellow)', color: 'white', fontWeight: 900 }}>
+                                {item.status}
+                              </Tag>
+                            </div>
+                            <Paragraph style={{ color: 'var(--ash-grey)', marginTop: 12, fontSize: '14px', lineHeight: 1.6 }}>{item.description}</Paragraph>
+                            
+                            {item.images && item.images.length > 0 && (
+                              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                                {item.images.map((img: any) => (
+                                  <Avatar key={img.id} shape="square" size={48} src={getServerUrl(img.imageUrl)} style={{ border: '1px solid var(--onyx-black)', borderRadius: 0 }} />
+                                ))}
+                              </div>
+                            )}
+                         </Col>
+                       </Row>
                     </div>
-                  </Card>
-                )}
-              />
-            </TabPane>
-          </Tabs>
+                  )}
+                />
+              </TabPane>
+
+              <TabPane tab={<span style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 900, fontSize: '12px' }}><CalendarOutlined /> Site Visit Requests</span>} key="2">
+                <List
+                  dataSource={siteVisits}
+                  renderItem={visit => (
+                    <div style={{ background: 'var(--papyrus-off-white)', border: '2px solid var(--onyx-black)', padding: '24px', marginBottom: '16px', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                        <div>
+                          <Text strong style={{ color: 'var(--onyx-black)', fontSize: 18, textTransform: 'uppercase' }}>{visit.user.name}</Text>
+                          <div style={{ marginTop: 8, display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white' }}>{visit.project.title.toUpperCase()}</Tag>
+                            <Text style={{ color: 'var(--ash-grey)', fontSize: '12px', fontFamily: 'var(--font-accent)' }}>{new Date(visit.createdAt).toLocaleDateString()}</Text>
+                          </div>
+                          <div style={{ marginTop: 16, padding: '12px', borderLeft: '3px solid var(--baobab-emerald)', background: 'rgba(11, 97, 56, 0.05)' }}>
+                            <Paragraph style={{ color: 'var(--onyx-black)', margin: 0, fontStyle: 'italic', fontSize: '13px' }}>
+                              "{visit.message}"
+                            </Paragraph>
+                          </div>
+                        </div>
+                        <Space direction="vertical" align="end">
+                           <div style={{ display: 'flex', gap: 12 }}>
+                              <Button icon={<MailOutlined />} href={`mailto:${visit.user.email}`} style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
+                              {visit.user.phone && <Button icon={<PhoneOutlined />} href={`tel:${visit.user.phone}`} style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />}
+                           </div>
+                           {visit.status === 'PENDING' ? (
+                             <Space style={{ marginTop: 8 }}>
+                               <AfroButton 
+                                 primary 
+                                 style={{ height: '32px', fontSize: '10px', padding: '0 12px' }} 
+                                 icon={<CheckCircleOutlined />} 
+                                 onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')}
+                               >
+                                 APPROVE
+                               </AfroButton>
+                               <AfroButton 
+                                 style={{ height: '32px', fontSize: '10px', padding: '0 12px', color: 'var(--terracotta-clay)', borderColor: 'var(--terracotta-clay)' }} 
+                                 onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')}
+                               >
+                                 REJECT
+                               </AfroButton>
+                             </Space>
+                           ) : (
+                             <Tag style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', background: visit.status === 'APPROVED' ? 'var(--baobab-emerald)' : 'var(--terracotta-clay)', color: 'white', fontWeight: 900 }}>
+                               {visit.status}
+                             </Tag>
+                           )}
+                        </Space>
+                      </div>
+                    </div>
+                  )}
+                />
+              </TabPane>
+            </Tabs>
+          </div>
         </Col>
       </Row>
 
       {/* Post Project Modal */}
       <Modal
-        title="Post New Infrastructure Project"
+        title={null}
         open={isProjectModalVisible}
         onCancel={() => setIsProjectModalVisible(false)}
         footer={null}
-        className="glass-card"
+        styles={{ 
+          content: { 
+            borderRadius: 0, 
+            border: '4px solid var(--onyx-black)', 
+            padding: '40px',
+            boxShadow: '15px 15px 0px var(--onyx-black)'
+          }
+        }}
+        centered
       >
-        <Form form={projectForm} layout="vertical" onFinish={onProjectFinish}>
-            <Form.Item name="title" label="Project Title" rules={[{ required: true }]}>
-              <Input placeholder="e.g. Smart Utility Grid Expansion" />
+        <CornerAccent position="tr" color="var(--baobab-emerald)" />
+        <span className="eyebrow">Project Registry</span>
+        <Title level={2} style={{ textTransform: 'uppercase', marginBottom: '32px' }}>Post New Infrastructure Project</Title>
+        <Form form={projectForm} layout="vertical" onFinish={onProjectFinish} requiredMark={false}>
+            <Form.Item name="title" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Project Title</span>} rules={[{ required: true }]}>
+              <Input placeholder="e.g. Smart Utility Grid Expansion" style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', height: '48px' }} />
             </Form.Item>
-            <Form.Item name="status" label="Current Status" initialValue="PLANNED">
-              <Select>
+            <Form.Item name="status" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Current Status</span>} initialValue="PLANNED">
+              <Select style={{ height: '48px' }}>
                 <Select.Option value="PLANNED">Planned Phase</Select.Option>
                 <Select.Option value="IN_PROGRESS">Execution Phase</Select.Option>
                 <Select.Option value="COMPLETED">Actualized Milestone</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item name="description" label="Detailed Description" rules={[{ required: true }]}>
-              <Input.TextArea rows={4} placeholder="What is the impact of this project?" />
+            <Form.Item name="description" label={<span className="eyebrow" style={{ fontSize: '10px', marginBottom: 0 }}>Detailed Description</span>} rules={[{ required: true }]}>
+              <Input.TextArea rows={4} placeholder="What is the impact of this project?" style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
             </Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading} size="large">
-              Publish to Network
-            </Button>
+            <AfroButton primary htmlType="submit" block loading={loading} style={{ height: '64px', marginTop: '12px' }}>
+              PUBLISH TO NETWORK
+            </AfroButton>
         </Form>
       </Modal>
     </div>

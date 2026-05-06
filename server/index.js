@@ -19,7 +19,13 @@ app.use(helmet({
 }));
 
 // Security: Apply rate limiting to all API requests
-app.use("/api", apiLimiter);
+// Security: Apply rate limiting to all API requests, but bypass for Socket.io
+app.use("/api", (req, res, next) => {
+  if (req.path.startsWith("/socket.io")) {
+    return next();
+  }
+  return apiLimiter(req, res, next);
+});
 
 // Enable CORS for specific origins
 app.use(

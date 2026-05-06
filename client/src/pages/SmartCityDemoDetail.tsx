@@ -1,7 +1,8 @@
-// src/pages/SmartCityDemoDetail.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import {
+  Row,
+  Col,
   Spin,
   Typography,
   Button,
@@ -38,7 +39,7 @@ const { useBreakpoint } = Grid;
 const { useToken } = theme;
 
 const SmartCityDemoDetail: React.FC = () => {
-  const { id } = useParams(); // Using ID from URL
+  const { id } = useParams();
   const [demo, setDemo] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
@@ -51,42 +52,40 @@ const SmartCityDemoDetail: React.FC = () => {
   const [selectedEngagementType, setSelectedEngagementType] =
     useState<string>("partner");
 
-  // Engagement options - tailored for Demos
   const engagementOptions = useMemo(
     () => [
       {
         value: "invest",
-        label: "I am interested in investing",
-        description: "Explore investment opportunities in this demonstrator",
+        label: "Invest",
+        description: "Explore investment opportunities",
         icon: <FaMoneyBillTrendUp />,
-        color: "#1890ff",
+        color: "var(--terracotta-clay)",
       },
       {
         value: "participate",
-        label: "I want to participate",
-        description: "Engage as a participant or resident",
+        label: "Participate",
+        description: "Engage as a participant",
         icon: <TeamOutlined />,
-        color: "#52c41a",
+        color: "var(--baobab-emerald)",
       },
       {
         value: "learn",
-        label: "I want to learn more",
-        description: "Request more information about this system",
+        label: "Learn",
+        description: "Request more information",
         icon: <BulbOutlined />,
-        color: "#fa8c16",
+        color: "var(--ochre-yellow)",
       },
       {
         value: "collaborate",
-        label: "I want to collaborate",
-        description: "Offer technical or strategic collaboration",
+        label: "Collaborate",
+        description: "Offer technical collaboration",
         icon: <FaRegHandshake />,
-        color: "#722ed1",
+        color: "var(--onyx-black)",
       },
     ],
     []
   );
 
-  // Fetch demo detail
   const fetchDemoDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -96,26 +95,15 @@ const SmartCityDemoDetail: React.FC = () => {
       const baseURL =
         import.meta.env.VITE_API_BASE_URL ||
         "https://api.qsi.africa/api";
-      // Update endpoint to /submit/demos/:id
       const response = await axios.get(`${baseURL}/submit/demos/${id}`);
       setDemo(response.data);
     } catch (err: any) {
-      console.error("Failed to fetch demo details:", err);
-      let errorMessage = "Could not load demonstrator details.";
-      if (err.response?.status === 404) {
-        errorMessage = `Demonstrator not found.`;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (!err.response) {
-        errorMessage = "Network error. Please check your connection.";
-      }
-      setError(errorMessage);
+      setError("Could not load demonstrator details.");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  // Handle engagement form submission
   const handleEngagementSubmit = useCallback(
     async (values: any) => {
       setEngagementLoading(true);
@@ -125,8 +113,8 @@ const SmartCityDemoDetail: React.FC = () => {
           "https://api.qsi.africa/api";
 
         const payload = {
-          pilotKey: id, // Sending ID as key
-          pilotTitle: demo?.title, // Use title as title
+          pilotKey: id,
+          pilotTitle: demo?.title,
           engagementType: values.engagementType,
           customIntent: values.customIntent,
           message: values.message,
@@ -137,22 +125,16 @@ const SmartCityDemoDetail: React.FC = () => {
         };
 
         await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
-
-        message.success(
-          "Your engagement request has been submitted successfully!"
-        );
+        message.success("Submission successful!");
         setEngagementModalVisible(false);
         form.resetFields();
       } catch (error) {
-        console.error("Engagement submission error:", error);
-        message.error(
-          "Failed to submit your request."
-        );
+        message.error("Failed to submit request.");
       } finally {
         setEngagementLoading(false);
       }
     },
-    [id, demo?.name, form]
+    [id, demo?.title, form]
   );
 
   const openEngagementModal = useCallback(() => {
@@ -165,7 +147,6 @@ const SmartCityDemoDetail: React.FC = () => {
     setSelectedEngagementType("invest");
   }, [form]);
 
-  // Handle engagement type change
   const handleEngagementTypeChange = useCallback(
     (optionValue: string) => {
       setSelectedEngagementType(optionValue);
@@ -180,251 +161,25 @@ const SmartCityDemoDetail: React.FC = () => {
     }
   }, [fetchDemoDetail, id]);
 
-  // Simplified styles
   const styles = useMemo(() => {
-    const isMobile = !screens.md;
-    const isTablet = screens.md && !screens.lg;
-
     return {
-      container: {
-        minHeight: "100vh",
-        background: token.colorBgLayout,
-        padding: isMobile ? `${token.paddingSM}px` : `${token.paddingLG}px`,
-      },
-      navSection: {
-        maxWidth: isMobile ? "95%" : isTablet ? "90%" : "80%",
-        margin: `0 auto ${isMobile ? token.marginSM : token.margin}px`,
-      },
-      contentCard: {
-        maxWidth: isMobile ? "95%" : isTablet ? "90%" : "80%",
-        margin: "0 auto",
-        background: token.colorBgContainer,
-        borderRadius: token.borderRadiusLG,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingXL}px`,
-        boxShadow: token.boxShadowSecondary,
-        border: `1px solid ${token.colorBorder}`,
-      },
-      errorCard: {
-        textAlign: "center" as any,
-        padding: isMobile
-          ? `${token.paddingXL}px ${token.padding}px`
-          : `${token.paddingXL * 2}px ${token.paddingXL}px`,
-      },
-      pilotMeta: {
-        display: "flex",
-        flexDirection: (isMobile ? "column" : "row") as any,
-        alignItems: isMobile ? "flex-start" : "center",
-        gap: `${token.marginSM}px`,
-        marginBottom: `${token.marginLG}px`,
-      },
-      dateInfo: {
-        display: "flex",
-        alignItems: "center",
-        gap: `${token.paddingSM}px`,
-        color: token.colorTextSecondary,
-      },
-      pilotTitle: {
-        fontWeight: token.fontWeightStrong,
-        lineHeight: token.lineHeightHeading1,
-        marginBottom: `${token.margin}px`,
-        background: `transparent`,
-        color: token.colorSuccess,
-        fontSize: isMobile
-          ? token.fontSizeHeading3
-          : isTablet
-            ? token.fontSizeHeading2
-            : token.fontSizeHeading1,
-      },
-      pilotSubtitle: {
-        fontSize: isMobile ? token.fontSize : token.fontSizeHeading4,
-        lineHeight: token.lineHeight,
-        color: token.colorTextSecondary,
-        marginBottom: 0,
-      },
-      pilotContent: {
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-        color: token.colorText,
-      },
-      contentHeadingH3: {
-        color: token.colorText,
-        fontSize: isMobile ? token.fontSizeHeading4 : token.fontSizeHeading3,
-        margin: `${isMobile ? token.marginLG : token.marginXL}px 0 ${token.margin
-          }px`,
-        paddingBottom: `${token.paddingSM}px`,
-        textDecoration: "underline",
-        textDecorationColor: token.colorPrimary,
-        textDecorationThickness: "2px",
-        textUnderlineOffset: "4px",
-        fontWeight: token.fontWeightStrong,
-      },
-      contentHeadingH4: {
-        color: token.colorText,
-        fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0 ${token.marginSM
-          }px`,
-        fontWeight: token.fontWeightStrong,
-      },
-      contentParagraph: {
-        marginBottom: `${token.marginLG}px`,
-        lineHeight: token.lineHeight,
-        color: token.colorText,
-      },
-      contentList: {
-        marginBottom: `${token.marginLG}px`,
-        paddingLeft: isMobile ? `${token.margin}px` : `${token.marginLG}px`,
-      },
-      contentListItem: {
-        marginBottom: `${token.marginXS}px`,
-        lineHeight: token.lineHeight,
-      },
-      contentStrong: {
-        color: token.colorText,
-        fontWeight: token.fontWeightStrong,
-      },
-      contentEmphasis: {
-        color: token.colorTextSecondary,
-        fontStyle: "italic",
-      },
-      contentBlockquote: {
-        borderLeft: `4px solid ${token.colorPrimary}`,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingLG}px`,
-        margin: `${isMobile ? token.margin : token.marginLG}px 0`,
-        background: token.colorFillAlter || token.colorBgContainer,
-        borderRadius: `0 ${token.borderRadius}px ${token.borderRadius}px 0`,
-        fontStyle: "italic",
-        border: `1px solid ${token.colorBorder}`,
-      },
-      contentCodeInline: {
-        background: token.colorFillSecondary,
-        padding: `2px ${token.paddingXS}px`,
-        borderRadius: token.borderRadiusSM,
-        fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
-        fontSize: "0.85em",
-        color: token.colorInfo,
-      },
-      contentCodeBlock: {
-        background: token.colorFillSecondary,
-        color: token.colorText,
-        padding: isMobile ? `${token.padding}px` : `${token.paddingLG}px`,
-        borderRadius: token.borderRadius,
-        margin: `${token.margin}px 0`,
-        overflowX: "auto" as any,
-        fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
-        fontSize: "0.85em",
-        lineHeight: 1.5,
-        border: `1px solid ${token.colorBorder}`,
-      },
-      ctaCard: {
-        border: "none",
-        boxShadow: token.boxShadowTertiary,
-        borderRadius: token.borderRadiusLG,
-        textAlign: "center" as const,
-        background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorInfo} 100%)`,
-      },
-      ctaTitle: {
-        color: `${token.colorTextLightSolid} !important`,
-        marginBottom: `${token.margin}px`,
-        fontSize: isMobile ? token.fontSizeHeading5 : token.fontSizeHeading4,
-        fontWeight: token.fontWeightStrong,
-      },
-      ctaDescription: {
-        color: "rgba(255, 255, 255, 0.9)",
-        marginBottom: `${token.marginLG}px`,
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-      },
-      ctaActions: {
-        display: "flex",
-        flexDirection: (isMobile ? "column" : "row") as any,
-        gap: `${token.marginSM}px`,
-        justifyContent: "center",
-        alignItems: "center",
-      },
-      loadingContainer: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        minWidth: "100vw",
-        background: token.colorBgLayout,
-      },
-      errorTitle: {
-        color: token.colorError,
-        marginBottom: `${token.margin}px`,
-        fontSize: isMobile ? token.fontSizeHeading3 : token.fontSizeHeading2,
-        fontWeight: token.fontWeightStrong,
-      },
-      errorMessage: {
-        color: token.colorTextSecondary,
-        fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-        lineHeight: token.lineHeight,
-      },
-      tagStyle: {
-        background: demo?.isActive
-          ? `${token.colorSuccessBg}`
-          : token.colorFillSecondary,
-        color: demo?.isActive ? token.colorSuccess : token.colorTextSecondary,
-        border: "none",
-        fontWeight: 500,
-        padding: "4px 12px",
-        margin: 0,
-        borderRadius: token.borderRadiusSM,
-      },
-      engagementOptionCard: {
-        border: `1px solid ${token.colorBorder}`,
-        borderRadius: token.borderRadiusLG,
-        padding: `0px`,
-        marginBottom: `${token.marginSM}px`,
-        cursor: "pointer",
-        transition: "all 0.3s ease",
-        background: token.colorBgContainer,
-      },
-      engagementOptionCardSelected: {
-        border: `2px solid ${token.colorPrimary}`,
-        background: token.colorPrimaryBg,
-      },
-      contactInfoCard: {
-        background: token.colorFillAlter,
-        border: `1px solid ${token.colorBorder}`,
-        borderRadius: token.borderRadiusLG,
-        padding: `12px`,
-      },
+      markdown: {
+        h3: (props: any) => (
+          <Title level={3} style={{ marginTop: '48px', marginBottom: '24px', textTransform: 'uppercase' }} {...props} />
+        ),
+        h4: (props: any) => (
+          <Title level={4} style={{ marginTop: '32px', marginBottom: '16px', textTransform: 'uppercase' }} {...props} />
+        ),
+        p: (props: any) => <Paragraph style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '24px', color: 'var(--onyx-black)' }} {...props} />,
+        li: (props: any) => <li style={{ fontSize: '18px', marginBottom: '12px' }} {...props} />,
+        strong: (props: any) => <strong style={{ fontWeight: 900 }} {...props} />,
+      }
     };
-  }, [screens, token, demo?.isActive]);
-
-  const cleanMarkdown = useCallback((text: string) => {
-    if (!text) return "";
-    return text;
   }, []);
-
-  const markdownComponents = useMemo(
-    () => ({
-      h3: (props: any) => (
-        <Title level={3} style={styles.contentHeadingH3} {...props} />
-      ),
-      h4: (props: any) => (
-        <Title level={4} style={styles.contentHeadingH4} {...props} />
-      ),
-      p: (props: any) => <Paragraph style={styles.contentParagraph} {...props} />,
-      // ... (Shortened for brevity, use same components)
-      code: ({ inline, ...props }: any) => {
-        if (inline) {
-          return <code style={styles.contentCodeInline} {...props} />;
-        }
-        return (
-          <pre style={styles.contentCodeBlock}>
-            <code {...props} />
-          </pre>
-        );
-      },
-    }),
-    [styles]
-  );
 
   if (loading) {
     return (
-      <div style={styles.loadingContainer}>
+      <div className="flex-center" style={{ minHeight: "100vh", background: "var(--canvas-white)" }}>
         <Spin size="large" />
       </div>
     );
@@ -432,190 +187,260 @@ const SmartCityDemoDetail: React.FC = () => {
 
   if (error || !demo) {
     return (
-      <div style={styles.container}>
-        <div style={styles.navSection}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            type="default"
-            size={screens.xs ? "middle" : "large"}
-            style={{
-              borderColor: token.colorBorder,
-              color: token.colorTextSecondary,
-            }}
-            onClick={() => navigate("/demos")}
-          >
-            Back to Smart City Demos
-          </Button>
-        </div>
-        <div style={{ ...styles.contentCard, ...styles.errorCard }}>
-          <Title level={2} style={styles.errorTitle}>
-            {error ? "Error Loading Demonstrator" : "Demonstrator Not Found"}
-          </Title>
-          <Paragraph style={styles.errorMessage}>
-            {error || "Demonstrator data could not be loaded."}
-          </Paragraph>
-          <Button type="primary" onClick={fetchDemoDetail}>Try Again</Button>
-        </div>
+      <div className="flex-center" style={{ minHeight: "100vh", background: "var(--canvas-white)", flexDirection: 'column', padding: '0 5%' }}>
+        <Title level={2} style={{ color: 'var(--terracotta-clay)' }}>{error || "Demonstrator Not Found"}</Title>
+        <Button className="afro-button" onClick={() => navigate("/demos")}>Back to Demos</Button>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      {/* Navigation */}
-      <div style={styles.navSection}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          type="link"
-          size={screens.xs ? "middle" : "large"}
-          style={{
-            color: token.colorPrimary,
-            fontWeight: "500",
-          }}
-          onClick={() => navigate("/demos")}
-        >
-          Back to Smart City Demos
-        </Button>
-      </div>
-
-      {/* Main Content */}
-      <div style={styles.contentCard}>
-        {/* Header */}
-        <header style={{ marginBottom: `${token.marginXL}px` }}>
-          <div style={styles.pilotMeta}>
-            <Space size="middle">
-              <Tag style={styles.tagStyle}>{demo.status || "PROPOSED"}</Tag>
-              {demo.city && (
-                <div style={styles.dateInfo}>
-                  <EnvironmentOutlined />
-                  <Text type="secondary">{demo.city}</Text>
-                </div>
-              )}
-            </Space>
+    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
+      {/* Detail Hero */}
+      <div 
+        className="pattern-mudcloth"
+        style={{
+          padding: "120px 5% 60px 5%",
+          borderBottom: "2px solid var(--onyx-black)",
+          position: "relative"
+        }}
+      >
+        <div className="container" style={{ padding: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+            <Button 
+              onClick={() => navigate("/demos")} 
+              className="afro-button"
+              icon={<ArrowLeftOutlined />}
+            >
+              Back
+            </Button>
+            <Tag 
+              style={{ 
+                margin: 0, 
+                borderRadius: 0, 
+                padding: '8px 16px',
+                border: '2px solid var(--onyx-black)',
+                background: demo.status === 'ACTIVE' ? 'var(--baobab-emerald)' : 'var(--ochre-yellow)',
+                color: 'white',
+                fontFamily: 'var(--font-accent)',
+                fontSize: '12px',
+                fontWeight: 900
+              }}
+            >
+              {demo.status || "PROPOSED"}
+            </Tag>
           </div>
 
           <Title
-            level={screens.xs ? 4 : screens.md ? 2 : 1}
-            style={styles.pilotTitle}
+            level={1}
+            className="reveal-up"
+            style={{ 
+              fontSize: "clamp(32px, 6vw, 80px)", 
+              margin: "0 0 24px 0",
+              color: "var(--onyx-black)",
+              textTransform: 'uppercase'
+            }}
           >
             {demo.title}
           </Title>
 
-          {demo.shortDescription && (
-            <Paragraph style={styles.pilotSubtitle}>
-              {demo.shortDescription}
-            </Paragraph>
+          {demo.city && (
+            <div className="reveal-up" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <EnvironmentOutlined style={{ color: 'var(--terracotta-clay)', fontSize: '20px' }} />
+              <span className="eyebrow" style={{ margin: 0 }}>{demo.city}</span>
+            </div>
           )}
-        </header>
+        </div>
+      </div>
 
-        {/* Content */}
-        <article style={styles.pilotContent}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={markdownComponents}
-          >
-            {/* Uses expandedView from schema */}
-            {cleanMarkdown(demo.expandedView || demo.shortDescription)}
-          </ReactMarkdown>
-        </article>
+      {/* Main Content Area */}
+      <div className="container section-py">
+        <Row gutter={[64, 64]}>
+          <Col xs={24} lg={16}>
+            <article className="reveal-up">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={styles.markdown}
+              >
+                {demo.expandedView || demo.shortDescription}
+              </ReactMarkdown>
+            </article>
+          </Col>
 
-        {/* Footer */}
-        <Divider style={{ borderColor: token.colorBorderSecondary }} />
-
-        {demo.engagementEnabled && (
-          <footer style={{ marginTop: `${token.marginXL}px` }}>
-            <Card style={styles.ctaCard}>
-              <Title level={screens.xs ? 5 : 4} style={styles.ctaTitle}>
-                Engage with this Demonstrator
-              </Title>
-              <div style={styles.ctaActions}>
-                <Button
-                  type="primary"
-                  size={screens.xs ? "middle" : "large"}
+          <Col xs={24} lg={8}>
+            <div className="reveal-up" style={{ position: 'sticky', top: '120px' }}>
+              <div 
+                className="geometric-card pattern-dots" 
+                style={{ 
+                  border: '3px solid var(--onyx-black)', 
+                  padding: '40px',
+                  background: 'var(--canvas-white)',
+                  boxShadow: '8px 8px 0px var(--onyx-black)'
+                }}
+              >
+                <div 
+                  style={{ 
+                    height: '6px', 
+                    width: '100%', 
+                    background: 'repeating-linear-gradient(to right, #0B6138 0, #0B6138 16px, #D15B35 16px, #D15B35 32px, #E2B142 32px, #E2B142 48px, #4D7A51 48px, #4D7A51 64px, #111111 64px, #111111 80px)',
+                    marginBottom: '24px',
+                    border: '1px solid var(--onyx-black)'
+                  }} 
+                />
+                <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>Participation</span>
+                <Title level={3} style={{ marginBottom: '24px', textTransform: 'uppercase', fontWeight: 900 }}>ENGAGE WITH THE DEMO</Title>
+                <Paragraph style={{ marginBottom: '32px', fontSize: '16px' }}>
+                  Join us in shaping the future of this demonstrator. We are looking for partners, investors, and participants.
+                </Paragraph>
+                <Button 
+                  className="afro-button primary" 
+                  style={{ width: '100%' }}
                   onClick={openEngagementModal}
-                  icon={<MessageOutlined />}
-                  style={{
-                    height: screens.xs ? token.controlHeight : token.controlHeightLG,
-                    padding: `0 ${screens.xs ? token.padding : token.paddingLG}px`,
-                  }}
                 >
-                  I am interested
+                  I AM INTERESTED
                 </Button>
               </div>
-            </Card>
-          </footer>
-        )}
+            </div>
+          </Col>
+        </Row>
       </div>
 
       {/* Engagement Modal */}
       <Modal
-        title={`Engage with ${demo.title}`}
+        title={null}
         open={engagementModalVisible}
         onCancel={closeEngagementModal}
         footer={null}
-        width={screens.xs ? "95%" : screens.md ? "70%" : "50%"}
+        width={800}
         destroyOnClose
-        style={{ top: "10px" }}
+        className="afro-bauhaus-modal"
+        centered
+        bodyStyle={{ padding: 0 }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleEngagementSubmit}
-          initialValues={{ engagementType: selectedEngagementType }}
+        <div 
+          style={{ 
+            padding: '40px', 
+            border: '4px solid var(--onyx-black)',
+            background: 'var(--canvas-white)',
+            boxShadow: '12px 12px 0px var(--onyx-black)'
+          }}
         >
-          {/* Engagement Type Selection */}
-          <Form.Item
-            name="engagementType"
-            label="What is your primary interest?"
-            rules={[
-              { required: true, message: "Please select your interest" },
-            ]}
-          >
-            <Radio.Group style={{ width: "100%" }}>
-              <Space direction="vertical" style={{ width: "100%" }}>
-                {engagementOptions.map((option) => (
-                  <Card
-                    key={option.value}
-                    style={{
-                      ...styles.engagementOptionCard,
-                      ...(selectedEngagementType === option.value
-                        ? styles.engagementOptionCardSelected
-                        : {}),
-                    }}
-                    onClick={() => handleEngagementTypeChange(option.value)}
-                  >
-                    <div style={{ display: "flex", gap: "12px", padding: "12px" }}>
-                      <div style={{ color: option.color, fontSize: "20px" }}>{option.icon}</div>
-                      <div>
-                        <Text strong>{option.label}</Text><br />
-                        <Text type="secondary" style={{ fontSize: "12px" }}>{option.description}</Text>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </Space>
-            </Radio.Group>
-          </Form.Item>
-
-          <Divider>Contact Details</Divider>
-          <Form.Item name="contactName" label="Name" rules={[{ required: true }]}>
-            <Input prefix={<UserOutlined />} />
-          </Form.Item>
-          <Form.Item name="contactEmail" label="Email" rules={[{ required: true, type: 'email' }]}>
-            <Input prefix={<MailOutlined />} />
-          </Form.Item>
-          <Form.Item name="contactPhone" label="Phone Number">
-            <Input prefix={<PhoneOutlined />} placeholder="+263..." />
-          </Form.Item>
-          <Form.Item name="message" label="Additional Information" rules={[{ required: true, message: 'Please provide some details' }]}>
-            <Input.TextArea rows={4} placeholder="How can we help you?" />
-          </Form.Item>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-            <Button onClick={closeEngagementModal}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={engagementLoading}>Submit</Button>
+          <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+            <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>Project Engagement</span>
+            <Title level={2} style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '28px', fontWeight: 900 }}>
+              {demo.title}
+            </Title>
+            <div style={{ height: '4px', width: '40px', background: 'var(--terracotta-clay)', margin: '16px auto 0 auto' }} />
           </div>
-        </Form>
+          
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleEngagementSubmit}
+            initialValues={{ engagementType: selectedEngagementType }}
+          >
+            <Form.Item
+              name="engagementType"
+              label={<span className="eyebrow">Engagement Pathway</span>}
+              rules={[{ required: true }]}
+              style={{ marginBottom: '24px' }}
+            >
+              <Radio.Group style={{ width: "100%" }}>
+                <Row gutter={[12, 12]}>
+                  {engagementOptions.map((option) => (
+                    <Col span={6} key={option.value}>
+                      <div
+                        onClick={() => handleEngagementTypeChange(option.value)}
+                        style={{
+                          border: `3px solid ${selectedEngagementType === option.value ? 'var(--baobab-emerald)' : 'var(--onyx-black)'}`,
+                          padding: '16px 8px',
+                          cursor: 'pointer',
+                          background: selectedEngagementType === option.value ? 'var(--papyrus-off-white)' : 'white',
+                          height: '100%',
+                          textAlign: 'center',
+                          boxShadow: selectedEngagementType === option.value ? '4px 4px 0px var(--baobab-emerald)' : 'none',
+                          transition: 'all 0.1s ease'
+                        }}
+                      >
+                        <div style={{ color: option.color, fontSize: '24px', marginBottom: '8px' }}>{option.icon}</div>
+                        <Text strong style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--onyx-black)' }}>{option.label}</Text>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </Radio.Group>
+            </Form.Item>
+
+            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '3px solid var(--onyx-black)' }}>
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Form.Item name="contactName" label={<span className="eyebrow">Full Name</span>} rules={[{ required: true }]} style={{ marginBottom: '16px' }}>
+                    <Input className="afro-input compact" placeholder="Full Name" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item name="contactEmail" label={<span className="eyebrow">Email</span>} rules={[{ required: true, type: 'email' }]} style={{ marginBottom: '16px' }}>
+                    <Input className="afro-input compact" placeholder="Email" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              
+              <Form.Item 
+                name="message" 
+                label={<span className="eyebrow">Brief Intent</span>} 
+                rules={[{ required: true }]}
+                style={{ marginBottom: '24px' }}
+              >
+                <Input.TextArea rows={3} className="afro-input compact" placeholder="Describe your collaboration goals..." />
+              </Form.Item>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <Button 
+                  className="afro-button primary" 
+                  htmlType="submit" 
+                  loading={engagementLoading}
+                  style={{ flex: 2, height: '52px', fontSize: '14px' }}
+                >
+                  SUBMIT REQUEST
+                </Button>
+                <Button 
+                  className="afro-button" 
+                  onClick={closeEngagementModal}
+                  style={{ flex: 1, height: '52px' }}
+                >
+                  CANCEL
+                </Button>
+              </div>
+            </div>
+          </Form>
+        </div>
       </Modal>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .afro-input {
+          border: 3px solid var(--onyx-black) !important;
+          border-radius: 0 !important;
+          padding: 16px 20px !important;
+          font-family: var(--font-body) !important;
+          background: var(--canvas-white) !important;
+          font-size: 16px !important;
+        }
+        .afro-input:focus {
+          border-color: var(--baobab-emerald) !important;
+          box-shadow: 4px 4px 0px var(--onyx-black) !important;
+        }
+        .afro-bauhaus-modal .ant-modal-content {
+          border-radius: 0 !important;
+          padding: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+        .afro-bauhaus-modal .ant-modal-close {
+          top: 24px;
+          right: 24px;
+          color: var(--onyx-black);
+        }
+      `}} />
     </div>
   );
 };

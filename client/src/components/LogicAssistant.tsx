@@ -1,6 +1,6 @@
-import React from 'react';
-import { Button, Tooltip, theme } from 'antd';
-import { RobotOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Button, Tooltip, theme, Dropdown, Menu } from 'antd';
+import { RobotOutlined, BuildOutlined, EyeOutlined, HeartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const { useToken } = theme;
@@ -8,7 +8,7 @@ const { useToken } = theme;
 const LogicAssistant: React.FC = () => {
   const { token } = useToken();
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -16,56 +16,86 @@ const LogicAssistant: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleClick = () => {
-    navigate('/healing');
-  };
+  const menu = (
+    <Menu 
+      className="header-menu"
+      style={{ 
+        minWidth: '240px', 
+        marginBottom: '12px',
+        backgroundColor: 'var(--canvas-white)',
+        border: '3px solid var(--onyx-black)',
+        boxShadow: '10px 10px 0px var(--onyx-black)',
+        padding: '8px'
+      }}
+    >
+      <Menu.Item 
+        key="infra" 
+        icon={<BuildOutlined style={{ color: 'var(--savanna-moss)' }} />} 
+        onClick={() => navigate('/chat/infrastructure')}
+        style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+      >
+        Smart Infrastructure
+      </Menu.Item>
+      <Menu.Item 
+        key="vision" 
+        icon={<EyeOutlined style={{ color: 'var(--baobab-emerald)' }} />} 
+        onClick={() => navigate('/chat/vision')}
+        style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+      >
+        Vision Space
+      </Menu.Item>
+      <Menu.Item 
+        key="healing" 
+        icon={<HeartOutlined style={{ color: 'var(--terracotta-clay)' }} />} 
+        onClick={() => navigate('/chat/healing')}
+        style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+      >
+        Healing & Therapy
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
     <div style={{
       position: 'fixed',
-      bottom: isMobile ? 160 : 80,
+      bottom: isMobile ? 120 : 40,
       right: 25,
       zIndex: 1000,
     }}>
       <style>
         {`
-          @keyframes pulse {
-            0% {
-              box-shadow: 0 0 0 0 rgba(74, 127, 167, 0.4);
-            }
-            70% {
-              box-shadow: 0 0 0 15px rgba(74, 127, 167, 0);
-            }
-            100% {
-              box-shadow: 0 0 0 0 rgba(74, 127, 167, 0);
-            }
+          @keyframes pulse-vibrant {
+            0% { box-shadow: 0 0 0 0 rgba(209, 91, 53, 0.6); }
+            70% { box-shadow: 0 0 0 20px rgba(209, 91, 53, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(209, 91, 53, 0); }
           }
-          .assistant-pulsating-glow {
-            animation: pulse 2s infinite;
+          .assistant-vibrant-glow {
+            animation: pulse-vibrant 2s infinite;
           }
         `}
       </style>
-      <Tooltip title="QSI Logic Assistant - Healing & Therapy" placement="left">
-        <Button
-          type="primary"
-          shape="circle"
-          size="large"
-          icon={<RobotOutlined style={{ fontSize: '24px' }} />}
-          className="assistant-pulsating-glow"
-          onClick={handleClick}
-          style={{
-            width: 56,
-            height: 56,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #4A7FA7 0%, #0A1931 100%)',
-            border: '2px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
-          }}
-        />
-      </Tooltip>
+      <Dropdown overlay={menu} placement="topRight" trigger={['click']}>
+        <Tooltip title="QSI Logic Assistant - Chat with our AI" placement="left">
+          <Button
+            type="primary"
+            shape="circle"
+            size="large"
+            icon={<RobotOutlined style={{ fontSize: '28px' }} />}
+            className="assistant-vibrant-glow"
+            style={{
+              width: 72,
+              height: 72,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'var(--baobab-emerald)',
+              borderColor: 'var(--onyx-black)',
+              borderWidth: '3px',
+              boxShadow: '6px 6px 0px var(--onyx-black)',
+            }}
+          />
+        </Tooltip>
+      </Dropdown>
     </div>
   );
 };

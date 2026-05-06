@@ -1,790 +1,212 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react';
-import {
-  Row,
-  Col,
-  Card,
-  Typography,
-  Modal,
-  Input,
-  Button,
-  Form,
-  ConfigProvider,
-  theme,
-  Space,
-  Spin,
-  Drawer,
-  Menu,
-} from "antd";
-import Lottie from "lottie-react";
-import {
-  ArrowRightOutlined,
-  ToolOutlined,
-  RobotOutlined,
+import React from 'react';
+import { useNavigate } from "react-router-dom";
+import { GridLine, GeometricCard, CornerAccent, AfroButton } from "../components/AfroBauhausComponents";
+import { 
+  RocketOutlined, 
+  BulbOutlined, 
+  CarOutlined, 
   HeartOutlined,
-  EyeOutlined,
-  CustomerServiceOutlined,
-  RocketOutlined,
-  MenuOutlined,
-  CloseOutlined,
-  BulbOutlined,
-} from "@ant-design/icons";
-import { useNavigate, useLocation } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import animationData from "../assets/animations/meditate_animation.json";
-import lightLogo from "../assets/images/qsi_light_logo.png";
-import darkLogo from "../assets/images/QSI.png";
-import { useThemeMode } from "../hooks/useTheme";
-import PilotsGrid from "../components/PilotsPagination";
-import { LuAudioWaveform, LuFrame } from "react-icons/lu";
-import { useAuth } from "../context/AuthContext";
+  CloudServerOutlined,
+  GlobalOutlined
+} from '@ant-design/icons';
 
-const { Title, Text, Paragraph, Link } = Typography;
-const { useToken } = theme;
-
-// Constants
-const MODULES = [
-  {
-    key: "infrastructure",
-    title: "Smart Infrastructure",
-    description: "Where intention becomes structure.",
-    icon: <ToolOutlined />,
-  },
-  {
-    key: "vision",
-    title: "Vision Space",
-    description: "Turning vision into value.",
-    icon: <EyeOutlined />,
-  },
-  {
-    key: "mobility",
-    title: "QSI Mobility",
-    description: "Mobility built for purpose.",
-    icon: <RocketOutlined />, // Using Rocket for Mobility
-  },
-  {
-    key: "concepts", // Renamed from pilots to concepts (will update routing matches)
-    title: "QSI Concepts",
-    description: "Culture engineered for the future.",
-    icon: <BulbOutlined />, // Changing icon to Bulb for Concepts/Ideas
-  },
-  {
-    key: "healing",
-    title: "Healing & Therapy",
-    description: "Fix the mind that builds.",
-    icon: <HeartOutlined />,
-  },
-  {
-    key: "demos", // Renamed from frameworks
-    title: "QSI Smart City Demos",
-    description: "Where the future is lived, not imagined.",
-    icon: <LuFrame />,
-  },
-  {
-    key: "tv",
-    title: "QSI TV",
-    description: "Live streams and real-time video calls.",
-    icon: <ToolOutlined />, // Will update to Video icon later
-  },
-];
-
-// const NAV_LINKS = ["About Us", "Contact Us"];
-const NAV_LINKS = ["About QSI"];
-
-const MOBILE_BREAKPOINT = 768;
-
-// Custom Hooks
-const useWindowSize = () => {
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return windowSize;
-};
-
-const useScrollDetection = () => {
-  const [isScrolled, setIsScrolled] = useState<boolean>(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return isScrolled;
-};
-
-// Optimized Components
-const ContactModal = React.memo(({ open, onCancel, onFinish }) => {
-  const [form] = Form.useForm();
-  const { token } = useToken();
-
-  const handleSubmit = useCallback(async () => {
-    try {
-      const values = await form.validateFields();
-      onFinish(values);
-      form.resetFields();
-    } catch (error) {
-      console.log("Validation failed:", error);
-    }
-  }, [form, onFinish]);
-
-  const modalStyles = useMemo(
-    () => ({
-      content: {
-        background: token.colorBgContainer,
-        borderRadius: token.borderRadiusLG,
-        boxShadow: token.boxShadowSecondary,
-      },
-    }),
-    [token]
-  );
-
-  return (
-    <Modal
-      title={
-        <Title level={4} style={{ margin: 0, color: token.colorText }}>
-          Engage QSI
-        </Title>
-      }
-      open={open}
-      onCancel={onCancel}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          Cancel
-        </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>,
-      ]}
-      styles={modalStyles}
-    >
-      <Paragraph style={{ color: token.colorTextSecondary }}>
-        Please provide your contact details to begin the process for Smart
-        Infrastructure or Healing & Therapy.
-      </Paragraph>
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[{ required: true, message: "Please enter your name" }]}
-        >
-          <Input placeholder="Enter your name" />
-        </Form.Item>
-        <Form.Item
-          name="email"
-          label="Email or Phone"
-          rules={[
-            {
-              required: true,
-              message: "Please enter an email or phone number",
-            },
-            {
-              validator: (_, value) => {
-                if (!value) return Promise.reject();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const phoneRegex = /^(\+?\d{1,3}[-.\s]?)?\d{7,15}$/;
-                return emailRegex.test(value) || phoneRegex.test(value)
-                  ? Promise.resolve()
-                  : Promise.reject("Enter a valid email or phone number");
-              },
-            },
-          ]}
-        >
-          <Input type="email" placeholder="Enter your email or phone number" />
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-});
-
-const CustomHeader = React.memo(() => {
-  const { token } = useToken();
-  const isScrolled = useScrollDetection();
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const { width: windowWidth } = useWindowSize();
-  const { mode } = useThemeMode();
-  const navigate = useNavigate();
-
-  const isMobile = windowWidth <= MOBILE_BREAKPOINT;
-
-  // Explicit map for nav links that don't match the auto-slug pattern
-  const NAV_ROUTE_MAP: Record<string, string> = {
-    "About QSI": "/about-us",
-    "Contact Us": "/contact-us",
-  };
-
-  const handleNavClick = useCallback(
-    (link) => {
-      if (link === "Modules" || link === "Pilots") {
-        const sectionId = link.toLowerCase().replace(" ", "-");
-        const element = document.getElementById(sectionId);
-        element?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // Use explicit route map first, fall back to auto-slug
-        const route =
-          NAV_ROUTE_MAP[link] || `/${link.toLowerCase().replace(/\s+/g, "-")}`;
-        navigate(route);
-      }
-      setDrawerOpen(false);
-    },
-    [navigate]
-  );
-
-  const menuItems = useMemo(
-    () =>
-      NAV_LINKS.map((link) => ({
-        key: link,
-        label: (
-          <div
-            onClick={() => handleNavClick(link)}
-            style={{
-              padding: `${token.paddingXS}px 0`,
-              color: token.colorText,
-              fontSize: token.fontSizeLG,
-              cursor: "pointer",
-            }}
-          >
-            {link}
-          </div>
-        ),
-      })),
-    [token, handleNavClick]
-  );
-
-  const headerStyle = useMemo(
-    () => ({
-      position: "fixed",
-      top: 0,
-      width: "100%",
-      zIndex: 1000,
-      padding: `${token.paddingSM}px ${token.paddingMD}px`,
-      backgroundColor: token.colorGreenBackground,
-      backdropFilter: isScrolled ? "blur(8px)" : "none",
-      transition: `all ${token.motionDurationMid} ${token.motionEaseInOut}`,
-      borderBottom: isScrolled
-        ? `1px solid ${token.colorBorderSecondary}`
-        : "none",
-      display: "flex",
-      justifyContent: "center",
-    }),
-    [token, isScrolled]
-  );
-
-  return (
-    <>
-      <div style={headerStyle}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "100%",
-            maxWidth: "1200px",
-            height: "fit-content",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: token.marginXXS,
-            }}
-          >
-            <img
-              src={mode === "dark" ? lightLogo : darkLogo}
-              style={{
-                width: 25,
-                height: 25,
-              }}
-              alt="QSI Logo"
-            />
-            <Text
-              strong
-              style={{ fontSize: token.fontSizeLG, color: token.colorText }}
-            >
-              QSI
-            </Text>
-            <Text style={{ fontSize: 12, color: token.colorPrimary }}>
-              A Living Intelligence Framework
-            </Text>
-          </div>
-
-          {!isMobile && (
-            <Space size="large">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link}
-                  onClick={() => handleNavClick(link)}
-                  style={{
-                    color: token.colorTextSecondary,
-                    fontWeight: token.fontWeightMedium,
-                    cursor: "pointer",
-                  }}
-                >
-                  {link}
-                </Link>
-              ))}
-            </Space>
-          )}
-
-          {isMobile && (
-            <Button
-              type="text"
-              icon={drawerOpen ? <CloseOutlined /> : <MenuOutlined />}
-              onClick={() => setDrawerOpen(!drawerOpen)}
-              style={{
-                color: token.colorText,
-                border: "none",
-                background: "transparent",
-              }}
-            />
-          )}
-        </div>
-      </div>
-
-      <Drawer
-        title={
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: token.marginXS,
-            }}
-          >
-            <img
-              src={mode !== "light" ? lightLogo : darkLogo}
-              style={{ width: 32 }}
-              alt="QSI Platform Logo"
-            />
-            <Text
-              strong
-              style={{ color: token.colorText, fontSize: token.fontSizeLG }}
-            >
-              QSI
-            </Text>
-          </div>
-        }
-        placement="right"
-        onClose={() => setDrawerOpen(false)}
-        open={drawerOpen}
-        styles={{
-          body: { padding: 0, background: token.colorBgContainer },
-          header: {
-            background: token.colorBgContainer,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          },
-        }}
-        width={280}
-      >
-        <Menu
-          mode="vertical"
-          items={menuItems}
-          style={{
-            border: "none",
-            background: "transparent",
-            padding: `${token.padding}px 0`,
-          }}
-        />
-      </Drawer>
-    </>
-  );
-});
-
-const HeroSection = React.memo(() => {
-  const { token } = useToken();
-  const lottieRef = useRef();
-  const { width: windowWidth } = useWindowSize();
-  const isMobile = windowWidth <= MOBILE_BREAKPOINT;
-
-  useEffect(() => {
-    if (lottieRef.current) {
-      lottieRef.current.setSpeed(0.5);
-    }
-  }, []);
-
-  return (
-    <Row
-      align="middle"
-      gutter={[token.marginLG, token.marginLG]}
-      style={{
-        marginTop: 80,
-        padding: isMobile ? token.padding : token.paddingLG,
-        flexDirection: isMobile ? "column-reverse" : "row",
-      }}
-    >
-      <Col xs={24} md={12}>
-        <Title
-          level={2}
-          style={{
-            fontSize: isMobile ? token.fontSizeHeading3 : "48px",
-            fontWeight: token.fontWeightStrong,
-            margin: `0 0 ${token.marginSM}px 0`,
-            color: token.colorText,
-            lineHeight: 1.2,
-            textAlign: isMobile ? "center" : "left",
-          }}
-        >
-          Explore the QSI Modules
-        </Title>
-        <Paragraph
-          style={{
-            fontSize: isMobile ? token.fontSize : token.fontSizeLG,
-            color: token.colorTextSecondary,
-            marginBottom: token.marginLG,
-            textAlign: isMobile ? "center" : "left",
-          }}
-        >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            One interface. Three paths: **Smart Infrastructure**, **Healing &
-            Therapy**, and **Vision Space**. Powered by one **Quantum Spiritual
-            Intelligence** to bring coherence and alignment to your challenges.
-          </ReactMarkdown>
-        </Paragraph>
-        <div style={{ textAlign: isMobile ? "center" : "left" }}>
-          <a href="#modules">
-            <Button
-              type="primary"
-              size="large"
-              style={{
-                background: token.colorPrimary,
-                borderColor: token.colorPrimary,
-                fontWeight: token.fontWeightStrong,
-                height: 48,
-                boxShadow: token.boxShadowSecondary,
-              }}
-            >
-              Begin Your Solution
-            </Button>
-          </a>
-        </div>
-      </Col>
-      <Col
-        xs={24}
-        md={12}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: isMobile ? 300 : 400,
-            aspectRatio: "1 / 1",
-          }}
-        >
-          <Lottie
-            lottieRef={lottieRef}
-            animationData={animationData}
-            loop={true}
-          />
-        </div>
-      </Col>
-    </Row>
-  );
-});
-
-const ServicesModulesSection = React.memo(
-  ({ handleModuleClick, hoveredModule, setHoveredModule }) => {
-    const { token } = useToken();
-    const { width: windowWidth } = useWindowSize();
-    const { mode } = useThemeMode();
-    const isMobile = windowWidth <= MOBILE_BREAKPOINT;
-
-    const getCardStyles = useCallback(
-      (module) => ({
-        background: token.colorBgBase,
-        borderRadius: token.borderRadiusLG,
-        cursor: "pointer",
-        transition: `all 0.3s ease-in-out`,
-        minHeight: 100,
-        boxShadow:
-          hoveredModule === module.key
-            ? token.boxShadowSecondary
-            : token.boxShadow,
-        transform:
-          hoveredModule === module.key
-            ? "translateY(-4px) scale(1.02)"
-            : "translateY(0) scale(1)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        textAlign: "center",
-        width: "100%",
-        border:
-          mode === "dark"
-            ? `0.2px solid ${token.colorCardBorder}`
-            : `1px solid ${token.colorCardBorder}`,
-      }),
-      [token, hoveredModule, mode]
-    );
-
-    return (
-      <div
-        id="modules"
-        style={{
-          padding: isMobile ? token.paddingXS : token.paddingLG,
-          width: "100%",
-          backgroundColor: token.navyLighter,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-        }}
-      >
-        <Row gutter={[token.margin, token.margin]}>
-          {MODULES.map((module) => (
-            <Col key={module.key} xs={24} sm={12} lg={8}>
-              <Card
-                onClick={() => handleModuleClick(module.key)}
-                onMouseEnter={() => setHoveredModule(module.key)}
-                onMouseLeave={() => setHoveredModule(null)}
-                style={getCardStyles(module)}
-                bodyStyle={{
-                  padding: isMobile ? token.paddingSM : token.padding,
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "middle",
-                  flexDirection: "column",
-                }}
-                bordered
-                hoverable
-              >
-                <Row
-                  gutter={[12, 12]}
-                  justify="space-between"
-                  align="middle"
-                  style={{ padding: "0 12px" }}
-                >
-                  <Text
-                    style={{
-                      fontSize: isMobile ? 24 : 32,
-                      color: token.colorText,
-                    }}
-                  >
-                    {module.icon}
-                  </Text>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      flexDirection: "column",
-                    }}
-                  >
-                    <Title
-                      level={isMobile ? 5 : 4}
-                      style={{ margin: 0, color: token.colorText }}
-                    >
-                      {module.title}
-                    </Title>
-                    <Paragraph
-                      style={{
-                        color: token.colorTextTertiary,
-                        fontSize: isMobile ? token.fontSizeSM : token.fontSize,
-                        margin: 0,
-                      }}
-                    >
-                      {module.description}
-                    </Paragraph>
-                  </div>
-                  <ArrowRightOutlined />
-                </Row>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
-    );
-  }
-);
-
-// Main Component
 const LandingPage: React.FC = () => {
-  const [hoveredModule, setHoveredModule] = useState<any>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [selectedModuleKey, setSelectedModuleKey] = useState<any>(null);
-  const { token } = useToken();
   const navigate = useNavigate();
-  const { width: windowWidth } = useWindowSize();
-  const isMobile = windowWidth <= MOBILE_BREAKPOINT;
-  const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
 
-  useEffect(() => {
-    const handleMouseMove = (e: React.FormEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  const handleModuleClick = (moduleKey) => {
-    switch (moduleKey) {
-      case "infrastructure":
-        // if (isAuthenticated) {
-        // Logged-in: Bypass modal, pass user info
-        navigate(`/chat/infrastructure`, {
-          state: { contactInfo: { name: user?.name, email: user?.email, phone: user?.phone } },
-        });
-        // } else {
-        //   // Guest: Show modal
-        //   setSelectedModuleKey(moduleKey);
-        //   setModalOpen(true);
-        // }
-        break;
-
-      case "healing":
-        if (isAuthenticated) {
-          // Logged-in: Bypass modal, pass user info
-          navigate(`/chat/healing`, {
-            state: { contactInfo: { name: user.name, email: user.email, phone: user.phone } },
-          });
-        } else {
-          // Guest: Force login/register
-          navigate("/login", {
-            state: {
-              from: location,
-              message: "Please log in or register to access Healing & Therapy.",
-            },
-          });
-        }
-        break;
-
-      case "vision":
-        // Vision Space is accessible to all (but requires login for onboarding flow)
-        navigate(`/chat/vision`);
-        break;
-
-      case "mobility":
-        // New Mobility Page
-        navigate(`/mobility`);
-        break;
-
-      case "concepts":
-        // Concepts (formerly pilots)
-        navigate("/concepts");
-        break;
-
-      case "demos":
-        // Smart City Demos (formerly frameworks)
-        navigate(`/demos`);
-        break;
-
-      case "tv":
-        // QSI TV
-        navigate(`/tv`);
-        break;
-
-      // REMOVED FREQUENCY CASE (It is now internal to Healing)
-
-      default:
-        // Fallback for general modal open (e.g., from header)
-        setSelectedModuleKey(null);
-        setModalOpen(true);
-    }
-  };
-
-  const handleModalFinish = (contactInfo) => {
-    setModalOpen(false);
-    if (selectedModuleKey) {
-      // This is now only for GUEST + INFRASTRUCTURE
-      navigate(`/chat/${selectedModuleKey}`, { state: { contactInfo } });
-    } else {
-      // Fallback for general quote requests (e.g., from Header or Hero CTA)
-      console.log("General Proposal Request Submitted:", contactInfo);
-      // You could add an API call here to submit a general inquiry
-    }
-    setSelectedModuleKey(null);
-  };
-
-  const handleModalCancel = () => {
-    setModalOpen(false);
-    setSelectedModuleKey(null);
-  };
-
-  const backgroundGradient = useMemo(
-    () =>
-      `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${token.colorPrimary
-      }20 20%, ${token.colorBgContainer} 60%),
-     radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y
-      }%, ${token.colorSuccess}10 0%, ${token.colorBgContainer} 40%),
-     ${token.colorBgContainer}`,
-    [mousePosition, token]
-  );
+  const services = [
+    { label: 'Vision Space', icon: <BulbOutlined />, path: '/chat/vision', color: 'var(--baobab-emerald)' },
+    { label: 'Smart City Demos', icon: <RocketOutlined />, path: '/demos', color: 'var(--terracotta-clay)' },
+    { label: 'Mobility', icon: <CarOutlined />, path: '/mobility', color: 'var(--ochre-yellow)' },
+    { label: 'Healing Chatbot', icon: <HeartOutlined />, path: '/chat/healing', color: 'var(--baobab-emerald)' },
+    { label: 'Smart Infrastructure', icon: <CloudServerOutlined />, path: '/chat/infrastructure', color: 'var(--savanna-moss)' },
+    { label: 'Network', icon: <GlobalOutlined />, path: '/network', color: 'var(--onyx-black)' },
+  ];
 
   return (
-    <div
-      style={{
-        width: "100%",
-        background: backgroundGradient,
-        position: "relative",
-        marginTop: isMobile ? "60px" : 0,
-        minHeight: "100vh",
-      }}
-    >
-      <CustomHeader />
+    <div style={{ backgroundColor: 'var(--canvas-white)', minHeight: '100vh', overflowX: 'hidden' }}>
+      {/* Hero Section */}
+      <section className="section-py pattern-mudcloth" style={{ position: 'relative', paddingTop: '160px', backgroundColor: 'var(--canvas-white)' }}>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '64px', alignItems: 'center' }}>
+          <div className="reveal-up">
+            <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>Quality Solutions International</span>
+            <h1 style={{ fontSize: 'clamp(3rem, 6vw, 5.5rem)', marginBottom: '32px', textTransform: 'uppercase', letterSpacing: '-0.02em', color: 'var(--onyx-black)' }}>
+              Innovating Africa's <br/>
+              <span style={{ color: 'var(--baobab-emerald)' }}>Future. Together.</span>
+            </h1>
+            <p style={{ fontSize: '20px', color: 'var(--onyx-black)', marginBottom: '48px', maxWidth: '500px', fontWeight: 500 }}>
+              Empowering growth through strategic consulting, capacity building, and sustainable solutions across the continent.
+            </p>
+            <AfroButton primary onClick={() => navigate('/services')}>
+              Explore Our Impact
+            </AfroButton>
+          </div>
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          width: "100%",
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: ` ${isMobile ? "12px" : "60px"} ${token.paddingLG}px`,
-        }}
-      >
-        <ServicesModulesSection
-          handleModuleClick={handleModuleClick}
-          hoveredModule={hoveredModule}
-          setHoveredModule={setHoveredModule}
-        />
-      </div>
+          <div style={{ position: 'relative' }}>
+            <div 
+              style={{ 
+                width: '100%', 
+                height: '650px', 
+                backgroundColor: 'var(--papyrus-off-white)',
+                border: '3px solid var(--onyx-black)',
+                overflow: 'hidden',
+                position: 'relative'
+              }}
+            >
+              <img 
+                src="/hero_cityscape.png" 
+                alt="Modern African Cityscape" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <CornerAccent position="br" />
+            </div>
+            
+            {/* Floating Image Accent */}
+            <div 
+              style={{ 
+                position: 'absolute', 
+                bottom: '-40px', 
+                left: '-40px', 
+                width: '320px', 
+                height: '320px', 
+                border: '4px solid var(--canvas-white)',
+                boxShadow: '20px 20px 0 var(--baobab-emerald)',
+                overflow: 'hidden',
+                zIndex: 5
+              }}
+            >
+              <img 
+                src="/community_accent.png" 
+                alt="QSI Community" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <ContactModal
-        open={modalOpen}
-        onCancel={handleModalCancel}
-        onFinish={handleModalFinish}
-      />
+      {/* Services Section */}
+      <section className="section-py grid-border-t pattern-vibrant">
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '64px' }}>
+            <div>
+              <span className="eyebrow">Our Services</span>
+              <h2 style={{ fontSize: '3.5rem', textTransform: 'uppercase' }}>What we <span style={{ color: 'var(--baobab-emerald)' }}>do</span></h2>
+            </div>
+            <AfroButton onClick={() => navigate('/services')}>View All Services</AfroButton>
+          </div>
 
-      <div style={{ textAlign: "center", paddingTop: "40px" }}>
-        <Text
-          style={{ color: token.colorTextTertiary, fontSize: token.fontSizeSM }}
-        >
-          © {new Date().getFullYear()} Pan-African Engineers
-        </Text>
-      </div>
+          {/* Desktop View: Grid Cards */}
+          <div className="desktop-only" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2px', backgroundColor: 'var(--onyx-black)', border: '2px solid var(--onyx-black)' }}>
+            {services.map((s, i) => (
+              <div 
+                key={i} 
+                onClick={() => navigate(s.path)}
+                className="reveal-up"
+                style={{ 
+                  backgroundColor: 'var(--canvas-white)', 
+                  padding: '48px', 
+                  cursor: 'pointer', 
+                  transition: 'var(--snappy)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ fontSize: '32px', color: s.color, marginBottom: '24px' }}>{s.icon}</div>
+                <h3 style={{ fontSize: '1.5rem', textTransform: 'uppercase', marginBottom: '12px' }}>{s.label}</h3>
+                <p style={{ color: 'var(--ash-grey)', fontSize: '14px' }}>Advanced solutions aligned with coherence principles.</p>
+                <div style={{ position: 'absolute', bottom: '20px', right: '20px', fontSize: '20px', opacity: 0.2 }}>0{i+1}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile View: Horizontal Scroll with Circular Icons */}
+          <div className="mobile-only no-scrollbar" style={{ display: 'flex', gap: '24px', overflowX: 'auto', padding: '20px 0' }}>
+            {services.map((s, i) => (
+              <div 
+                key={i} 
+                onClick={() => navigate(s.path)}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', flexShrink: 0 }}
+              >
+                <div className="circular-option" style={{ color: s.color, fontSize: '24px' }}>
+                  {s.icon}
+                </div>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-accent)', textTransform: 'uppercase' }}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Grid Divider */}
+      <div className="container pattern-lines" style={{ height: '100px' }} />
+
+      {/* Stats Section */}
+      <section className="section-py grid-border-t pattern-lines">
+        <div className="container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
+            {[
+              { label: 'Projects Delivered', value: '500+', desc: 'Empowering growth through strategic consulting.' },
+              { label: 'Lives Impacted', value: '1M+', desc: 'Providing sustainable solutions for communities.' },
+              { label: 'Capital Mobilized', value: '$2B+', desc: 'Strategic investment in infrastructure.' },
+              { label: 'Countries Served', value: '45', desc: 'Expanding pan-African excellence.' },
+            ].map((stat, i) => (
+              <GeometricCard key={i} className="reveal-up" style={{ animationDelay: `${i * 0.1}s` }}>
+                <span className="eyebrow">{stat.label}</span>
+                <h2 style={{ fontSize: '3.5rem', margin: '8px 0', color: 'var(--baobab-emerald)' }}>{stat.value}</h2>
+                <p style={{ color: 'var(--ash-grey)', fontSize: '14px' }}>{stat.desc}</p>
+              </GeometricCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Approach Section */}
+      <section className="section-py pattern-dots" style={{ backgroundColor: 'var(--papyrus-off-white)', position: 'relative', borderTop: '2px solid var(--onyx-black)' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+            <span className="eyebrow">Our Methodology</span>
+            <h2 style={{ fontSize: '4rem', textTransform: 'uppercase' }}>Our Approach</h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2px', backgroundColor: 'var(--onyx-black)', border: '2px solid var(--onyx-black)' }}>
+            {[
+              { title: 'Strategic Consulting', desc: 'Envisioning growth through strategic correctly building and sustainable solutions across the continent.' },
+              { title: 'Capacity Building', desc: 'Empowering growth, team capacity building, and navigating through sustainable solutions for community impact.' },
+              { title: 'Sustainable Solutions', desc: 'Sustainable solutions for urban planning and infrastructure, prioritizing environmental harmony.' },
+            ].map((item, i) => (
+              <div key={i} style={{ backgroundColor: 'var(--canvas-white)', padding: '64px', position: 'relative' }}>
+                <h3 style={{ fontSize: '2.5rem', marginBottom: '24px', textTransform: 'uppercase' }}>{item.title}</h3>
+                <p style={{ color: 'var(--onyx-black)', lineHeight: 1.8, fontSize: '16px' }}>{item.desc}</p>
+                <CornerAccent position="tl" color={i % 2 === 0 ? 'var(--terracotta-clay)' : 'var(--ochre-yellow)'} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer CTA */}
+      <section className="section-py grid-border-t pattern-mudcloth">
+        <div className="container" style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '4rem', marginBottom: '48px', textTransform: 'uppercase' }}>
+            Ready to <span style={{ color: 'var(--baobab-emerald)' }}>Transform?</span>
+          </h2>
+          <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <AfroButton primary onClick={() => navigate('/contact-us')}>Get In Touch</AfroButton>
+            <AfroButton onClick={() => navigate('/about-us')}>Learn More</AfroButton>
+          </div>
+        </div>
+      </section>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-only { display: none !important; }
+          .mobile-only { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .desktop-only { display: grid !important; }
+          .mobile-only { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 };
