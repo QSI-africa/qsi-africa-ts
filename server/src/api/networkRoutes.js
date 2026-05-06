@@ -120,4 +120,51 @@ router.post("/projects", authMiddleware, async (req, res) => {
   }
 });
 
+// 5. Get individual profile with insights
+router.get("/profile/:id", async (req, res) => {
+  try {
+    const profile = await prisma.engineerProfile.findUnique({
+      where: { id: req.params.id },
+      include: {
+        user: { select: { name: true, email: true, role: true } },
+        projects: true,
+        insights: true
+      }
+    });
+    if (!profile) return res.status(404).json({ error: "Profile not found." });
+    res.status(200).json(profile);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 6. Post a sovereign insight (Sovereign Minds only)
+router.post("/insights", authMiddleware, async (req, res) => {
+  const { title, content, category } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const profile = await prisma.engineerProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile || !profile.isVerified) {
+      return res.status(403).json({ error: "Only verified Sovereign Minds can post insights." });
+    }
+
+    const insight = await prisma.sovereignInsight.create({
+      data: {
+        profileId: profile.id,
+        title,
+        content,
+        category
+      }
+    });
+
+    res.status(201).json(insight);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 module.exports = router;

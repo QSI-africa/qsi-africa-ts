@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Typography, Card, Row, Col, Button, Tag, 
   Space, Divider, List, Modal, Form, Input, 
-  notification, Badge, Empty 
+  notification, Badge, Empty, Select
 } from 'antd';
 import { 
   HeartOutlined, SafetyCertificateOutlined, 
@@ -72,10 +72,10 @@ const HealingPage: React.FC = () => {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <span className="eyebrow" style={{ color: 'var(--baobab-emerald)', fontWeight: 900 }}>Holistic Sovereignty</span>
           <Title level={1} style={{ color: 'var(--onyx-black)', fontSize: '4rem', marginTop: 10, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-            Healing & <span style={{ color: 'var(--baobab-emerald)' }}>Psychological Coherence</span>
+            Healing and <span style={{ color: 'var(--baobab-emerald)' }}>Wisdom</span>
           </Title>
           <Paragraph style={{ color: 'var(--ash-grey)', fontSize: '1.2rem', maxWidth: 800, margin: '0 auto', fontFamily: 'var(--font-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Infrastructure is only as strong as the minds that build and inhabit it. Access elite psychological support and frequency alignment programs.
+            Fix the mind that builds. Infrastructure is only as strong as the minds that build and inhabit it.
           </Paragraph>
         </div>
       </div>
@@ -252,7 +252,7 @@ const HealingPage: React.FC = () => {
               style={{ height: '48px' }}
               dropdownStyle={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }}
             >
-              <Select.Option value="VIDEO">Secure Video (QSI TV)</Select.Option>
+              <Select.Option value="VIDEO">Secure Video (PanX TV)</Select.Option>
               <Select.Option value="AUDIO">Audio Only</Select.Option>
               <Select.Option value="TEXT">Async Text Guidance</Select.Option>
             </Select>

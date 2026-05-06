@@ -114,7 +114,7 @@ const QsiTvPage: React.FC = () => {
                         textTransform: 'uppercase',
                         fontWeight: 900
                     }}>
-                        QSI TV
+                        PanX TV
                     </Title>
                     
                     {/* Colourful Brand Accent Line */}

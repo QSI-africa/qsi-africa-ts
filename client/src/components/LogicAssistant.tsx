@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 import { Button, Tooltip, theme, Dropdown, Menu } from 'antd';
 import { RobotOutlined, BuildOutlined, EyeOutlined, HeartOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const { useToken } = theme;
+
+const QsiLogo = () => (
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Stylized Axe Head */}
+    <path d="M20 10C14.4772 10 10 14.4772 10 20C10 25.5228 14.4772 30 20 30" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M20 10V30" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+    <path d="M20 20H30" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+    <circle cx="20" cy="20" r="18" stroke="white" strokeWidth="1" strokeDasharray="2 2" opacity="0.5"/>
+  </svg>
+);
 
 const LogicAssistant: React.FC = () => {
   const { token } = useToken();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   React.useEffect(() => {
@@ -15,6 +26,10 @@ const LogicAssistant: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Don't show on Inbox page as it overlaps with messaging controls
+  // Moved after hooks to prevent "Rendered fewer hooks than expected" error
+  if (location.pathname === '/inbox') return null;
 
   const menu = (
     <Menu 
@@ -50,7 +65,7 @@ const LogicAssistant: React.FC = () => {
         onClick={() => navigate('/chat/healing')}
         style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
       >
-        Healing & Therapy
+        Healing and Wisdom
       </Menu.Item>
     </Menu>
   );
@@ -58,16 +73,16 @@ const LogicAssistant: React.FC = () => {
   return (
     <div style={{
       position: 'fixed',
-      bottom: isMobile ? 120 : 40,
+      bottom: isMobile ? 90 : 40, // Adjusted for bottom nav
       right: 25,
       zIndex: 1000,
     }}>
       <style>
         {`
           @keyframes pulse-vibrant {
-            0% { box-shadow: 0 0 0 0 rgba(209, 91, 53, 0.6); }
-            70% { box-shadow: 0 0 0 20px rgba(209, 91, 53, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(209, 91, 53, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(11, 97, 56, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(11, 97, 56, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(11, 97, 56, 0); }
           }
           .assistant-vibrant-glow {
             animation: pulse-vibrant 2s infinite;
@@ -79,19 +94,19 @@ const LogicAssistant: React.FC = () => {
           <Button
             type="primary"
             shape="circle"
-            size="large"
-            icon={<RobotOutlined style={{ fontSize: '28px' }} />}
+            icon={<QsiLogo />}
             className="assistant-vibrant-glow"
             style={{
-              width: 72,
-              height: 72,
+              width: 80,
+              height: 80,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'var(--baobab-emerald)',
               borderColor: 'var(--onyx-black)',
               borderWidth: '3px',
-              boxShadow: '6px 6px 0px var(--onyx-black)',
+              boxShadow: '8px 8px 0px var(--onyx-black)',
+              transition: 'var(--snappy)',
             }}
           />
         </Tooltip>

@@ -7,7 +7,11 @@ import {
   CarOutlined, 
   HeartOutlined,
   CloudServerOutlined,
-  GlobalOutlined
+  GlobalOutlined,
+  ExperimentOutlined,
+  MessageOutlined,
+  PlaySquareOutlined,
+  CustomerServiceOutlined
 } from '@ant-design/icons';
 
 const LandingPage: React.FC = () => {
@@ -15,11 +19,14 @@ const LandingPage: React.FC = () => {
 
   const services = [
     { label: 'Vision Space', icon: <BulbOutlined />, path: '/chat/vision', color: 'var(--baobab-emerald)' },
-    { label: 'Smart City Demos', icon: <RocketOutlined />, path: '/demos', color: 'var(--terracotta-clay)' },
-    { label: 'Mobility', icon: <CarOutlined />, path: '/mobility', color: 'var(--ochre-yellow)' },
-    { label: 'Healing Chatbot', icon: <HeartOutlined />, path: '/chat/healing', color: 'var(--baobab-emerald)' },
     { label: 'Smart Infrastructure', icon: <CloudServerOutlined />, path: '/chat/infrastructure', color: 'var(--savanna-moss)' },
+    { label: 'PanX Mobility', icon: <CarOutlined />, path: '/mobility', color: 'var(--ochre-yellow)' },
+    { label: 'Healing and Wisdom', icon: <HeartOutlined />, path: '/chat/healing', color: 'var(--terracotta-clay)' },
+    { label: 'PanX Lab', icon: <ExperimentOutlined />, path: '/lab', color: 'var(--baobab-emerald)' },
+    { label: 'Inbox', icon: <MessageOutlined />, path: '/inbox', color: 'var(--savanna-moss)' },
     { label: 'Network', icon: <GlobalOutlined />, path: '/network', color: 'var(--onyx-black)' },
+    { label: 'QSI TV', icon: <PlaySquareOutlined />, path: '/tv', color: 'var(--terracotta-clay)' },
+    { label: 'QSI Music', icon: <CustomerServiceOutlined />, path: '/music', color: 'var(--ochre-yellow)' },
   ];
 
   return (
@@ -96,7 +103,13 @@ const LandingPage: React.FC = () => {
           </div>
 
           {/* Desktop View: Grid Cards */}
-          <div className="desktop-only" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2px', backgroundColor: 'var(--onyx-black)', border: '2px solid var(--onyx-black)' }}>
+          <div className="desktop-only" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(3, 1fr)', 
+            gap: '2px', 
+            backgroundColor: 'var(--onyx-black)', 
+            border: '2px solid var(--onyx-black)' 
+          }}>
             {services.map((s, i) => (
               <div 
                 key={i} 

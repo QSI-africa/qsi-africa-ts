@@ -5,7 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import { 
   UserOutlined, LogoutOutlined, DashboardOutlined,
-  HeartOutlined, MenuOutlined, DownOutlined
+  HeartOutlined, MenuOutlined, DownOutlined, SettingOutlined,
+  ExperimentOutlined, MessageOutlined, CustomerServiceOutlined,
+  PlaySquareOutlined, DesktopOutlined, BulbOutlined, CarOutlined
 } from '@ant-design/icons';
 
 const { Header } = Layout;
@@ -31,15 +33,18 @@ const GlobalNavbar: React.FC = () => {
   }
 
   const servicesMenu = (
-    <Menu className="header-menu" style={{ minWidth: '220px' }}>
-      <Menu.Item key="infrastructure" onClick={() => navigate('/chat/infrastructure')}>Smart Infrastructure</Menu.Item>
-      <Menu.Item key="vision" onClick={() => navigate('/chat/vision')}>Vision Space</Menu.Item>
-      <Menu.Item key="mobility" onClick={() => navigate('/mobility')}>Mobility</Menu.Item>
-      <Menu.Item key="concepts" onClick={() => navigate('/concepts')}>Concepts</Menu.Item>
-      <Menu.Item key="healing" onClick={() => navigate('/chat/healing')}>Healing & Therapy Chatbot</Menu.Item>
-      <Menu.Item key="demos" onClick={() => navigate('/demos')}>Smart City Demos</Menu.Item>
+    <Menu className="header-menu" style={{ minWidth: '240px' }}>
+      <Menu.Item key="infrastructure" icon={<DesktopOutlined />} onClick={() => navigate('/chat/infrastructure')}>Smart Infrastructure</Menu.Item>
+      <Menu.Item key="vision" icon={<BulbOutlined />} onClick={() => navigate('/chat/vision')}>Vision Space</Menu.Item>
+      <Menu.Item key="mobility" icon={<CarOutlined />} onClick={() => navigate('/mobility')}>PanX Mobility</Menu.Item>
+      <Menu.Item key="healing" icon={<HeartOutlined />} onClick={() => navigate('/chat/healing')}>Healing and Wisdom</Menu.Item>
+      <Menu.Item key="lab" icon={<ExperimentOutlined />} onClick={() => navigate('/lab')}>PanX Lab</Menu.Item>
+      <Menu.Item key="inbox" icon={<MessageOutlined />} onClick={() => navigate('/inbox')}>Messaging Inbox</Menu.Item>
       <Menu.Divider />
-      <Menu.Item key="tv" onClick={() => navigate('/tv')}>QSI TV</Menu.Item>
+      <Menu.Item key="concepts" onClick={() => navigate('/concepts')}>Digital Concepts</Menu.Item>
+      <Menu.Item key="demos" onClick={() => navigate('/demos')}>City Demonstrators</Menu.Item>
+      <Menu.Item key="tv" icon={<PlaySquareOutlined />} onClick={() => navigate('/tv')}>PanX TV</Menu.Item>
+      <Menu.Item key="music" icon={<CustomerServiceOutlined />} onClick={() => navigate('/music')}>PanX Music</Menu.Item>
     </Menu>
   );
 
@@ -71,8 +76,13 @@ const GlobalNavbar: React.FC = () => {
       <Menu.Item key="1" icon={<DashboardOutlined />} onClick={() => navigate(user?.role === 'ENGINEER' ? '/engineer/dashboard' : '/dashboard')}>
         My Dashboard
       </Menu.Item>
+      {(user?.role === 'ADMIN' || user?.role === 'SUPER_USER') && (
+        <Menu.Item key="admin" icon={<SettingOutlined />} onClick={() => navigate('/admin')}>
+          Admin Command
+        </Menu.Item>
+      )}
       <Menu.Item key="2" icon={<HeartOutlined />} onClick={() => navigate('/healing')}>
-        Healing Center
+        Healing and Wisdom
       </Menu.Item>
       <Menu.Divider />
       <Menu.Item key="3" icon={<LogoutOutlined />} onClick={logout} danger>
@@ -198,66 +208,102 @@ const GlobalNavbar: React.FC = () => {
       </div>
 
       <Drawer
-        title={<Text style={{ fontFamily: 'var(--font-heading)', textTransform: 'uppercase' }}>Navigation</Text>}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 24, height: 24, backgroundColor: 'var(--baobab-emerald)' }} />
+            <Text strong style={{ 
+              fontFamily: 'var(--font-heading)', 
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+              fontSize: 18
+            }}>Navigation</Text>
+          </div>
+        }
         placement="right"
         onClose={() => setMobileVisible(false)}
         open={mobileVisible}
         styles={{ 
           body: { background: 'var(--canvas-white)', padding: 0 },
-          header: { borderBottom: '2px solid var(--onyx-black)' }
+          header: { borderBottom: '3px solid var(--onyx-black)', padding: '20px 24px' }
         }}
-        width={300}
+        width={windowWidth < 480 ? '100%' : 320}
+        closeIcon={<MenuOutlined style={{ color: 'var(--onyx-black)', fontSize: 20 }} />}
       >
         <Menu
-          mode="vertical"
+          mode="inline"
           selectedKeys={[location.pathname]}
-          style={{ border: 'none' }}
+          style={{ 
+            border: 'none',
+            background: 'transparent',
+            padding: '16px 0'
+          }}
           onClick={() => setMobileVisible(false)}
         >
-          <Menu.Item key="home" onClick={() => navigate('/')} style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase' }}>
+          <Menu.Item key="home" onClick={() => navigate('/')} style={{ height: '50px', margin: '4px 16px', borderRadius: 0, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 700 }}>
             Home
           </Menu.Item>
           
-          <Menu.SubMenu key="services" title="SERVICES" style={{ fontFamily: 'var(--font-accent)' }}>
+          <Menu.SubMenu 
+            key="services" 
+            title="SERVICES" 
+            style={{ fontFamily: 'var(--font-accent)', fontWeight: 700 }}
+            className="mobile-submenu"
+          >
             <Menu.Item key="infra" onClick={() => navigate('/chat/infrastructure')}>Smart Infrastructure</Menu.Item>
             <Menu.Item key="vision" onClick={() => navigate('/chat/vision')}>Vision Space</Menu.Item>
-            <Menu.Item key="mobility" onClick={() => navigate('/mobility')}>Mobility</Menu.Item>
+            <Menu.Item key="mobility" onClick={() => navigate('/mobility')}>PanX Mobility</Menu.Item>
+            <Menu.Item key="healing-m" onClick={() => navigate('/chat/healing')}>Healing and Wisdom</Menu.Item>
+            <Menu.Item key="lab" onClick={() => navigate('/lab')}>PanX Lab</Menu.Item>
+            <Menu.Item key="inbox" onClick={() => navigate('/inbox')}>Messaging Inbox</Menu.Item>
+            <Menu.Divider />
             <Menu.Item key="concepts" onClick={() => navigate('/concepts')}>Concepts</Menu.Item>
-            <Menu.Item key="healing-m" onClick={() => navigate('/chat/healing')}>Healing & Therapy</Menu.Item>
             <Menu.Item key="demos" onClick={() => navigate('/demos')}>Demos</Menu.Item>
-            <Menu.Item key="tv" onClick={() => navigate('/tv')}>QSI TV</Menu.Item>
+            <Menu.Item key="tv" onClick={() => navigate('/tv')}>PanX TV</Menu.Item>
+            <Menu.Item key="music" onClick={() => navigate('/music')}>PanX Music</Menu.Item>
           </Menu.SubMenu>
 
-          <Menu.SubMenu key="impact" title="IMPACT" style={{ fontFamily: 'var(--font-accent)' }}>
+          <Menu.SubMenu 
+            key="impact" 
+            title="IMPACT" 
+            style={{ fontFamily: 'var(--font-accent)', fontWeight: 700 }}
+            className="mobile-submenu"
+          >
             <Menu.Item key="projects" onClick={() => navigate('/demos')}>Pilot Projects</Menu.Item>
             <Menu.Item key="community" onClick={() => navigate('/about-us')}>Community Impact</Menu.Item>
             <Menu.Item key="reports" onClick={() => navigate('/concepts')}>Sustainable Reports</Menu.Item>
           </Menu.SubMenu>
 
-          <Menu.SubMenu key="insights" title="INSIGHTS" style={{ fontFamily: 'var(--font-accent)' }}>
+          <Menu.SubMenu 
+            key="insights" 
+            title="INSIGHTS" 
+            style={{ fontFamily: 'var(--font-accent)', fontWeight: 700 }}
+            className="mobile-submenu"
+          >
             <Menu.Item key="news" onClick={() => navigate('/')}>Latest News</Menu.Item>
             <Menu.Item key="blog" onClick={() => navigate('/concepts')}>Research Blog</Menu.Item>
             <Menu.Item key="network" onClick={() => navigate('/network')}>Sovereign Minds</Menu.Item>
           </Menu.SubMenu>
 
-          <Menu.Item key="about" onClick={() => navigate('/about-us')} style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase' }}>
+          <Menu.Item key="about" onClick={() => navigate('/about-us')} style={{ height: '50px', margin: '4px 16px', borderRadius: 0, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 700 }}>
             About
           </Menu.Item>
-          <Menu.Item key="contact" onClick={() => navigate('/contact-us')} style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase' }}>
+          <Menu.Item key="contact" onClick={() => navigate('/contact-us')} style={{ height: '50px', margin: '4px 16px', borderRadius: 0, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 700 }}>
             Contact Us
           </Menu.Item>
-          <Menu.Divider />
+          
+          <Menu.Divider style={{ margin: '16px 0', borderTop: '2px solid var(--onyx-black)', opacity: 0.1 }} />
+          
           {isAuthenticated ? (
             <>
-              <Menu.Item key="dash" icon={<DashboardOutlined />} onClick={() => navigate(user?.role === 'ENGINEER' ? '/engineer/dashboard' : '/dashboard')}>
+              <Menu.Item key="dash" icon={<DashboardOutlined />} onClick={() => navigate(user?.role === 'ENGINEER' ? '/engineer/dashboard' : '/dashboard')} style={{ margin: '4px 16px' }}>
                 Dashboard
               </Menu.Item>
-              <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={logout} danger>
+              <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={logout} danger style={{ margin: '4px 16px' }}>
                 Logout
               </Menu.Item>
             </>
           ) : (
-             <Menu.Item key="signin" onClick={() => navigate('/login')}>Sign In</Menu.Item>
+             <Menu.Item key="signin" onClick={() => navigate('/login')} style={{ margin: '4px 16px', fontWeight: 700 }}>Sign In</Menu.Item>
           )}
         </Menu>
       </Drawer>

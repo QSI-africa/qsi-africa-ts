@@ -78,6 +78,9 @@ model User {
   vehicleHireRequests  VehicleHireRequest[] @relation("EngineerVehicleHire")
   vehicleHireAccepts   VehicleHireRequest[] @relation("UserVehicleHireAccept")
   engineerProfile      EngineerProfile?
+  notifications        Notification[]
+  conversations        ConversationParticipant[]
+  messages             Message[]
 }
 
 model FrequencyScan {
@@ -345,6 +348,7 @@ model EngineerProfile {
   updatedAt       DateTime @updatedAt
   
   projects        ProjectShowcase[]
+  insights        SovereignInsight[]
 }
 
 model ProjectShowcase {
@@ -473,4 +477,99 @@ model InvoiceItem {
   unitPrice   Decimal @default(0.0)
   total       Decimal @default(0.0) // quantity * unitPrice
 }
+
+model SovereignInsight {
+  id                String          @id @default(cuid())
+  profileId         String
+  profile           EngineerProfile @relation(fields: [profileId], references: [id])
+  title             String
+  content           String          @db.Text
+  category          String?         // THOUGHT, DESIGN, MENTAL, ECOLOGY, etc.
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model LabCategory {
+  id          String       @id @default(cuid())
+  title       String       @unique
+  descriptor  String
+  icon        String?      // Icon name (e.g. CodeOutlined)
+  order       Int          @default(0)
+  packages    LabPackage[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model LabPackage {
+  id          String      @id @default(cuid())
+  categoryId  String
+  category    LabCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  level       String      // Beginner, Intermediate, Advanced
+  duration    String
+  description String?     @db.Text
+  isActive    Boolean     @default(true)
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+
+model Notification {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id])
+  title             String
+  message           String          @db.Text
+  type              String          @default("GENERAL") // INFO, ALERT, SUCCESS
+  isRead            Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+}
+
+model MusicTrack {
+  id                String          @id @default(cuid())
+  title             String
+  broadcaster       String?
+  audioUrl          String
+  thumbnailUrl      String?
+  category          String?         // MEDITATION, AMBIENT, TECH_TALK
+  createdAt         DateTime        @default(now())
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  title     String?
+  type      String   @default("GENERAL") // MODULE, OPERATOR, SYSTEM_ASSISTED, PROJECT
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("PARTICIPANT") // OWNER, PARTICIPANT
+  joinedAt       DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String?      
+  sender         User?        @relation(fields: [senderId], references: [id])
+  senderType     String       @default("USER") // USER, AI, SYSTEM, OPERATOR
+  text           String       @db.Text
+  metadata       Json?        // For file attachments, etc.
+  createdAt      DateTime     @default(now())
+}
+
 

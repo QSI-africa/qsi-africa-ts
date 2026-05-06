@@ -16,7 +16,6 @@ import { socketService } from '../services/socket';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 
 const MobilityPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -27,10 +26,18 @@ const MobilityPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [myVisits, setMyVisits] = useState<any[]>([]);
+  const [incomingVisits, setIncomingVisits] = useState<any[]>([]);
 
   useEffect(() => {
     fetchProjects();
     fetchBroadcasts();
+    if (isAuthenticated) {
+      fetchMyVisits();
+      if (user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') {
+        fetchIncomingVisits();
+      }
+    }
 
     socketService.on('new-vehicle-hire', (data) => {
       setBroadcasts(prev => [data, ...prev]);
@@ -49,9 +56,20 @@ const MobilityPage: React.FC = () => {
       fetchBroadcasts();
     });
 
+    socketService.on('site-visit-status', (data) => {
+      if (data.userId === user?.id) {
+        notification.info({
+          message: 'Site Visit Update',
+          description: `Your request for ${data.projectTitle} has been ${data.status.toLowerCase()}.`,
+        });
+        fetchMyVisits();
+      }
+    });
+
     return () => {
       socketService.off('new-vehicle-hire');
       socketService.off('vehicle-hire-accepted');
+      socketService.off('site-visit-status');
     };
   }, [isAuthenticated]);
 
@@ -98,6 +116,34 @@ const MobilityPage: React.FC = () => {
     }
   };
 
+  const fetchMyVisits = async () => {
+    try {
+      const response = await api.get('/mobility/my-visits');
+      setMyVisits(response.data);
+    } catch (error) {
+      console.error("Fetch my visits error:", error);
+    }
+  };
+
+  const fetchIncomingVisits = async () => {
+    try {
+      const response = await api.get('/mobility/my-project-visits');
+      setIncomingVisits(response.data);
+    } catch (error) {
+      console.error("Fetch incoming visits error:", error);
+    }
+  };
+
+  const handleUpdateVisitStatus = async (id: string, status: string) => {
+    try {
+      await api.patch(`/mobility/site-visit/${id}/status`, { status });
+      notification.success({ message: 'Status Updated', description: `Visit has been ${status.toLowerCase()}.` });
+      fetchIncomingVisits();
+    } catch (error) {
+      notification.error({ message: 'Update Failed' });
+    }
+  };
+
   const handleHireVehicle = async (values: any) => {
     setLoading(true);
     try {
@@ -137,7 +183,7 @@ const MobilityPage: React.FC = () => {
           position: "relative"
         }}
       >
-        <div className="container" style={{ padding: 0 }}>
+        <div className="container" style={{ padding: 0, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <span className="eyebrow reveal-up">Logistics & Infrastructure</span>
           <Title
             level={1}
@@ -149,9 +195,9 @@ const MobilityPage: React.FC = () => {
               textTransform: 'uppercase'
             }}
           >
-            MOBILITY <br /> SYSTEMS
+            PanX <br /> Mobility
           </Title>
-          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '600px' }}>
+          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '600px', margin: '0 auto' }}>
             <Paragraph
               className="reveal-up"
               style={{
@@ -174,58 +220,61 @@ const MobilityPage: React.FC = () => {
           onChange={setActiveTab} 
           centered 
           className="afro-tabs"
-        >
-          {/* USER TAB: SITE VISITS */}
-          <TabPane tab={<span>SITE VIEWINGS</span>} key="1">
-            <div style={{ padding: '48px 0' }}>
-              <Row gutter={[32, 32]}>
-                {projects.length > 0 ? (
-                  projects.map(project => (
-                    <Col xs={24} md={12} key={project.id}>
-                      <Card 
-                        className="geometric-card reveal-up" 
-                        hoverable 
-                        bodyStyle={{ padding: 0 }}
-                        style={{ border: '2px solid var(--onyx-black)', borderRadius: 0, overflow: 'hidden' }}
-                      >
-                        <div style={{ height: '240px', borderBottom: '2px solid var(--onyx-black)' }}>
-                          <img alt={project.title} src={project.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                        <div style={{ padding: '32px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                            <Title level={4} style={{ margin: 0, textTransform: 'uppercase' }}>{project.title}</Title>
-                            <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white' }}>ACTIVE</Tag>
-                          </div>
-                          <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, display: 'block', marginBottom: 16, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontSize: '12px' }}>
-                            {project.engineerProfile.user.name} 
-                            {project.engineerProfile.isVerified && <SafetyCertificateOutlined style={{ marginLeft: 8 }} />}
-                          </Text>
-                          <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '15px' }}>
-                            {project.description}
-                          </Paragraph>
-                          <Button 
-                            className="afro-button primary" 
-                            block 
-                            style={{ marginTop: '24px' }}
-                            icon={<SendOutlined />} 
-                            onClick={() => handleRequestSiteVisit(project)}
+          items={[
+            {
+              key: '1',
+              label: <span>SITE VIEWINGS</span>,
+              children: (
+                <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                  <Row gutter={[32, 32]} justify="center">
+                    {projects.length > 0 ? (
+                      projects.map(project => (
+                        <Col xs={24} md={12} key={project.id}>
+                          <Card 
+                            className="geometric-card reveal-up" 
+                            hoverable 
+                            bodyStyle={{ padding: 0 }}
+                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0, overflow: 'hidden' }}
                           >
-                            REQUEST SITE VISIT
-                          </Button>
-                        </div>
-                      </Card>
-                    </Col>
-                  ))
-                ) : (
-                  <Empty description={<Text className="eyebrow">No active projects</Text>} />
-                )}
-              </Row>
-            </div>
-          </TabPane>
-
-          {/* ENGINEER TAB: LOGISTICS */}
-          {(user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') && (
-            <TabPane tab={<span>LOGISTICS (ENGINEER)</span>} key="2">
+                            <div style={{ height: '240px', borderBottom: '2px solid var(--onyx-black)' }}>
+                              <img alt={project.title} src={project.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                            <div style={{ padding: '32px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                <Title level={4} style={{ margin: 0, textTransform: 'uppercase' }}>{project.title}</Title>
+                                <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white' }}>ACTIVE</Tag>
+                              </div>
+                              <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, display: 'block', marginBottom: 16, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontSize: '12px' }}>
+                                {project.engineerProfile.user.name} 
+                                {project.engineerProfile.isVerified && <SafetyCertificateOutlined style={{ marginLeft: 8 }} />}
+                              </Text>
+                              <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '15px' }}>
+                                {project.description}
+                              </Paragraph>
+                              <Button 
+                                className="afro-button primary" 
+                                block 
+                                style={{ marginTop: '24px' }}
+                                icon={<SendOutlined />} 
+                                onClick={() => handleRequestSiteVisit(project)}
+                              >
+                                REQUEST SITE VISIT
+                              </Button>
+                            </div>
+                          </Card>
+                        </Col>
+                      ))
+                    ) : (
+                      <Empty description={<Text className="eyebrow">No active projects</Text>} />
+                    )}
+                  </Row>
+                </div>
+              )
+            },
+            ...((user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') ? [{
+              key: '2',
+              label: <span>LOGISTICS (ENGINEER)</span>,
+              children: (
                 <Row gutter={[64, 64]} style={{ padding: '48px 0' }}>
                   <Col xs={24} md={10}>
                     <span className="eyebrow">Deployment</span>
@@ -250,68 +299,124 @@ const MobilityPage: React.FC = () => {
                     </Form>
                   </Col>
                   <Col xs={24} md={14}>
-                    <span className="eyebrow">Active Missions</span>
-                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Request History</Title>
-                    <div 
-                      className="pattern-lines" 
-                      style={{ 
-                        background: 'var(--papyrus-off-white)', 
-                        padding: '64px', 
-                        border: '2px solid var(--onyx-black)',
-                        textAlign: 'center' 
-                      }}
-                    >
-                       <HistoryOutlined style={{ fontSize: 40, color: 'var(--onyx-black)', opacity: 0.1, marginBottom: 16 }} />
-                       <Text className="eyebrow" style={{ display: 'block', opacity: 0.4 }}>History will appear here</Text>
+                    <span className="eyebrow">Pending Inbound Visits</span>
+                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Review Requests</Title>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {incomingVisits.length > 0 ? (
+                        incomingVisits.map(visit => (
+                          <Card 
+                            key={visit.id} 
+                            size="small" 
+                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0 }}
+                            extra={<Tag color={visit.status === 'APPROVED' ? 'green' : visit.status === 'REJECTED' ? 'red' : 'gold'}>{visit.status}</Tag>}
+                            title={<Text strong>{visit.user.name}</Text>}
+                          >
+                            <Paragraph style={{ fontSize: '13px', marginBottom: '16px' }}>{visit.message}</Paragraph>
+                            <Space>
+                              <Button size="small" type="primary" className="afro-button primary" onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')}>APPROVE</Button>
+                              <Button size="small" danger onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')}>REJECT</Button>
+                            </Space>
+                          </Card>
+                        ))
+                      ) : (
+                        <div 
+                          className="pattern-lines" 
+                          style={{ 
+                            background: 'var(--papyrus-off-white)', 
+                            padding: '64px', 
+                            border: '2px solid var(--onyx-black)',
+                            textAlign: 'center' 
+                          }}
+                        >
+                           <HistoryOutlined style={{ fontSize: 40, color: 'var(--onyx-black)', opacity: 0.1, marginBottom: 16 }} />
+                           <Text className="eyebrow" style={{ display: 'block', opacity: 0.4 }}>No incoming visit requests</Text>
+                        </div>
+                      )}
                     </div>
                   </Col>
                 </Row>
-            </TabPane>
-          )}
-
-          {/* BROADCAST FEED */}
-          <TabPane tab={<span>MARKETPLACE <Badge count={broadcasts.length} offset={[10, -5]} /></span>} key="3">
-            <div style={{ padding: '48px 0' }}>
-              <Row gutter={[32, 32]}>
-                {broadcasts.length > 0 ? (
-                  broadcasts.map(req => (
-                    <Col xs={24} key={req.id}>
-                      <Card className="geometric-card" bodyStyle={{ padding: '32px' }} style={{ border: '2px solid var(--onyx-black)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white', marginBottom: '16px' }}>ACTIVE OPPORTUNITY</Tag>
-                            <Title level={3} style={{ margin: '0 0 8px 0', textTransform: 'uppercase' }}>{req.location}</Title>
-                            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                              <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><CarOutlined /> {req.duration} MISSION</Text>
-                              <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><UserOutlined /> ENG: {req.engineer.name}</Text>
+              )
+            }] : []),
+            {
+              key: '3',
+              label: <span>MARKETPLACE <Badge count={broadcasts.length} offset={[10, -5]} /></span>,
+              children: (
+                <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                  <Row gutter={[32, 32]} justify="center">
+                    {broadcasts.length > 0 ? (
+                      broadcasts.map(req => (
+                        <Col xs={24} key={req.id}>
+                          <Card className="geometric-card" bodyStyle={{ padding: '32px' }} style={{ border: '2px solid var(--onyx-black)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white', marginBottom: '16px' }}>ACTIVE OPPORTUNITY</Tag>
+                                <Title level={3} style={{ margin: '0 0 8px 0', textTransform: 'uppercase' }}>{req.location}</Title>
+                                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                                  <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><CarOutlined /> {req.duration} MISSION</Text>
+                                  <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><UserOutlined /> ENG: {req.engineer.name}</Text>
+                                </div>
+                                {req.details && (
+                                  <Paragraph style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '14px', background: 'var(--papyrus-off-white)', padding: '16px', border: '1px solid var(--onyx-black)' }}>
+                                    {req.details}
+                                  </Paragraph>
+                                )}
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <Title level={2} style={{ margin: '0 0 24px 0', color: 'var(--baobab-emerald)' }}>${req.price}</Title>
+                                <Button 
+                                  className="afro-button primary"
+                                  icon={<CheckCircleOutlined />}
+                                  onClick={() => handleAcceptHire(req.id)}
+                                >
+                                  ACCEPT TASK
+                                </Button>
+                              </div>
                             </div>
-                            {req.details && (
-                              <Paragraph style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '14px', background: 'var(--papyrus-off-white)', padding: '16px', border: '1px solid var(--onyx-black)' }}>
-                                {req.details}
-                              </Paragraph>
-                            )}
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <Title level={2} style={{ margin: '0 0 24px 0', color: 'var(--baobab-emerald)' }}>${req.price}</Title>
-                            <Button 
-                              className="afro-button primary"
-                              icon={<CheckCircleOutlined />}
-                              onClick={() => handleAcceptHire(req.id)}
-                            >
-                              ACCEPT TASK
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    </Col>
-                  ))
-                ) : (
-                  <Empty description={<Text className="eyebrow">No active requests</Text>} />
-                )}
-              </Row>
-            </div>
-          </TabPane>
-        </Tabs>
+                          </Card>
+                        </Col>
+                      ))
+                    ) : (
+                      <Empty description={<Text className="eyebrow">No active requests</Text>} />
+                    )}
+                  </Row>
+                </div>
+              )
+            },
+            {
+              key: '4',
+              label: <span>MY MOBILITY</span>,
+              children: (
+                <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                  <span className="eyebrow" style={{ display: 'block', marginBottom: '8px' }}>Personal Requests</span>
+                  <Title level={3} style={{ marginBottom: 48, textTransform: 'uppercase' }}>Visit History</Title>
+                  <Row gutter={[24, 24]} justify="center">
+                    {myVisits.length > 0 ? (
+                      myVisits.map(visit => (
+                        <Col xs={24} md={12} key={visit.id}>
+                          <Card 
+                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0 }}
+                            title={<Text strong>{visit.project.title}</Text>}
+                            extra={<Tag color={visit.status === 'APPROVED' ? 'green' : visit.status === 'REJECTED' ? 'red' : 'gold'}>{visit.status}</Tag>}
+                          >
+                            <Text style={{ fontSize: '12px', color: 'var(--ash-grey)', textTransform: 'uppercase' }}>
+                              Lead Engineer: {visit.project.engineerProfile.user.name}
+                            </Text>
+                            <Divider style={{ margin: '12px 0' }} />
+                            <Paragraph style={{ fontSize: '14px' }}>{visit.message}</Paragraph>
+                          </Card>
+                        </Col>
+                      ))
+                    ) : (
+                      <Col span={24}>
+                        <Empty description="No site visits requested yet" />
+                      </Col>
+                    )}
+                  </Row>
+                </div>
+              )
+            }
+          ]}
+        />
       </div>
 
       {/* Modal Refinement */}

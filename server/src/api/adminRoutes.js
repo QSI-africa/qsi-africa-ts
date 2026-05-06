@@ -1050,4 +1050,46 @@ router.get("/pilot-engagements", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+// =========================================================================
+// 10. MOBILITY MANAGEMENT (SUPER_USER/ADMIN)
+// =========================================================================
+
+/**
+ * GET /api/admin/mobility/site-visits
+ * Retrieves all site visit requests across the platform.
+ */
+router.get("/mobility/site-visits", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const visits = await prisma.siteVisitRequest.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        project: { select: { title: true } },
+        user: { select: { name: true, email: true } }
+      }
+    });
+    res.json(visits);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch site visits." });
+  }
+});
+
+/**
+ * GET /api/admin/mobility/vehicle-hires
+ * Retrieves all vehicle hire requests across the platform.
+ */
+router.get("/mobility/vehicle-hires", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const hires = await prisma.vehicleHireRequest.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        engineer: { select: { name: true } },
+        acceptedBy: { select: { name: true } }
+      }
+    });
+    res.json(hires);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch vehicle hires." });
+  }
+});
+
 module.exports = router;

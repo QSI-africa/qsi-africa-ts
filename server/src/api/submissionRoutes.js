@@ -12,6 +12,7 @@ const {
 } = require("../services/emailService");
 const { upload, uploadMultiple } = require("../middleware/uploadMiddleware");
 const fs = require("fs");
+const { createSystemConversation } = require("../utils/messagingHelper");
 const router = express.Router();
 
 // Helper: Parse JSON safely
@@ -237,6 +238,17 @@ router.post("/infrastructure", upload.none(), async (req, res) => {
 
         sendInfraRequestEmail(submission).catch(console.error);
 
+        // --- NEW: Create Inbox Conversation ---
+        if (userId) {
+          createSystemConversation({
+            userId: userId,
+            title: `Infrastructure: ${args.project_type || "Request"}`,
+            type: "MODULE",
+            firstMessageText: `We have received your infrastructure request for ${args.project_type} in ${args.location}. A task has been created and assigned to our engineering team.`,
+            metadata: { submissionId: submission.id, documentCount: documentIds.length }
+          }).catch(console.error);
+        }
+
         res.status(201).json({
           sender: "ai",
           text: `We have received your details (Ref: ${submission.id}) and ${
@@ -321,6 +333,17 @@ router.post("/healing", async (req, res) => {
       console.error("Silent email send error:", err)
     );
 
+    // --- NEW: Create Inbox Conversation ---
+    if (userId) {
+      createSystemConversation({
+        userId: userId,
+        title: `Healing: ${packageName || "Session"}`,
+        type: "MODULE",
+        firstMessageText: `Thank you for your interest in the ${packageName} healing package. We have received your inquiry regarding "${struggleDescription.substring(0, 50)}..." and will be in touch shortly.`,
+        metadata: { submissionId: submission.id, packageName }
+      }).catch(console.error);
+    }
+
     const aiResponseText =
       "We have received your details and we will be in touch with you for the next steps.";
     res.status(201).json({ sender: "ai", text: aiResponseText });
@@ -376,6 +399,18 @@ router.post("/vision", async (req, res) => {
           },
         });
         responseToSend.text = aiResponse.markdown;
+
+        // --- NEW: Create Inbox Conversation ---
+        const userIdFromToken = userId; // Fallback if not explicitly passed in body
+        if (userIdFromToken) {
+          createSystemConversation({
+            userId: userIdFromToken,
+            title: `Vision: ${initialUserPrompt.substring(0, 30)}...`,
+            type: "MODULE",
+            firstMessageText: `Your vision has been successfully generated and saved to your Digital Vault. You can continue the discussion here.`,
+            metadata: { visionId: submission.id }
+          }).catch(console.error);
+        }
       } catch (dbError) {
         console.error("Error saving final vision to DB:", dbError);
         res.status(500).json({
