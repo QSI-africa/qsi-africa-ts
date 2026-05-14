@@ -39,14 +39,14 @@ const AboutUs: React.FC = () => {
       {/* Hero Section */}
       <section className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
-           <Globe size={600} className="text-accent-gold translate-x-1/2 -translate-y-1/4" />
+           <Globe size={600} className="text-accent-primary translate-x-1/2 -translate-y-1/4" />
         </div>
         
         <div className="max-w-4xl relative z-10">
           <span className="eyebrow">Vision & Philosophy</span>
           <h1 className="text-5xl lg:text-7xl font-extrabold text-white mb-8 leading-tight">
             Architecting <br/>
-            <span className="text-gold">Human Resonance</span>
+            <span className="text-accent-primary">Human Resonance</span>
           </h1>
           <p className="text-xl lg:text-2xl text-text-secondary leading-relaxed max-w-2xl">
             QSI is a practical intelligence framework designed to help Africans think, build, and organize systems more coherently.
@@ -70,7 +70,7 @@ const AboutUs: React.FC = () => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {coreAreas.map((area, i) => (
             <div key={i} className="feed-card reveal-up" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="w-14 h-14 rounded-2xl bg-accent-gold-soft border border-accent-gold-soft flex items-center justify-center text-accent-gold mb-8">
+              <div className="w-14 h-14 rounded-2xl bg-accent-primary-soft border border-accent-primary-soft flex items-center justify-center text-accent-primary mb-8">
                 {area.icon}
               </div>
               <h3 className="text-2xl font-bold text-text-primary mb-4">{area.title}</h3>
@@ -96,8 +96,8 @@ const AboutUs: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {foundations.map((f, i) => (
               <div key={i} className="reveal-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                <h4 className="text-lg font-bold text-accent-gold mb-4 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent-gold"></span>
+                <h4 className="text-lg font-bold text-accent-primary mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-primary"></span>
                   {f.title}
                 </h4>
                 <p className="text-text-secondary text-sm leading-relaxed">{f.desc}</p>
@@ -110,7 +110,7 @@ const AboutUs: React.FC = () => {
       {/* Mission CTA */}
       <section className="p-12 lg:p-20 text-center">
         <div className="max-w-3xl mx-auto">
-          <Shield size={48} className="mx-auto mb-8 text-accent-gold opacity-30" />
+          <Shield size={48} className="mx-auto mb-8 text-accent-primary opacity-30" />
           <h2 className="text-4xl font-extrabold text-white mb-8">"When coherence leads, everything aligns."</h2>
           <p className="text-xl text-text-secondary mb-12">
             A return to the natural order of creation, where every idea, structure, and life form vibrates in harmony with its true sovereign purpose.

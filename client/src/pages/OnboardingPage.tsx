@@ -86,7 +86,7 @@ const OnboardingPage: React.FC = () => {
     <div className="min-h-screen w-screen flex items-center justify-center bg-bg-primary p-6 lg:p-12 relative overflow-hidden">
       {/* Background Decorative Element */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none -z-0">
-         <Zap size={800} className="text-accent-gold" />
+         <Zap size={800} className="text-accent-primary" />
       </div>
 
       <div className="w-full max-w-2xl bg-bg-secondary border border-border-subtle rounded-3xl p-8 lg:p-12 shadow-2xl relative z-10">
@@ -111,7 +111,7 @@ const OnboardingPage: React.FC = () => {
           {/* Step 0: Welcome */}
           {current === 0 && (
             <div className="py-8 text-center animate-fade-in">
-              <div className="w-16 h-16 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-gold mx-auto mb-8 shadow-xl">
+              <div className="w-16 h-16 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-primary mx-auto mb-8 shadow-xl">
                  <Activity size={32} />
               </div>
               <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-4">The Frequency Scan</h3>
@@ -166,7 +166,7 @@ const OnboardingPage: React.FC = () => {
                 Next Step <ArrowRight size={18} />
               </button>
             ) : (
-              <button onClick={() => form.submit()} disabled={loading} className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-gold/20">
+              <button onClick={() => form.submit()} disabled={loading} className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-primary/20">
                 {loading ? 'SYNCHRONIZING...' : 'FINALIZE PROFILE'} <Zap size={18} />
               </button>
             )}

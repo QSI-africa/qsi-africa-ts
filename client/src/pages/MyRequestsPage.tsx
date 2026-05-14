@@ -153,10 +153,10 @@ const MyRequestsPage: React.FC = () => {
                         <div className="feed-card mb-4 flex items-center justify-between">
                           <div>
                             <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-tight">{item.location}</h3>
-                            <p className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">{item.duration} Mission</p>
+                            <p className="text-[10px] text-accent-primary font-bold uppercase tracking-widest">{item.duration} Mission</p>
                           </div>
                           <div className="text-2xl font-black text-white">
-                             <span className="text-accent-gold text-sm font-normal mr-1">$</span>{item.price}
+                             <span className="text-accent-primary text-sm font-normal mr-1">$</span>{item.price}
                           </div>
                         </div>
                       )}
@@ -195,7 +195,7 @@ const MyRequestsPage: React.FC = () => {
                              href={getServerUrl(doc.filePath)} 
                              target="_blank" 
                              rel="noopener noreferrer"
-                             className="p-3 rounded-xl bg-bg-primary text-text-secondary hover:text-accent-gold border border-border-subtle transition-all"
+                             className="p-3 rounded-xl bg-bg-primary text-text-secondary hover:text-accent-primary border border-border-subtle transition-all"
                            >
                               <Download size={18} />
                            </a>

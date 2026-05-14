@@ -92,7 +92,7 @@ const SubmissionForm: React.FC = () => {
       case "healing":
         return <Heart size={20} className="text-red-500" />;
       case "vision":
-        return <Zap size={20} className="text-accent-gold" />;
+        return <Zap size={20} className="text-accent-primary" />;
       default:
         return <Layers size={20} className="text-success-green" />;
     }
@@ -101,13 +101,13 @@ const SubmissionForm: React.FC = () => {
   return (
     <div className="space-y-8">
       <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-12 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 opacity-5 text-accent-gold group-hover:scale-110 transition-transform duration-700">
+        <div className="absolute top-0 right-0 p-8 opacity-5 text-accent-primary group-hover:scale-110 transition-transform duration-700">
            <Send size={120} />
         </div>
         
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-8">
-             <div className="w-12 h-12 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-gold shadow-xl">
+             <div className="w-12 h-12 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-primary shadow-xl">
                 <Activity size={24} />
              </div>
              <div>
@@ -144,7 +144,7 @@ const SubmissionForm: React.FC = () => {
               >
                 <TextArea
                   rows={6}
-                  className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none focus:border-accent-gold/40 transition-all p-4"
+                  className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none focus:border-accent-primary/40 transition-all p-4"
                   placeholder="Input technical requirements or operational constraints..."
                 />
               </Form.Item>
@@ -155,13 +155,13 @@ const SubmissionForm: React.FC = () => {
                 rules={[{ required: true, message: "Contact information required." }]}
               >
                 <Input
-                  className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl focus:border-accent-gold/40 transition-all px-4"
+                  className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl focus:border-accent-primary/40 transition-all px-4"
                   placeholder="ID@DOMAIN.COM"
                 />
               </Form.Item>
 
               <button
-                className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-accent-gold/20 group/btn"
+                className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-accent-primary/20 group/btn"
                 type="submit"
                 disabled={loading}
               >

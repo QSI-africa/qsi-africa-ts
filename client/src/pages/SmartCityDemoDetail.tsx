@@ -71,7 +71,7 @@ const SmartCityDemoDetail: React.FC = () => {
         label: "Learn",
         description: "Request more information",
         icon: <Lightbulb size={24} />,
-        color: "var(--accent-gold)",
+        color: "var(--accent-primary)",
       },
       {
         value: "collaborate",
@@ -170,7 +170,7 @@ const SmartCityDemoDetail: React.FC = () => {
             >
               <ArrowLeft size={18} /> Back
             </button>
-            <Tag className={`rounded-full px-4 py-1 font-black uppercase text-[10px] ${demo.status === 'ACTIVE' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-gold-soft text-accent-gold border-accent-gold-soft'}`}>
+            <Tag className={`rounded-full px-4 py-1 font-black uppercase text-[10px] ${demo.status === 'ACTIVE' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-primary-soft text-accent-primary border-accent-primary-soft'}`}>
               {demo.status || "PROPOSED"}
             </Tag>
           </div>
@@ -180,14 +180,14 @@ const SmartCityDemoDetail: React.FC = () => {
           </h1>
 
           {demo.city && (
-            <div className="flex items-center gap-2 text-accent-gold">
+            <div className="flex items-center gap-2 text-accent-primary">
               <MapPin size={20} />
               <span className="text-xs font-bold uppercase tracking-[0.2em]">{demo.city}</span>
             </div>
           )}
         </div>
         <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Zap size={500} className="text-accent-gold" />
+           <Zap size={500} className="text-accent-primary" />
         </div>
       </header>
 
@@ -208,14 +208,14 @@ const SmartCityDemoDetail: React.FC = () => {
           <Col xs={24} lg={8}>
             <div className="sticky top-12">
               <div className="feed-card bg-bg-secondary border-border-subtle p-8 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-success-green via-accent-gold to-red-500" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-success-green via-accent-primary to-red-500" />
                 <span className="eyebrow">Participation</span>
                 <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-tight">Engage With Demo</h3>
                 <p className="text-text-secondary text-sm leading-relaxed mb-8">
                   Join us in shaping the future of this demonstrator. We are actively seeking strategic partners, visionary investors, and technical participants to actualize this infrastructure.
                 </p>
                 <button 
-                  className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-gold/10"
+                  className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-primary/10"
                   onClick={() => setEngagementModalVisible(true)}
                 >
                   Request Collaboration <ArrowRight size={18} />
@@ -241,7 +241,7 @@ const SmartCityDemoDetail: React.FC = () => {
           <div className="text-center mb-10">
             <span className="eyebrow">Project Engagement</span>
             <h3 className="text-3xl font-black text-white uppercase tracking-tight mt-2 mb-4">{demo.title}</h3>
-            <div className="w-12 h-1 bg-accent-gold mx-auto" />
+            <div className="w-12 h-1 bg-accent-primary mx-auto" />
           </div>
           
           <Form
@@ -265,9 +265,9 @@ const SmartCityDemoDetail: React.FC = () => {
                           setSelectedEngagementType(option.value);
                           form.setFieldValue("engagementType", option.value);
                         }}
-                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-gold' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
+                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-primary' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
                       >
-                        <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-gold' : 'text-text-tertiary'}`}>
+                        <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-primary' : 'text-text-tertiary'}`}>
                           {option.icon}
                         </div>
                         <span className={`text-[9px] font-black uppercase tracking-widest text-center ${selectedEngagementType === option.value ? 'text-white' : 'text-text-tertiary'}`}>

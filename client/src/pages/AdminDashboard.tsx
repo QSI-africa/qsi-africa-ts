@@ -10,8 +10,6 @@ import {
   Edit3, 
   Trash2, 
   Code, 
-  Lightbulb,
-  AppWindow,
   Truck,
   MapPin,
   ShieldCheck,
@@ -20,7 +18,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const { Title, Text } = Typography;
 const { Option } = Select;
 
 const AdminDashboard: React.FC = () => {
@@ -131,7 +128,7 @@ const AdminDashboard: React.FC = () => {
       key: 'actions',
       render: (_: any, record: any) => (
         <Space>
-          <button className="text-text-tertiary hover:text-accent-gold" onClick={() => {
+          <button className="text-text-tertiary hover:text-accent-primary" onClick={() => {
             setEditingPackage(record);
             setActiveCategoryId(record.categoryId);
             packageForm.setFieldsValue(record);
@@ -147,19 +144,19 @@ const AdminDashboard: React.FC = () => {
       {/* Header */}
       <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex items-center gap-3 text-accent-gold mb-4">
+          <div className="flex items-center gap-3 text-accent-primary mb-4">
              <Settings size={20} />
              <span className="text-xs font-bold uppercase tracking-widest">Core Command Center</span>
           </div>
           <h1 className="text-4xl lg:text-6xl font-black text-white mb-4 tracking-tighter uppercase">
-            Platform <span className="text-gold">Admin</span>
+            Platform <span className="text-accent-primary">Admin</span>
           </h1>
           <p className="text-text-secondary max-w-2xl text-lg leading-relaxed">
             Global orchestration of technical R&D, mobility logistics, and ecosystem-wide structural integrity.
           </p>
         </div>
         <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Zap size={500} className="text-accent-gold" />
+           <Zap size={500} className="text-accent-primary" />
         </div>
       </header>
 
@@ -196,7 +193,7 @@ const AdminDashboard: React.FC = () => {
                            <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-bg-primary/50">
                               <div>
                                  <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                                    <Zap size={16} className="text-accent-gold" /> {cat.title}
+                                    <Zap size={16} className="text-accent-primary" /> {cat.title}
                                  </h4>
                                  <span className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest">{cat.descriptor}</span>
                               </div>
@@ -226,7 +223,7 @@ const AdminDashboard: React.FC = () => {
                                       packageForm.resetFields();
                                       setIsPackageModalOpen(true);
                                     }}
-                                    className="w-full py-4 text-[10px] font-bold text-accent-gold uppercase tracking-[0.2em] border-t border-border-subtle hover:bg-accent-gold/5 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-4 text-[10px] font-bold text-accent-primary uppercase tracking-[0.2em] border-t border-border-subtle hover:bg-accent-primary/5 transition-colors flex items-center justify-center gap-2"
                                   >
                                     <Plus size={14} /> Add Module to {cat.title}
                                   </button>
@@ -248,7 +245,7 @@ const AdminDashboard: React.FC = () => {
                    <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
                       <div className="p-6 border-b border-border-subtle">
                          <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                            <MapPin size={18} className="text-accent-gold" /> Site Visit Registry
+                            <MapPin size={18} className="text-accent-primary" /> Site Visit Registry
                          </h4>
                       </div>
                       <Table 
@@ -262,7 +259,7 @@ const AdminDashboard: React.FC = () => {
                             title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
                             dataIndex: 'status', 
                             key: 'status',
-                            render: (status) => <Tag className={status === 'APPROVED' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-gold-soft text-accent-gold border-accent-gold-soft'}>{status}</Tag>
+                            render: (status) => <Tag className={status === 'APPROVED' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-primary-soft text-accent-primary border-accent-primary-soft'}>{status}</Tag>
                           },
                           { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Sync Date</span>, dataIndex: 'createdAt', key: 'date', render: (d) => new Date(d).toLocaleDateString() },
                         ]}
@@ -272,7 +269,7 @@ const AdminDashboard: React.FC = () => {
                    <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
                       <div className="p-6 border-b border-border-subtle">
                          <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                            <Truck size={18} className="text-accent-gold" /> Logistics Missions
+                            <Truck size={18} className="text-accent-primary" /> Logistics Missions
                          </h4>
                       </div>
                       <Table 
@@ -288,7 +285,7 @@ const AdminDashboard: React.FC = () => {
                             title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Sync</span>, 
                             dataIndex: 'status', 
                             key: 'status',
-                            render: (status) => <Tag className={status === 'ACCEPTED' ? 'bg-success-green/20 text-success-green' : 'bg-accent-gold-soft text-accent-gold'}>{status}</Tag>
+                            render: (status) => <Tag className={status === 'ACCEPTED' ? 'bg-success-green/20 text-success-green' : 'bg-accent-primary-soft text-accent-primary'}>{status}</Tag>
                           },
                         ]}
                       />
@@ -301,7 +298,7 @@ const AdminDashboard: React.FC = () => {
               label: <span className="flex items-center gap-2 py-2"><Activity size={16} /> Ecosystem Health</span>,
               children: (
                 <div className="py-24 flex flex-col items-center justify-center text-center opacity-30">
-                   <Zap size={64} className="text-accent-gold mb-8 animate-pulse" />
+                   <Zap size={64} className="text-accent-primary mb-8 animate-pulse" />
                    <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Operational Coherence</h2>
                    <p className="text-text-tertiary max-w-xs">Global system statistics and real-time health metrics are being synchronized.</p>
                 </div>

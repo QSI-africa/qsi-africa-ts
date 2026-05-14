@@ -49,14 +49,14 @@ const ContactUs: React.FC = () => {
         <div className="max-w-6xl mx-auto relative z-10">
           <span className="eyebrow">Strategic Support</span>
           <h1 className="text-5xl lg:text-7xl font-black text-white mt-4 mb-8 tracking-tighter uppercase leading-none">
-            Ecosystem <br/><span className="text-gold">Synchronization</span>
+            Ecosystem <br/><span className="text-accent-primary">Synchronization</span>
           </h1>
           <p className="text-xl text-text-secondary max-w-2xl leading-relaxed">
             Our infrastructure is ready to receive your vision. Reach out to the QSI team for strategic inquiries, collaborations, and technical audits.
           </p>
         </div>
         <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Globe size={600} className="text-accent-gold" />
+           <Globe size={600} className="text-accent-primary" />
         </div>
       </header>
 
@@ -68,7 +68,7 @@ const ContactUs: React.FC = () => {
               <div className="space-y-8">
                 {contactInfo.map((item, i) => (
                   <div key={i} className="flex gap-6 items-start group">
-                    <div className="w-14 h-14 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-center text-accent-gold shadow-lg group-hover:border-accent-gold/40 transition-colors">
+                    <div className="w-14 h-14 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-center text-accent-primary shadow-lg group-hover:border-accent-primary/40 transition-colors">
                       {item.icon}
                     </div>
                     <div>
@@ -93,10 +93,10 @@ const ContactUs: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-text-secondary">Weekend</span>
-                    <span className="text-sm font-bold text-accent-gold">Emergency Sync Only</span>
+                    <span className="text-sm font-bold text-accent-primary">Emergency Sync Only</span>
                   </div>
                 </div>
-                <Zap size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold" />
+                <Zap size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-primary" />
               </div>
             </div>
           </Col>
@@ -109,7 +109,7 @@ const ContactUs: React.FC = () => {
                     <h2 className="text-3xl font-black text-white uppercase tracking-tight">Transmit Briefing</h2>
                     <p className="text-text-tertiary mt-2">Initialize a secure communication sequence.</p>
                   </div>
-                  <Activity size={32} className="text-accent-gold opacity-20" />
+                  <Activity size={32} className="text-accent-primary opacity-20" />
                </div>
 
                <Form 
@@ -145,7 +145,7 @@ const ContactUs: React.FC = () => {
                     <Input.TextArea rows={6} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="DESCRIBE YOUR VISION OR OPERATIONAL REQUIREMENTS..." />
                   </Form.Item>
 
-                  <button className="qsi-button primary w-full py-5 text-lg font-bold flex items-center justify-center gap-3 shadow-xl shadow-accent-gold/20" type="submit" disabled={loading}>
+                  <button className="qsi-button primary w-full py-5 text-lg font-bold flex items-center justify-center gap-3 shadow-xl shadow-accent-primary/20" type="submit" disabled={loading}>
                      {loading ? 'SYNCHRONIZING...' : 'TRANSMIT MESSAGE'} <Send size={20} />
                   </button>
                </Form>

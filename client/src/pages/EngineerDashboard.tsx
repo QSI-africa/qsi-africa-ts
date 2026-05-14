@@ -146,7 +146,7 @@ const EngineerDashboard: React.FC = () => {
           <div>
             <span className="eyebrow">Network Operations</span>
             <h1 className="text-4xl lg:text-6xl font-black text-white mt-2 mb-4 tracking-tighter uppercase">
-              Operational <span className="text-gold">Console</span>
+              Operational <span className="text-accent-primary">Console</span>
             </h1>
             <p className="text-text-secondary max-w-xl text-lg">
               Orchestrating infrastructure milestones and professional documentation for the African Renaissance.
@@ -154,13 +154,13 @@ const EngineerDashboard: React.FC = () => {
           </div>
           <button 
             onClick={() => setIsProjectModalVisible(true)}
-            className="qsi-button primary flex items-center gap-2 py-4 px-8 shadow-xl shadow-accent-gold/20"
+            className="qsi-button primary flex items-center gap-2 py-4 px-8 shadow-xl shadow-accent-primary/20"
           >
             <Plus size={20} /> Register New Project
           </button>
         </div>
         <div className="absolute top-1/2 right-0 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Zap size={600} className="text-accent-gold" />
+           <Zap size={600} className="text-accent-primary" />
         </div>
       </header>
 
@@ -176,12 +176,12 @@ const EngineerDashboard: React.FC = () => {
                       {profile?.avatarUrl ? (
                         <img src={getServerUrl(profile.avatarUrl)} className="w-full h-full object-cover" />
                       ) : (
-                        <User size={48} className="text-accent-gold opacity-50" />
+                        <User size={48} className="text-accent-primary opacity-50" />
                       )}
                    </div>
                 </div>
                 <h2 className="text-2xl font-bold text-white mt-4 uppercase tracking-tight">{user?.name}</h2>
-                <Tag className="bg-accent-gold-soft text-accent-gold border-accent-gold-soft rounded-full px-4 py-1 text-[10px] font-black uppercase mt-2">
+                <Tag className="bg-accent-primary-soft text-accent-primary border-accent-primary-soft rounded-full px-4 py-1 text-[10px] font-black uppercase mt-2">
                   {profile?.specialization || 'Strategic Architect'}
                 </Tag>
                 
@@ -189,11 +189,11 @@ const EngineerDashboard: React.FC = () => {
                 
                 <div className="text-left">
                   <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-4">Secured Vault</h4>
-                  <div className="p-4 rounded-2xl bg-bg-primary border border-border-subtle group hover:border-accent-gold/30 transition-all">
+                  <div className="p-4 rounded-2xl bg-bg-primary border border-border-subtle group hover:border-accent-primary/30 transition-all">
                     {profile?.resumeUrl ? (
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-3">
-                            <FileText size={20} className="text-accent-gold" />
+                            <FileText size={20} className="text-accent-primary" />
                             <span className="text-xs font-bold text-white uppercase tracking-tight">Technical Resume</span>
                          </div>
                          <a href={getServerUrl(profile.resumeUrl)} target="_blank" className="text-text-tertiary hover:text-white"><Eye size={18} /></a>
@@ -254,7 +254,7 @@ const EngineerDashboard: React.FC = () => {
                           dataSource={projects}
                           locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No registered projects found.</span>} /> }}
                           renderItem={item => (
-                            <div className="p-6 rounded-3xl bg-bg-secondary border border-border-subtle mb-6 group hover:border-accent-gold/20 transition-all">
+                            <div className="p-6 rounded-3xl bg-bg-secondary border border-border-subtle mb-6 group hover:border-accent-primary/20 transition-all">
                                <Row gutter={24}>
                                  <Col xs={24} md={8}>
                                     <div className="h-40 rounded-2xl overflow-hidden border border-border-subtle relative group/img">
@@ -276,7 +276,7 @@ const EngineerDashboard: React.FC = () => {
                                  <Col xs={24} md={16}>
                                     <div className="flex justify-between items-start mb-4">
                                        <h3 className="text-xl font-bold text-white uppercase tracking-tight">{item.title}</h3>
-                                       <Tag className="bg-bg-primary text-accent-gold border-accent-gold-soft rounded-full uppercase text-[9px] font-black">{item.status}</Tag>
+                                       <Tag className="bg-bg-primary text-accent-primary border-accent-primary-soft rounded-full uppercase text-[9px] font-black">{item.status}</Tag>
                                     </div>
                                     <p className="text-sm text-text-secondary leading-relaxed mb-6 line-clamp-2">{item.description}</p>
                                     {item.images && item.images.length > 0 && (
@@ -305,15 +305,15 @@ const EngineerDashboard: React.FC = () => {
                           dataSource={siteVisits}
                           locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No incoming requests found.</span>} /> }}
                           renderItem={visit => (
-                            <div className="p-6 rounded-3xl bg-bg-secondary border border-border-subtle mb-4 group hover:border-accent-gold/20 transition-all">
+                            <div className="p-6 rounded-3xl bg-bg-secondary border border-border-subtle mb-4 group hover:border-accent-primary/20 transition-all">
                                <div className="flex justify-between items-start mb-4">
                                   <div className="flex items-center gap-4">
-                                     <div className="w-12 h-12 rounded-2xl bg-bg-primary flex items-center justify-center font-bold text-accent-gold">
+                                     <div className="w-12 h-12 rounded-2xl bg-bg-primary flex items-center justify-center font-bold text-accent-primary">
                                         {visit.user.name[0]}
                                      </div>
                                      <div>
                                         <h4 className="text-lg font-bold text-white uppercase tracking-tight">{visit.user.name}</h4>
-                                        <span className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">{visit.project.title}</span>
+                                        <span className="text-[10px] text-accent-primary font-bold uppercase tracking-widest">{visit.project.title}</span>
                                      </div>
                                   </div>
                                   <Tag className="bg-bg-primary text-text-tertiary border-border-subtle rounded-full uppercase text-[9px] font-black">{visit.status}</Tag>

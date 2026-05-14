@@ -314,7 +314,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
           <button
             onClick={handleStopBroadcast}
             style={{
-              height: '48px', padding: '0 22px', borderRadius: '14px', border: 'none',
+              height: '48px', padding: '0 22px', borderRadius: '14px',
               background: 'rgba(239,68,68,0.15)', color: '#EF4444', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '8px',
               fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',

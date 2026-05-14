@@ -92,11 +92,11 @@ const ProfileDetailPage: React.FC = () => {
                    <ShieldCheck size={24} />
                 </div>
               )}
-              <div className="absolute inset-0 bg-accent-gold/20 blur-3xl rounded-full opacity-20 -z-10 group-hover:opacity-40 transition-opacity" />
+              <div className="absolute inset-0 bg-accent-primary/20 blur-3xl rounded-full opacity-20 -z-10 group-hover:opacity-40 transition-opacity" />
             </div>
             
             <div className="flex-1">
-              <span className="eyebrow text-gold">
+              <span className="eyebrow text-accent-primary">
                 {profile.isVerified ? 'Sovereign Mind (Verified)' : 'Professional Member'}
               </span>
               <h1 className="text-4xl lg:text-7xl font-black text-white mt-4 mb-6 uppercase tracking-tighter leading-none">
@@ -119,7 +119,7 @@ const ProfileDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Zap size={600} className="text-accent-gold" />
+           <Zap size={600} className="text-accent-primary" />
         </div>
       </header>
 
@@ -135,7 +135,7 @@ const ProfileDetailPage: React.FC = () => {
                         <span className="eyebrow">Practical Contribution</span>
                         <h2 className="text-3xl font-black text-white uppercase tracking-tight">Project Ledger</h2>
                       </div>
-                      <Activity size={32} className="text-accent-gold opacity-10" />
+                      <Activity size={32} className="text-accent-primary opacity-10" />
                    </div>
 
                    <div className="space-y-8">
@@ -145,7 +145,7 @@ const ProfileDetailPage: React.FC = () => {
                              <div className="h-64 border-b border-border-subtle relative overflow-hidden">
                                 <img src={getServerUrl(proj.imageUrl)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={proj.title} />
                                 <div className="absolute top-6 right-6">
-                                   <Tag className="rounded-full px-4 py-1 bg-bg-primary/80 backdrop-blur-md border-border-subtle text-accent-gold font-black uppercase text-[9px]">
+                                   <Tag className="rounded-full px-4 py-1 bg-bg-primary/80 backdrop-blur-md border-border-subtle text-accent-primary font-black uppercase text-[9px]">
                                       {proj.status}
                                    </Tag>
                                 </div>
@@ -158,7 +158,7 @@ const ProfileDetailPage: React.FC = () => {
                                       <Layers size={16} />
                                       <span className="text-[10px] font-bold uppercase tracking-widest">Outcome Verified</span>
                                    </div>
-                                   <button className="qsi-button text-xs font-black uppercase tracking-widest text-accent-gold hover:underline flex items-center gap-2">
+                                   <button className="qsi-button text-xs font-black uppercase tracking-widest text-accent-primary hover:underline flex items-center gap-2">
                                       View Case Study <ExternalLink size={14} />
                                    </button>
                                 </div>
@@ -181,21 +181,21 @@ const ProfileDetailPage: React.FC = () => {
                         <span className="eyebrow">Intellectual Leadership</span>
                         <h2 className="text-3xl font-black text-white uppercase tracking-tight">Sovereign Insights</h2>
                       </div>
-                      <BookOpen size={32} className="text-accent-gold opacity-10" />
+                      <BookOpen size={32} className="text-accent-primary opacity-10" />
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {mockInsights.map((insight) => (
-                        <div key={insight.id} className="feed-card bg-bg-secondary border-border-subtle p-8 hover:border-accent-gold/40 transition-all cursor-pointer group">
+                        <div key={insight.id} className="feed-card bg-bg-secondary border-border-subtle p-8 hover:border-accent-primary/40 transition-all cursor-pointer group">
                            <div className="flex justify-between items-center mb-6">
                               <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle">
                                  {insight.category}
                               </span>
                               <span className="text-[9px] font-bold text-text-tertiary uppercase">{insight.date}</span>
                            </div>
-                           <h4 className="text-lg font-bold text-white uppercase tracking-tight mb-8 group-hover:text-accent-gold transition-colors">{insight.title}</h4>
+                           <h4 className="text-lg font-bold text-white uppercase tracking-tight mb-8 group-hover:text-accent-primary transition-colors">{insight.title}</h4>
                            <div className="flex justify-end">
-                              <Zap size={18} className="text-accent-gold opacity-20 group-hover:opacity-100 transition-opacity" />
+                              <Zap size={18} className="text-accent-primary opacity-20 group-hover:opacity-100 transition-opacity" />
                            </div>
                         </div>
                       ))}
@@ -208,9 +208,9 @@ const ProfileDetailPage: React.FC = () => {
           <Col xs={24} lg={8}>
             <div className="sticky top-12 space-y-8">
                <div className="feed-card bg-bg-secondary border-border-subtle p-8 text-center relative overflow-hidden">
-                  <Activity size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold" />
+                  <Activity size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-primary" />
                   <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-6">Engage Professional</h3>
-                  <button className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest mb-4 shadow-xl shadow-accent-gold/10">
+                  <button className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest mb-4 shadow-xl shadow-accent-primary/10">
                      Schedule Consultation
                   </button>
                   <button className="qsi-button w-full py-5 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2">

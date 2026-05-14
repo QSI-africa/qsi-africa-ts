@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Typography,
-  Tag,
   Spin,
   Empty,
   App as AntApp,
-  theme,
   Grid
 } from "antd";
 import {
@@ -17,14 +15,10 @@ import {
   AlertCircle,
   FileDigit,
   Receipt,
-  ArrowRight,
-  ExternalLink,
   CreditCard
 } from "lucide-react";
 import api from "../api";
 
-const { Title, Text } = Typography;
-const { useToken } = theme;
 const { useBreakpoint } = Grid;
 
 const GREEN = '#10B981';

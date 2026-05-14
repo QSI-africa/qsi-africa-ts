@@ -4,28 +4,18 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   App as AntApp,
   Spin,
   Input,
-  Button,
-  Modal,
-  Form
+  Modal
 } from "antd";
 import {
   Send,
-  Plus,
-  ArrowLeft,
   Info,
   MoreVertical,
   Paperclip,
-  Mic,
-  Lightbulb,
-  Package,
-  Zap,
-  Globe,
-  MoreHorizontal,
   Bot,
   Brain,
   Sparkles,
@@ -67,7 +57,7 @@ const ChatWindow: React.FC = () => {
   const details = moduleDetails[moduleName as keyof typeof moduleDetails] || moduleDetails.healing;
   const { message: antMessage } = AntApp.useApp();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useAuth()!;
   const { setSidebarContent } = useSidebar();
 
   const [messages, setMessages] = useState<any[]>([]);

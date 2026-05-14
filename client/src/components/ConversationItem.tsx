@@ -35,7 +35,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     switch (conversation.type) {
       case 'module': return <RobotOutlined style={{ color: 'var(--success-green)' }} />;
       case 'operator': return <UserOutlined style={{ color: '#ff4d4f' }} />;
-      case 'system-assisted': return <ThunderboltOutlined style={{ color: 'var(--accent-gold)' }} />;
+      case 'system-assisted': return <ThunderboltOutlined style={{ color: 'var(--accent-primary)' }} />;
       case 'project': return <ProjectOutlined style={{ color: 'var(--savanna-moss)' }} />;
       default: return <UserOutlined />;
     }
@@ -45,7 +45,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     switch (conversation.type) {
       case 'module': return 'var(--success-green)';
       case 'operator': return '#ff4d4f';
-      case 'system-assisted': return 'var(--accent-gold)';
+      case 'system-assisted': return 'var(--accent-primary)';
       case 'project': return 'var(--savanna-moss)';
       default: return 'var(--text-tertiary)';
     }

@@ -66,7 +66,7 @@ const ConceptDetailPage: React.FC = () => {
       label: "Sync Request",
       description: "Schedule a technical brief",
       icon: <Users size={24} />,
-      color: "var(--accent-gold)",
+      color: "var(--accent-primary)",
     },
     {
       value: "custom",
@@ -180,7 +180,7 @@ const ConceptDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Layers size={600} className="text-accent-gold" />
+           <Layers size={600} className="text-accent-primary" />
         </div>
       </header>
 
@@ -206,7 +206,7 @@ const ConceptDetailPage: React.FC = () => {
                 
                 <div className="space-y-4">
                   <button 
-                    className="qsi-button primary w-full py-4 font-black uppercase text-xs tracking-widest shadow-xl shadow-accent-gold/10"
+                    className="qsi-button primary w-full py-4 font-black uppercase text-xs tracking-widest shadow-xl shadow-accent-primary/10"
                     onClick={() => setEngagementModalVisible(true)}
                   >
                     Express Interest
@@ -228,7 +228,7 @@ const ConceptDetailPage: React.FC = () => {
                     <span className="text-sm font-bold text-white uppercase">Framework Validation</span>
                   </div>
                 </div>
-                <Zap size={120} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold group-hover:scale-110 transition-transform duration-700" />
+                <Zap size={120} className="absolute -bottom-8 -right-8 opacity-5 text-accent-primary group-hover:scale-110 transition-transform duration-700" />
               </div>
 
               <div className="px-4">
@@ -261,7 +261,7 @@ const ConceptDetailPage: React.FC = () => {
           <div className="text-center mb-10">
             <span className="eyebrow">Strategic Intent</span>
             <h3 className="text-3xl font-black text-white uppercase tracking-tight mt-2 mb-4">Collaborate on Framework</h3>
-            <div className="w-12 h-1 bg-accent-gold mx-auto" />
+            <div className="w-12 h-1 bg-accent-primary mx-auto" />
           </div>
           
           <Form form={form} layout="vertical" onFinish={handleEngagementSubmit} className="space-y-6">
@@ -279,9 +279,9 @@ const ConceptDetailPage: React.FC = () => {
                         setSelectedEngagementType(option.value);
                         form.setFieldValue('engagementType', option.value);
                       }}
-                      className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-gold shadow-lg' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
+                      className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-primary shadow-lg' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
                     >
-                      <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-gold' : 'text-text-tertiary'}`}>
+                      <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-primary' : 'text-text-tertiary'}`}>
                         {option.icon}
                       </div>
                       <span className={`text-[10px] font-black uppercase tracking-widest text-center ${selectedEngagementType === option.value ? 'text-white' : 'text-text-tertiary'}`}>

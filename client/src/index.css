@@ -44,13 +44,9 @@
   --rail-width: 72px;
   --sidebar-width: 500px;
 
-  /* Legacy Aliases (pointing to new green system) */
-  --accent-gold: var(--accent-primary);
-  --accent-gold-soft: var(--accent-primary-soft);
-  --accent-gold-hover: var(--accent-primary-hover);
-  
-  --canvas-white: #FFFFFF;
-  --savanna-moss: var(--accent-primary);
+  /* Layout Constants */
+  --rail-width: 72px;
+  --sidebar-width: 500px;
 }
 
 * {
@@ -384,8 +380,8 @@ body {
 }
 
 /* Utility Classes */
-.text-gold { color: var(--accent-gold); }
-.bg-gold { background-color: var(--accent-gold); }
+.text-accent-primary { color: var(--accent-primary); }
+.bg-accent-primary { background-color: var(--accent-primary); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Image Grid System */

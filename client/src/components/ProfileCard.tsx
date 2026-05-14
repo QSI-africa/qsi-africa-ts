@@ -35,7 +35,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 }) => {
   return (
     <div 
-      className="feed-card bg-bg-secondary border-border-subtle p-8 cursor-pointer hover:border-accent-gold/40 transition-all group"
+      className="feed-card bg-bg-secondary border-border-subtle p-8 cursor-pointer hover:border-accent-primary/40 transition-all group"
       onClick={() => onClick(id)}
     >
       <div className="flex flex-col md:flex-row gap-8">
@@ -59,7 +59,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="flex-1">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-accent-gold transition-colors">
+              <h3 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-accent-primary transition-colors">
                 {name}
               </h3>
               <span className="text-[10px] font-black text-success-green uppercase tracking-[0.15em]">
@@ -79,7 +79,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             {skills.slice(0, 3).map((skill: string) => (
               <span 
                 key={skill} 
-                className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle group-hover:border-accent-gold/20 group-hover:text-accent-gold transition-colors"
+                className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle group-hover:border-accent-primary/20 group-hover:text-accent-primary transition-colors"
               >
                 {skill}
               </span>
@@ -96,7 +96,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       {/* Decorative Progress Accent */}
       <div className="mt-8 h-px w-full bg-border-subtle/50 relative overflow-hidden">
          <div 
-           className={`absolute top-0 left-0 h-full transition-all duration-1000 ${isVerified ? 'bg-success-green w-full' : 'bg-accent-gold w-1/3'}`} 
+           className={`absolute top-0 left-0 h-full transition-all duration-1000 ${isVerified ? 'bg-success-green w-full' : 'bg-accent-primary w-1/3'}`} 
          />
       </div>
     </div>

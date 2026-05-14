@@ -28,7 +28,7 @@ const ChatTile: React.FC<ChatTileProps> = ({ icon, name, tagline, onClick, color
       </div>
       
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-black text-white uppercase tracking-tight truncate group-hover:text-accent-gold transition-colors">
+        <h3 className="text-sm font-black text-white uppercase tracking-tight truncate group-hover:text-accent-primary transition-colors">
           {name}
         </h3>
         <p className="text-xs text-text-tertiary mt-1 font-medium truncate">
