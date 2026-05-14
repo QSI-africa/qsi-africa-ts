@@ -33,9 +33,9 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 }) => {
   const getTypeIcon = () => {
     switch (conversation.type) {
-      case 'module': return <RobotOutlined style={{ color: 'var(--baobab-emerald)' }} />;
-      case 'operator': return <UserOutlined style={{ color: 'var(--terracotta-clay)' }} />;
-      case 'system-assisted': return <ThunderboltOutlined style={{ color: 'var(--ochre-yellow)' }} />;
+      case 'module': return <RobotOutlined style={{ color: 'var(--success-green)' }} />;
+      case 'operator': return <UserOutlined style={{ color: '#ff4d4f' }} />;
+      case 'system-assisted': return <ThunderboltOutlined style={{ color: 'var(--accent-gold)' }} />;
       case 'project': return <ProjectOutlined style={{ color: 'var(--savanna-moss)' }} />;
       default: return <UserOutlined />;
     }
@@ -43,11 +43,11 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   const getTypeColor = () => {
     switch (conversation.type) {
-      case 'module': return 'var(--baobab-emerald)';
-      case 'operator': return 'var(--terracotta-clay)';
-      case 'system-assisted': return 'var(--ochre-yellow)';
+      case 'module': return 'var(--success-green)';
+      case 'operator': return '#ff4d4f';
+      case 'system-assisted': return 'var(--accent-gold)';
       case 'project': return 'var(--savanna-moss)';
-      default: return 'var(--ash-grey)';
+      default: return 'var(--text-tertiary)';
     }
   };
 
@@ -57,9 +57,9 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       style={{
         padding: '16px 20px',
         cursor: 'pointer',
-        backgroundColor: isActive ? 'var(--papyrus-off-white)' : 'var(--canvas-white)',
-        borderBottom: '2px solid var(--onyx-black)',
-        borderLeft: isActive ? '8px solid var(--baobab-emerald)' : '8px solid transparent',
+        backgroundColor: isActive ? 'var(--bg-primary)' : 'var(--canvas-white)',
+        borderBottom: '2px solid var(--border-subtle)',
+        borderLeft: isActive ? '8px solid var(--success-green)' : '8px solid transparent',
         transition: 'var(--snappy)',
         display: 'flex',
         gap: '16px',
@@ -70,7 +70,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {/* Background Pattern for Active State */}
       {isActive && (
-        <div className="pattern-dots" style={{ 
+        <div className="" style={{ 
           position: 'absolute', 
           top: 0, 
           left: 0, 
@@ -83,16 +83,16 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       )}
 
       <div style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
-        <Badge dot={conversation.status === 'online'} color="var(--baobab-emerald)" offset={[-4, 32]}>
+        <Badge dot={conversation.status === 'online'} color="var(--success-green)" offset={[-4, 32]}>
           <Avatar 
             shape="square" 
             size={48} 
             icon={getTypeIcon()}
             style={{ 
               backgroundColor: 'var(--canvas-white)', 
-              border: `2px solid var(--onyx-black)`,
-              color: 'var(--onyx-black)',
-              boxShadow: isActive ? '4px 4px 0px var(--onyx-black)' : 'none'
+              border: `2px solid var(--border-subtle)`,
+              color: 'var(--border-subtle)',
+              boxShadow: isActive ? '4px 4px 0px var(--border-subtle)' : 'none'
             }}
             src={conversation.avatar}
           />
@@ -105,10 +105,10 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             level={5} 
             style={{ 
               margin: 0, 
-              color: 'var(--onyx-black)', 
+              color: 'var(--border-subtle)', 
               textTransform: 'uppercase', 
               fontSize: '14px',
-              fontFamily: 'var(--font-heading)',
+              fontFamily: 'var(--font-primary)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
@@ -116,7 +116,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           >
             {conversation.title}
           </Title>
-          <Text style={{ fontSize: '10px', color: 'var(--ash-grey)', fontFamily: 'var(--font-accent)' }}>
+          <Text style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-primary)' }}>
             {conversation.timestamp}
           </Text>
         </div>
@@ -125,7 +125,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           <Text 
             style={{ 
               fontSize: '12px', 
-              color: conversation.unreadCount > 0 ? 'var(--onyx-black)' : 'var(--ash-grey)',
+              color: conversation.unreadCount > 0 ? 'var(--border-subtle)' : 'var(--text-tertiary)',
               fontWeight: conversation.unreadCount > 0 ? 800 : 400,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -146,7 +146,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               padding: '2px 6px',
               border: `1px solid ${getTypeColor()}`,
               color: getTypeColor(),
-              fontFamily: 'var(--font-accent)',
+              fontFamily: 'var(--font-primary)',
             }}>
               {conversation.type}
             </span>
@@ -154,9 +154,9 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               <Badge 
                 count={conversation.unreadCount} 
                 style={{ 
-                  backgroundColor: 'var(--terracotta-clay)', 
+                  backgroundColor: '#ff4d4f', 
                   borderRadius: 0,
-                  border: '1px solid var(--onyx-black)',
+                  border: '1px solid var(--border-subtle)',
                   fontSize: '10px',
                   fontWeight: 900
                 }} 

@@ -15,17 +15,17 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
 
   const buttonStyle = {
     background: "var(--canvas-white)",
-    border: "3px solid var(--onyx-black)",
+    border: "3px solid var(--border-subtle)",
     borderRadius: 0,
     padding: "24px 20px",
-    color: "var(--onyx-black)",
+    color: "var(--border-subtle)",
     textAlign: "left",
     cursor: "pointer",
     width: "100%",
     maxWidth: "340px",
     display: "block",
     marginBottom: "20px",
-    boxShadow: "6px 6px 0px var(--onyx-black)",
+    boxShadow: "6px 6px 0px var(--border-subtle)",
     position: "relative",
     transition: "transform 0.1s ease",
   };
@@ -45,12 +45,12 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        backgroundColor: "var(--papyrus-off-white)",
+        backgroundColor: "var(--bg-primary)",
         backgroundImage: `
-          linear-gradient(135deg, var(--onyx-black) 25%, transparent 25%),
-          linear-gradient(225deg, var(--onyx-black) 25%, transparent 25%),
-          linear-gradient(315deg, var(--onyx-black) 25%, transparent 25%),
-          linear-gradient(45deg, var(--onyx-black) 25%, transparent 25%)
+          linear-gradient(135deg, var(--border-subtle) 25%, transparent 25%),
+          linear-gradient(225deg, var(--border-subtle) 25%, transparent 25%),
+          linear-gradient(315deg, var(--border-subtle) 25%, transparent 25%),
+          linear-gradient(45deg, var(--border-subtle) 25%, transparent 25%)
         `,
         backgroundSize: '32px 32px',
         backgroundPosition: '16px 0, 16px 0, 0 0, 0 0',
@@ -64,8 +64,8 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'var(--papyrus-off-white)',
-        backgroundImage: `radial-gradient(var(--onyx-black) 1px, transparent 1px)`,
+        background: 'var(--bg-primary)',
+        backgroundImage: `radial-gradient(var(--border-subtle) 1px, transparent 1px)`,
         backgroundSize: '16px 16px',
         opacity: 0.94,
         zIndex: 0,
@@ -88,7 +88,7 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
         <div
           style={{
             background: "var(--savanna-moss)",
-            border: "3px solid var(--onyx-black)",
+            border: "3px solid var(--border-subtle)",
             padding: "12px",
             display: "flex",
             alignItems: "center",
@@ -103,15 +103,15 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
             }}
           />
         </div>
-        <Title level={4} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
+        <Title level={4} style={{ margin: 0, color: "var(--border-subtle)", fontFamily: "var(--font-primary)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
           Healing Packages
         </Title>
         <Text
           style={{
-            color: "var(--onyx-black)",
+            color: "var(--border-subtle)",
             fontSize: "12px",
             fontWeight: 700,
-            fontFamily: "var(--font-accent)",
+            fontFamily: "var(--font-primary)",
             textTransform: "uppercase",
             opacity: 0.7,
             letterSpacing: "0.1em",
@@ -130,21 +130,21 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
             style={buttonStyle}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "8px 8px 0px var(--onyx-black)";
+              e.currentTarget.style.boxShadow = "8px 8px 0px var(--border-subtle)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "6px 6px 0px var(--onyx-black)";
+              e.currentTarget.style.boxShadow = "6px 6px 0px var(--border-subtle)";
             }}
           >
             {/* Content */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Text
                 style={{
-                  color: "var(--onyx-black)",
+                  color: "var(--border-subtle)",
                   fontWeight: 900,
                   fontSize: "14px",
-                  fontFamily: "var(--font-accent)",
+                  fontFamily: "var(--font-primary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
@@ -153,9 +153,9 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
               </Text>
               <Text
                 style={{
-                  color: "var(--onyx-black)",
+                  color: "var(--border-subtle)",
                   fontSize: "12px",
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--font-primary)",
                   lineHeight: 1.4,
                   opacity: 0.8,
                 }}

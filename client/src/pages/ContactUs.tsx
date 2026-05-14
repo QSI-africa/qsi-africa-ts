@@ -1,137 +1,157 @@
 import React, { useState } from 'react';
 import {
-  MailOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  GlobalOutlined,
-  SendOutlined
-} from "@ant-design/icons";
-import { AfroButton, GeometricCard, CornerAccent } from "../components/AfroBauhausComponents";
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  Globe,
+  Zap,
+  MoreVertical,
+  Activity
+} from "lucide-react";
+import { Typography, Row, Col, Form, Input, notification } from 'antd';
+
+const { Title, Text, Paragraph } = Typography;
 
 const ContactUs: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    alert("Message received. Our systems are now aligning with your inquiry.");
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
+    try {
+      console.log("Form submitted:", values);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      notification.success({
+        message: 'Synchronization Complete',
+        description: 'Your message has been received. Our systems are now aligning with your inquiry.',
+        placement: 'bottomRight'
+      });
+      form.resetFields();
+    } catch (error) {
+      notification.error({ message: 'Synchronization Failure' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const contactInfo = [
-    { icon: <EnvironmentOutlined />, title: "Visit Us", content: "No. 3 Jenkinson close, Chisipite, Harare" },
-    { icon: <PhoneOutlined />, title: "Call Us", content: "+263 771 099 675", link: "tel:+263771099675" },
-    { icon: <MailOutlined />, title: "Email Us", content: "info@qsi.africa", link: "mailto:info@qsi.africa" },
+    { icon: <MapPin size={20} />, title: "Headquarters", content: "No. 3 Jenkinson close, Chisipite, Harare", category: "Physical Location" },
+    { icon: <Phone size={20} />, title: "Voice Uplink", content: "+263 771 099 675", link: "tel:+263771099675", category: "Telecommunications" },
+    { icon: <Mail size={20} />, title: "Secure Email", content: "info@qsi.africa", link: "mailto:info@qsi.africa", category: "Digital Network" },
   ];
 
   return (
-    <div style={{ backgroundColor: 'var(--canvas-white)', minHeight: '100vh', paddingTop: '80px' }}>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Header */}
-      <section className="section-py pattern-lines" style={{ backgroundColor: 'var(--papyrus-off-white)', borderBottom: '2px solid var(--onyx-black)', paddingTop: '100px' }}>
-        <div className="container">
-          <span className="eyebrow">Connect</span>
-          <h1 style={{ fontSize: '4rem', textTransform: 'uppercase', marginBottom: '24px' }}>
-            Let's <span style={{ color: 'var(--baobab-emerald)' }}>Build</span> <br/> Something Great
+      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          <span className="eyebrow">Strategic Support</span>
+          <h1 className="text-5xl lg:text-7xl font-black text-white mt-4 mb-8 tracking-tighter uppercase leading-none">
+            Ecosystem <br/><span className="text-gold">Synchronization</span>
           </h1>
-          <p style={{ maxWidth: '600px', fontSize: '18px', fontWeight: 500 }}>
-            Our infrastructure is ready to receive your vision. Reach out to the QSI team for strategic inquiries and collaborations.
+          <p className="text-xl text-text-secondary max-w-2xl leading-relaxed">
+            Our infrastructure is ready to receive your vision. Reach out to the QSI team for strategic inquiries, collaborations, and technical audits.
           </p>
         </div>
-      </section>
+        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
+           <Globe size={600} className="text-accent-gold" />
+        </div>
+      </header>
 
-      <section className="section-py">
-        <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '64px' }}>
-            
-            {/* Contact Details */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              {contactInfo.map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                  <div style={{ 
-                    width: '56px', 
-                    height: '56px', 
-                    border: '2px solid var(--onyx-black)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontSize: '24px',
-                    backgroundColor: 'var(--baobab-emerald)',
-                    color: 'var(--canvas-white)'
-                  }}>
-                    {item.icon}
+      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
+        <Row gutter={[64, 64]}>
+          {/* Info Column */}
+          <Col xs={24} lg={10}>
+            <div className="space-y-12 sticky top-12">
+              <div className="space-y-8">
+                {contactInfo.map((item, i) => (
+                  <div key={i} className="flex gap-6 items-start group">
+                    <div className="w-14 h-14 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-center text-accent-gold shadow-lg group-hover:border-accent-gold/40 transition-colors">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest block mb-1">{item.category}</span>
+                      <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">{item.title}</h3>
+                      {item.link ? (
+                        <a href={item.link} className="text-text-secondary hover:text-white transition-colors">{item.content}</a>
+                      ) : (
+                        <p className="text-text-secondary">{item.content}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ textTransform: 'uppercase', fontSize: '1.25rem', marginBottom: '8px' }}>{item.title}</h3>
-                    {item.link ? (
-                      <a href={item.link} style={{ color: 'var(--ash-grey)', fontSize: '16px', textDecoration: 'none' }}>{item.content}</a>
-                    ) : (
-                      <p style={{ color: 'var(--ash-grey)', fontSize: '16px', margin: 0 }}>{item.content}</p>
-                    )}
+                ))}
+              </div>
+
+              <div className="feed-card bg-bg-secondary border-border-subtle relative overflow-hidden">
+                <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-6">Operational Window</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text-secondary">Monday — Friday</span>
+                    <span className="text-sm font-bold text-white">08:00 - 17:00 CAT</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text-secondary">Weekend</span>
+                    <span className="text-sm font-bold text-accent-gold">Emergency Sync Only</span>
                   </div>
                 </div>
-              ))}
-
-              <div style={{ marginTop: '32px', padding: '32px', border: '2px solid var(--onyx-black)', position: 'relative' }}>
-                <CornerAccent position="tl" color="var(--terracotta-clay)" />
-                <h4 style={{ textTransform: 'uppercase', marginBottom: '12px' }}>Operational Hours</h4>
-                <p style={{ fontSize: '14px', color: 'var(--ash-grey)' }}>Monday — Friday: 08:00 - 17:00 CAT</p>
-                <p style={{ fontSize: '14px', color: 'var(--ash-grey)' }}>Weekend: Emergency Support Only</p>
+                <Zap size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold" />
               </div>
             </div>
+          </Col>
 
-            {/* Contact Form */}
-            <form onSubmit={handleSubmit} style={{ border: '2px solid var(--onyx-black)', padding: '48px', backgroundColor: 'var(--canvas-white)', position: 'relative' }}>
-              <h2 style={{ textTransform: 'uppercase', marginBottom: '32px', fontSize: '2rem' }}>Send a Message</h2>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div>
-                  <label className="eyebrow" style={{ display: 'block', marginBottom: '8px' }}>Full Name</label>
-                  <input 
-                    name="name"
-                    required
-                    style={{ width: '100%', padding: '16px', border: '2px solid var(--onyx-black)', fontFamily: 'var(--font-accent)', outline: 'none' }}
-                    placeholder="ENTER YOUR NAME"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="eyebrow" style={{ display: 'block', marginBottom: '8px' }}>Email Address</label>
-                  <input 
-                    name="email"
-                    type="email"
-                    required
-                    style={{ width: '100%', padding: '16px', border: '2px solid var(--onyx-black)', fontFamily: 'var(--font-accent)', outline: 'none' }}
-                    placeholder="EMAIL@QSI.AFRICA"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="eyebrow" style={{ display: 'block', marginBottom: '8px' }}>Inquiry Message</label>
-                  <textarea 
-                    name="message"
-                    required
-                    rows={6}
-                    style={{ width: '100%', padding: '16px', border: '2px solid var(--onyx-black)', fontFamily: 'var(--font-accent)', outline: 'none', resize: 'none' }}
-                    placeholder="HOW CAN WE ALIGN?"
-                    onChange={handleChange}
-                  />
-                </div>
-                <AfroButton primary type="submit" style={{ width: '100%', height: '60px' }}>
-                  Transmit Message <SendOutlined />
-                </AfroButton>
-              </div>
-            </form>
+          {/* Form Column */}
+          <Col xs={24} lg={14}>
+            <div className="feed-card p-12 lg:p-16 relative overflow-hidden">
+               <div className="flex justify-between items-center mb-12">
+                  <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tight">Transmit Briefing</h2>
+                    <p className="text-text-tertiary mt-2">Initialize a secure communication sequence.</p>
+                  </div>
+                  <Activity size={32} className="text-accent-gold opacity-20" />
+               </div>
 
-          </div>
-        </div>
+               <Form 
+                form={form} 
+                layout="vertical" 
+                onFinish={handleSubmit}
+                className="space-y-8"
+               >
+                  <Form.Item 
+                    name="name" 
+                    label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Full Name</span>}
+                    rules={[{ required: true, message: 'Identity required for synchronization' }]}
+                  >
+                    <Input className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl" placeholder="ENTER YOUR FULL LEGAL NAME" />
+                  </Form.Item>
+
+                  <Form.Item 
+                    name="email" 
+                    label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Network Email</span>}
+                    rules={[
+                      { required: true, message: 'Email required for uplink' },
+                      { type: 'email', message: 'Invalid email format' }
+                    ]}
+                  >
+                    <Input className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl" placeholder="EMAIL@DOMAIN.COM" />
+                  </Form.Item>
+
+                  <Form.Item 
+                    name="message" 
+                    label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Inquiry Briefing</span>}
+                    rules={[{ required: true, message: 'Briefing content required' }]}
+                  >
+                    <Input.TextArea rows={6} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="DESCRIBE YOUR VISION OR OPERATIONAL REQUIREMENTS..." />
+                  </Form.Item>
+
+                  <button className="qsi-button primary w-full py-5 text-lg font-bold flex items-center justify-center gap-3 shadow-xl shadow-accent-gold/20" type="submit" disabled={loading}>
+                     {loading ? 'SYNCHRONIZING...' : 'TRANSMIT MESSAGE'} <Send size={20} />
+                  </button>
+               </Form>
+            </div>
+          </Col>
+        </Row>
       </section>
     </div>
   );

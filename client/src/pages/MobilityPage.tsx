@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Card, Row, Col, Button, Form, Input, 
-  Select, Table, Tag, Space, Modal, notification, 
-  Empty, Badge, Tabs, Divider, Tooltip 
+  Typography, Row, Col, Form, Input, 
+  Tag, Tabs, Badge, Modal, notification, 
+  Empty, Spin
 } from 'antd';
 import { 
-  CarOutlined, EnvironmentOutlined, SendOutlined, 
-  SafetyCertificateOutlined, HistoryOutlined, 
-  RocketOutlined, CheckCircleOutlined, InfoCircleOutlined,
-  UserOutlined 
-} from '@ant-design/icons';
+  Truck, 
+  MapPin, 
+  Send, 
+  ShieldCheck, 
+  History, 
+  Rocket, 
+  CheckCircle, 
+  User,
+  Zap,
+  Activity,
+  ArrowRight,
+  MoreVertical,
+  ChevronRight,
+  Globe,
+  Clock,
+  DollarSign,
+  Package
+} from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { socketService } from '../services/socket';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text, Paragraph } = Typography;
+const GREEN = '#10B981';
 
 const MobilityPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -42,16 +55,16 @@ const MobilityPage: React.FC = () => {
     socketService.on('new-vehicle-hire', (data) => {
       setBroadcasts(prev => [data, ...prev]);
       notification.info({
-        message: 'New Vehicle Hire Opportunity',
-        description: `${data.engineerName} needs a car at ${data.location}. Price: ${data.price}`,
-        icon: <CarOutlined style={{ color: 'var(--baobab-emerald)' }} />,
+        message: 'New Logistics Opportunity',
+        description: `${data.engineerName} needs transport at ${data.location}.`,
+        icon: <Truck size={18} style={{ color: GREEN }} />,
       });
     });
 
     socketService.on('vehicle-hire-accepted', (data) => {
       notification.success({
-        message: 'Vehicle Request Accepted',
-        description: `Your request for a vehicle has been accepted by ${data.acceptedBy}.`,
+        message: 'Request Accepted',
+        description: `Your logistics request has been accepted by ${data.acceptedBy}.`,
       });
       fetchBroadcasts();
     });
@@ -71,7 +84,7 @@ const MobilityPage: React.FC = () => {
       socketService.off('vehicle-hire-accepted');
       socketService.off('site-visit-status');
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id, user?.role]);
 
   const fetchProjects = async () => {
     try {
@@ -106,11 +119,11 @@ const MobilityPage: React.FC = () => {
       });
       notification.success({ 
         message: 'Request Sent', 
-        description: `Your request to visit ${selectedProject.title} has been sent.` 
+        description: `Your request to visit ${selectedProject.title} has been synchronized.` 
       });
       setRequestModalVisible(false);
     } catch (error) {
-      notification.error({ message: 'Request Failed' });
+      notification.error({ message: 'Synchronization Failed' });
     } finally {
       setLoading(false);
     }
@@ -150,7 +163,7 @@ const MobilityPage: React.FC = () => {
       await api.post('/mobility/vehicle-hire', values);
       notification.success({
         message: 'Broadcast Active',
-        description: 'Your vehicle request is now live.',
+        description: 'Your logistics request is now live in the ecosystem.',
       });
     } catch (error) {
       notification.error({ message: 'Broadcast Failed' });
@@ -164,7 +177,7 @@ const MobilityPage: React.FC = () => {
       await api.post(`/mobility/vehicle-hire/${id}/accept`);
       notification.success({
         message: 'Accepted',
-        description: 'You have accepted this vehicle hire request.',
+        description: 'You have accepted this logistics mission.',
       });
       fetchBroadcasts();
     } catch (error) {
@@ -173,319 +186,333 @@ const MobilityPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
-      {/* Hero Section */}
-      <div 
-        className="pattern-dots"
-        style={{
-          padding: "120px 5% 60px 5%",
-          borderBottom: "2px solid var(--onyx-black)",
-          position: "relative"
-        }}
-      >
-        <div className="container" style={{ padding: 0, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <span className="eyebrow reveal-up">Logistics & Infrastructure</span>
-          <Title
-            level={1}
-            className="reveal-up"
-            style={{ 
-              fontSize: "clamp(48px, 8vw, 100px)", 
-              margin: "0 0 24px 0",
-              color: "var(--onyx-black)",
-              textTransform: 'uppercase'
-            }}
-          >
-            PanX <br /> Mobility
-          </Title>
-          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '600px', margin: '0 auto' }}>
-            <Paragraph
-              className="reveal-up"
-              style={{
-                fontSize: "18px",
-                color: "var(--onyx-black)",
-                maxWidth: "600px",
-                fontFamily: "var(--font-body)",
-                fontWeight: 500
-              }}
-            >
-              Coherence in motion. Connecting visionary sites with reliable logistics and sustainable transport solutions.
-            </Paragraph>
+    <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      {/* Header */}
+      <div style={{
+        padding: '24px 32px',
+        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
+          }}>
+            <Truck size={20} />
           </div>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+              MOBILITY
+            </h1>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
+              Logistics & Infrastructure
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+           {['Site Viewings', 'Marketplace'].map((label, idx) => (
+             <button 
+               key={label}
+               onClick={() => setActiveTab((idx + 1).toString())}
+               style={{
+                 padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                 fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                 transition: 'all 0.2s',
+                 background: activeTab === (idx + 1).toString() ? GREEN : 'rgba(255,255,255,0.04)',
+                 color: activeTab === (idx + 1).toString() ? 'white' : 'rgba(255,255,255,0.4)',
+                 boxShadow: activeTab === (idx + 1).toString() ? `0 6px 16px -4px ${GREEN}60` : 'none',
+               }}
+             >
+               {label}
+             </button>
+           ))}
         </div>
       </div>
 
-      <div className="container section-py">
-        <Tabs 
-          activeKey={activeTab} 
-          onChange={setActiveTab} 
-          centered 
-          className="afro-tabs"
-          items={[
-            {
-              key: '1',
-              label: <span>SITE VIEWINGS</span>,
-              children: (
-                <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <Row gutter={[32, 32]} justify="center">
-                    {projects.length > 0 ? (
-                      projects.map(project => (
-                        <Col xs={24} md={12} key={project.id}>
-                          <Card 
-                            className="geometric-card reveal-up" 
-                            hoverable 
-                            bodyStyle={{ padding: 0 }}
-                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0, overflow: 'hidden' }}
-                          >
-                            <div style={{ height: '240px', borderBottom: '2px solid var(--onyx-black)' }}>
-                              <img alt={project.title} src={project.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
-                            <div style={{ padding: '32px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                <Title level={4} style={{ margin: 0, textTransform: 'uppercase' }}>{project.title}</Title>
-                                <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white' }}>ACTIVE</Tag>
-                              </div>
-                              <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, display: 'block', marginBottom: 16, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontSize: '12px' }}>
-                                {project.engineerProfile.user.name} 
-                                {project.engineerProfile.isVerified && <SafetyCertificateOutlined style={{ marginLeft: 8 }} />}
-                              </Text>
-                              <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '15px' }}>
-                                {project.description}
-                              </Paragraph>
-                              <Button 
-                                className="afro-button primary" 
-                                block 
-                                style={{ marginTop: '24px' }}
-                                icon={<SendOutlined />} 
-                                onClick={() => handleRequestSiteVisit(project)}
-                              >
-                                REQUEST SITE VISIT
-                              </Button>
-                            </div>
-                          </Card>
-                        </Col>
-                      ))
-                    ) : (
-                      <Empty description={<Text className="eyebrow">No active projects</Text>} />
-                    )}
-                  </Row>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
+        
+        {/* Hero Section */}
+        <div style={{
+          borderRadius: '24px', overflow: 'hidden', position: 'relative',
+          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
+              Coherence in Motion
+            </p>
+            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
+              Connecting Visionary<br />Infrastructure
+            </h2>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '480px' }}>
+              Synchronizing reliable logistics and sustainable transport solutions across the Pan-African corridor.
+            </p>
+          </div>
+
+          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
+            <Globe size={240} />
+          </div>
+        </div>
+
+        {/* Dynamic Content */}
+        {activeTab === '1' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+            {projects.length > 0 ? projects.map(project => (
+              <div 
+                key={project.id}
+                style={{
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '24px', overflow: 'hidden', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}40`;
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ height: '200px', position: 'relative', background: '#0d1520' }}>
+                  <img src={project.imageUrl} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                  <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+                    <span style={{ 
+                      background: 'rgba(16,185,129,0.2)', border: `1px solid ${GREEN}40`, color: GREEN,
+                      fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', padding: '4px 10px', borderRadius: '6px', letterSpacing: '0.1em'
+                    }}>Active Site</span>
+                  </div>
                 </div>
-              )
-            },
-            ...((user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') ? [{
-              key: '2',
-              label: <span>LOGISTICS (ENGINEER)</span>,
-              children: (
-                <Row gutter={[64, 64]} style={{ padding: '48px 0' }}>
-                  <Col xs={24} md={10}>
-                    <span className="eyebrow">Deployment</span>
-                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Request Logistics</Title>
-                    
-                    <Form layout="vertical" onFinish={handleHireVehicle} className="afro-form">
-                      <Form.Item name="location" label={<span className="eyebrow">Pickup Location</span>} rules={[{ required: true }]}>
-                        <Input className="afro-input" placeholder="e.g. Harare North" />
-                      </Form.Item>
-                      <Form.Item name="duration" label={<span className="eyebrow">Duration</span>} rules={[{ required: true }]}>
-                        <Input className="afro-input" placeholder="e.g. 4 Hours" />
-                      </Form.Item>
-                      <Form.Item name="price" label={<span className="eyebrow">Proposed Price (USD)</span>} rules={[{ required: true }]}>
-                        <Input type="number" className="afro-input" placeholder="0.00" prefix="$" />
-                      </Form.Item>
-                      <Form.Item name="details" label={<span className="eyebrow">Mission Details</span>}>
-                        <Input.TextArea rows={4} className="afro-input" placeholder="Describe the task..." />
-                      </Form.Item>
-                      <Button className="afro-button primary" htmlType="submit" size="large" loading={loading} block icon={<RocketOutlined />}>
-                        BROADCAST REQUEST
-                      </Button>
-                    </Form>
-                  </Col>
-                  <Col xs={24} md={14}>
-                    <span className="eyebrow">Pending Inbound Visits</span>
-                    <Title level={3} style={{ marginBottom: 32, textTransform: 'uppercase' }}>Review Requests</Title>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {incomingVisits.length > 0 ? (
-                        incomingVisits.map(visit => (
-                          <Card 
-                            key={visit.id} 
-                            size="small" 
-                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0 }}
-                            extra={<Tag color={visit.status === 'APPROVED' ? 'green' : visit.status === 'REJECTED' ? 'red' : 'gold'}>{visit.status}</Tag>}
-                            title={<Text strong>{visit.user.name}</Text>}
-                          >
-                            <Paragraph style={{ fontSize: '13px', marginBottom: '16px' }}>{visit.message}</Paragraph>
-                            <Space>
-                              <Button size="small" type="primary" className="afro-button primary" onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')}>APPROVE</Button>
-                              <Button size="small" danger onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')}>REJECT</Button>
-                            </Space>
-                          </Card>
-                        ))
-                      ) : (
-                        <div 
-                          className="pattern-lines" 
-                          style={{ 
-                            background: 'var(--papyrus-off-white)', 
-                            padding: '64px', 
-                            border: '2px solid var(--onyx-black)',
-                            textAlign: 'center' 
-                          }}
-                        >
-                           <HistoryOutlined style={{ fontSize: 40, color: 'var(--onyx-black)', opacity: 0.1, marginBottom: 16 }} />
-                           <Text className="eyebrow" style={{ display: 'block', opacity: 0.4 }}>No incoming visit requests</Text>
-                        </div>
-                      )}
+                <div style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', letterSpacing: '-0.02em' }}>{project.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <User size={14} color={GREEN} />
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {project.engineerProfile?.user?.name || 'Lead Architect'}
+                    </span>
+                    {project.engineerProfile?.isVerified && <ShieldCheck size={12} color={GREEN} />}
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '24px', height: '42px', overflow: 'hidden' }}>
+                    {project.description}
+                  </p>
+                  <button 
+                    onClick={() => handleRequestSiteVisit(project)}
+                    style={{
+                      width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${GREEN}30`,
+                      background: `${GREEN}10`, color: GREEN, cursor: 'pointer',
+                      fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Request Site Visit <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )) : (
+              <div style={{ gridColumn: '1 / -1', padding: '80px 0', textAlign: 'center' }}>
+                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>No active projects</span>} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === '2' && (
+          <Row gutter={[40, 40]}>
+            <Col xs={24} lg={10}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '32px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deployment Brief</h3>
+                <Form layout="vertical" onFinish={handleHireVehicle}>
+                  <Form.Item name="location" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Pickup Location</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Harare North" />
+                  </Form.Item>
+                  <Form.Item name="duration" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Duration</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. 4 Hours" />
+                  </Form.Item>
+                  <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Proposed Bounty (USD)</span>}>
+                    <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
+                  </Form.Item>
+                  <Form.Item name="details" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Mission Details</span>}>
+                    <Input.TextArea rows={4} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Describe the mission scope..." />
+                  </Form.Item>
+                  <button style={{
+                    width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
+                    background: GREEN, color: 'white', cursor: 'pointer',
+                    fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    boxShadow: `0 8px 20px -5px ${GREEN}60`
+                  }}>
+                    <Rocket size={16} /> Broadcast Request
+                  </button>
+                </Form>
+              </div>
+            </Col>
+            <Col xs={24} lg={14}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inbound Requests</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {incomingVisits.length > 0 ? incomingVisits.map(visit => (
+                  <div key={visit.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                      <div>
+                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{visit.user.name}</h4>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{visit.project?.title}</span>
+                      </div>
+                      <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>{visit.status}</span>
                     </div>
-                  </Col>
-                </Row>
-              )
-            }] : []),
-            {
-              key: '3',
-              label: <span>MARKETPLACE <Badge count={broadcasts.length} offset={[10, -5]} /></span>,
-              children: (
-                <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <Row gutter={[32, 32]} justify="center">
-                    {broadcasts.length > 0 ? (
-                      broadcasts.map(req => (
-                        <Col xs={24} key={req.id}>
-                          <Card className="geometric-card" bodyStyle={{ padding: '32px' }} style={{ border: '2px solid var(--onyx-black)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div>
-                                <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--baobab-emerald)', color: 'white', marginBottom: '16px' }}>ACTIVE OPPORTUNITY</Tag>
-                                <Title level={3} style={{ margin: '0 0 8px 0', textTransform: 'uppercase' }}>{req.location}</Title>
-                                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                                  <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><CarOutlined /> {req.duration} MISSION</Text>
-                                  <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px' }}><UserOutlined /> ENG: {req.engineer.name}</Text>
-                                </div>
-                                {req.details && (
-                                  <Paragraph style={{ color: 'var(--onyx-black)', opacity: 0.8, fontSize: '14px', background: 'var(--papyrus-off-white)', padding: '16px', border: '1px solid var(--onyx-black)' }}>
-                                    {req.details}
-                                  </Paragraph>
-                                )}
-                              </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <Title level={2} style={{ margin: '0 0 24px 0', color: 'var(--baobab-emerald)' }}>${req.price}</Title>
-                                <Button 
-                                  className="afro-button primary"
-                                  icon={<CheckCircleOutlined />}
-                                  onClick={() => handleAcceptHire(req.id)}
-                                >
-                                  ACCEPT TASK
-                                </Button>
-                              </div>
-                            </div>
-                          </Card>
-                        </Col>
-                      ))
-                    ) : (
-                      <Empty description={<Text className="eyebrow">No active requests</Text>} />
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px' }}>
+                      {visit.message}
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: GREEN, color: 'white', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Approve</button>
+                      <button onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: 'white', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Reject</button>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ padding: '60px', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: '24px', textAlign: 'center' }}>
+                    <History size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '16px' }} />
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>No pending requests</p>
+                  </div>
+                )}
+              </div>
+            </Col>
+          </Row>
+        )}
+
+        {activeTab === '3' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {broadcasts.length > 0 ? broadcasts.map(req => (
+              <div 
+                key={req.id}
+                style={{
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '24px', padding: '32px', transition: 'all 0.2s'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', md: 'row', justifyContent: 'space-between', gap: '32px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                       <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Active Mission</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Activity size={12} color={GREEN} />
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Critical Deployment</span>
+                       </div>
+                    </div>
+                    <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white', marginBottom: '12px', letterSpacing: '-0.02em' }}>{req.location}</h3>
+                    <div style={{ display: 'flex', gap: '24px', marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={14} color={GREEN} />
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{req.duration}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <User size={14} color={GREEN} />
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Eng: {req.engineer.name}</span>
+                      </div>
+                    </div>
+                    {req.details && (
+                      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                        "{req.details}"
+                      </p>
                     )}
-                  </Row>
+                  </div>
+                  
+                  <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: '24px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: '4px' }}>Mission Bounty</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: '4px' }}>
+                        <span style={{ fontSize: '20px', fontWeight: 900, color: GREEN }}>$</span>
+                        <span style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>{req.price}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleAcceptHire(req.id)}
+                      style={{
+                        padding: '16px 32px', borderRadius: '14px', border: 'none',
+                        background: GREEN, color: 'white', cursor: 'pointer',
+                        fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em',
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        boxShadow: `0 8px 20px -5px ${GREEN}60`
+                      }}
+                    >
+                      <CheckCircle size={18} /> Accept Mission
+                    </button>
+                  </div>
                 </div>
-              )
-            },
-            {
-              key: '4',
-              label: <span>MY MOBILITY</span>,
-              children: (
-                <div style={{ padding: '48px 0', textAlign: 'center' }}>
-                  <span className="eyebrow" style={{ display: 'block', marginBottom: '8px' }}>Personal Requests</span>
-                  <Title level={3} style={{ marginBottom: 48, textTransform: 'uppercase' }}>Visit History</Title>
-                  <Row gutter={[24, 24]} justify="center">
-                    {myVisits.length > 0 ? (
-                      myVisits.map(visit => (
-                        <Col xs={24} md={12} key={visit.id}>
-                          <Card 
-                            style={{ border: '2px solid var(--onyx-black)', borderRadius: 0 }}
-                            title={<Text strong>{visit.project.title}</Text>}
-                            extra={<Tag color={visit.status === 'APPROVED' ? 'green' : visit.status === 'REJECTED' ? 'red' : 'gold'}>{visit.status}</Tag>}
-                          >
-                            <Text style={{ fontSize: '12px', color: 'var(--ash-grey)', textTransform: 'uppercase' }}>
-                              Lead Engineer: {visit.project.engineerProfile.user.name}
-                            </Text>
-                            <Divider style={{ margin: '12px 0' }} />
-                            <Paragraph style={{ fontSize: '14px' }}>{visit.message}</Paragraph>
-                          </Card>
-                        </Col>
-                      ))
-                    ) : (
-                      <Col span={24}>
-                        <Empty description="No site visits requested yet" />
-                      </Col>
-                    )}
-                  </Row>
-                </div>
-              )
-            }
-          ]}
-        />
+              </div>
+            )) : (
+              <div style={{ padding: '80px 0', textAlign: 'center' }}>
+                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>No active opportunities</span>} />
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
-      {/* Modal Refinement */}
+      {/* Modal Redesign */}
       <Modal
         title={null}
         open={requestModalVisible}
         onCancel={() => setRequestModalVisible(false)}
         footer={null}
-        width={500}
+        width={480}
         centered
-        className="bauhaus-modal"
+        className="dark-modal"
+        styles={{ content: { background: '#0a1018', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: 0 } }}
       >
-        <div style={{ padding: '40px', border: '2px solid var(--onyx-black)' }}>
-          <span className="eyebrow">Site Visit Request</span>
-          <Title level={3} style={{ margin: '8px 0 24px 0', textTransform: 'uppercase' }}>{selectedProject?.title}</Title>
-          <Paragraph style={{ marginBottom: '32px', fontSize: '15px' }}>
-            Requesting access to visit this site. The lead engineer will contact you via email or phone.
-          </Paragraph>
+        <div style={{ padding: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${GREEN}15`, border: `1px solid ${GREEN}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
+              <Package size={18} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>Site Synchronisation</h3>
+          </div>
+          
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Target Site</span>
+            <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'white', marginTop: '4px', marginBottom: 0 }}>{selectedProject?.title}</h4>
+          </div>
+
           <Form layout="vertical" onFinish={handleSubmitVisit}>
             <Form.Item 
               name="message" 
-              label={<span className="eyebrow">Interest & Purpose</span>} 
-              rules={[{ required: true }]}
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Operational Intent</span>}
+              rules={[{ required: true, message: 'Please state your purpose' }]}
             >
-              <Input.TextArea rows={4} className="afro-input" placeholder="Explain your interest..." />
+              <Input.TextArea rows={4} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Explain your operational interest in this site..." />
             </Form.Item>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <Button className="afro-button primary" htmlType="submit" block loading={loading}>
-                SEND REQUEST
-              </Button>
-              <Button className="afro-button" onClick={() => setRequestModalVisible(false)} block>
-                CANCEL
-              </Button>
+            
+            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+              <button 
+                type="submit"
+                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer' }}
+              >
+                Send Request
+              </button>
+              <button 
+                onClick={() => setRequestModalVisible(false)}
+                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
             </div>
           </Form>
         </div>
       </Modal>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .afro-tabs .ant-tabs-nav-list {
-          width: 100%;
-          justify-content: center;
-        }
-        .afro-tabs .ant-tabs-tab {
-          font-family: var(--font-accent) !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.15em !important;
-          font-size: 12px !important;
-          font-weight: 800 !important;
-          padding: 16px 32px !important;
-          margin: 0 !important;
-        }
-        .afro-tabs .ant-tabs-tab-active {
-          color: var(--baobab-emerald) !important;
-        }
-        .afro-tabs .ant-tabs-ink-bar {
-          background: var(--baobab-emerald) !important;
-          height: 4px !important;
-        }
-        .afro-input {
-          border: 2px solid var(--onyx-black) !important;
-          border-radius: 0 !important;
-          padding: 12px 16px !important;
-        }
-        .bauhaus-modal .ant-modal-content {
-          border-radius: 0 !important;
-          padding: 0 !important;
-        }
-      `}} />
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

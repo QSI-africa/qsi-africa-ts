@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Card, Row, Col, Button, Tag, 
-  Space, Divider, List, Modal, Form, Input, 
-  notification, Badge, Empty, Select
+  Typography, Row, Col, Modal, Form, Input, 
+  notification, Select, Spin, Empty
 } from 'antd';
 import { 
-  HeartOutlined, SafetyCertificateOutlined, 
-  MedicineBoxOutlined, SmileOutlined, 
-  ThunderboltOutlined, StarOutlined,
-  CheckCircleOutlined, InfoCircleOutlined,
-  MessageOutlined 
-} from '@ant-design/icons';
+  Heart, 
+  ShieldCheck, 
+  Zap, 
+  Star,
+  CheckCircle2,
+  Info,
+  MessageCircle,
+  Activity,
+  ArrowRight,
+  User,
+  Coffee,
+  Sparkles,
+  Waves,
+  Brain,
+  Shield
+} from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
-const { Title, Text, Paragraph } = Typography;
+const GREEN = '#10B981';
 
 const HealingPage: React.FC = () => {
   const { user } = useAuth();
@@ -30,7 +39,6 @@ const HealingPage: React.FC = () => {
 
   const fetchPackages = async () => {
     try {
-      // Fetching from admin route which we can reuse for public viewing if authorized
       const response = await api.get('/admin/healing-packages');
       setPackages(response.data.filter((p: any) => p.isActive));
     } catch (error) {
@@ -54,7 +62,8 @@ const HealingPage: React.FC = () => {
       });
       notification.success({
         message: 'Inquiry Received',
-        description: 'The QSI Healing Team will connect with you shortly for a personalized trajectory scan.'
+        description: 'The QSI Healing Team will connect with you shortly for a personalized trajectory scan.',
+        placement: 'bottomRight'
       });
       setIsInquiryModalVisible(false);
       form.resetFields();
@@ -66,210 +75,300 @@ const HealingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '80px 20px', maxWidth: 1400, margin: '0 auto', minHeight: '100vh', background: 'var(--canvas-white)' }}>
-      <div style={{ textAlign: 'center', marginBottom: 80, position: 'relative' }}>
-        <div className="pattern-dots" style={{ position: 'absolute', top: -40, left: 0, right: 0, height: 200, opacity: 0.1, zIndex: 0 }}></div>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <span className="eyebrow" style={{ color: 'var(--baobab-emerald)', fontWeight: 900 }}>Holistic Sovereignty</span>
-          <Title level={1} style={{ color: 'var(--onyx-black)', fontSize: '4rem', marginTop: 10, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-            Healing and <span style={{ color: 'var(--baobab-emerald)' }}>Wisdom</span>
-          </Title>
-          <Paragraph style={{ color: 'var(--ash-grey)', fontSize: '1.2rem', maxWidth: 800, margin: '0 auto', fontFamily: 'var(--font-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Fix the mind that builds. Infrastructure is only as strong as the minds that build and inhabit it.
-          </Paragraph>
+    <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      {/* Header */}
+      <div style={{
+        padding: '24px 32px',
+        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
+          }}>
+            <Heart size={20} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+              HEALING
+            </h1>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
+              Wisdom & Restoration
+            </p>
+          </div>
         </div>
       </div>
 
-      <Row gutter={[40, 40]}>
-        {/* Core Philosophy Section */}
-        <Col xs={24} lg={10}>
-          <div className="geometric-card" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
-            <div className="pattern-mudcloth" style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', opacity: 0.1 }}></div>
-            <Title level={3} style={{ color: 'var(--onyx-black)', textTransform: 'uppercase' }}>The QSI Approach</Title>
-            <div className="grid-border-t grid-border-emerald" style={{ width: '60px', margin: '20px 0' }} />
-            
-            <List
-              itemLayout="horizontal"
-              dataSource={[
-                { title: 'Frequency Alignment', icon: <ThunderboltOutlined style={{ color: 'var(--baobab-emerald)' }} />, desc: 'Synchronizing personal goals with organizational trajectory.' },
-                { title: 'Trauma Synthesis', icon: <HeartOutlined style={{ color: 'var(--terracotta-clay)' }} />, desc: 'Converting historical bottlenecks into fuel for innovation.' },
-                { title: 'Sovereign Cognition', icon: <ThunderboltOutlined style={{ color: 'var(--ochre-yellow)' }} />, desc: 'De-coupling from limiting mental frameworks.' },
-                { title: 'Relational Coherence', icon: <SmileOutlined style={{ color: 'var(--savanna-moss)' }} />, desc: 'Building high-trust network interactions.' }
-              ]}
-              renderItem={item => (
-                <List.Item style={{ border: 'none', padding: '16px 0' }}>
-                  <List.Item.Meta
-                    avatar={<div style={{ padding: 12, background: 'var(--papyrus-off-white)', border: '1px solid var(--onyx-black)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>}
-                    title={<Text style={{ color: 'var(--onyx-black)', fontWeight: 900, textTransform: 'uppercase', fontSize: '14px', fontFamily: 'var(--font-accent)' }}>{item.title}</Text>}
-                    description={<Text style={{ color: 'var(--ash-grey)', fontSize: '12px' }}>{item.desc}</Text>}
-                  />
-                </List.Item>
-              )}
-            />
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
+        
+        {/* Hero Section */}
+        <div style={{
+          borderRadius: '24px', overflow: 'hidden', position: 'relative',
+          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
+              Holistic Sovereignty
+            </p>
+            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
+              Fix the Mind that<br />Builds Infrastructure
+            </h2>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '520px' }}>
+              Structural harmony begins within. We provide high-coherence restoration paths for visionaries and engineering teams.
+            </p>
+          </div>
 
-            <div style={{ marginTop: 40, padding: 24, background: 'var(--papyrus-off-white)', border: '2px solid var(--baobab-emerald)', position: 'relative' }}>
-               <Title level={5} style={{ color: 'var(--baobab-emerald)', margin: 0, textTransform: 'uppercase' }}>Verified Sovereign Healing</Title>
-               <Paragraph style={{ color: 'var(--onyx-black)', marginTop: 10, fontSize: 13, fontWeight: 500 }}>
-                 Our practitioners are vetted by the Sovereign Minds Network to ensure alignment with pan-African values and technological excellence.
-               </Paragraph>
-               <Button type="link" style={{ padding: 0, color: 'var(--baobab-emerald)', fontWeight: 700, textTransform: 'uppercase', fontSize: '11px' }}>
-                 Learn about certification <SafetyCertificateOutlined />
-               </Button>
+          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
+            <Waves size={240} />
+          </div>
+        </div>
+
+        <Row gutter={[40, 40]}>
+          {/* Philosophy Section */}
+          <Col xs={24} lg={10}>
+             <div style={{ 
+               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', 
+               borderRadius: '24px', padding: '32px', position: 'sticky', top: '100px'
+             }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '32px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  The QSI Approach
+                </h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                  {[
+                    { title: 'Frequency Alignment', icon: <Zap size={18} />, desc: 'Synchronizing personal goals with organizational trajectory.' },
+                    { title: 'Trauma Synthesis', icon: <Heart size={18} />, desc: 'Converting historical bottlenecks into fuel for innovation.' },
+                    { title: 'Sovereign Cognition', icon: <Brain size={18} />, desc: 'De-coupling from limiting mental frameworks.' },
+                    { title: 'Relational Coherence', icon: <Coffee size={18} />, desc: 'Building high-trust network interactions.' }
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '20px' }}>
+                      <div style={{ 
+                        width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', 
+                        border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0
+                      }}>
+                        {item.icon}
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'white', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.title}</h4>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ 
+                  marginTop: '40px', padding: '20px', borderRadius: '16px', 
+                  background: `${GREEN}08`, borderLeft: `4px solid ${GREEN}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Shield size={14} color={GREEN} />
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Certified Alignment</span>
+                  </div>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: 0 }}>
+                    Practitioners are vetted by the Sovereign Minds Network to ensure Pan-African excellence.
+                  </p>
+                </div>
+             </div>
+          </Col>
+
+          {/* Packages Section */}
+          <Col xs={24} lg={14}>
+            <div style={{ marginBottom: '32px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '8px' }}>Select Your Path</p>
+              <h2 style={{ fontSize: '28px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>Specialized Trajectories</h2>
             </div>
-          </div>
-        </Col>
 
-        {/* Therapy Packages Section */}
-        <Col xs={24} lg={14}>
-          <div style={{ marginBottom: 32 }}>
-            <span className="eyebrow">Select Your Path</span>
-            <Title level={3} style={{ color: 'var(--onyx-black)', textTransform: 'uppercase', margin: 0 }}>Specialized Trajectories</Title>
-            <Text style={{ color: 'var(--ash-grey)', fontFamily: 'var(--font-accent)', fontSize: '12px' }}>Choose a trajectory aligned with your current evolutionary phase.</Text>
-          </div>
-
-          <Row gutter={[24, 24]}>
-            {packages.length > 0 ? (
-              packages.map(pkg => (
-                <Col xs={24} sm={12} key={pkg.id}>
+            {loading ? (
+              <div style={{ padding: '100px 0', textAlign: 'center' }}><Spin /></div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
+                {packages.map(pkg => (
                   <div 
-                    className="geometric-card" 
-                    style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      height: '320px',
-                      padding: '24px',
-                      background: 'var(--canvas-white)',
-                      boxShadow: '6px 6px 0px var(--onyx-black)',
-                      transition: 'transform 0.2s ease'
+                    key={pkg.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', height: '320px'
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}40`;
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
+                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
                     }}
                   >
-                    <div style={{ flex: 1 }}>
-                      <Tag style={{ borderRadius: 0, background: 'var(--onyx-black)', color: 'var(--canvas-white)', border: 'none', padding: '2px 8px', fontSize: '10px', fontWeight: 700, marginBottom: 12 }}>
-                        {pkg.duration.toUpperCase()}
-                      </Tag>
-                      <Title level={4} style={{ color: 'var(--onyx-black)', margin: 0, textTransform: 'uppercase', fontSize: '18px' }}>{pkg.title}</Title>
-                      <Paragraph style={{ color: 'var(--ash-grey)', marginTop: 12, fontSize: '13px', lineHeight: 1.5 }} ellipsis={{ rows: 3 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <span style={{ 
+                          fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', 
+                          background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase' 
+                        }}>
+                          {pkg.duration}
+                        </span>
+                        <Sparkles size={14} color={GREEN} style={{ opacity: 0.4 }} />
+                      </div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '12px', letterSpacing: '-0.02em' }}>{pkg.title}</h3>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
                         {pkg.shortPreview}
-                      </Paragraph>
+                      </p>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--papyrus-off-white)' }}>
-                      <Text style={{ color: 'var(--baobab-emerald)', fontSize: '20px', fontWeight: 900 }}>${pkg.fee}</Text>
-                      <Button 
-                        className="afro-button primary" 
-                        style={{ height: '40px', padding: '0 20px', fontSize: '12px' }} 
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block' }}>Fee</span>
+                        <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>${pkg.fee}</span>
+                      </div>
+                      <button 
                         onClick={() => handleInquiry(pkg)}
+                        style={{
+                          padding: '10px 20px', borderRadius: '10px', border: 'none', background: GREEN, color: 'white',
+                          fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer'
+                        }}
                       >
-                        {pkg.cta ? pkg.cta.toUpperCase() : 'INQUIRE'}
-                      </Button>
+                        {pkg.cta || 'Inquire'}
+                      </button>
                     </div>
                   </div>
-                </Col>
-              ))
-            ) : (
-              <Col span={24}>
-                <Empty description={<Text style={{ color: 'var(--ash-grey)' }}>No standard packages currently active. Contact the Assistant for custom logic.</Text>} />
-              </Col>
+                ))}
+              </div>
             )}
-          </Row>
-          
-          <div 
-            style={{ 
-              marginTop: 40, 
-              background: 'var(--onyx-black)', 
-              padding: '40px',
-              border: '3px solid var(--baobab-emerald)',
-              boxShadow: '12px 12px 0px var(--baobab-emerald)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            <div className="pattern-mudcloth" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.1 }}></div>
-            <Row align="middle" gutter={24} style={{ position: 'relative', zIndex: 1 }}>
-              <Col xs={24} md={16}>
-                <Title level={4} style={{ color: 'var(--canvas-white)', margin: 0, textTransform: 'uppercase' }}>Need Custom Organizational Alignment?</Title>
-                <Paragraph style={{ color: 'rgba(255,255,255,0.7)', marginTop: 12, fontFamily: 'var(--font-accent)', fontSize: '13px' }}>
-                  We provide group coherence workshops for engineering teams and visionary organizations.
-                </Paragraph>
-              </Col>
-              <Col xs={24} md={8}>
-                 <Button 
-                   block 
-                   size="large" 
-                   icon={<MessageOutlined />}
-                   className="afro-button"
-                   style={{ background: 'var(--canvas-white)', border: 'none', color: 'var(--onyx-black)', height: '56px' }}
-                 >
-                   CONTACT TEAM
-                 </Button>
-              </Col>
-            </Row>
-          </div>
-        </Col>
-      </Row>
 
-      {/* Inquiry Modal */}
+            <div style={{ 
+              marginTop: '40px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', 
+              borderRadius: '24px', padding: '32px', position: 'relative', overflow: 'hidden' 
+            }}>
+              <div style={{ position: 'absolute', top: '-20px', right: '-20px', color: GREEN, opacity: 0.03 }}>
+                <MessageCircle size={160} />
+              </div>
+              <Row align="middle" gutter={24}>
+                <Col xs={24} md={16}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', textTransform: 'uppercase' }}>Organizational Alignment</h3>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>
+                    Workshops for engineering teams and visionary organizations looking to scale structural harmony.
+                  </p>
+                </Col>
+                <Col xs={24} md={8}>
+                   <button style={{
+                     width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid rgba(255,255,255,0.1)`, 
+                     background: 'rgba(255,255,255,0.04)', color: 'white', cursor: 'pointer',
+                     fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em'
+                   }}>
+                      Contact Team
+                   </button>
+                </Col>
+              </Row>
+            </div>
+          </Col>
+        </Row>
+      </div>
+
+      {/* Modal Redesign */}
       <Modal
-        title={selectedPackage ? `INITIATE: ${selectedPackage.title.toUpperCase()}` : 'TRAJECTORY INQUIRY'}
+        title={null}
         open={isInquiryModalVisible}
         onCancel={() => setIsInquiryModalVisible(false)}
         footer={null}
-        styles={{
-          content: {
-            borderRadius: 0,
-            border: '4px solid var(--onyx-black)',
-            padding: '40px',
-            boxShadow: '15px 15px 0px var(--onyx-black)'
-          },
-          header: {
-            background: 'transparent',
-            borderBottom: '2px solid var(--onyx-black)',
-            marginBottom: '24px',
-            paddingBottom: '16px'
-          }
-        }}
+        width={480}
+        centered
+        className="dark-modal"
+        styles={{ content: { background: '#18241E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: 0 } }}
       >
-        <Form form={form} layout="vertical" onFinish={onFinishInquiry}>
-          <Paragraph style={{ color: 'var(--ash-grey)', fontFamily: 'var(--font-accent)', fontSize: '13px', marginBottom: '24px' }}>
-            Tell us slightly more about your current coherence needs so we can assign the best practitioner.
-          </Paragraph>
-          <Form.Item 
-            name="message" 
-            label={<span className="eyebrow" style={{ fontSize: '10px' }}>Current State Summary</span>} 
-            rules={[{ required: true }]}
-          >
-            <Input.TextArea 
-              rows={4} 
-              placeholder="e.g. Navigating high-stress transition, seeking creative clarity..." 
-              style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', padding: '12px' }}
-            />
-          </Form.Item>
-          <Form.Item 
-            name="preference" 
-            label={<span className="eyebrow" style={{ fontSize: '10px' }}>Preferred Session Mode</span>}
-          >
-            <Select 
-              placeholder="Select mode"
-              style={{ height: '48px' }}
-              dropdownStyle={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }}
+        <div style={{ padding: '40px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ 
+              width: '48px', height: '48px', borderRadius: '14px', background: `${GREEN}15`, border: `1px solid ${GREEN}30`, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, margin: '0 auto 16px' 
+            }}>
+              <Activity size={24} />
+            </div>
+            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '4px' }}>Trajectory Scan</p>
+            <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>{selectedPackage?.title}</h3>
+          </div>
+          
+          <Form form={form} layout="vertical" onFinish={onFinishInquiry}>
+            <Form.Item 
+              name="message" 
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Current Evolutionary Phase</span>} 
+              rules={[{ required: true, message: 'Please describe your state' }]}
             >
-              <Select.Option value="VIDEO">Secure Video (PanX TV)</Select.Option>
-              <Select.Option value="AUDIO">Audio Only</Select.Option>
-              <Select.Option value="TEXT">Async Text Guidance</Select.Option>
-            </Select>
-          </Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            block 
-            loading={loading} 
-            size="large"
-            className="afro-button primary"
-            style={{ height: '64px', marginTop: '12px' }}
-          >
-            REQUEST TRAJECTORY SCAN
-          </Button>
-        </Form>
+              <Input.TextArea 
+                rows={4} 
+                style={{ 
+                  background: 'rgba(255,255,255,0.02)', 
+                  border: '1px solid rgba(255,255,255,0.08)', 
+                  borderRadius: '16px', 
+                  color: 'white', 
+                  padding: '16px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  resize: 'none',
+                  boxShadow: 'none',
+                  transition: 'all 0.3s'
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = GREEN;
+                  e.target.style.background = 'rgba(16,185,129,0.03)';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'rgba(255,255,255,0.08)';
+                  e.target.style.background = 'rgba(255,255,255,0.02)';
+                }}
+                placeholder="Briefly describe your current journey..." 
+              />
+            </Form.Item>
+            <Form.Item 
+              name="preference" 
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Session Mode</span>}
+            >
+              <Select className="custom-select-dark" style={{ width: '100%' }}>
+                <Select.Option value="VIDEO">Secure Video (PanX TV)</Select.Option>
+                <Select.Option value="AUDIO">High-Fidelity Audio</Select.Option>
+                <Select.Option value="TEXT">Async Text Guidance</Select.Option>
+              </Select>
+            </Form.Item>
+            
+            <button 
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white',
+                fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '12px',
+                boxShadow: `0 8px 20px -5px ${GREEN}60`
+              }}
+            >
+              {loading ? 'SYNCHRONIZING...' : 'REQUEST SCAN'} <ArrowRight size={18} />
+            </button>
+          </Form>
+        </div>
       </Modal>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-select-dark .ant-select-selector {
+          background: rgba(255,255,255,0.03) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          border-radius: 12px !important;
+          color: white !important;
+          height: 44px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .custom-select-dark .ant-select-arrow { color: rgba(255,255,255,0.3); }
+      `}</style>
     </div>
   );
 };

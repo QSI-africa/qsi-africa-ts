@@ -4,36 +4,31 @@ import {
   Spin,
   Typography,
   Tag,
-  Divider,
   Grid,
-  Space,
   Modal,
   Form,
   Input,
   Radio,
-  List,
-  Avatar,
   message,
   Alert
 } from "antd";
 import {
-  ArrowLeftOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  MessageOutlined,
-  TeamOutlined,
-  BulbOutlined,
-  SendOutlined,
-  RocketOutlined
-} from "@ant-design/icons";
+  ArrowLeft,
+  Calendar,
+  Layers,
+  Zap,
+  Globe,
+  Activity,
+  Handshake,
+  TrendingUp,
+  Users,
+  Lightbulb,
+  ExternalLink,
+  Share2
+} from "lucide-react";
 import axios from "axios";
-import { FaMoneyBillTrendUp } from "react-icons/fa6";
-import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { GeometricCard, CornerAccent, AfroButton } from "../components/AfroBauhausComponents";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -55,30 +50,30 @@ const ConceptDetailPage: React.FC = () => {
     {
       value: "partner",
       label: "Partnership",
-      description: "Collaborate on this concept as a partner",
-      icon: <FaRegHandshake />,
-      color: "var(--baobab-emerald)",
+      description: "Collaborate on this concept",
+      icon: <Handshake size={24} />,
+      color: "var(--success-green)",
     },
     {
       value: "invest",
       label: "Investment",
-      description: "Invest in this concept",
-      icon: <FaMoneyBillTrendUp />,
-      color: "var(--terracotta-clay)",
+      description: "Invest in this framework",
+      icon: <TrendingUp size={24} />,
+      color: "#ff4d4f",
     },
     {
       value: "meeting",
-      label: "Request Meeting",
-      description: "Schedule a meeting to discuss further",
-      icon: <TeamOutlined />,
-      color: "var(--ochre-yellow)",
+      label: "Sync Request",
+      description: "Schedule a technical brief",
+      icon: <Users size={24} />,
+      color: "var(--accent-gold)",
     },
     {
       value: "custom",
-      label: "Other Intentions",
-      description: "Describe your specific interests",
-      icon: <BulbOutlined />,
-      color: "var(--onyx-black)",
+      label: "Other Intent",
+      description: "Describe your interest",
+      icon: <Lightbulb size={24} />,
+      color: "var(--text-tertiary)",
     },
   ], []);
 
@@ -90,7 +85,6 @@ const ConceptDetailPage: React.FC = () => {
       const response = await axios.get(`${baseURL}/submit/concepts/${id}`);
       setPilot(response.data);
     } catch (err: any) {
-      console.error("Failed to fetch concept details:", err);
       setError(err.response?.data?.error || "Could not load concept details.");
     } finally {
       setLoading(false);
@@ -112,14 +106,13 @@ const ConceptDetailPage: React.FC = () => {
         timestamp: new Date().toISOString(),
       };
       await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
-      message.success("Engagement request submitted successfully!");
+      message.success("Engagement synchronized successfully!");
       setEngagementModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error("Engagement submission error:", error);
-      message.error("Failed to submit request.");
+      message.error("Failed to synchronize request.");
     } finally {
-      setEngagementLoading(true);
+      setEngagementLoading(false);
     }
   };
 
@@ -131,119 +124,126 @@ const ConceptDetailPage: React.FC = () => {
     });
   };
 
-  const cleanMarkdown = (text: string) => {
-    if (!text) return "";
-    return text.trim();
-  };
-
   const markdownComponents = {
-    h1: (props: any) => <Title level={1} style={{ textTransform: 'uppercase', marginTop: '40px', color: 'var(--onyx-black)' }} {...props} />,
-    h2: (props: any) => <Title level={2} style={{ textTransform: 'uppercase', marginTop: '32px', color: 'var(--onyx-black)' }} {...props} />,
-    h3: (props: any) => <Title level={3} style={{ textTransform: 'uppercase', marginTop: '24px', color: 'var(--onyx-black)' }} {...props} />,
-    p: (props: any) => <Paragraph style={{ fontSize: '18px', lineHeight: 1.8, marginBottom: '24px', color: 'var(--onyx-black)' }} {...props} />,
-    li: (props: any) => <li style={{ fontSize: '18px', lineHeight: 1.8, marginBottom: '8px', color: 'var(--onyx-black)' }} {...props} />,
+    h1: (props: any) => <h1 className="text-3xl lg:text-4xl font-black text-white mt-12 mb-6 uppercase tracking-tight" {...props} />,
+    h2: (props: any) => <h2 className="text-2xl lg:text-3xl font-bold text-white mt-10 mb-5 uppercase tracking-tight" {...props} />,
+    h3: (props: any) => <h3 className="text-xl lg:text-2xl font-bold text-white mt-8 mb-4 uppercase tracking-tight" {...props} />,
+    p: (props: any) => <p className="text-lg text-text-secondary leading-relaxed mb-6" {...props} />,
+    li: (props: any) => <li className="text-lg text-text-secondary mb-3 list-disc ml-6" {...props} />,
     blockquote: (props: any) => (
-      <blockquote style={{ 
-        borderLeft: '4px solid var(--baobab-emerald)', 
-        padding: '24px', 
-        background: 'var(--papyrus-off-white)',
-        margin: '32px 0',
-        fontStyle: 'italic'
-      }} {...props} />
+      <blockquote className="border-l-4 border-success-green bg-bg-secondary p-8 my-10 italic text-white rounded-r-2xl shadow-xl" {...props} />
     ),
   };
 
-  if (loading) return <div className="flex-center" style={{ height: '100vh' }}><Spin size="large" /></div>;
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
-  if (error || !pilot) return (
-    <div className="container section-py" style={{ textAlign: 'center' }}>
-      <Alert message={error || "Concept not found"} type="error" showIcon style={{ marginBottom: 40 }} />
-      <AfroButton onClick={() => navigate('/concepts')}>Back to Concepts</AfroButton>
-    </div>
-  );
+  if (error || !pilot) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Concept Not Found"}</h2>
+        <button className="qsi-button primary px-8 py-3" onClick={() => navigate('/concepts')}>Back to Concepts</button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: 'var(--canvas-white)', minHeight: '100vh' }}>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Hero Header */}
-      <section className="pattern-mudcloth" style={{ paddingTop: '140px', paddingBottom: '80px', borderBottom: '2px solid var(--onyx-black)' }}>
-        <div className="container">
-          <div style={{ marginBottom: '24px' }}>
-            <AfroButton onClick={() => navigate('/concepts')} style={{ padding: '8px 16px', height: 'auto', fontSize: '12px' }}>
-              <ArrowLeftOutlined /> BACK TO CONCEPTS
-            </AfroButton>
-          </div>
+      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          <button 
+            onClick={() => navigate('/concepts')} 
+            className="qsi-button flex items-center gap-2 mb-12 py-2 px-4"
+          >
+            <ArrowLeft size={18} /> Back to Concepts
+          </button>
           
           <span className="eyebrow">Strategic Architecture</span>
-          <Title style={{ fontSize: 'clamp(32px, 5vw, 64px)', textTransform: 'uppercase', margin: '16px 0 32px 0' }}>
+          <h1 className="text-4xl lg:text-7xl font-black text-white mt-4 mb-8 uppercase tracking-tighter leading-none">
             {pilot.title}
-          </Title>
+          </h1>
 
-          <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarOutlined style={{ color: 'var(--baobab-emerald)' }} />
-              <span className="eyebrow" style={{ margin: 0 }}>Published: {formatDate(pilot.createdAt)}</span>
+          <div className="flex flex-wrap gap-8 items-center">
+            <div className="flex items-center gap-2 text-text-secondary">
+              <Calendar size={18} className="text-success-green" />
+              <span className="text-xs font-bold uppercase tracking-widest">Published: {formatDate(pilot.createdAt)}</span>
             </div>
-            <Tag style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', background: 'var(--onyx-black)', color: 'white', fontFamily: 'var(--font-accent)', textTransform: 'uppercase', padding: '4px 12px' }}>
-              CONCEPT ID: {id?.substring(0, 8).toUpperCase()}
+            <Tag className="rounded-full px-4 py-1 bg-bg-primary border-border-subtle text-text-tertiary font-black uppercase text-[10px]">
+              Concept ID: {id?.substring(0, 8).toUpperCase()}
             </Tag>
           </div>
         </div>
-      </section>
+        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
+           <Layers size={600} className="text-accent-gold" />
+        </div>
+      </header>
 
       {/* Content Section */}
-      <section className="container section-py">
-        <div style={{ display: 'grid', gridTemplateColumns: screens.lg ? '1fr 350px' : '1fr', gap: '64px', alignItems: 'start' }}>
-          
-          <div className="reveal-up">
-            <GeometricCard style={{ padding: screens.xs ? '24px' : '64px', position: 'relative' }}>
-              <CornerAccent position="tl" />
-              <CornerAccent position="br" color="var(--baobab-emerald)" />
-              
-              <article className="concept-article">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                  {cleanMarkdown(pilot.expandedView)}
-                </ReactMarkdown>
-              </article>
-            </GeometricCard>
-          </div>
+      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
+        <Row gutter={[64, 64]}>
+          <Col xs={24} lg={16}>
+            <article className="prose prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                {pilot.expandedView}
+              </ReactMarkdown>
+            </article>
+          </Col>
 
-          <aside className="reveal-up" style={{ position: screens.lg ? 'sticky' : 'static', top: '120px' }}>
-            <GeometricCard style={{ padding: '32px', background: 'var(--papyrus-off-white)' }}>
-              <span className="eyebrow">Engagement</span>
-              <Title level={3} style={{ textTransform: 'uppercase', marginBottom: '24px', color: 'var(--onyx-black)' }}>Collaborate</Title>
-              <Paragraph style={{ marginBottom: '32px', color: 'var(--onyx-black)' }}>
-                This concept represents a strategic blueprint for African sovereignty. We are actively seeking partners and visionaries to actualize this framework.
-              </Paragraph>
-              
-              <AfroButton primary style={{ width: '100%', marginBottom: '16px' }} onClick={() => setEngagementModalVisible(true)}>
-                EXPRESS INTEREST
-              </AfroButton>
-              <AfroButton style={{ width: '100%' }} onClick={() => navigate('/contact-us')}>
-                GET IN TOUCH
-              </AfroButton>
+          <Col xs={24} lg={8}>
+            <aside className="sticky top-12 space-y-8">
+              <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-10 relative overflow-hidden group">
+                <span className="eyebrow">Engagement</span>
+                <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">Collaborate</h3>
+                <p className="text-text-secondary text-sm leading-relaxed mb-10">
+                  This concept represents a strategic blueprint for African technical sovereignty. We are actively seeking partners and visionaries to actualize this framework within the ecosystem.
+                </p>
+                
+                <div className="space-y-4">
+                  <button 
+                    className="qsi-button primary w-full py-4 font-black uppercase text-xs tracking-widest shadow-xl shadow-accent-gold/10"
+                    onClick={() => setEngagementModalVisible(true)}
+                  >
+                    Express Interest
+                  </button>
+                  <button 
+                    className="qsi-button w-full py-4 font-black uppercase text-xs tracking-widest"
+                    onClick={() => navigate('/contact-us')}
+                  >
+                    Contact Team
+                  </button>
+                </div>
 
-              <Divider style={{ borderColor: 'var(--onyx-black)', opacity: 0.2 }} />
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Avatar icon={<RocketOutlined />} style={{ background: 'var(--baobab-emerald)', borderRadius: 0 }} />
-                <div>
-                  <Text strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', fontFamily: 'var(--font-accent)' }}>Status</Text>
-                  <Text style={{ fontSize: '14px' }}>Framework Validation</Text>
+                <div className="mt-12 pt-8 border-t border-border-subtle/50 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-success-green shadow-xl">
+                    <Activity size={24} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest block mb-1">Status</span>
+                    <span className="text-sm font-bold text-white uppercase">Framework Validation</span>
+                  </div>
+                </div>
+                <Zap size={120} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold group-hover:scale-110 transition-transform duration-700" />
+              </div>
+
+              <div className="px-4">
+                <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest block mb-4">Share Concept</span>
+                <div className="flex gap-6">
+                  <button className="text-[10px] font-black text-text-secondary hover:text-white transition-colors uppercase tracking-widest">Twitter</button>
+                  <button className="text-[10px] font-black text-text-secondary hover:text-white transition-colors uppercase tracking-widest">LinkedIn</button>
+                  <button className="text-[10px] font-black text-text-secondary hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2">
+                     <Share2 size={12} /> Link
+                  </button>
                 </div>
               </div>
-            </GeometricCard>
-
-            <div style={{ marginTop: '32px', padding: '0 12px' }}>
-              <span className="eyebrow" style={{ fontSize: '10px' }}>Share this concept</span>
-              <Space size="large" style={{ marginTop: '8px' }}>
-                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>TWITTER</Text>
-                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>LINKEDIN</Text>
-                <Text style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>COPY LINK</Text>
-              </Space>
-            </div>
-          </aside>
-
-        </div>
+            </aside>
+          </Col>
+        </Row>
       </section>
 
       {/* Engagement Modal */}
@@ -253,19 +253,25 @@ const ConceptDetailPage: React.FC = () => {
         onCancel={() => setEngagementModalVisible(false)}
         footer={null}
         width={700}
-        styles={{ body: { padding: 0 } }}
         centered
         destroyOnClose
+        className="dark-modal"
       >
-        <div style={{ padding: '48px', position: 'relative' }}>
-          <CornerAccent position="tr" color="var(--baobab-emerald)" />
-          <span className="eyebrow">Expression of Interest</span>
-          <Title level={2} style={{ textTransform: 'uppercase', marginBottom: '32px' }}>Collaborate on this Concept</Title>
+        <div className="p-8 lg:p-12 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <div className="text-center mb-10">
+            <span className="eyebrow">Strategic Intent</span>
+            <h3 className="text-3xl font-black text-white uppercase tracking-tight mt-2 mb-4">Collaborate on Framework</h3>
+            <div className="w-12 h-1 bg-accent-gold mx-auto" />
+          </div>
           
-          <Form form={form} layout="vertical" onFinish={handleEngagementSubmit}>
-            <Form.Item name="engagementType" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Intention</span>}>
-              <Radio.Group style={{ width: "100%" }} onChange={(e) => setSelectedEngagementType(e.target.value)}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <Form form={form} layout="vertical" onFinish={handleEngagementSubmit} className="space-y-6">
+            <Form.Item 
+              name="engagementType" 
+              label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Engagement Pathway</span>}
+              initialValue="partner"
+            >
+              <Radio.Group className="w-full">
+                <div className="grid grid-cols-2 gap-4">
                   {engagementOptions.map((option) => (
                     <div 
                       key={option.value}
@@ -273,58 +279,48 @@ const ConceptDetailPage: React.FC = () => {
                         setSelectedEngagementType(option.value);
                         form.setFieldValue('engagementType', option.value);
                       }}
-                      style={{ 
-                        padding: '16px', 
-                        border: '2px solid var(--onyx-black)',
-                        background: selectedEngagementType === option.value ? 'var(--papyrus-off-white)' : 'white',
-                        cursor: 'pointer',
-                        borderColor: selectedEngagementType === option.value ? 'var(--baobab-emerald)' : 'var(--onyx-black)'
-                      }}
+                      className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-gold shadow-lg' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
                     >
-                      <div style={{ fontSize: '20px', color: option.color, marginBottom: '8px' }}>{option.icon}</div>
-                      <Text strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase' }}>{option.label}</Text>
-                      <Radio value={option.value} style={{ display: 'none' }} />
+                      <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-gold' : 'text-text-tertiary'}`}>
+                        {option.icon}
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest text-center ${selectedEngagementType === option.value ? 'text-white' : 'text-text-tertiary'}`}>
+                        {option.label}
+                      </span>
                     </div>
                   ))}
                 </div>
               </Radio.Group>
             </Form.Item>
 
-            <Form.Item name="contactName" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Full Name</span>} rules={[{ required: true }]}>
-              <Input style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', height: '48px' }} />
+            <div className="pt-6 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Form.Item name="contactName" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Full Name</span>} rules={[{ required: true }]}>
+                <Input className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl" placeholder="Full Identity" />
+              </Form.Item>
+
+              <Form.Item name="contactEmail" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Network Email</span>} rules={[{ required: true, type: 'email' }]}>
+                <Input className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl" placeholder="Email@domain.com" />
+              </Form.Item>
+            </div>
+
+            <Form.Item 
+              name="message" 
+              label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Strategic Context</span>}
+            >
+              <TextArea rows={4} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="Describe your collaborative vision or organizational interest..." />
             </Form.Item>
 
-            <Form.Item name="contactEmail" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Email Address</span>} rules={[{ required: true, type: 'email' }]}>
-              <Input style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', height: '48px' }} />
-            </Form.Item>
-
-            <Form.Item name="message" label={<span className="eyebrow" style={{ fontSize: '10px' }}>Additional Context</span>}>
-              <TextArea rows={4} style={{ borderRadius: 0, border: '2px solid var(--onyx-black)' }} />
-            </Form.Item>
-
-            <div style={{ marginTop: '32px', display: 'flex', gap: '16px' }}>
-              <AfroButton primary style={{ flex: 1 }} onClick={() => form.submit()}>SUBMIT INTEREST</AfroButton>
-              <AfroButton style={{ flex: 1 }} onClick={() => setEngagementModalVisible(false)}>CANCEL</AfroButton>
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={engagementLoading}>
+                {engagementLoading ? 'SYNCHRONIZING...' : 'SUBMIT INTEREST'}
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setEngagementModalVisible(false)}>
+                CANCEL
+              </button>
             </div>
           </Form>
         </div>
       </Modal>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .concept-article h1, .concept-article h2, .concept-article h3 {
-          font-family: var(--font-heading);
-          color: var(--onyx-black);
-          letter-spacing: -0.01em;
-        }
-        .concept-article p, .concept-article li {
-          font-family: var(--font-body);
-          color: var(--onyx-black);
-          opacity: 0.9;
-        }
-        .concept-article strong {
-          color: var(--baobab-emerald);
-        }
-      `}} />
     </div>
   );
 };

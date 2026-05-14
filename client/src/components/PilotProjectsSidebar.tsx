@@ -16,16 +16,16 @@ const PilotProjectsSidebar = ({ pilots }) => {
 
   const linkStyle = {
     background: "var(--canvas-white)",
-    border: "3px solid var(--onyx-black)",
+    border: "3px solid var(--border-subtle)",
     borderRadius: 0,
     padding: "20px",
-    color: "var(--onyx-black)",
+    color: "var(--border-subtle)",
     textDecoration: "none",
     width: "100%",
     maxWidth: "340px",
     display: "block",
     marginBottom: "20px",
-    boxShadow: "6px 6px 0px var(--onyx-black)",
+    boxShadow: "6px 6px 0px var(--border-subtle)",
     position: "relative",
     transition: "transform 0.1s ease",
   };
@@ -55,7 +55,7 @@ const PilotProjectsSidebar = ({ pilots }) => {
         <div
           style={{
             background: "var(--savanna-moss)",
-            border: "3px solid var(--onyx-black)",
+            border: "3px solid var(--border-subtle)",
             padding: "12px",
             display: "flex",
             alignItems: "center",
@@ -70,15 +70,15 @@ const PilotProjectsSidebar = ({ pilots }) => {
             }}
           />
         </div>
-        <Title level={4} style={{ margin: 0, color: "var(--onyx-black)", fontFamily: "var(--font-heading)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
+        <Title level={4} style={{ margin: 0, color: "var(--border-subtle)", fontFamily: "var(--font-primary)", fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
           Explore Projects
         </Title>
         <Text
           style={{
-            color: "var(--onyx-black)",
+            color: "var(--border-subtle)",
             fontSize: "12px",
             fontWeight: 700,
-            fontFamily: "var(--font-accent)",
+            fontFamily: "var(--font-primary)",
             textTransform: "uppercase",
             opacity: 0.7,
             letterSpacing: "0.1em",
@@ -97,20 +97,20 @@ const PilotProjectsSidebar = ({ pilots }) => {
             style={linkStyle}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "8px 8px 0px var(--onyx-black)";
+              e.currentTarget.style.boxShadow = "8px 8px 0px var(--border-subtle)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "6px 6px 0px var(--onyx-black)";
+              e.currentTarget.style.boxShadow = "6px 6px 0px var(--border-subtle)";
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Text
                 style={{
-                  color: "var(--onyx-black)",
+                  color: "var(--border-subtle)",
                   fontWeight: 900,
                   fontSize: "14px",
-                  fontFamily: "var(--font-accent)",
+                  fontFamily: "var(--font-primary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                 }}
@@ -119,9 +119,9 @@ const PilotProjectsSidebar = ({ pilots }) => {
               </Text>
               <Text
                 style={{
-                  color: "var(--onyx-black)",
+                  color: "var(--border-subtle)",
                   fontSize: "12px",
-                  fontFamily: "var(--font-body)",
+                  fontFamily: "var(--font-primary)",
                   lineHeight: 1.4,
                   opacity: 0.8,
                 }}

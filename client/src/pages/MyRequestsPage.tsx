@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Card, Row, Col, Tabs, 
-  Tag, List, Button, Space, Empty, 
-  Badge, Divider 
+  Typography, Tabs, 
+  Tag, List, Empty, 
+  Spin, Divider 
 } from 'antd';
 import { 
-  RocketOutlined, EnvironmentOutlined, 
-  CheckCircleOutlined, ClockCircleOutlined,
-  CloseCircleOutlined, CarOutlined,
-  FileTextOutlined, DownloadOutlined 
-} from '@ant-design/icons';
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  MapPin, 
+  Truck, 
+  FileText, 
+  Download,
+  Activity,
+  ArrowRight
+} from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 
 const MyRequestsPage: React.FC = () => {
   const { user } = useAuth();
@@ -44,98 +48,166 @@ const MyRequestsPage: React.FC = () => {
   };
 
   const statusMap: any = {
-    'PENDING': { color: 'orange', icon: <ClockCircleOutlined /> },
-    'APPROVED': { color: 'green', icon: <CheckCircleOutlined /> },
-    'REJECTED': { color: 'red', icon: <CloseCircleOutlined /> },
+    'PENDING': { color: 'text-orange-500', icon: <Clock size={14} /> },
+    'APPROVED': { color: 'text-success-green', icon: <CheckCircle2 size={14} /> },
+    'REJECTED': { color: 'text-red-500', icon: <XCircle size={14} /> },
   };
 
   const getServerUrl = (path: string) => {
     if (!path) return '';
-    return path.startsWith('http') ? path : `http://localhost:3001${path}`;
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const origin = new URL(baseURL).origin;
+    return path.startsWith('http') ? path : `${origin}${path}`;
   };
 
   return (
-    <div style={{ padding: '80px 20px', maxWidth: 1200, margin: '0 auto', minHeight: '100vh', background: 'var(--canvas-white)' }}>
-      <div style={{ marginBottom: 60, position: 'relative' }}>
-        <div className="pattern-dots" style={{ position: 'absolute', top: -40, left: 0, right: 0, height: 200, opacity: 0.1, zIndex: 0 }}></div>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <span className="eyebrow" style={{ color: 'var(--baobab-emerald)', fontWeight: 900 }}>User Activity</span>
-          <Title level={1} style={{ color: 'var(--onyx-black)', textTransform: 'uppercase', fontSize: '3rem', margin: 0 }}>My Sovereignty Dashboard</Title>
-          <Paragraph style={{ color: 'var(--ash-grey)', marginTop: 8, fontFamily: 'var(--font-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Track your infrastructure engagements and manage your professional documentation.
-          </Paragraph>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary">
+      {/* Header */}
+      <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="flex items-center gap-3 text-accent-primary mb-6">
+             <Activity size={20} />
+             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operation Center</span>
+          </div>
+          <h1 className="text-4xl lg:text-6xl font-black text-white mb-6 tracking-tighter uppercase">
+            Sovereign <span className="text-accent-primary">Activity</span>
+          </h1>
+          <p className="text-text-secondary max-w-2xl text-lg leading-relaxed">
+            Orchestrating infrastructure engagements, managing digital assets, and monitoring logistics missions.
+          </p>
         </div>
-      </div>
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+           <Activity size={400} className="text-accent-primary" />
+        </div>
+      </header>
 
-      <div className="geometric-card" style={{ padding: 0, background: 'var(--canvas-white)', overflow: 'hidden' }}>
-        <CornerAccent position="tl" color="var(--baobab-emerald)" />
-        <Tabs 
-          defaultActiveKey="1" 
-          style={{ padding: '32px' }}
-          tabBarStyle={{ borderBottom: '2px solid var(--onyx-black)', marginBottom: '32px' }}
-        >
-          <TabPane tab={<span style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 900, fontSize: '12px' }}><EnvironmentOutlined /> Site Visits</span>} key="1">
-            <List
-              loading={loading}
-              dataSource={siteVisits}
-              locale={{ emptyText: <Empty description={<Text style={{ color: 'var(--ash-grey)' }}>No site visit requests yet</Text>} /> }}
-              renderItem={visit => (
-                <div style={{ background: 'var(--papyrus-off-white)', border: '2px solid var(--onyx-black)', padding: '24px', marginBottom: '16px', boxShadow: '4px 4px 0px var(--onyx-black)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <Title level={4} style={{ color: 'var(--onyx-black)', margin: 0, textTransform: 'uppercase' }}>{visit.project.title}</Title>
-                      <Text style={{ color: 'var(--ash-grey)', fontSize: '12px', fontFamily: 'var(--font-accent)' }}>Requested on {new Date(visit.createdAt).toLocaleDateString()}</Text>
-                    </div>
-                    <Tag style={{ borderRadius: 0, border: '2px solid var(--onyx-black)', background: statusMap[visit.status]?.color === 'green' ? 'var(--baobab-emerald)' : statusMap[visit.status]?.color === 'orange' ? 'var(--ochre-yellow)' : 'var(--terracotta-clay)', color: 'white', fontWeight: 900 }}>
-                      {visit.status}
-                    </Tag>
+      {/* Tabs / Content */}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-8">
+        <div className="max-w-5xl mx-auto">
+          <Tabs 
+            defaultActiveKey="1" 
+            className="custom-tabs"
+            items={[
+              {
+                key: '1',
+                label: (
+                  <span className="flex items-center gap-2 py-2">
+                    <MapPin size={16} /> Site Visits
+                  </span>
+                ),
+                children: (
+                  <div className="py-6">
+                    {loading ? (
+                      <div className="flex justify-center py-12"><Spin /></div>
+                    ) : (
+                      <List
+                        dataSource={siteVisits}
+                        locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No site visit requests found</span>} /> }}
+                        renderItem={visit => (
+                          <div key={visit.id} className="feed-card mb-6 group hover:border-accent-primary/20 transition-all p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h3 className="text-xl font-bold text-white uppercase tracking-tight">{visit.project.title}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                   <Clock size={12} className="text-text-tertiary" />
+                                   <span className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
+                                     Initialized: {new Date(visit.createdAt).toLocaleDateString()}
+                                   </span>
+                                </div>
+                              </div>
+                              <div className={`flex items-center gap-2 px-4 py-1.5 rounded-md bg-bg-primary border border-border-subtle text-[10px] font-black uppercase tracking-[0.15em] ${statusMap[visit.status]?.color}`}>
+                                {statusMap[visit.status]?.icon}
+                                {visit.status}
+                              </div>
+                            </div>
+                            <Divider className="border-border-subtle my-6 opacity-30" />
+                            <div className="flex items-center justify-between">
+                               <p className="text-xs text-text-secondary">
+                                 <span className="text-accent-primary font-black uppercase tracking-widest text-[9px] mr-3">Assigned Architect:</span> 
+                                 <span className="font-bold text-text-primary uppercase">{visit.project.engineerProfile?.user?.name || 'In Evaluation'}</span>
+                               </p>
+                               <button className="text-accent-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+                                  Full Schematics <ArrowRight size={14} />
+                                </button>
+                            </div>
+                          </div>
+                        )}
+                      />
+                    )}
                   </div>
-                  <Divider style={{ margin: '16px 0', borderColor: 'var(--onyx-black)', opacity: 0.1 }} />
-                  <Paragraph style={{ color: 'var(--ash-grey)', margin: 0, fontSize: '14px' }}>
-                    <Text strong style={{ color: 'var(--baobab-emerald)', textTransform: 'uppercase', fontSize: '12px' }}>Lead Engineer:</Text> {visit.project.engineerProfile.user.name}
-                  </Paragraph>
-                </div>
-              )}
-            />
-          </TabPane>
-
-          <TabPane tab={<span style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 900, fontSize: '12px' }}><CarOutlined /> Logistics Activity</span>} key="2">
-            <List
-              dataSource={vehicleAccepts}
-              locale={{ emptyText: <Empty description={<Text style={{ color: 'var(--ash-grey)' }}>No logistics activity yet</Text>} /> }}
-              renderItem={item => (
-                <div style={{ background: 'var(--papyrus-off-white)', border: '2px solid var(--onyx-black)', padding: '24px', marginBottom: '16px', boxShadow: '4px 4px 0px var(--onyx-black)' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                     <Space direction="vertical" size={0}>
-                        <Text strong style={{ color: 'var(--onyx-black)', fontSize: 18, textTransform: 'uppercase' }}>{item.location}</Text>
-                        <Text style={{ color: 'var(--ash-grey)', fontSize: '12px', fontFamily: 'var(--font-accent)' }}>{item.duration.toUpperCase()} MISSION</Text>
-                     </Space>
-                     <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 900, fontSize: 24 }}>${item.price}</Text>
-                   </div>
-                </div>
-              )}
-            />
-          </TabPane>
-
-          <TabPane tab={<span style={{ fontFamily: 'var(--font-accent)', textTransform: 'uppercase', fontWeight: 900, fontSize: '12px' }}><FileTextOutlined /> Digital Vault</span>} key="3">
-             <div style={{ textAlign: 'right', marginBottom: 24 }}>
-               <AfroButton primary icon={<DownloadOutlined />}>UPLOAD NEW DOCUMENT</AfroButton>
-             </div>
-             <List
-               dataSource={documents}
-               locale={{ emptyText: <Empty description={<Text style={{ color: 'var(--ash-grey)' }}>Your vault is empty</Text>} /> }}
-               renderItem={doc => (
-                 <div style={{ background: 'var(--papyrus-off-white)', border: '2px solid var(--onyx-black)', padding: '16px 24px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Space size="large">
-                      <FileTextOutlined style={{ color: 'var(--baobab-emerald)', fontSize: 24 }} />
-                      <Text style={{ color: 'var(--onyx-black)', fontWeight: 700, textTransform: 'uppercase', fontSize: '13px' }}>{doc.originalName}</Text>
-                    </Space>
-                    <Button type="link" icon={<DownloadOutlined style={{ fontSize: 20 }} />} href={getServerUrl(doc.filePath)} target="_blank" style={{ color: 'var(--baobab-emerald)' }} />
-                 </div>
-               )}
-             />
-          </TabPane>
-        </Tabs>
+                )
+              },
+              {
+                key: '2',
+                label: (
+                  <span className="flex items-center gap-2 py-2">
+                    <Truck size={16} /> Logistics
+                  </span>
+                ),
+                children: (
+                  <div className="py-6">
+                    <List
+                      dataSource={vehicleAccepts}
+                      locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No logistics activity found</span>} /> }}
+                      renderItem={item => (
+                        <div className="feed-card mb-4 flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-tight">{item.location}</h3>
+                            <p className="text-[10px] text-accent-gold font-bold uppercase tracking-widest">{item.duration} Mission</p>
+                          </div>
+                          <div className="text-2xl font-black text-white">
+                             <span className="text-accent-gold text-sm font-normal mr-1">$</span>{item.price}
+                          </div>
+                        </div>
+                      )}
+                    />
+                  </div>
+                )
+              },
+              {
+                key: '3',
+                label: (
+                  <span className="flex items-center gap-2 py-2">
+                    <FileText size={16} /> Digital Vault
+                  </span>
+                ),
+                children: (
+                  <div className="py-6">
+                    <div className="flex justify-between items-center mb-8">
+                       <h4 className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Secured Documents</h4>
+                       <button className="qsi-button primary py-2 px-6 text-xs">Upload Document</button>
+                    </div>
+                    <List
+                      dataSource={documents}
+                      locale={{ emptyText: <Empty description={<span className="text-text-tertiary">Your digital vault is empty</span>} /> }}
+                      renderItem={doc => (
+                         <div className="sidebar-item p-6 flex items-center justify-between mb-4 group">
+                            <div className="flex items-center gap-5">
+                               <div className="w-14 h-14 rounded-2xl bg-bg-tertiary flex items-center justify-center text-accent-primary border border-accent-primary/10 shadow-inner group-hover:bg-accent-primary group-hover:text-black transition-all">
+                                  <FileText size={24} />
+                               </div>
+                               <div>
+                                  <h5 className="font-bold text-white text-base tracking-tight mb-1">{doc.originalName}</h5>
+                                  <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.15em]">Vault Sync: {new Date(doc.createdAt).toLocaleDateString()}</p>
+                               </div>
+                            </div>
+                           <a 
+                             href={getServerUrl(doc.filePath)} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="p-3 rounded-xl bg-bg-primary text-text-secondary hover:text-accent-gold border border-border-subtle transition-all"
+                           >
+                              <Download size={18} />
+                           </a>
+                        </div>
+                      )}
+                    />
+                  </div>
+                )
+              }
+            ]}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 import React from 'react';
-import { Card, Typography, Tag, Avatar, Space } from 'antd';
-import { UserOutlined, SafetyCertificateOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Typography, Tag, Avatar, Space } from 'antd';
+import { 
+  ShieldCheck, 
+  ArrowRight, 
+  User,
+  Zap,
+  Activity
+} from 'lucide-react';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -28,105 +34,72 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onClick
 }) => {
   return (
-    <Card 
-      className="geometric-card" 
-      bodyStyle={{ padding: 0 }}
-      style={{ 
-        border: '3px solid var(--onyx-black)', 
-        borderRadius: 0, 
-        overflow: 'hidden',
-        cursor: 'pointer',
-        background: 'var(--canvas-white)',
-        transition: 'var(--snappy)'
-      }}
+    <div 
+      className="feed-card bg-bg-secondary border-border-subtle p-8 cursor-pointer hover:border-accent-gold/40 transition-all group"
       onClick={() => onClick(id)}
     >
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'start', padding: '32px' }}>
-        <div style={{ position: 'relative' }}>
-          <Avatar 
-            size={100} 
-            src={avatarUrl} 
-            icon={<UserOutlined />} 
-            style={{ 
-              borderRadius: 0, 
-              border: '3px solid var(--onyx-black)',
-              background: 'var(--papyrus-off-white)'
-            }}
-          />
+      <div className="flex flex-col md:flex-row gap-8">
+        <div className="relative flex-shrink-0">
+          <div className="w-24 h-24 rounded-2xl bg-bg-primary border border-border-subtle overflow-hidden relative z-10 group-hover:scale-105 transition-transform">
+             {avatarUrl ? (
+               <img src={avatarUrl} className="w-full h-full object-cover" alt={name} />
+             ) : (
+               <div className="w-full h-full flex items-center justify-center text-text-tertiary">
+                 <User size={32} />
+               </div>
+             )}
+          </div>
           {isVerified && (
-            <div style={{ 
-              position: 'absolute', 
-              bottom: -10, 
-              right: -10, 
-              background: 'var(--baobab-emerald)', 
-              color: 'white',
-              padding: '6px',
-              border: '2px solid var(--onyx-black)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 2
-            }}>
-              <SafetyCertificateOutlined style={{ fontSize: '16px' }} />
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success-green rounded-xl flex items-center justify-center text-white border-2 border-bg-secondary z-20 shadow-xl">
+               <ShieldCheck size={16} />
             </div>
           )}
         </div>
         
-        <div style={{ flex: 1 }}>
-          <div style={{ marginBottom: '12px' }}>
-            <Title level={4} style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '-0.01em', fontWeight: 900 }}>
-              {name}
-            </Title>
-            <Text style={{ 
-              color: 'var(--baobab-emerald)', 
-              fontWeight: 800, 
-              fontFamily: 'var(--font-accent)', 
-              fontSize: '11px', 
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              {specialization || role}
-            </Text>
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-accent-gold transition-colors">
+                {name}
+              </h3>
+              <span className="text-[10px] font-black text-success-green uppercase tracking-[0.15em]">
+                {specialization || role}
+              </span>
+            </div>
+            <div className="opacity-0 group-hover:opacity-40 transition-opacity">
+               <ArrowRight size={20} className="text-white" />
+            </div>
           </div>
           
-          <Paragraph style={{ color: 'var(--onyx-black)', fontSize: '14px', opacity: 0.8, marginBottom: '20px' }} ellipsis={{ rows: 2 }}>
+          <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mb-6">
             {bio || "Contributing to the pan-African infrastructure and mental transformation."}
-          </Paragraph>
+          </p>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Space size="small" wrap>
-              {skills.slice(0, 3).map((skill: string) => (
-                <Tag 
-                  key={skill} 
-                  style={{ 
-                    borderRadius: 0, 
-                    border: '1px solid var(--onyx-black)', 
-                    background: 'var(--papyrus-off-white)', 
-                    color: 'var(--onyx-black)', 
-                    fontFamily: 'var(--font-accent)', 
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  {skill}
-                </Tag>
-              ))}
-            </Space>
-            <div style={{ color: 'var(--onyx-black)', fontSize: '20px', transition: 'var(--snappy)' }}>
-              <ArrowRightOutlined />
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {skills.slice(0, 3).map((skill: string) => (
+              <span 
+                key={skill} 
+                className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle group-hover:border-accent-gold/20 group-hover:text-accent-gold transition-colors"
+              >
+                {skill}
+              </span>
+            ))}
+            {skills.length > 3 && (
+              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle">
+                +{skills.length - 3}
+              </span>
+            )}
           </div>
         </div>
       </div>
       
-      {/* Decorative Bottom Bar */}
-      <div style={{ 
-        height: '4px', 
-        width: '100%', 
-        background: isVerified ? 'var(--baobab-emerald)' : 'var(--terracotta-clay)' 
-      }} />
-    </Card>
+      {/* Decorative Progress Accent */}
+      <div className="mt-8 h-px w-full bg-border-subtle/50 relative overflow-hidden">
+         <div 
+           className={`absolute top-0 left-0 h-full transition-all duration-1000 ${isVerified ? 'bg-success-green w-full' : 'bg-accent-gold w-1/3'}`} 
+         />
+      </div>
+    </div>
   );
 };
 

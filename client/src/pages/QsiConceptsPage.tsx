@@ -1,26 +1,24 @@
-// src/pages/QsiConceptsPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Card, Typography, Spin, Button, theme } from "antd";
-import { useNavigate, Link } from "react-router-dom";
+import { Row, Col, Typography, Spin, Empty } from "antd";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  BulbOutlined
-} from "@ant-design/icons";
+  Lightbulb,
+  ArrowRight,
+  Zap,
+  Globe,
+  Layers,
+  Activity
+} from "lucide-react";
 
 const { Title, Paragraph, Text } = Typography;
-const { useToken } = theme;
 
 const QsiConceptsPage: React.FC = () => {
   const [pilots, setPilots] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
-  const [searchTerm] = useState<string>("");
   const navigate = useNavigate();
-  const { token } = useToken();
 
-  // Fetch concepts on component mount
   useEffect(() => {
     const fetchConcepts = async () => {
       setLoading(true);
@@ -28,17 +26,13 @@ const QsiConceptsPage: React.FC = () => {
       try {
         const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
         const response = await axios.get(`${baseURL}/submit/concepts`);
-
         if (Array.isArray(response.data)) {
           setPilots(response.data);
         } else {
-          setError("Received invalid data format for concepts.");
-          setPilots([]);
+          setError("Received invalid data format.");
         }
       } catch (err) {
-        console.error("Failed to fetch concepts:", err);
-        setError("Could not load concepts.");
-        setPilots([]);
+        setError("Could not load digital concepts.");
       } finally {
         setLoading(false);
       }
@@ -46,145 +40,77 @@ const QsiConceptsPage: React.FC = () => {
     fetchConcepts();
   }, []);
 
-  // Filter pilots based on search term
-  const filteredPilots = useMemo(() => {
-    if (!searchTerm) {
-      return pilots;
-    }
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return pilots.filter(
-      (pilot) =>
-        pilot.title?.toLowerCase().includes(lowerSearchTerm) ||
-        pilot.description?.toLowerCase().includes(lowerSearchTerm)
-    );
-  }, [pilots, searchTerm]);
-
-  const handleCardClick = (id: string) => {
-    navigate(`/concepts/${id}`);
-  };
-
   return (
-    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Hero Section */}
-      <div 
-        className="pattern-mudcloth"
-        style={{
-          padding: "120px 5% 60px 5%",
-          borderBottom: "2px solid var(--onyx-black)",
-          position: "relative"
-        }}
-      >
-        <div className="container" style={{ padding: 0 }}>
-          <span className="eyebrow reveal-up">Culture Engineered</span>
-          <Title
-            level={1}
-            className="reveal-up"
-            style={{ 
-              fontSize: "clamp(48px, 8vw, 100px)", 
-              margin: "0 0 24px 0",
-              color: "var(--onyx-black)",
-              textTransform: 'uppercase'
-            }}
-          >
-            QSI <br /> CONCEPTS
-          </Title>
-          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '24px', maxWidth: '800px' }}>
-            <Paragraph
-              className="reveal-up"
-              style={{
-                fontSize: "18px",
-                color: "var(--onyx-black)",
-                maxWidth: "600px",
-                fontFamily: "var(--font-body)",
-                fontWeight: 500
-              }}
-            >
-              These are brand-anchored or investable innovation concepts that merge culture, technology, and consciousness. Each concept operates as a unique franchise or collaborative venture.
-            </Paragraph>
-          </div>
+      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          <span className="eyebrow">Culture Engineered</span>
+          <h1 className="text-5xl lg:text-8xl font-black text-white mt-4 mb-8 tracking-tighter uppercase leading-none">
+            Digital <br/><span className="text-gold">Concepts</span>
+          </h1>
+          <p className="text-xl text-text-secondary max-w-2xl leading-relaxed">
+            Brand-anchored innovation concepts merging culture, technology, and consciousness. Each concept operates as a collaborative technical framework.
+          </p>
         </div>
-      </div>
+        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
+           <Layers size={600} className="text-accent-gold" />
+        </div>
+      </header>
 
-      <div className="container section-py">
-        {loading && (
-          <div style={{ textAlign: "center", padding: "100px" }}>
-            <Spin size="large" />
+      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
+        {loading ? (
+          <div className="py-24 text-center">
+            <Spin />
+            <p className="text-xs text-text-tertiary uppercase tracking-widest font-black mt-4 animate-pulse">Retrieving Vision Models...</p>
           </div>
-        )}
-
-        {error && (
-          <div style={{ textAlign: "center", padding: "40px", border: '2px solid var(--onyx-black)' }}>
-            <Text type="danger" className="eyebrow">{error}</Text>
+        ) : error ? (
+          <div className="py-12 px-8 border border-red-500/20 bg-red-500/5 rounded-2xl text-center">
+            <Text type="danger" className="font-bold uppercase tracking-widest">{error}</Text>
           </div>
-        )}
-
-        {!loading && !error && (
+        ) : (
           <Row gutter={[32, 32]}>
-            {filteredPilots.length > 0 ? (
-              filteredPilots.map((pilot) => (
+            {pilots.length > 0 ? (
+              pilots.map((pilot) => (
                 <Col key={pilot.id} xs={24} sm={12} md={8}>
-                  <Card
-                    className="geometric-card reveal-up"
-                    onClick={() => handleCardClick(pilot.id)}
-                    bodyStyle={{
-                      padding: "32px",
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                      justifyContent: "space-between",
-                    }}
-                    style={{ 
-                      height: "100%", 
-                      border: '2px solid var(--onyx-black)',
-                      borderRadius: 0,
-                      cursor: 'pointer'
-                    }}
+                  <div 
+                    className="feed-card bg-bg-secondary border-border-subtle p-8 h-full flex flex-col justify-between cursor-pointer hover:border-accent-gold/40 transition-all group"
+                    onClick={() => navigate(`/concepts/${pilot.id}`)}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <BulbOutlined style={{ color: 'var(--baobab-emerald)', fontSize: '20px' }} />
-                        <span className="eyebrow" style={{ margin: 0 }}>INNOVATION</span>
+                      <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-bg-primary flex items-center justify-center text-accent-gold border border-border-subtle group-hover:border-accent-gold/30 transition-colors">
+                          <Lightbulb size={20} />
+                        </div>
+                        <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Innovation Model</span>
                       </div>
-                      <Title level={4} style={{ marginBottom: "16px", textTransform: 'uppercase' }}>
+                      <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-4 group-hover:text-accent-gold transition-colors">
                         {pilot.title}
-                      </Title>
-                      <Paragraph
-                        style={{
-                          fontSize: "15px",
-                          color: "var(--onyx-black)",
-                          opacity: 0.8,
-                          marginBottom: "24px",
-                          lineHeight: 1.8
-                        }}
-                        ellipsis={{ rows: 4 }}
-                      >
+                      </h3>
+                      <p className="text-sm text-text-secondary leading-relaxed mb-8 line-clamp-4">
                         {pilot.shortDescription}
-                      </Paragraph>
+                      </p>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                      <Text style={{ color: 'var(--baobab-emerald)', fontWeight: 800, fontFamily: 'var(--font-accent)', fontSize: '12px' }}>
-                        EXPLORE CONCEPT
-                      </Text>
-                      <ArrowRightOutlined style={{ color: 'var(--baobab-emerald)' }} />
+                    <div className="flex justify-between items-center pt-6 border-t border-border-subtle/50">
+                      <span className="text-[10px] font-black text-accent-gold uppercase tracking-widest">
+                        Explore Concept
+                      </span>
+                      <ArrowRight size={18} className="text-accent-gold transform group-hover:translate-x-1 transition-transform" />
                     </div>
-                  </Card>
+                  </div>
                 </Col>
               ))
             ) : (
               <Col span={24}>
-                <Empty description={<Text className="eyebrow">No concepts found</Text>} />
+                <div className="py-24 text-center">
+                   <Activity size={48} className="mx-auto text-text-tertiary opacity-10 mb-6" />
+                   <p className="text-text-tertiary uppercase font-black tracking-widest">No concepts registered in this cycle.</p>
+                </div>
               </Col>
             )}
           </Row>
         )}
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .geometric-card:hover {
-          border-color: var(--baobab-emerald) !important;
-          transform: translateY(-4px);
-        }
-      `}} />
+      </section>
     </div>
   );
 };

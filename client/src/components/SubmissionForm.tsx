@@ -1,21 +1,27 @@
-// src/components/SubmissionForm.jsx
 import React, { useState  } from 'react';
-import { axios } from "axios";
+import axios from "axios";
 import {
   Form,
   Input,
-  Button,
   Select,
-  Card,
   Spin,
   App as AntApp,
   Alert,
-  theme,
+  Typography
 } from "antd";
+import { 
+  Zap, 
+  Send, 
+  Layers, 
+  Heart, 
+  Activity,
+  CheckCircle2,
+  AlertTriangle
+} from "lucide-react";
 
 const { Option } = Select;
 const { TextArea } = Input;
-const { useToken } = theme;
+const { Title, Text } = Typography;
 
 const SubmissionForm: React.FC = () => {
   const { message } = AntApp.useApp();
@@ -23,24 +29,23 @@ const SubmissionForm: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<string>("infrastructure");
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [form] = Form.useForm();
-  const { token } = useToken();
 
-  const handleModuleChange = (value) => {
+  const handleModuleChange = (value: string) => {
     setSelectedModule(value);
     setApiResponse(null);
     form.resetFields(["description", "contactInfo"]);
   };
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
     setApiResponse(null);
-    const endpointMap = {
+    const endpointMap: Record<string, string> = {
       infrastructure: "/infrastructure",
       healing: "/healing",
       vision: "/vision",
     };
 
-    const payloadMap = {
+    const payloadMap: Record<string, any> = {
       infrastructure: {
         description: values.description,
         contactInfo: values.contactInfo,
@@ -59,12 +64,12 @@ const SubmissionForm: React.FC = () => {
       const endpoint = `https://api.qsi.africa/apisubmit${endpointMap[selectedModule]}`;
       const response = await axios.post(endpoint, payloadMap[selectedModule]);
 
-      message.success("Your submission has been received.");
+      message.success("Operational brief synchronized successfully.");
       setApiResponse(response.data);
       form.resetFields();
     } catch (error) {
       console.error("Submission failed:", error);
-      message.error("There was an error with your submission.");
+      message.error("Frequency synchronization failure. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -73,245 +78,127 @@ const SubmissionForm: React.FC = () => {
   const getFormLabel = () => {
     switch (selectedModule) {
       case "healing":
-        return "Describe your internal state or struggle...";
+        return "Describe your current mental or energetic friction...";
       case "vision":
-        return "Describe your vision or problem...";
+        return "Describe your strategic vision or bottleneck...";
       case "infrastructure":
       default:
-        return "Describe your infrastructure need (Water, Road, Housing, etc.)...";
+        return "Describe your structural requirement (Water, Energy, Mobility)...";
     }
   };
 
-  const cardStyles = {
-    background: token.colorBgContainer,
-    border: `1px solid ${token.colorBorder}`,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowSecondary,
-  };
-
-  const inputStyles = {
-    background: token.colorBgContainer,
-    border: `1px solid ${token.colorBorder}`,
-    borderRadius: token.borderRadius,
-    color: token.colorText,
-    fontSize: token.fontSize,
-
-    "&:hover": {
-      borderColor: token.colorPrimaryHover,
-    },
-
-    "&:focus": {
-      borderColor: token.colorPrimary,
-      boxShadow: `0 0 0 2px ${token.colorPrimaryBg}`,
-    },
+  const getModuleIcon = () => {
+    switch (selectedModule) {
+      case "healing":
+        return <Heart size={20} className="text-red-500" />;
+      case "vision":
+        return <Zap size={20} className="text-accent-gold" />;
+      default:
+        return <Layers size={20} className="text-success-green" />;
+    }
   };
 
   return (
-    <>
-      <Card
-        title="Submit your problem. Receive your solution."
-        bordered={false}
-        styles={{
-          body: {
-            background: token.colorBgContainer,
-            padding: token.paddingLG,
-          },
-          header: {
-            background: token.colorBgContainer,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            color: token.colorText,
-            fontSize: token.fontSizeHeading4,
-            fontWeight: token.fontWeightStrong,
-          },
-        }}
-        style={cardStyles}
-      >
-        <Spin spinning={loading}>
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Form.Item
-              label={
-                <span
-                  style={{
-                    color: token.colorText,
-                    fontWeight: token.fontWeightMedium,
-                  }}
-                >
-                  Select Module
-                </span>
-              }
-            >
-              <Select
-                defaultValue="infrastructure"
-                onChange={handleModuleChange}
-                style={{
-                  width: "100%",
-                }}
-                styles={{
-                  selector: {
-                    background: token.colorBgContainer,
-                    border: `1px solid ${token.colorBorder}`,
-                    borderRadius: token.borderRadius,
-                    color: token.colorText,
+    <div className="space-y-8">
+      <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-12 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-5 text-accent-gold group-hover:scale-110 transition-transform duration-700">
+           <Send size={120} />
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-8">
+             <div className="w-12 h-12 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-gold shadow-xl">
+                <Activity size={24} />
+             </div>
+             <div>
+                <h2 className="text-2xl font-black text-white uppercase tracking-tight">Technical Briefing</h2>
+                <p className="text-xs text-text-tertiary uppercase tracking-widest font-bold">Submit problem. Receive solution.</p>
+             </div>
+          </div>
 
-                    "&:hover": {
-                      borderColor: token.colorPrimaryHover,
-                    },
-                  },
-                }}
+          <Spin spinning={loading}>
+            <Form form={form} layout="vertical" onFinish={onFinish} className="space-y-6">
+              <Form.Item
+                label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Operational Module</span>}
               >
-                <Option value="infrastructure">Smart Infrastructure</Option>
-                <Option value="healing">Healing & Therapy</Option>
-                <Option value="vision">Vision Space</Option>
-              </Select>
-            </Form.Item>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                     {getModuleIcon()}
+                  </div>
+                  <Select
+                    defaultValue="infrastructure"
+                    onChange={handleModuleChange}
+                    className="custom-select pl-10 h-12 w-full"
+                  >
+                    <Option value="infrastructure">Smart Infrastructure</Option>
+                    <Option value="healing">Healing & Wisdom</Option>
+                    <Option value="vision">Vision Space</Option>
+                  </Select>
+                </div>
+              </Form.Item>
 
-            <Form.Item
-              name="description"
-              label={
-                <span
-                  style={{
-                    color: token.colorText,
-                    fontWeight: token.fontWeightMedium,
-                  }}
-                >
-                  {getFormLabel()}
-                </span>
-              }
-              rules={[{ required: true, message: "This field is required." }]}
-            >
-              <TextArea
-                rows={6}
-                style={{
-                  background: token.colorBgContainer,
-                  border: `1px solid ${token.colorBorder}`,
-                  borderRadius: token.borderRadius,
-                  color: token.colorText,
-                  fontSize: token.fontSize,
-                  resize: "vertical",
-                }}
-                onFocus={(e: React.FormEvent) => {
-                  e.target.style.borderColor = token.colorPrimary;
-                  e.target.style.boxShadow = `0 0 0 2px ${token.colorPrimaryBg}`;
-                }}
-                onBlur={(e: React.FormEvent) => {
-                  e.target.style.borderColor = token.colorBorder;
-                  e.target.style.boxShadow = "none";
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="contactInfo"
-              label={
-                <span
-                  style={{
-                    color: token.colorText,
-                    fontWeight: token.fontWeightMedium,
-                  }}
-                >
-                  Your Email or Phone Number
-                </span>
-              }
-              rules={[
-                {
-                  required: true,
-                  message: "Please provide your contact information.",
-                },
-              ]}
-            >
-              <Input
-                style={{
-                  background: token.colorBgContainer,
-                  border: `1px solid ${token.colorBorder}`,
-                  borderRadius: token.borderRadius,
-                  color: token.colorText,
-                  fontSize: token.fontSize,
-                }}
-                onFocus={(e: React.FormEvent) => {
-                  e.target.style.borderColor = token.colorPrimary;
-                  e.target.style.boxShadow = `0 0 0 2px ${token.colorPrimaryBg}`;
-                }}
-                onBlur={(e: React.FormEvent) => {
-                  e.target.style.borderColor = token.colorBorder;
-                  e.target.style.boxShadow = "none";
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                block
-                style={{
-                  height: token.controlHeightLG,
-                  background: token.colorPrimary,
-                  borderColor: token.colorPrimary,
-                  borderRadius: token.borderRadius,
-                  fontSize: token.fontSize,
-                  fontWeight: token.fontWeightStrong,
-                  boxShadow: token.boxShadowSecondary,
-
-                  "&:hover": {
-                    background: token.colorPrimaryHover,
-                    borderColor: token.colorPrimaryHover,
-                    transform: "translateY(-1px)",
-                    boxShadow: token.boxShadow,
-                  },
-
-                  "&:active": {
-                    background: token.colorPrimaryActive,
-                    borderColor: token.colorPrimaryActive,
-                    transform: "translateY(0)",
-                  },
-                }}
-                onMouseEnter={(e: React.FormEvent) => {
-                  e.target.style.background = token.colorPrimaryHover;
-                  e.target.style.borderColor = token.colorPrimaryHover;
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow = token.boxShadow;
-                }}
-                onMouseLeave={(e: React.FormEvent) => {
-                  e.target.style.background = token.colorPrimary;
-                  e.target.style.borderColor = token.colorPrimary;
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = token.boxShadowSecondary;
-                }}
+              <Form.Item
+                name="description"
+                label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">{getFormLabel()}</span>}
+                rules={[{ required: true, message: "Briefing content required." }]}
               >
-                Submit
-              </Button>
-            </Form.Item>
-          </Form>
-        </Spin>
-      </Card>
+                <TextArea
+                  rows={6}
+                  className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none focus:border-accent-gold/40 transition-all p-4"
+                  placeholder="Input technical requirements or operational constraints..."
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="contactInfo"
+                label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Communication Uplink (Email/Phone)</span>}
+                rules={[{ required: true, message: "Contact information required." }]}
+              >
+                <Input
+                  className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl focus:border-accent-gold/40 transition-all px-4"
+                  placeholder="ID@DOMAIN.COM"
+                />
+              </Form.Item>
+
+              <button
+                className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-accent-gold/20 group/btn"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'SYNCHRONIZING...' : 'TRANSMIT BRIEFING'} 
+                <Send size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+              </button>
+            </Form>
+          </Spin>
+        </div>
+      </div>
 
       {apiResponse && apiResponse.generatedPlan && (
-        <Alert
-          message="Your Liberation Plan"
-          description={
-            <div
-              style={{
-                whiteSpace: "pre-wrap",
-                color: token.colorText,
-                fontSize: token.fontSize,
-                lineHeight: token.lineHeight,
-              }}
-            >
-              {apiResponse.generatedPlan}
-            </div>
-          }
-          type="success"
-          showIcon
-          style={{
-            marginTop: token.marginLG,
-            background: token.colorSuccessBg,
-            border: `1px solid ${token.colorSuccessBorder}`,
-            borderRadius: token.borderRadiusLG,
-            color: token.colorText,
-          }}
-        />
+        <div className="animate-fade-in">
+           <div className="feed-card bg-success-green/10 border-success-green/30 p-8 lg:p-12">
+              <div className="flex items-center gap-4 mb-8">
+                 <CheckCircle2 size={32} className="text-success-green" />
+                 <div>
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Liberation Strategy Synthesized</h3>
+                    <p className="text-[10px] font-bold text-success-green uppercase tracking-widest">Actionable Intelligence Generated</p>
+                 </div>
+              </div>
+              
+              <div className="bg-bg-primary/50 rounded-2xl p-8 border border-success-green/20">
+                 <pre className="text-sm text-text-secondary whitespace-pre-wrap font-sans leading-relaxed">
+                   {apiResponse.generatedPlan}
+                 </pre>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                 <button className="text-[10px] font-black text-success-green uppercase tracking-widest flex items-center gap-2 hover:underline">
+                    Download Strategy <Layers size={14} />
+                 </button>
+              </div>
+           </div>
+        </div>
       )}
-    </>
+    </div>
   );
 };
 

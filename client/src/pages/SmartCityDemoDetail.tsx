@@ -7,11 +7,9 @@ import {
   Typography,
   Button,
   Tag,
-  Card,
   Divider,
   Grid,
   Space,
-  theme,
   Modal,
   Form,
   Input,
@@ -19,24 +17,25 @@ import {
   Radio,
 } from "antd";
 import {
-  ArrowLeftOutlined,
-  UserOutlined,
-  MailOutlined,
-  MessageOutlined,
-  TeamOutlined,
-  BulbOutlined,
-  EnvironmentOutlined,
-  PhoneOutlined
-} from "@ant-design/icons";
+  ArrowLeft,
+  User,
+  Mail,
+  MessageCircle,
+  Users,
+  Lightbulb,
+  MapPin,
+  Phone,
+  Zap,
+  TrendingUp,
+  Handshake,
+  ArrowRight
+} from "lucide-react";
 import axios from "axios";
-import { FaMoneyBillTrendUp } from "react-icons/fa6";
-import { FaRegHandshake } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
-const { useToken } = theme;
 
 const SmartCityDemoDetail: React.FC = () => {
   const { id } = useParams();
@@ -47,7 +46,6 @@ const SmartCityDemoDetail: React.FC = () => {
   const [engagementLoading, setEngagementLoading] = useState<boolean>(false);
   const [form] = Form.useForm();
   const screens = useBreakpoint();
-  const { token } = useToken();
   const navigate = useNavigate();
   const [selectedEngagementType, setSelectedEngagementType] =
     useState<string>("partner");
@@ -58,29 +56,29 @@ const SmartCityDemoDetail: React.FC = () => {
         value: "invest",
         label: "Invest",
         description: "Explore investment opportunities",
-        icon: <FaMoneyBillTrendUp />,
-        color: "var(--terracotta-clay)",
+        icon: <TrendingUp size={24} />,
+        color: "#ff4d4f",
       },
       {
         value: "participate",
         label: "Participate",
         description: "Engage as a participant",
-        icon: <TeamOutlined />,
-        color: "var(--baobab-emerald)",
+        icon: <Users size={24} />,
+        color: "var(--success-green)",
       },
       {
         value: "learn",
         label: "Learn",
         description: "Request more information",
-        icon: <BulbOutlined />,
-        color: "var(--ochre-yellow)",
+        icon: <Lightbulb size={24} />,
+        color: "var(--accent-gold)",
       },
       {
         value: "collaborate",
         label: "Collaborate",
         description: "Offer technical collaboration",
-        icon: <FaRegHandshake />,
-        color: "var(--onyx-black)",
+        icon: <Handshake size={24} />,
+        color: "var(--text-tertiary)",
       },
     ],
     []
@@ -89,12 +87,8 @@ const SmartCityDemoDetail: React.FC = () => {
   const fetchDemoDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setDemo(null);
-
     try {
-      const baseURL =
-        import.meta.env.VITE_API_BASE_URL ||
-        "https://api.qsi.africa/api";
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
       const response = await axios.get(`${baseURL}/submit/demos/${id}`);
       setDemo(response.data);
     } catch (err: any) {
@@ -108,10 +102,7 @@ const SmartCityDemoDetail: React.FC = () => {
     async (values: any) => {
       setEngagementLoading(true);
       try {
-        const baseURL =
-          import.meta.env.VITE_API_BASE_URL ||
-          "https://api.qsi.africa/api";
-
+        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
         const payload = {
           pilotKey: id,
           pilotTitle: demo?.title,
@@ -123,13 +114,12 @@ const SmartCityDemoDetail: React.FC = () => {
           contactPhone: values.contactPhone,
           timestamp: new Date().toISOString(),
         };
-
         await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
-        message.success("Submission successful!");
+        message.success("Submission synchronized successfully!");
         setEngagementModalVisible(false);
         form.resetFields();
       } catch (error) {
-        message.error("Failed to submit request.");
+        message.error("Failed to synchronize request.");
       } finally {
         setEngagementLoading(false);
       }
@@ -137,49 +127,23 @@ const SmartCityDemoDetail: React.FC = () => {
     [id, demo?.title, form]
   );
 
-  const openEngagementModal = useCallback(() => {
-    setEngagementModalVisible(true);
-  }, []);
-
-  const closeEngagementModal = useCallback(() => {
-    setEngagementModalVisible(false);
-    form.resetFields();
-    setSelectedEngagementType("invest");
-  }, [form]);
-
-  const handleEngagementTypeChange = useCallback(
-    (optionValue: string) => {
-      setSelectedEngagementType(optionValue);
-      form.setFieldValue("engagementType", optionValue);
-    },
-    [form]
-  );
-
   useEffect(() => {
-    if (id) {
-      fetchDemoDetail();
-    }
+    if (id) fetchDemoDetail();
   }, [fetchDemoDetail, id]);
 
-  const styles = useMemo(() => {
-    return {
-      markdown: {
-        h3: (props: any) => (
-          <Title level={3} style={{ marginTop: '48px', marginBottom: '24px', textTransform: 'uppercase' }} {...props} />
-        ),
-        h4: (props: any) => (
-          <Title level={4} style={{ marginTop: '32px', marginBottom: '16px', textTransform: 'uppercase' }} {...props} />
-        ),
-        p: (props: any) => <Paragraph style={{ fontSize: '18px', lineHeight: '1.8', marginBottom: '24px', color: 'var(--onyx-black)' }} {...props} />,
-        li: (props: any) => <li style={{ fontSize: '18px', marginBottom: '12px' }} {...props} />,
-        strong: (props: any) => <strong style={{ fontWeight: 900 }} {...props} />,
-      }
-    };
-  }, []);
+  const styles = useMemo(() => ({
+    markdown: {
+      h3: (props: any) => <h3 className="text-2xl font-bold text-white mt-12 mb-6 uppercase tracking-tight" {...props} />,
+      h4: (props: any) => <h4 className="text-xl font-bold text-white mt-8 mb-4 uppercase tracking-tight" {...props} />,
+      p: (props: any) => <p className="text-lg text-text-secondary leading-relaxed mb-6" {...props} />,
+      li: (props: any) => <li className="text-lg text-text-secondary mb-3 list-disc ml-6" {...props} />,
+      strong: (props: any) => <strong className="font-black text-white" {...props} />,
+    }
+  }), []);
 
   if (loading) {
     return (
-      <div className="flex-center" style={{ minHeight: "100vh", background: "var(--canvas-white)" }}>
+      <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen">
         <Spin size="large" />
       </div>
     );
@@ -187,77 +151,51 @@ const SmartCityDemoDetail: React.FC = () => {
 
   if (error || !demo) {
     return (
-      <div className="flex-center" style={{ minHeight: "100vh", background: "var(--canvas-white)", flexDirection: 'column', padding: '0 5%' }}>
-        <Title level={2} style={{ color: 'var(--terracotta-clay)' }}>{error || "Demonstrator Not Found"}</Title>
-        <Button className="afro-button" onClick={() => navigate("/demos")}>Back to Demos</Button>
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Demonstrator Not Found"}</h2>
+        <button className="qsi-button primary px-8 py-3" onClick={() => navigate("/demos")}>Back to Demos</button>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Detail Hero */}
-      <div 
-        className="pattern-mudcloth"
-        style={{
-          padding: "120px 5% 60px 5%",
-          borderBottom: "2px solid var(--onyx-black)",
-          position: "relative"
-        }}
-      >
-        <div className="container" style={{ padding: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
-            <Button 
+      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="flex justify-between items-center mb-12">
+            <button 
               onClick={() => navigate("/demos")} 
-              className="afro-button"
-              icon={<ArrowLeftOutlined />}
+              className="qsi-button flex items-center gap-2 py-2 px-4"
             >
-              Back
-            </Button>
-            <Tag 
-              style={{ 
-                margin: 0, 
-                borderRadius: 0, 
-                padding: '8px 16px',
-                border: '2px solid var(--onyx-black)',
-                background: demo.status === 'ACTIVE' ? 'var(--baobab-emerald)' : 'var(--ochre-yellow)',
-                color: 'white',
-                fontFamily: 'var(--font-accent)',
-                fontSize: '12px',
-                fontWeight: 900
-              }}
-            >
+              <ArrowLeft size={18} /> Back
+            </button>
+            <Tag className={`rounded-full px-4 py-1 font-black uppercase text-[10px] ${demo.status === 'ACTIVE' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-gold-soft text-accent-gold border-accent-gold-soft'}`}>
               {demo.status || "PROPOSED"}
             </Tag>
           </div>
 
-          <Title
-            level={1}
-            className="reveal-up"
-            style={{ 
-              fontSize: "clamp(32px, 6vw, 80px)", 
-              margin: "0 0 24px 0",
-              color: "var(--onyx-black)",
-              textTransform: 'uppercase'
-            }}
-          >
+          <h1 className="text-4xl lg:text-7xl font-black text-white mb-6 uppercase tracking-tighter leading-none">
             {demo.title}
-          </Title>
+          </h1>
 
           {demo.city && (
-            <div className="reveal-up" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <EnvironmentOutlined style={{ color: 'var(--terracotta-clay)', fontSize: '20px' }} />
-              <span className="eyebrow" style={{ margin: 0 }}>{demo.city}</span>
+            <div className="flex items-center gap-2 text-accent-gold">
+              <MapPin size={20} />
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">{demo.city}</span>
             </div>
           )}
         </div>
-      </div>
+        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
+           <Zap size={500} className="text-accent-gold" />
+        </div>
+      </header>
 
       {/* Main Content Area */}
-      <div className="container section-py">
+      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
         <Row gutter={[64, 64]}>
           <Col xs={24} lg={16}>
-            <article className="reveal-up">
+            <article className="prose prose-invert max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={styles.markdown}
@@ -268,69 +206,42 @@ const SmartCityDemoDetail: React.FC = () => {
           </Col>
 
           <Col xs={24} lg={8}>
-            <div className="reveal-up" style={{ position: 'sticky', top: '120px' }}>
-              <div 
-                className="geometric-card pattern-dots" 
-                style={{ 
-                  border: '3px solid var(--onyx-black)', 
-                  padding: '40px',
-                  background: 'var(--canvas-white)',
-                  boxShadow: '8px 8px 0px var(--onyx-black)'
-                }}
-              >
-                <div 
-                  style={{ 
-                    height: '6px', 
-                    width: '100%', 
-                    background: 'repeating-linear-gradient(to right, #0B6138 0, #0B6138 16px, #D15B35 16px, #D15B35 32px, #E2B142 32px, #E2B142 48px, #4D7A51 48px, #4D7A51 64px, #111111 64px, #111111 80px)',
-                    marginBottom: '24px',
-                    border: '1px solid var(--onyx-black)'
-                  }} 
-                />
-                <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>Participation</span>
-                <Title level={3} style={{ marginBottom: '24px', textTransform: 'uppercase', fontWeight: 900 }}>ENGAGE WITH THE DEMO</Title>
-                <Paragraph style={{ marginBottom: '32px', fontSize: '16px' }}>
-                  Join us in shaping the future of this demonstrator. We are looking for partners, investors, and participants.
-                </Paragraph>
-                <Button 
-                  className="afro-button primary" 
-                  style={{ width: '100%' }}
-                  onClick={openEngagementModal}
+            <div className="sticky top-12">
+              <div className="feed-card bg-bg-secondary border-border-subtle p-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-success-green via-accent-gold to-red-500" />
+                <span className="eyebrow">Participation</span>
+                <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-tight">Engage With Demo</h3>
+                <p className="text-text-secondary text-sm leading-relaxed mb-8">
+                  Join us in shaping the future of this demonstrator. We are actively seeking strategic partners, visionary investors, and technical participants to actualize this infrastructure.
+                </p>
+                <button 
+                  className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-gold/10"
+                  onClick={() => setEngagementModalVisible(true)}
                 >
-                  I AM INTERESTED
-                </Button>
+                  Request Collaboration <ArrowRight size={18} />
+                </button>
               </div>
             </div>
           </Col>
         </Row>
-      </div>
+      </section>
 
       {/* Engagement Modal */}
       <Modal
         title={null}
         open={engagementModalVisible}
-        onCancel={closeEngagementModal}
+        onCancel={() => setEngagementModalVisible(false)}
         footer={null}
-        width={800}
+        width={700}
         destroyOnClose
-        className="afro-bauhaus-modal"
         centered
-        bodyStyle={{ padding: 0 }}
+        className="dark-modal"
       >
-        <div 
-          style={{ 
-            padding: '40px', 
-            border: '4px solid var(--onyx-black)',
-            background: 'var(--canvas-white)',
-            boxShadow: '12px 12px 0px var(--onyx-black)'
-          }}
-        >
-          <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-            <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>Project Engagement</span>
-            <Title level={2} style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '28px', fontWeight: 900 }}>
-              {demo.title}
-            </Title>
-            <div style={{ height: '4px', width: '40px', background: 'var(--terracotta-clay)', margin: '16px auto 0 auto' }} />
+        <div className="p-8 lg:p-12 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <div className="text-center mb-10">
+            <span className="eyebrow">Project Engagement</span>
+            <h3 className="text-3xl font-black text-white uppercase tracking-tight mt-2 mb-4">{demo.title}</h3>
+            <div className="w-12 h-1 bg-accent-gold mx-auto" />
           </div>
           
           <Form
@@ -338,32 +249,30 @@ const SmartCityDemoDetail: React.FC = () => {
             layout="vertical"
             onFinish={handleEngagementSubmit}
             initialValues={{ engagementType: selectedEngagementType }}
+            className="space-y-6"
           >
             <Form.Item
               name="engagementType"
-              label={<span className="eyebrow">Engagement Pathway</span>}
+              label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Engagement Pathway</span>}
               rules={[{ required: true }]}
-              style={{ marginBottom: '24px' }}
             >
-              <Radio.Group style={{ width: "100%" }}>
+              <Radio.Group className="w-full">
                 <Row gutter={[12, 12]}>
                   {engagementOptions.map((option) => (
                     <Col span={6} key={option.value}>
                       <div
-                        onClick={() => handleEngagementTypeChange(option.value)}
-                        style={{
-                          border: `3px solid ${selectedEngagementType === option.value ? 'var(--baobab-emerald)' : 'var(--onyx-black)'}`,
-                          padding: '16px 8px',
-                          cursor: 'pointer',
-                          background: selectedEngagementType === option.value ? 'var(--papyrus-off-white)' : 'white',
-                          height: '100%',
-                          textAlign: 'center',
-                          boxShadow: selectedEngagementType === option.value ? '4px 4px 0px var(--baobab-emerald)' : 'none',
-                          transition: 'all 0.1s ease'
+                        onClick={() => {
+                          setSelectedEngagementType(option.value);
+                          form.setFieldValue("engagementType", option.value);
                         }}
+                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-gold' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
                       >
-                        <div style={{ color: option.color, fontSize: '24px', marginBottom: '8px' }}>{option.icon}</div>
-                        <Text strong style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--onyx-black)' }}>{option.label}</Text>
+                        <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-gold' : 'text-text-tertiary'}`}>
+                          {option.icon}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase tracking-widest text-center ${selectedEngagementType === option.value ? 'text-white' : 'text-text-tertiary'}`}>
+                          {option.label}
+                        </span>
                       </div>
                     </Col>
                   ))}
@@ -371,76 +280,34 @@ const SmartCityDemoDetail: React.FC = () => {
               </Radio.Group>
             </Form.Item>
 
-            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '3px solid var(--onyx-black)' }}>
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item name="contactName" label={<span className="eyebrow">Full Name</span>} rules={[{ required: true }]} style={{ marginBottom: '16px' }}>
-                    <Input className="afro-input compact" placeholder="Full Name" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item name="contactEmail" label={<span className="eyebrow">Email</span>} rules={[{ required: true, type: 'email' }]} style={{ marginBottom: '16px' }}>
-                    <Input className="afro-input compact" placeholder="Email" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              
-              <Form.Item 
-                name="message" 
-                label={<span className="eyebrow">Brief Intent</span>} 
-                rules={[{ required: true }]}
-                style={{ marginBottom: '24px' }}
-              >
-                <Input.TextArea rows={3} className="afro-input compact" placeholder="Describe your collaboration goals..." />
-              </Form.Item>
+            <div className="pt-6 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Form.Item name="contactName" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Full Name</span>} rules={[{ required: true }]}>
+                  <Input className="bg-bg-primary border-border-subtle text-white h-10 rounded-xl" placeholder="Full Identity" />
+                </Form.Item>
+                <Form.Item name="contactEmail" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Network Email</span>} rules={[{ required: true, type: 'email' }]}>
+                  <Input className="bg-bg-primary border-border-subtle text-white h-10 rounded-xl" placeholder="Email@domain.com" />
+                </Form.Item>
+            </div>
+            
+            <Form.Item 
+              name="message" 
+              label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Brief Intent</span>} 
+              rules={[{ required: true }]}
+            >
+              <Input.TextArea rows={3} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="Describe your collaboration goals..." />
+            </Form.Item>
 
-              <div style={{ display: "flex", gap: "12px" }}>
-                <Button 
-                  className="afro-button primary" 
-                  htmlType="submit" 
-                  loading={engagementLoading}
-                  style={{ flex: 2, height: '52px', fontSize: '14px' }}
-                >
-                  SUBMIT REQUEST
-                </Button>
-                <Button 
-                  className="afro-button" 
-                  onClick={closeEngagementModal}
-                  style={{ flex: 1, height: '52px' }}
-                >
-                  CANCEL
-                </Button>
-              </div>
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={engagementLoading}>
+                {engagementLoading ? 'SYNCHRONIZING...' : 'SUBMIT REQUEST'}
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setEngagementModalVisible(false)}>
+                CANCEL
+              </button>
             </div>
           </Form>
         </div>
       </Modal>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .afro-input {
-          border: 3px solid var(--onyx-black) !important;
-          border-radius: 0 !important;
-          padding: 16px 20px !important;
-          font-family: var(--font-body) !important;
-          background: var(--canvas-white) !important;
-          font-size: 16px !important;
-        }
-        .afro-input:focus {
-          border-color: var(--baobab-emerald) !important;
-          box-shadow: 4px 4px 0px var(--onyx-black) !important;
-        }
-        .afro-bauhaus-modal .ant-modal-content {
-          border-radius: 0 !important;
-          padding: 0 !important;
-          background: transparent !important;
-          box-shadow: none !important;
-        }
-        .afro-bauhaus-modal .ant-modal-close {
-          top: 24px;
-          right: 24px;
-          color: var(--onyx-black);
-        }
-      `}} />
     </div>
   );
 };

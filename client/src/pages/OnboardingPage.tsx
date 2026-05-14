@@ -1,49 +1,50 @@
-// client/src/pages/OnboardingPage.jsx
 import React, { useState  } from 'react';
 import {
   Form,
   Input,
   Button,
-  Card,
   Typography,
   App as AntApp,
   Steps,
   Grid,
+  Spin
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../api"; // Use the client-side api instance
+import api from "../api";
+import { 
+  Zap, 
+  User, 
+  Globe, 
+  Activity, 
+  ArrowRight, 
+  ArrowLeft,
+  CheckCircle2
+} from "lucide-react";
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 const { useBreakpoint } = Grid;
 
-// Define the steps for the onboarding process
 const steps = [
-  { title: "Welcome", content: "Introduction" },
-  { title: "Your Profile", content: "Background & Beliefs" },
-  { title: "Your Vision", content: "Goals & Challenges" },
+  { title: "Initialize", content: "Welcome" },
+  { title: "Identity", content: "Background & Beliefs" },
+  { title: "Vision", content: "Goals & Challenges" },
 ];
 
 const OnboardingPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [current, setCurrent] = useState<number>(0); // Current step
+  const [current, setCurrent] = useState<number>(0);
   const [form] = Form.useForm();
-  const { user, token, refetchUser } = useAuth(); // Get user, token, and refetch function
+  const { user, token, refetchUser } = useAuth();
   const navigate = useNavigate();
   const { message } = AntApp.useApp();
   const screens = useBreakpoint();
 
-  // Function to go to the next step
   const handleNext = async () => {
     try {
-      // Validate fields for the current step
       if (current === 1) {
-        await form.validateFields([
-          "location",
-          "personalBeliefs",
-          "background",
-        ]);
+        await form.validateFields(["location", "personalBeliefs", "background"]);
       } else if (current === 2) {
         await form.validateFields(["lifeVision", "challenges"]);
       }
@@ -53,16 +54,14 @@ const OnboardingPage: React.FC = () => {
     }
   };
 
-  // Function to go to the previous step
   const handlePrev = () => {
     setCurrent(current - 1);
   };
 
-  // Function to handle the final form submission
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
     const profileData = {
-      fullName: user?.name || "User", // Get name from auth context
+      fullName: user?.name || "User",
       location: values.location,
       personalBeliefs: values.personalBeliefs,
       background: values.background,
@@ -71,237 +70,109 @@ const OnboardingPage: React.FC = () => {
     };
 
     try {
-      // Ensure auth header is set
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       await api.post("/onboarding/profile", profileData);
-
-      message.success("Profile created successfully! AI analysis is underway.");
-
-      // Refetch the user data in the AuthContext to include the new profile
-      // This will update `user.frequencyProfile` and allow access to the main app
-      if (refetchUser) {
-        await refetchUser();
-      }
-
-      navigate("/"); // Navigate to the main app
-    } catch (err) {
-      console.error("Profile creation failed:", err);
+      message.success("Profile synchronized! AI analysis is underway.");
+      if (refetchUser) await refetchUser();
+      navigate("/");
+    } catch (err: any) {
       message.error(err.response?.data?.error || "Failed to create profile.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Responsive styles
-  const containerStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    width: "100vw",
-    padding: screens.xs ? "16px" : "20px",
-    background: "var(--papyrus-off-white)",
-    position: "relative",
-    overflow: "hidden"
-  };
-
-  const cardStyle = {
-    width: "100%",
-    maxWidth: screens.xs ? "100%" : screens.sm ? "90%" : "800px",
-    margin: "0 auto",
-    boxShadow: "10px 10px 0px var(--onyx-black)",
-    border: "3px solid var(--onyx-black)",
-    borderRadius: "0px",
-    background: "var(--canvas-white)",
-    zIndex: 1
-  };
-
-  const titleStyle = {
-    textAlign: "center",
-    fontSize: screens.xs ? "20px" : "24px",
-    marginBottom: screens.xs ? "8px" : "16px",
-  };
-
-  const paragraphStyle = {
-    textAlign: "center",
-    fontSize: screens.xs ? "13px" : "14px",
-    marginBottom: screens.xs ? "16px" : "24px",
-  };
-
-  const stepsStyle = {
-    marginBottom: screens.xs ? "16px" : "24px",
-  };
-
-  const contentStyle = {
-    minHeight: screens.xs ? "150px" : "200px",
-    padding: screens.xs ? "8px 0" : "16px 0",
-  };
-
-  const formItemStyle = {
-    marginBottom: screens.xs ? "16px" : "24px",
-  };
-
-  const buttonContainerStyle = {
-    marginTop: screens.xs ? "16px" : "24px",
-    display: "flex",
-    justifyContent: "space-between",
-    gap: screens.xs ? "8px" : "16px",
-  };
-
-  const buttonStyle = {
-    flex: screens.xs ? 1 : "none",
-    height: screens.xs ? "40px" : "auto",
-  };
-
   return (
-    <div style={containerStyle}>
-      <div className="pattern-mudcloth" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.1, pointerEvents: 'none', zIndex: 0 }}></div>
-      <Card style={cardStyle}>
-        <Title level={screens.xs ? 4 : 3} style={titleStyle}>
-          Welcome to QSI
-        </Title>
-        <Paragraph style={paragraphStyle} type="secondary">
-          Let's create your Frequency Profile. This helps us understand your
-          vision and challenges to provide aligned solutions.
-        </Paragraph>
+    <div className="min-h-screen w-screen flex items-center justify-center bg-bg-primary p-6 lg:p-12 relative overflow-hidden">
+      {/* Background Decorative Element */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none -z-0">
+         <Zap size={800} className="text-accent-gold" />
+      </div>
+
+      <div className="w-full max-w-2xl bg-bg-secondary border border-border-subtle rounded-3xl p-8 lg:p-12 shadow-2xl relative z-10">
+        <div className="text-center mb-10">
+           <span className="eyebrow">Frequency Calibration</span>
+           <h1 className="text-3xl lg:text-4xl font-black text-white mt-2 mb-4 uppercase tracking-tight">Initialize Profile</h1>
+           <p className="text-sm text-text-secondary leading-relaxed max-w-md mx-auto">
+             Let's create your Frequency Profile. This helps us synchronize your vision with the platform's intelligent infrastructure.
+           </p>
+        </div>
 
         <Steps
           current={current}
+          className="custom-steps mb-12"
           items={steps.map((s) => ({
-            title: screens.xs ? "" : s.title,
-            description: screens.xs ? s.title : undefined,
+            title: screens.md ? s.title : "",
+            icon: current > steps.indexOf(s) ? <CheckCircle2 size={16} /> : undefined
           }))}
-          style={stepsStyle}
-          size={screens.xs ? "small" : "default"}
-          responsive={false}
         />
 
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="space-y-6">
           {/* Step 0: Welcome */}
-          <div
-            style={{
-              display: current === 0 ? "block" : "none",
-              ...contentStyle,
-            }}
-          >
-            <Title level={screens.xs ? 5 : 4}>The Frequency Scan</Title>
-            <Paragraph
-              type="secondary"
-              style={{ fontSize: screens.xs ? "13px" : "14px" }}
-            >
-              To provide you with coherent guidance, QSI first understands your
-              unique energetic signature. This involves mapping your worldview,
-              vision, and current challenges.
-            </Paragraph>
-            <Paragraph style={{ fontSize: screens.xs ? "13px" : "14px" }}>
-              This one-time setup will take about 2-3 minutes.
-            </Paragraph>
-          </div>
+          {current === 0 && (
+            <div className="py-8 text-center animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-bg-primary border border-border-subtle flex items-center justify-center text-accent-gold mx-auto mb-8 shadow-xl">
+                 <Activity size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-4">The Frequency Scan</h3>
+              <p className="text-text-secondary text-sm leading-relaxed mb-6">
+                To provide you with coherent guidance, QSI first understands your unique energetic signature. This involves mapping your worldview, vision, and current challenges.
+              </p>
+              <div className="inline-block px-4 py-2 bg-bg-primary rounded-full border border-border-subtle">
+                 <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Est. Time: 2-3 Minutes</span>
+              </div>
+            </div>
+          )}
 
           {/* Step 1: Background & Beliefs */}
-          <div style={{ display: current === 1 ? "block" : "none" }}>
-            <Form.Item
-              name="location"
-              label="Location (City, Country)"
-              rules={[{ required: true }]}
-              style={formItemStyle}
-            >
-              <Input
-                size={screens.xs ? "small" : "middle"}
-                placeholder="e.g., Harare, Zimbabwe"
-              />
-            </Form.Item>
-            <Form.Item
-              name="personalBeliefs"
-              label="Personal Beliefs & Worldview"
-              rules={[{ required: true }]}
-              style={formItemStyle}
-            >
-              <TextArea
-                rows={screens.xs ? 3 : 4}
-                size={screens.xs ? "small" : "middle"}
-                placeholder="What are your core beliefs about the world, spirituality, or your place in it?"
-              />
-            </Form.Item>
-            <Form.Item
-              name="background"
-              label="Educational & Professional Background"
-              rules={[{ required: true }]}
-              style={formItemStyle}
-            >
-              <TextArea
-                rows={screens.xs ? 3 : 4}
-                size={screens.xs ? "small" : "middle"}
-                placeholder="Briefly describe your background (e.g., education, career path, key skills)."
-              />
-            </Form.Item>
-          </div>
+          {current === 1 && (
+            <div className="space-y-6 animate-fade-in">
+              <Form.Item name="location" label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Current Location</span>} rules={[{ required: true }]}>
+                <Input className="bg-bg-primary border-border-subtle text-white h-12 rounded-xl" placeholder="e.g. Harare, Zimbabwe" />
+              </Form.Item>
+              <Form.Item name="personalBeliefs" label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Worldview & Philosophy</span>} rules={[{ required: true }]}>
+                <TextArea rows={4} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="What are your core beliefs about the world or your place in it?" />
+              </Form.Item>
+              <Form.Item name="background" label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Technical Background</span>} rules={[{ required: true }]}>
+                <TextArea rows={4} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="Describe your educational and professional trajectory." />
+              </Form.Item>
+            </div>
+          )}
 
           {/* Step 2: Vision & Challenges */}
-          <div style={{ display: current === 2 ? "block" : "none" }}>
-            <Form.Item
-              name="lifeVision"
-              label="Life Vision (Goals, Timelines, Trajectory)"
-              rules={[{ required: true }]}
-              style={formItemStyle}
-            >
-              <TextArea
-                rows={screens.xs ? 3 : 4}
-                size={screens.xs ? "small" : "middle"}
-                placeholder="What do you want to create or achieve?"
-              />
-            </Form.Item>
-            <Form.Item
-              name="challenges"
-              label="Current Challenges (Emotional, Relational, Financial, etc.)"
-              rules={[{ required: true }]}
-              style={formItemStyle}
-            >
-              <TextArea
-                rows={screens.xs ? 3 : 4}
-                size={screens.xs ? "small" : "middle"}
-                placeholder="What are your main obstacles right now?"
-              />
-            </Form.Item>
-          </div>
+          {current === 2 && (
+            <div className="space-y-6 animate-fade-in">
+              <Form.Item name="lifeVision" label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Strategic Vision</span>} rules={[{ required: true }]}>
+                <TextArea rows={4} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="What do you want to create or achieve in this cycle?" />
+              </Form.Item>
+              <Form.Item name="challenges" label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Operational Obstacles</span>} rules={[{ required: true }]}>
+                <TextArea rows={4} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="What are your primary friction points right now?" />
+              </Form.Item>
+            </div>
+          )}
 
-          {/* Navigation Buttons */}
-          <div style={buttonContainerStyle}>
+          {/* Navigation */}
+          <div className="flex gap-4 pt-8">
             {current > 0 ? (
-              <Button
-                onClick={handlePrev}
-                style={buttonStyle}
-                size={screens.xs ? "small" : "middle"}
-              >
-                Previous
-              </Button>
+              <button onClick={handlePrev} className="qsi-button flex-1 py-4 font-bold flex items-center justify-center gap-2">
+                <ArrowLeft size={18} /> Previous
+              </button>
             ) : (
-              <div style={buttonStyle} /> // Placeholder for spacing
+              <div className="flex-1 hidden md:block" />
             )}
 
             {current < steps.length - 1 ? (
-              <Button
-                type="primary"
-                onClick={handleNext}
-                style={buttonStyle}
-                size={screens.xs ? "small" : "middle"}
-              >
-                Next
-              </Button>
-            ) : current === steps.length - 1 ? (
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                style={buttonStyle}
-                size={screens.xs ? "small" : "middle"}
-              >
-                Create Profile
-              </Button>
-            ) : null}
+              <button onClick={handleNext} className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2">
+                Next Step <ArrowRight size={18} />
+              </button>
+            ) : (
+              <button onClick={() => form.submit()} disabled={loading} className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-gold/20">
+                {loading ? 'SYNCHRONIZING...' : 'FINALIZE PROFILE'} <Zap size={18} />
+              </button>
+            )}
           </div>
         </Form>
-      </Card>
+      </div>
     </div>
   );
 };

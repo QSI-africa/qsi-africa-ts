@@ -44,18 +44,18 @@ const Message: React.FC<MessageProps> = ({ sender, text }) => {
         style={{
           maxWidth: "min(85%, 700px)",
           background: isUser
-            ? "var(--baobab-emerald)"
-            : "var(--papyrus-off-white)",
-          border: "3px solid var(--onyx-black)",
+            ? "var(--success-green)"
+            : "var(--bg-primary)",
+          border: "3px solid var(--border-subtle)",
           borderRadius: 0,
           padding: "20px 24px",
-          boxShadow: "6px 6px 0px var(--onyx-black)",
+          boxShadow: "6px 6px 0px var(--border-subtle)",
           position: "relative",
-          color: isUser ? "var(--canvas-white)" : "var(--onyx-black)",
+          color: isUser ? "var(--canvas-white)" : "var(--border-subtle)",
           fontSize: "14px",
           lineHeight: 1.6,
           fontWeight: 500,
-          fontFamily: "var(--font-body)",
+          fontFamily: "var(--font-primary)",
         }}
       >
         <ReactMarkdown

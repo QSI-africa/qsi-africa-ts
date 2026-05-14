@@ -163,7 +163,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // IMPORTANT: convert AntD fileList → raw File objects
     const rawFiles = selectedFiles
       .map((f) => f.originFileObj)
-      .filter((f): f is File => !!f);
+      .filter((f): f is NonNullable<typeof f> => !!f);
 
     onSendMessage(messageText, rawFiles);
 
@@ -300,27 +300,27 @@ const ChatInput: React.FC<ChatInputProps> = ({
         style={{
           display: "flex",
           alignItems: "stretch",
-          gap: "12px",
-          background: "var(--canvas-white)",
-          border: "3px solid var(--onyx-black)",
-          boxShadow: "8px 8px 0px var(--onyx-black)",
-          padding: "8px",
+          gap: "16px",
+          background: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: "20px",
+          padding: "8px 16px",
+          boxShadow: "var(--shadow-md)",
+          margin: "0 24px 24px 24px"
         }}
       >
         {isInfrastructure && (
           <Upload {...uploadProps}>
             <Button
-              type="primary"
-              icon={<UploadOutlined style={{ fontSize: '20px' }} />}
+              type="text"
+              icon={<UploadOutlined style={{ fontSize: '22px' }} />}
               disabled={loading}
               style={{
                 height: "100%",
                 minHeight: "56px",
-                width: "56px",
-                borderRadius: 0,
-                backgroundColor: "var(--savanna-moss)",
-                borderColor: "var(--onyx-black)",
-                borderWidth: "0 3px 0 0",
+                width: "48px",
+                borderRadius: "12px",
+                color: "var(--text-tertiary)",
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -330,50 +330,51 @@ const ChatInput: React.FC<ChatInputProps> = ({
         )}
 
         {/* Textbox */}
-        <Input.TextArea
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            isInfrastructure && selectedFiles.length > 0
-              ? "Add a message (optional)..."
-              : isInfrastructure
-              ? "Describe your infrastructure needs..."
-              : "Type your message..."
-          }
-          autoSize={{ minRows: 1, maxRows: 4 }}
-          disabled={loading}
-          style={{
-            flexGrow: 1,
-            borderRadius: 0,
-            border: "none",
-            fontSize: "16px",
-            padding: "12px",
-            background: "transparent",
-            boxShadow: "none",
-            fontFamily: "var(--font-body)",
-            color: "var(--onyx-black)",
-          }}
-        />
+          <Input.TextArea
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              isInfrastructure && selectedFiles.length > 0
+                ? "Add a message (optional)..."
+                : isInfrastructure
+                ? "Describe your infrastructure needs..."
+                : "Type your message..."
+            }
+            autoSize={{ minRows: 1, maxRows: 4 }}
+            disabled={loading}
+            style={{
+              flexGrow: 1,
+              borderRadius: 0,
+              border: "none",
+              fontSize: "15px",
+              padding: "12px 0",
+              background: "transparent",
+              boxShadow: "none",
+              fontFamily: "var(--font-primary)",
+              color: "var(--text-primary)",
+            }}
+          />
 
         {/* Send */}
         <Button
           type="primary"
-          icon={<SendOutlined style={{ fontSize: '20px' }} />}
+          icon={<SendOutlined style={{ fontSize: '22px' }} />}
           onClick={handleSend}
           loading={loading}
           disabled={!userInput.trim() && selectedFiles.length === 0}
           style={{
-            height: "100%",
-            minHeight: "56px",
-            width: "56px",
-            borderRadius: 0,
-            backgroundColor: "var(--baobab-emerald)",
-            borderColor: "var(--onyx-black)",
-            borderWidth: "0 0 0 3px",
+            height: "48px",
+            width: "48px",
+            borderRadius: "14px",
+            backgroundColor: "var(--accent-primary)",
+            color: "black",
+            border: "none",
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            alignSelf: 'center',
+            boxShadow: "0 8px 16px -4px var(--accent-primary-glow)"
           }}
         />
       </div>

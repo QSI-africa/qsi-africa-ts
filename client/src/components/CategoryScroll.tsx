@@ -32,8 +32,8 @@ interface CategoryScrollProps {
 
 const CategoryScroll: React.FC<CategoryScrollProps> = ({ activeCategory, onCategoryChange }) => {
   return (
-    <div className="no-scrollbar" style={{ width: '100%', overflowX: 'auto', padding: '24px 0' }}>
-      <div style={{ display: 'flex', gap: '32px', minWidth: 'max-content', padding: '0 5%' }}>
+    <div className="no-scrollbar" style={{ width: '100%', overflowX: 'auto', padding: '20px 0', backgroundColor: 'var(--bg-primary)' }}>
+      <div style={{ display: 'flex', gap: '16px', minWidth: 'max-content', padding: '0 6%' }}>
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.id;
@@ -44,33 +44,25 @@ const CategoryScroll: React.FC<CategoryScrollProps> = ({ activeCategory, onCateg
               onClick={() => onCategoryChange(cat.id)}
               style={{ 
                 display: 'flex', 
-                flexDirection: 'column', 
                 alignItems: 'center', 
-                gap: '12px', 
-                border: 'none', 
-                background: 'none', 
+                gap: '10px', 
+                border: '1px solid',
+                borderColor: isActive ? 'var(--bg-secondary)' : 'rgba(2, 44, 34, 0.08)', 
+                background: isActive ? 'var(--bg-secondary)' : 'white', 
+                color: isActive ? 'white' : 'var(--text-secondary)',
                 cursor: 'pointer', 
-                padding: 0,
-                outline: 'none'
+                padding: '12px 24px',
+                borderRadius: '100px',
+                outline: 'none',
+                transition: 'var(--transition-smooth)',
+                boxShadow: isActive ? 'var(--shadow-soft)' : 'none',
               }}
             >
-              <div 
-                className={`circular-option ${isActive ? 'active' : ''}`}
-                style={{
-                   fontSize: '24px',
-                   borderWidth: isActive ? '3px' : '2px'
-                }}
-              >
-                <Icon />
-              </div>
+              <Icon style={{ fontSize: '18px' }} />
               <span 
                 style={{ 
-                  fontSize: '11px', 
-                  fontWeight: 'bold', 
-                  color: isActive ? 'var(--baobab-emerald)' : 'var(--onyx-black)',
-                  fontFamily: 'var(--font-accent)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
+                  fontSize: '14px', 
+                  fontWeight: 600, 
                 }}
               >
                 {cat.label}

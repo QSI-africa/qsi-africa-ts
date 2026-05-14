@@ -1,21 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Typography, Row, Col, Input, 
-  Select, Tag, Space, Button, 
-  Empty, Badge, Tabs, Spin, Skeleton, Alert
+  Tag, Space, Button, 
+  Empty, Badge, Spin, Alert
 } from 'antd';
 import { 
-  SearchOutlined, 
-  SafetyCertificateOutlined, 
-  GlobalOutlined 
-} from '@ant-design/icons';
+  Search, 
+  ShieldCheck, 
+  Globe,
+  User,
+  Zap,
+  MoreVertical,
+  Activity,
+  ArrowRight,
+  Shield,
+  Star,
+  Users,
+  SearchCode
+} from 'lucide-react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import ProfileCard from '../components/ProfileCard';
 
-const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
-const { TabPane } = Tabs;
+const GREEN = '#10B981';
 
 const SovereignMindsPage: React.FC = () => {
   const [engineers, setEngineers] = useState<any[]>([]);
@@ -64,144 +71,202 @@ const SovereignMindsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: "var(--canvas-white)", minHeight: "100vh" }}>
-      {/* Hero Section */}
-      <div 
-        className="pattern-mudcloth"
-        style={{
-          padding: "160px 5% 80px 5%",
-          borderBottom: "3px solid var(--onyx-black)",
-          textAlign: "left",
-          position: "relative"
-        }}
-      >
-        <div className="container" style={{ padding: 0 }}>
-          <span className="eyebrow reveal-up" style={{ color: 'var(--baobab-emerald)' }}>Ecosystem of Excellence</span>
-          <Title
-            level={1}
-            className="reveal-up"
-            style={{ 
-              fontSize: "clamp(48px, 8vw, 100px)", 
-              margin: "12px 0 32px 0",
-              color: "var(--onyx-black)",
-              textTransform: 'uppercase',
-              fontWeight: 900,
-              letterSpacing: '-0.02em'
-            }}
-          >
-            SOVEREIGN <br /> MINDS
-          </Title>
-          <div className="grid-border-t grid-border-emerald" style={{ paddingTop: '32px', maxWidth: '800px' }}>
-            <Paragraph
-              className="reveal-up"
-              style={{
-                fontSize: "22px",
-                color: "var(--onyx-black)",
-                maxWidth: "750px",
-                fontFamily: "var(--font-body)",
-                fontWeight: 600,
-                lineHeight: 1.5
-              }}
-            >
-              A collective of decolonized thinkers driving mental transformation and intellectual leadership across the continent.
-            </Paragraph>
+    <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      {/* Header */}
+      <div style={{
+        padding: '24px 32px',
+        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
+          }}>
+            <Users size={20} />
           </div>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+              SOVEREIGN MINDS
+            </h1>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
+              Ecosystem of Excellence
+            </p>
+          </div>
+        </div>
 
-          {/* Search Bar */}
-          <div className="reveal-up" style={{ marginTop: '64px', maxWidth: '1100px' }}>
-            <div style={{ display: 'flex', gap: '2px', background: 'var(--onyx-black)', border: '3px solid var(--onyx-black)', boxShadow: '12px 12px 0px var(--onyx-black)' }}>
-              <Input 
-                placeholder="Search by name, expertise, or mission..." 
-                prefix={<SearchOutlined style={{ color: 'var(--baobab-emerald)', fontSize: '20px' }} />} 
-                style={{ flex: 1, height: '72px', border: 'none', borderRadius: 0, fontSize: '18px', paddingLeft: '24px' }}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-              <Button 
-                className="afro-button primary" 
-                style={{ height: '72px', border: 'none', padding: '0 48px', fontSize: '16px' }}
-              >
-                SEARCH NETWORK
-              </Button>
-            </div>
-          </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+           {[
+             { label: 'All Members', key: 'ALL' },
+             { label: 'Verified Minds', key: 'SOVEREIGN' },
+             { label: 'Professionals', key: 'PROFESSIONALS' }
+           ].map((tab) => (
+             <button 
+               key={tab.key}
+               onClick={() => setActiveTab(tab.key)}
+               style={{
+                 padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                 fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                 transition: 'all 0.2s',
+                 background: activeTab === tab.key ? GREEN : 'rgba(255,255,255,0.04)',
+                 color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.4)',
+                 boxShadow: activeTab === tab.key ? `0 6px 16px -4px ${GREEN}60` : 'none',
+               }}
+             >
+               {tab.label}
+             </button>
+           ))}
         </div>
       </div>
 
-      <div className="container section-py">
-        <Tabs 
-          activeKey={activeTab} 
-          onChange={setActiveTab} 
-          className="bauhaus-tabs"
-          style={{ marginBottom: '64px' }}
-        >
-          <TabPane tab="ALL MEMBERS" key="ALL" />
-          <TabPane tab="SOVEREIGN MINDS (VERIFIED)" key="SOVEREIGN" />
-          <TabPane tab="PROFESSIONAL PORTALS" key="PROFESSIONALS" />
-        </Tabs>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
+        
+        {/* Hero Section */}
+        <div style={{
+          borderRadius: '24px', overflow: 'hidden', position: 'relative',
+          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
+          display: 'flex', flexDirection: 'column', gap: '32px'
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
+              Collective of Decolonized Thinkers
+            </p>
+            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
+              Intellectual Leadership<br />across the Renaissance
+            </h2>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '560px' }}>
+              Connecting high-trust network interactions with visionary minds driving mental transformation and innovation.
+            </p>
+          </div>
+
+          {/* Search Bar Redesign */}
+          <div style={{ 
+            position: 'relative', zIndex: 1, maxWidth: '600px',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '16px', display: 'flex', alignItems: 'center', padding: '4px 4px 4px 20px',
+            boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+          }}>
+            <Search size={18} color="rgba(255,255,255,0.3)" />
+            <input 
+              style={{
+                background: 'none', border: 'none', outline: 'none', color: 'white',
+                padding: '12px 16px', flex: 1, fontSize: '14px', fontWeight: 500
+              }}
+              placeholder="Search by name, expertise, or mission..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            <button style={{
+              background: GREEN, color: 'white', border: 'none', borderRadius: '12px',
+              padding: '10px 24px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase',
+              cursor: 'pointer', boxShadow: `0 4px 12px ${GREEN}40`
+            }}>
+              Search
+            </button>
+          </div>
+
+          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
+            <Globe size={240} />
+          </div>
+        </div>
 
         {error && (
-          <Alert message={error} type="error" showIcon style={{ marginBottom: 48, borderRadius: 0, border: '3px solid var(--terracotta-clay)' }} />
+          <Alert 
+            message={error} 
+            type="error" 
+            showIcon 
+            style={{ marginBottom: '32px', borderRadius: '16px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }} 
+          />
         )}
 
         {loading ? (
-          <Row gutter={[40, 40]}>
-            {[1, 2, 3, 4].map(i => (
-              <Col xs={24} lg={12} key={i}>
-                <Skeleton active avatar paragraph={{ rows: 4 }} />
-              </Col>
-            ))}
-          </Row>
+          <div style={{ padding: '100px 0', textAlign: 'center' }}><Spin /></div>
         ) : filteredEngineers.length > 0 ? (
-          <Row gutter={[40, 40]}>
+          <Row gutter={[24, 24]}>
             {filteredEngineers.map(engineer => (
               <Col xs={24} lg={12} key={engineer.id}>
-                <ProfileCard 
-                  id={engineer.id}
-                  name={engineer.user.name}
-                  role={engineer.user.role}
-                  specialization={engineer.specialization}
-                  bio={engineer.bio}
-                  skills={engineer.skills}
-                  avatarUrl={getServerUrl(engineer.avatarUrl)}
-                  isVerified={engineer.isVerified}
-                  onClick={(id) => navigate(`/profiles/${id}`)}
-                />
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '24px', padding: '24px', height: '100%',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer'
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}40`;
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                }}
+                onClick={() => navigate(`/profiles/${engineer.id}`)}
+                >
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ 
+                        width: '72px', height: '72px', borderRadius: '20px', overflow: 'hidden',
+                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)'
+                      }}>
+                        <img src={getServerUrl(engineer.avatarUrl)} alt={engineer.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                      {engineer.isVerified && (
+                        <div style={{ 
+                          position: 'absolute', bottom: '-4px', right: '-4px',
+                          width: '24px', height: '24px', borderRadius: '50%',
+                          background: GREEN, border: '3px solid #0a1018',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+                        }}>
+                          <Shield size={12} fill="currentColor" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                         <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>{engineer.user.name}</h3>
+                         <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><MoreVertical size={18} /></button>
+                      </div>
+                      <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>{engineer.specialization}</p>
+                      <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {engineer.bio}
+                      </p>
+                      
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {engineer.skills?.slice(0, 3).map((skill: string, i: number) => (
+                          <span key={i} style={{ 
+                            fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', 
+                            background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'
+                          }}>
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </Col>
             ))}
           </Row>
         ) : (
-          <Empty 
-            image={Empty.PRESENTED_IMAGE_SIMPLE} 
-            description={<Text className="eyebrow" style={{ fontSize: '16px' }}>No matches found in this category</Text>} 
-          />
+          <div style={{ padding: '100px 0', textAlign: 'center' }}>
+             <SearchCode size={64} color="rgba(255,255,255,0.05)" style={{ marginBottom: '24px' }} />
+             <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>No Matches Found</h3>
+             <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>Adjust your search parameters for better synchronization.</p>
+          </div>
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .bauhaus-tabs .ant-tabs-nav-list {
-          gap: 32px;
-        }
-        .bauhaus-tabs .ant-tabs-tab {
-          padding: 16px 0 !important;
-          margin: 0 !important;
-        }
-        .bauhaus-tabs .ant-tabs-tab-btn {
-          font-family: var(--font-accent) !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.15em !important;
-          font-weight: 900 !important;
-          font-size: 13px !important;
-          color: var(--ash-grey) !important;
-        }
-        .bauhaus-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: var(--onyx-black) !important;
-        }
-        .bauhaus-tabs .ant-tabs-ink-bar {
-          background: var(--baobab-emerald) !important;
-          height: 6px !important;
-        }
-      `}} />
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };

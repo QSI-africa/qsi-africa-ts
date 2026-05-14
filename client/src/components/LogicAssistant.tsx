@@ -38,8 +38,8 @@ const LogicAssistant: React.FC = () => {
         minWidth: '240px', 
         marginBottom: '12px',
         backgroundColor: 'var(--canvas-white)',
-        border: '3px solid var(--onyx-black)',
-        boxShadow: '10px 10px 0px var(--onyx-black)',
+        border: '3px solid var(--border-subtle)',
+        boxShadow: '10px 10px 0px var(--border-subtle)',
         padding: '8px'
       }}
     >
@@ -53,7 +53,7 @@ const LogicAssistant: React.FC = () => {
       </Menu.Item>
       <Menu.Item 
         key="vision" 
-        icon={<EyeOutlined style={{ color: 'var(--baobab-emerald)' }} />} 
+        icon={<EyeOutlined style={{ color: 'var(--success-green)' }} />} 
         onClick={() => navigate('/chat/vision')}
         style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
       >
@@ -61,7 +61,7 @@ const LogicAssistant: React.FC = () => {
       </Menu.Item>
       <Menu.Item 
         key="healing" 
-        icon={<HeartOutlined style={{ color: 'var(--terracotta-clay)' }} />} 
+        icon={<HeartOutlined style={{ color: '#ff4d4f' }} />} 
         onClick={() => navigate('/chat/healing')}
         style={{ fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
       >
@@ -102,10 +102,10 @@ const LogicAssistant: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'var(--baobab-emerald)',
-              borderColor: 'var(--onyx-black)',
+              backgroundColor: 'var(--success-green)',
+              borderColor: 'var(--border-subtle)',
               borderWidth: '3px',
-              boxShadow: '8px 8px 0px var(--onyx-black)',
+              boxShadow: '8px 8px 0px var(--border-subtle)',
               transition: 'var(--snappy)',
             }}
           />

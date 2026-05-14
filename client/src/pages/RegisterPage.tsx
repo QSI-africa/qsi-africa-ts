@@ -6,16 +6,13 @@ import {
   Typography,
   App as AntApp,
   Alert,
-  Checkbox,
-  Row,
-  Col,
 } from "antd";
-import { UserOutlined, MailOutlined, LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { User, Mail, Lock, ArrowRight, ShieldPlus } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import authHero from "../assets/auth-hero.png";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
+const GREEN = '#10B981';
 
 const RegisterPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -29,94 +26,58 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await register(values.name, values.email, values.password, values.phone);
-      message.success("Registration Successful!");
+      await register(values.name, values.email, values.password);
+      message.success("Operational sector registered.");
       const from = location.state?.from?.pathname || "/onboarding";
       navigate(from, { replace: true });
     } catch (err: any) {
-      console.error("Registration Failed:", err);
-      setError(
-        err.response?.data?.error || "Registration failed. Please try again."
-      );
+      setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--canvas-white)' }}>
-      {/* Left Side: Visual Hero */}
-      <div 
-        style={{ 
-          flex: 1, 
-          position: 'relative', 
-          display: 'none', 
-          '@media (min-width: 992px)': { display: 'block' } 
-        } as any}
-        className="hide-mobile"
-      >
-        <div 
-          style={{ 
-            position: 'absolute', 
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundImage: `url(${authHero})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div 
-          style={{ 
-            position: 'absolute', 
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'linear-gradient(to right, rgba(0,0,0,0.4), transparent)',
-            zIndex: 1
-          }}
-        />
-        <div 
-          style={{ 
-            position: 'absolute', 
-            bottom: '80px', 
-            left: '80px', 
-            zIndex: 2,
-            maxWidth: '600px'
-          }}
-        >
-          <span className="eyebrow" style={{ color: 'white', opacity: 0.9 }}>Join the Network</span>
-          <Title level={1} style={{ color: 'white', fontSize: '64px', margin: '20px 0', textTransform: 'uppercase' }}>
-            Collaborate <br /> on Sovereignty.
-          </Title>
-          <div className="grid-border-t grid-border-emerald" style={{ width: '100px', margin: '24px 0' }} />
-        </div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-bg-primary p-6 relative overflow-hidden">
+      {/* Background Orbs */}
+      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '400px', height: '400px', background: `${GREEN}10`, borderRadius: '50%', filter: 'blur(80px)' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '300px', height: '300px', background: `${GREEN}05`, borderRadius: '50%', filter: 'blur(60px)' }} />
 
-      {/* Right Side: Register Form */}
-      <div 
-        style={{ 
-          flex: '0 0 100%',
-          maxWidth: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '0 8%',
-          '@media (min-width: 992px)': { flex: '0 0 600px', maxWidth: '600px' }
-        } as any}
-      >
-        <div style={{ maxWidth: '500px', width: '100%', margin: '40px auto' }}>
-          <div style={{ marginBottom: '40px' }}>
-            <span className="eyebrow">Start Your Journey</span>
-            <Title level={2} style={{ textTransform: 'uppercase', marginBottom: '16px' }}>CREATE ACCOUNT</Title>
-            <Paragraph style={{ color: 'var(--ash-grey)', fontSize: '16px' }}>
-              Join the architects of African infrastructure and unlock exclusive collaboration tools.
-            </Paragraph>
+      <div className="w-full max-w-md reveal-up relative z-10">
+        <div className="text-center mb-10">
+          <div style={{ 
+            width: '64px', height: '64px', background: `${GREEN}15`, borderRadius: '20px', 
+            border: `1px solid ${GREEN}30`, display: 'flex', alignItems: 'center', 
+            justifyContent: 'center', mx: 'auto', mb: '24px', margin: '0 auto 24px',
+            color: GREEN, boxShadow: `0 10px 25px -5px ${GREEN}40`
+          }}>
+             <ShieldPlus size={32} />
           </div>
+          <h1 className="text-4xl font-black text-white mb-2 uppercase tracking-tighter">Sector <span style={{ color: GREEN }}>Registration</span></h1>
+          <p className="text-sm font-bold text-text-tertiary uppercase tracking-widest opacity-60">Initialize Sovereign Profile</p>
+        </div>
 
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.02)', 
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '32px',
+          padding: '40px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}>
           {error && (
-            <Alert
-              message={error}
-              type="error"
-              showIcon
-              style={{ marginBottom: 24, borderRadius: 0, border: '2px solid var(--terracotta-clay)' }}
-            />
+            <div style={{ 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              border: '1px solid rgba(239, 68, 68, 0.2)', 
+              padding: '12px 16px', 
+              borderRadius: '12px', 
+              color: '#ef4444', 
+              fontSize: '13px', 
+              fontWeight: 600,
+              marginBottom: '24px'
+            }}>
+              {error}
+            </div>
           )}
 
           <Form 
@@ -125,122 +86,101 @@ const RegisterPage: React.FC = () => {
             layout="vertical"
             requiredMark={false}
           >
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <Form.Item 
-                  name="name" 
-                  label={<span className="eyebrow" style={{ marginBottom: 0, fontSize: '10px' }}>Full Name</span>}
-                  rules={[{ required: true }]}
-                >
-                  <Input 
-                    prefix={<UserOutlined style={{ color: 'var(--baobab-emerald)' }} />} 
-                    placeholder="Kwame Mensah" 
-                    style={{ height: '56px', borderRadius: 0, border: '2px solid var(--onyx-black)' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item 
-                  name="email" 
-                  label={<span className="eyebrow" style={{ marginBottom: 0, fontSize: '10px' }}>Email Address</span>}
-                  rules={[{ required: true, type: "email" }]}
-                >
-                  <Input 
-                    prefix={<MailOutlined style={{ color: 'var(--baobab-emerald)' }} />} 
-                    placeholder="kwame@qsi.africa" 
-                    style={{ height: '56px', borderRadius: 0, border: '2px solid var(--onyx-black)' }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
             <Form.Item 
-              name="password" 
-              label={<span className="eyebrow" style={{ marginBottom: 0, fontSize: '10px' }}>Secure Password</span>}
-              rules={[{ required: true, min: 6 }]}
+              name="name" 
+              label={<span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Operator Name</span>}
+              rules={[{ required: true }]}
             >
-              <Input.Password 
-                prefix={<LockOutlined style={{ color: 'var(--baobab-emerald)' }} />} 
-                placeholder="•••••••• (min 6 chars)" 
-                style={{ height: '56px', borderRadius: 0, border: '2px solid var(--onyx-black)' }}
+              <Input 
+                prefix={<User size={18} style={{ color: 'rgba(255,255,255,0.2)', marginRight: '8px' }} />} 
+                placeholder="Sovereign Architect" 
+                style={{ 
+                  height: '52px', background: 'rgba(255,255,255,0.03)', 
+                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', 
+                  color: 'white', padding: '0 16px', fontSize: '14px', fontWeight: 500,
+                  transition: 'all 0.3s'
+                }}
+                className="custom-input-focus"
               />
             </Form.Item>
 
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <Form.Item 
-                  name="phone"
-                  label={<span className="eyebrow" style={{ marginBottom: 0, fontSize: '10px' }}>Phone (Optional)</span>}
-                  rules={[{ pattern: /^[+]?[\d\s\-()]+$/, message: "Invalid phone number" }]}
-                >
-                  <Input 
-                    placeholder="+233 24 XXX XXXX" 
-                    style={{ height: '56px', borderRadius: 0, border: '2px solid var(--onyx-black)' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item 
-                  name="organization"
-                  label={<span className="eyebrow" style={{ marginBottom: 0, fontSize: '10px' }}>Organization</span>}
-                >
-                  <Input 
-                    placeholder="QSI Innovations" 
-                    style={{ height: '56px', borderRadius: 0, border: '2px solid var(--onyx-black)' }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              name="agreement"
-              valuePropName="checked"
-              rules={[
-                {
-                  validator: (_, value) =>
-                    value
-                      ? Promise.resolve()
-                      : Promise.reject(new Error("Please accept the terms")),
-                },
-              ]}
+            <Form.Item 
+              name="email" 
+              label={<span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Operation Email</span>}
+              rules={[{ required: true, type: "email" }]}
             >
-              <Checkbox style={{ fontFamily: 'var(--font-accent)', fontSize: '11px', textTransform: 'uppercase' }}>
-                I agree to the <Link to="/terms" style={{ color: 'var(--baobab-emerald)' }}>terms and conditions</Link>
-              </Checkbox>
+              <Input 
+                prefix={<Mail size={18} style={{ color: 'rgba(255,255,255,0.2)', marginRight: '8px' }} />} 
+                placeholder="architect@qsi.africa" 
+                style={{ 
+                  height: '52px', background: 'rgba(255,255,255,0.03)', 
+                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', 
+                  color: 'white', padding: '0 16px', fontSize: '14px', fontWeight: 500,
+                  transition: 'all 0.3s'
+                }}
+                className="custom-input-focus"
+              />
             </Form.Item>
 
-            <Form.Item style={{ marginTop: '24px' }}>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={loading} 
-                block 
-                className="afro-button primary"
-                style={{ height: '64px', fontSize: '16px' }}
-                icon={<ArrowRightOutlined />}
-              >
-                CREATE ACCOUNT
-              </Button>
+            <Form.Item 
+              name="password" 
+              label={<span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Security Key</span>}
+              rules={[{ required: true, min: 6 }]}
+            >
+              <Input.Password 
+                prefix={<Lock size={18} style={{ color: 'rgba(255,255,255,0.2)', marginRight: '8px' }} />} 
+                placeholder="••••••••" 
+                style={{ 
+                  height: '52px', background: 'rgba(255,255,255,0.03)', 
+                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', 
+                  color: 'white', padding: '0 16px', fontSize: '14px', fontWeight: 500,
+                  transition: 'all 0.3s'
+                }}
+                className="custom-input-focus"
+              />
             </Form.Item>
 
-            <div style={{ textAlign: "center" }}>
-              <Text style={{ color: 'var(--ash-grey)' }}>Already have an account?</Text>
-              <Link 
-                to="/login" 
-                style={{ marginLeft: '8px', color: 'var(--baobab-emerald)', fontWeight: 700, textTransform: 'uppercase', fontSize: '12px', fontFamily: 'var(--font-accent)' }}
+            <Form.Item className="mb-0 mt-8">
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ 
+                  width: '100%', height: '56px', borderRadius: '18px', border: 'none',
+                  background: GREEN, color: 'white', fontSize: '14px', fontWeight: 900,
+                  textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: `0 12px 24px -6px ${GREEN}60`
+                }}
               >
-                Log In
-              </Link>
-            </div>
+                {loading ? 'INITIALIZING...' : 'INITIALIZE SECTOR'} <ArrowRight size={20} />
+              </button>
+            </Form.Item>
           </Form>
+        </div>
+
+        <div className="text-center mt-10">
+          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontWeight: 600 }}>Already registered?</Text>
+          <Link 
+            to="/login" 
+            style={{ 
+              marginLeft: '8px', color: GREEN, fontWeight: 800, fontSize: '13px', 
+              textTransform: 'uppercase', letterSpacing: '0.05em' 
+            }}
+          >
+            Access Platform
+          </Link>
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 991px) {
-          .hide-mobile { display: none !important; }
+      <style>{`
+        .custom-input-focus:focus, .custom-input-focus:hover {
+          border-color: ${GREEN} !important;
+          background: rgba(16, 185, 129, 0.04) !important;
+          box-shadow: 0 0 0 2px ${GREEN}15 !important;
         }
-      `}} />
+        .ant-input-password-icon { color: rgba(255,255,255,0.3) !important; }
+      `}</style>
     </div>
   );
 };

@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Button, Typography, Avatar, Space } from 'antd';
-import { SendOutlined, UserOutlined } from '@ant-design/icons';
 import { socketService } from '../services/socket';
+import { Send, User, MessageSquare, ShieldCheck, Clock } from 'lucide-react';
 
-const { Text, Title } = Typography;
+const GREEN = '#10B981';
 
 interface ChatMessage {
   message: string;
@@ -53,92 +52,195 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      background: 'var(--papyrus-off-white)', 
-      borderLeft: '3px solid var(--onyx-black)',
-      position: 'relative'
+      background: 'rgba(10,16,24,0.95)', 
+      position: 'relative',
+      overflow: 'hidden'
     }}>
-      {/* Brand Accent Line */}
-      <div 
-        style={{ 
-          height: '6px', 
-          width: '100%', 
-          background: 'repeating-linear-gradient(to right, #0B6138 0, #0B6138 16px, #D15B35 16px, #D15B35 32px, #E2B142 32px, #E2B142 48px, #4D7A51 48px, #4D7A51 64px, #111111 64px, #111111 80px)',
-          borderBottom: '2px solid var(--onyx-black)'
-        }} 
-      />
-
-      <div style={{ padding: '20px', borderBottom: '2px solid var(--onyx-black)', background: 'var(--canvas-white)' }}>
-        <Title level={4} style={{ margin: 0, textTransform: 'uppercase', fontSize: '14px', fontWeight: 900, fontFamily: 'var(--font-heading)' }}>
-          Session Transmission
-        </Title>
-        <span className="eyebrow" style={{ fontSize: '10px', margin: 0 }}>Live Intelligence Log</span>
+      {/* Header (The calling component might provide its own header, but we keep a small one or just padding) */}
+      <div style={{ 
+        padding: '16px 20px', 
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+      }}>
+        <MessageSquare size={16} color={GREEN} />
+        <span style={{ 
+          fontSize: '12px', 
+          fontWeight: 800, 
+          color: 'white', 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.1em' 
+        }}>
+          Live Intelligence Log
+        </span>
+        <div style={{ 
+          marginLeft: 'auto',
+          padding: '2px 8px',
+          borderRadius: '6px',
+          background: 'rgba(16,185,129,0.1)',
+          border: `1px solid ${GREEN}30`,
+          fontSize: '9px',
+          fontWeight: 900,
+          color: GREEN,
+          textTransform: 'uppercase'
+        }}>
+          Active
+        </div>
       </div>
       
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Messages */}
+      <div className="no-scrollbar" style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        padding: '20px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '16px' 
+      }}>
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', marginTop: '40px' }}>
-            <span className="eyebrow" style={{ opacity: 0.5 }}>Waiting for logs...</span>
+          <div style={{ 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            opacity: 0.2
+          }}>
+            <Activity size={32} color={GREEN} style={{ marginBottom: '12px' }} />
+            <span style={{ 
+              fontSize: '10px', 
+              fontWeight: 800, 
+              color: 'white', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em' 
+            }}>
+              Initializing logs...
+            </span>
           </div>
         ) : (
-          messages.map((item, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text strong style={{ fontSize: '11px', textTransform: 'uppercase', fontFamily: 'var(--font-accent)', color: 'var(--onyx-black)' }}>
-                  {item.senderName}
-                </Text>
-                <Text style={{ fontSize: '10px', opacity: 0.5 }}>
-                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </div>
-              <div style={{ 
-                background: 'var(--canvas-white)', 
-                border: '2px solid var(--onyx-black)', 
-                padding: '12px 16px',
-                boxShadow: '4px 4px 0px var(--onyx-black)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '14px',
-                color: 'var(--onyx-black)'
+          messages.map((item, idx) => {
+            const isMe = item.senderName === userName;
+            return (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: isMe ? 'flex-end' : 'flex-start',
+                gap: '6px'
               }}>
-                {item.message}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px'
+                }}>
+                  <span style={{ 
+                    fontSize: '9px', 
+                    fontWeight: 800, 
+                    color: isMe ? GREEN : 'rgba(255,255,255,0.3)',
+                    textTransform: 'uppercase'
+                  }}>
+                    {item.senderName}
+                  </span>
+                  <Clock size={8} color="rgba(255,255,255,0.15)" />
+                  <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.15)' }}>
+                    {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ 
+                  background: isMe ? GREEN : 'rgba(255,255,255,0.05)', 
+                  border: isMe ? 'none' : '1px solid rgba(255,255,255,0.08)', 
+                  padding: '10px 14px',
+                  borderRadius: '14px',
+                  borderTopRightRadius: isMe ? '2px' : '14px',
+                  borderTopLeftRadius: isMe ? '14px' : '2px',
+                  color: isMe ? 'white' : 'rgba(255,255,255,0.8)',
+                  fontSize: '13px',
+                  lineHeight: 1.5,
+                  boxShadow: isMe ? `0 4px 12px -4px ${GREEN}40` : 'none',
+                  maxWidth: '90%',
+                  wordBreak: 'break-word'
+                }}>
+                  {item.message}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: '20px', borderTop: '3px solid var(--onyx-black)', background: 'var(--canvas-white)' }}>
-        <Space.Compact style={{ width: '100%' }}>
-          <Input 
+      {/* Input */}
+      <div style={{ 
+        padding: '16px 20px 24px', 
+        background: 'transparent'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px',
+          background: 'rgba(20, 32, 26, 0.8)', 
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.5)',
+          borderRadius: '16px',
+          padding: '6px'
+        }}>
+          <input 
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            onPressEnter={handleSend}
-            placeholder="TYPE TRANSMISSION..."
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder="TYPE LOG..."
             style={{ 
-              background: 'var(--canvas-white)', 
-              color: 'var(--onyx-black)', 
-              border: '2px solid var(--onyx-black)',
-              borderRadius: 0,
-              height: '48px',
-              fontFamily: 'var(--font-accent)',
-              fontSize: '12px'
+              flex: 1,
+              background: 'none', 
+              border: 'none',
+              outline: 'none',
+              color: 'white',
+              padding: '10px 14px',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.05em'
             }}
           />
-          <Button 
-            className="afro-button primary"
-            icon={<SendOutlined />} 
+          <button 
             onClick={handleSend}
+            disabled={!inputValue.trim()}
             style={{ 
-              height: '48px',
-              width: '60px',
-              marginLeft: '-2px',
-              zIndex: 1
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
+              border: 'none',
+              background: inputValue.trim() ? GREEN : 'rgba(255, 255, 255, 0.03)',
+              color: inputValue.trim() ? 'white' : 'rgba(255, 255, 255, 0.1)',
+              cursor: inputValue.trim() ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              boxShadow: inputValue.trim() ? `0 6px 12px -4px ${GREEN}60` : 'none'
             }}
-          />
-        </Space.Compact>
+          >
+            <Send size={16} fill={inputValue.trim() ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes activity-pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
+      `}</style>
     </div>
   );
 };
+
+const Activity = ({ size, color, style }: { size: number, color: string, style?: any }) => (
+  <svg 
+    width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" 
+    style={{ ...style, animation: 'activity-pulse 2s infinite' }}
+  >
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+  </svg>
+);
 
 export default RoomChat;

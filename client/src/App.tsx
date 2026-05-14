@@ -4,6 +4,7 @@ import { Layout, ConfigProvider, App as AntApp } from "antd";
 import { 
   BulbOutlined 
 } from "@ant-design/icons";
+import { Activity } from "lucide-react";
 
 // Page Imports
 import LandingPage from "./pages/LandingPage";
@@ -42,39 +43,43 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingRoute from "./components/OnboardingRoute";
 import PublicRoute from "./components/PublicRoute";
+import AppLayout from "./components/layout/AppLayout";
+import { SidebarProvider } from "./context/SidebarContext";
 import "./App.css";
 
 const { Content } = Layout;
 
 // Placeholder components for new routes
 const PlaceholderPage: React.FC<{ name: string }> = ({ name }) => (
-  <div style={{ padding: '100px 20px', textAlign: 'center', backgroundColor: 'var(--canvas-white)', minHeight: '80vh' }}>
-    <h1 style={{ fontSize: '3rem', textTransform: 'uppercase' }}>{name} <span style={{ color: 'var(--baobab-emerald)' }}>Section</span></h1>
-    <p style={{ fontSize: '1.2rem', maxWidth: '600px', margin: '24px auto' }}>
-      This section is currently being developed as part of the PANX evolution.
+  <div style={{ 
+    height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', 
+    justifyContent: 'center', padding: '40px', textAlign: 'center', background: 'transparent' 
+  }}>
+    <div style={{ 
+      width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(16,185,129,0.1)', 
+      border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', 
+      justifyContent: 'center', color: '#10B981', marginBottom: '32px' 
+    }}>
+      <Activity size={40} />
+    </div>
+    <p style={{ fontSize: '10px', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
+      Module Under Architecture
+    </p>
+    <h1 style={{ fontSize: '48px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', margin: '0 0 16px' }}>
+      {name}
+    </h1>
+    <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.4)', maxWidth: '400px', lineHeight: 1.6 }}>
+      This operational node is currently being integrated into the QSI ecosystem expansion framework.
     </p>
   </div>
 );
 
 const App: React.FC = () => {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
+  // Global design system initialization
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const isMobile = windowWidth <= 768;
-
-  // Enforce Afro-Bauhaus White Canvas globally
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "light");
-    document.body.style.background = "var(--canvas-white)";
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.body.style.background = "var(--bg-primary)";
+    document.body.style.color = "var(--text-primary)";
   }, []);
 
   return (
@@ -82,24 +87,16 @@ const App: React.FC = () => {
       <AntApp>
         <BrowserRouter>
           <AuthProvider>
-            <Layout
-              style={{
-                background: "var(--canvas-white)",
-                minHeight: "100vh"
-              }}
-            >
-
-              <GlobalNavbar />
-              <LogicAssistant />
-
+            <SidebarProvider>
+              <AppLayout>
               <Content
                 style={{
-                  minHeight: "calc(100vh - 70px)",
+                  height: "100%",
                   width: "100%",
                   padding: 0,
                   margin: 0,
                   background: "transparent",
-                  paddingBottom: isMobile ? '70px' : 0
+                  overflowY: 'auto'
                 }}
               >
                 <Routes>
@@ -162,10 +159,9 @@ const App: React.FC = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Content>
-
-              {isMobile && <BottomNavigationBar />}
-            </Layout>
-          </AuthProvider>
+            </AppLayout>
+          </SidebarProvider>
+        </AuthProvider>
         </BrowserRouter>
       </AntApp>
     </ConfigProvider>

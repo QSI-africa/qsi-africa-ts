@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Row, Col, Avatar, Tag, Space, Button, Skeleton, Empty, Image } from 'antd';
+import { Typography, Row, Col, Avatar, Tag, Space, Button, Skeleton, Empty, Image, Spin } from 'antd';
 import { 
-  SafetyCertificateOutlined, 
-  ArrowLeftOutlined, 
-  GlobalOutlined, 
-  ProjectOutlined,
-  ThunderboltOutlined,
-  ReadOutlined
-} from '@ant-design/icons';
+  ShieldCheck, 
+  ArrowLeft, 
+  Globe, 
+  Layers,
+  Zap,
+  BookOpen,
+  Calendar,
+  Activity,
+  MoreVertical,
+  ExternalLink,
+  MessageCircle
+} from 'lucide-react';
 import api from '../api';
-import { GeometricCard, GridLine, CornerAccent } from '../components/AfroBauhausComponents';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -27,8 +31,6 @@ const ProfileDetailPage: React.FC = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      // Reusing the engineers endpoint for profile detail for now
-      // In a real app, we'd have a specific /network/profile/:id endpoint
       const response = await api.get('/network/engineers');
       const found = response.data.find((eng: any) => eng.id === id);
       setProfile(found);
@@ -44,7 +46,6 @@ const ProfileDetailPage: React.FC = () => {
     return path.startsWith('http') ? path : `https://api.qsi.africa${path}`;
   };
 
-  // Mock Insights for Sovereign Minds
   const mockInsights = [
     { id: '1', title: 'Decolonizing the Urban Grid', date: 'Oct 24', category: 'THOUGHT' },
     { id: '2', title: 'Coherence in Infrastructure', date: 'Oct 12', category: 'DESIGN' },
@@ -54,217 +55,190 @@ const ProfileDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ paddingTop: '160px', minHeight: '100vh' }}>
-        <Skeleton active avatar paragraph={{ rows: 10 }} />
+      <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen">
+        <Spin size="large" />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="container" style={{ paddingTop: '160px', textAlign: 'center' }}>
-        <Empty description="Profile not found" />
-        <Button onClick={() => navigate('/network')}>Back to Network</Button>
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">Profile Not Found</h2>
+        <button className="qsi-button primary px-8 py-3" onClick={() => navigate('/network')}>Back to Network</button>
       </div>
     );
   }
 
   return (
-    <div style={{ background: 'var(--canvas-white)', minHeight: '100vh', paddingBottom: '120px' }}>
+    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Hero Section */}
-      <section className="pattern-mudcloth" style={{ paddingTop: '160px', paddingBottom: '80px', borderBottom: '3px solid var(--onyx-black)' }}>
-        <div className="container">
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
+      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="max-w-6xl mx-auto relative z-10">
+          <button 
             onClick={() => navigate('/network')}
-            style={{ marginBottom: '40px', padding: 0, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+            className="qsi-button flex items-center gap-2 mb-12 py-2 px-4"
           >
-            Back to Network
-          </Button>
+            <ArrowLeft size={18} /> Back to Network
+          </button>
           
-          <div style={{ display: 'flex', gap: '64px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative' }}>
-              <Avatar 
-                size={240} 
-                src={getServerUrl(profile.avatarUrl)} 
-                style={{ 
-                  borderRadius: 0, 
-                  border: '5px solid var(--onyx-black)',
-                  boxShadow: '15px 15px 0px var(--baobab-emerald)',
-                  background: 'var(--papyrus-off-white)'
-                }}
-              />
+          <div className="flex flex-col lg:flex-row gap-12 lg:items-end">
+            <div className="relative group">
+              <div className="w-64 h-64 lg:w-80 lg:h-80 rounded-3xl bg-bg-primary border-4 border-bg-primary overflow-hidden shadow-2xl relative z-10">
+                 <img src={getServerUrl(profile.avatarUrl)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={profile.user.name} />
+              </div>
               {profile.isVerified && (
-                <div style={{ 
-                  position: 'absolute', 
-                  top: -20, 
-                  right: -20, 
-                  background: 'var(--baobab-emerald)', 
-                  color: 'white',
-                  padding: '12px',
-                  border: '3px solid var(--onyx-black)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 2
-                }}>
-                  <SafetyCertificateOutlined style={{ fontSize: '24px' }} />
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-success-green rounded-2xl flex items-center justify-center text-white border-4 border-bg-secondary z-20 shadow-xl">
+                   <ShieldCheck size={24} />
                 </div>
               )}
+              <div className="absolute inset-0 bg-accent-gold/20 blur-3xl rounded-full opacity-20 -z-10 group-hover:opacity-40 transition-opacity" />
             </div>
             
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <span className="eyebrow" style={{ color: 'var(--baobab-emerald)' }}>
+            <div className="flex-1">
+              <span className="eyebrow text-gold">
                 {profile.isVerified ? 'Sovereign Mind (Verified)' : 'Professional Member'}
               </span>
-              <Title level={1} style={{ fontSize: 'clamp(3rem, 5vw, 5rem)', margin: '12px 0', textTransform: 'uppercase', letterSpacing: '-0.02em', fontWeight: 900 }}>
+              <h1 className="text-4xl lg:text-7xl font-black text-white mt-4 mb-6 uppercase tracking-tighter leading-none">
                 {profile.user.name}
-              </Title>
-              <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '24px' }}>
-                <Text style={{ fontSize: '20px', fontWeight: 800, color: 'var(--baobab-emerald)', textTransform: 'uppercase', fontFamily: 'var(--font-accent)' }}>
+              </h1>
+              <div className="flex flex-wrap gap-6 items-center mb-8">
+                <span className="text-xl font-bold text-success-green uppercase tracking-tight">
                   {profile.specialization}
-                </Text>
-                <div style={{ height: '10px', width: '2px', background: 'var(--onyx-black)' }} />
-                <Space>
-                  <GlobalOutlined /> <Text style={{ fontWeight: 700 }}>Pan-African Ecosystem</Text>
-                </Space>
-              </div>
-              <Paragraph style={{ fontSize: '18px', maxWidth: '700px', lineHeight: 1.6, fontWeight: 500 }}>
-                {profile.bio || "Dedicated to building the foundations of a sovereign and prosperous African future through excellence in infrastructure and thought leadership."}
-              </Paragraph>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Practical Contributions Section */}
-      <section className="section-py grid-border-b">
-        <div className="container">
-          <div style={{ marginBottom: '64px' }}>
-            <span className="eyebrow">Practical Contribution</span>
-            <Title level={2} style={{ textTransform: 'uppercase', fontSize: '3rem' }}>Project <span style={{ color: 'var(--baobab-emerald)' }}>Ledger</span></Title>
-            <Paragraph style={{ fontSize: '16px', color: 'var(--ash-grey)', textTransform: 'uppercase', fontWeight: 'bold' }}>
-              Focusing on tangible impact and decolonized engineering outcomes.
-            </Paragraph>
-          </div>
-
-          <Row gutter={[48, 48]}>
-            {profile.projects && profile.projects.length > 0 ? (
-              profile.projects.map((proj: any) => (
-                <Col xs={24} md={12} key={proj.id}>
-                  <GeometricCard style={{ padding: 0, height: '100%' }}>
-                    <div style={{ height: '300px', borderBottom: '3px solid var(--onyx-black)' }}>
-                      <Image 
-                        src={getServerUrl(proj.imageUrl)} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        preview={false}
-                      />
-                    </div>
-                    <div style={{ padding: '40px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <Title level={3} style={{ margin: 0, textTransform: 'uppercase', fontSize: '1.5rem' }}>{proj.title}</Title>
-                        <Tag style={{ borderRadius: 0, background: 'var(--onyx-black)', color: 'white', border: 'none' }}>{proj.status}</Tag>
-                      </div>
-                      <Paragraph style={{ fontSize: '15px', color: 'var(--onyx-black)', opacity: 0.8, marginBottom: '32px' }}>
-                        {proj.description}
-                      </Paragraph>
-                      <div className="grid-border-t" style={{ paddingTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
-                        <Space><ProjectOutlined /> <Text className="eyebrow" style={{ margin: 0 }}>Outcome Verified</Text></Space>
-                        <Button type="link" style={{ padding: 0, color: 'var(--baobab-emerald)', fontWeight: 900 }}>VIEW CASE STUDY</Button>
-                      </div>
-                    </div>
-                  </GeometricCard>
-                </Col>
-              ))
-            ) : (
-              <Col span={24}>
-                <div style={{ textAlign: 'center', padding: '80px', border: '3px dashed var(--ash-grey)' }}>
-                  <Title level={4} style={{ color: 'var(--ash-grey)', textTransform: 'uppercase' }}>No Projects Logged Yet</Title>
-                  <Text>Contributions are being verified by the QSI Governance Team.</Text>
+                </span>
+                <div className="hidden md:block w-px h-6 bg-border-subtle" />
+                <div className="flex items-center gap-2 text-text-secondary">
+                  <Globe size={18} />
+                  <span className="text-xs font-bold uppercase tracking-widest">Pan-African Ecosystem</span>
                 </div>
-              </Col>
-            )}
-          </Row>
-        </div>
-      </section>
-
-      {/* Sovereign Insights (Educational Content) */}
-      <section className="section-py pattern-dots">
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '64px' }}>
-            <div>
-              <span className="eyebrow">Intellectual Leadership</span>
-              <Title level={2} style={{ textTransform: 'uppercase', fontSize: '3rem' }}>Sovereign <span style={{ color: 'var(--baobab-emerald)' }}>Insights</span></Title>
+              </div>
+              <p className="text-xl text-text-secondary max-w-2xl leading-relaxed italic">
+                "{profile.bio || "Dedicated to building the foundations of a sovereign and prosperous African future through excellence in infrastructure and thought leadership."}"
+              </p>
             </div>
-            <Button className="afro-button" icon={<ReadOutlined />}>VIEW ALL CONTENT</Button>
           </div>
+        </div>
+        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
+           <Zap size={600} className="text-accent-gold" />
+        </div>
+      </header>
 
-          <div className="no-scrollbar" style={{ display: 'flex', gap: '32px', overflowX: 'auto', paddingBottom: '40px', paddingLeft: '4px' }}>
-            {mockInsights.map((insight) => (
-              <div 
-                key={insight.id}
-                style={{ 
-                  flexShrink: 0, 
-                  width: '320px', 
-                  backgroundColor: 'var(--canvas-white)', 
-                  border: '3px solid var(--onyx-black)',
-                  boxShadow: '8px 8px 0px var(--onyx-black)',
-                  padding: '32px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  height: '240px',
-                  cursor: 'pointer',
-                  transition: 'var(--snappy)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-8px)';
-                  e.currentTarget.style.boxShadow = '12px 12px 0px var(--baobab-emerald)';
-                  e.currentTarget.style.borderColor = 'var(--baobab-emerald)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '8px 8px 0px var(--onyx-black)';
-                  e.currentTarget.style.borderColor = 'var(--onyx-black)';
-                }}
-              >
+      {/* Main Content Area */}
+      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
+        <Row gutter={[48, 48]}>
+          <Col xs={24} lg={16}>
+             <div className="space-y-16">
+                {/* Projects */}
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                    <Tag style={{ borderRadius: 0, border: '1px solid var(--onyx-black)', background: 'var(--papyrus-off-white)' }}>{insight.category}</Tag>
-                    <Text style={{ fontFamily: 'var(--font-accent)', fontSize: '12px', fontWeight: 900 }}>{insight.date}</Text>
+                   <div className="flex justify-between items-end mb-10">
+                      <div>
+                        <span className="eyebrow">Practical Contribution</span>
+                        <h2 className="text-3xl font-black text-white uppercase tracking-tight">Project Ledger</h2>
+                      </div>
+                      <Activity size={32} className="text-accent-gold opacity-10" />
+                   </div>
+
+                   <div className="space-y-8">
+                      {profile.projects && profile.projects.length > 0 ? (
+                        profile.projects.map((proj: any) => (
+                          <div key={proj.id} className="feed-card bg-bg-secondary border-border-subtle overflow-hidden p-0 group">
+                             <div className="h-64 border-b border-border-subtle relative overflow-hidden">
+                                <img src={getServerUrl(proj.imageUrl)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={proj.title} />
+                                <div className="absolute top-6 right-6">
+                                   <Tag className="rounded-full px-4 py-1 bg-bg-primary/80 backdrop-blur-md border-border-subtle text-accent-gold font-black uppercase text-[9px]">
+                                      {proj.status}
+                                   </Tag>
+                                </div>
+                             </div>
+                             <div className="p-8 lg:p-12">
+                                <h3 className="text-2xl font-bold text-white uppercase tracking-tight mb-4">{proj.title}</h3>
+                                <p className="text-text-secondary leading-relaxed mb-8">{proj.description}</p>
+                                <div className="flex items-center justify-between pt-6 border-t border-border-subtle/50">
+                                   <div className="flex items-center gap-2 text-text-tertiary">
+                                      <Layers size={16} />
+                                      <span className="text-[10px] font-bold uppercase tracking-widest">Outcome Verified</span>
+                                   </div>
+                                   <button className="qsi-button text-xs font-black uppercase tracking-widest text-accent-gold hover:underline flex items-center gap-2">
+                                      View Case Study <ExternalLink size={14} />
+                                   </button>
+                                </div>
+                             </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center">
+                           <Layers size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
+                           <p className="text-text-tertiary font-bold uppercase tracking-widest">No Projects Logged Yet</p>
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                {/* Insights */}
+                <div>
+                   <div className="flex justify-between items-end mb-10">
+                      <div>
+                        <span className="eyebrow">Intellectual Leadership</span>
+                        <h2 className="text-3xl font-black text-white uppercase tracking-tight">Sovereign Insights</h2>
+                      </div>
+                      <BookOpen size={32} className="text-accent-gold opacity-10" />
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {mockInsights.map((insight) => (
+                        <div key={insight.id} className="feed-card bg-bg-secondary border-border-subtle p-8 hover:border-accent-gold/40 transition-all cursor-pointer group">
+                           <div className="flex justify-between items-center mb-6">
+                              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle">
+                                 {insight.category}
+                              </span>
+                              <span className="text-[9px] font-bold text-text-tertiary uppercase">{insight.date}</span>
+                           </div>
+                           <h4 className="text-lg font-bold text-white uppercase tracking-tight mb-8 group-hover:text-accent-gold transition-colors">{insight.title}</h4>
+                           <div className="flex justify-end">
+                              <Zap size={18} className="text-accent-gold opacity-20 group-hover:opacity-100 transition-opacity" />
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+          </Col>
+
+          {/* Sidebar */}
+          <Col xs={24} lg={8}>
+            <div className="sticky top-12 space-y-8">
+               <div className="feed-card bg-bg-secondary border-border-subtle p-8 text-center relative overflow-hidden">
+                  <Activity size={100} className="absolute -bottom-8 -right-8 opacity-5 text-accent-gold" />
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-6">Engage Professional</h3>
+                  <button className="qsi-button primary w-full py-5 font-black uppercase text-xs tracking-widest mb-4 shadow-xl shadow-accent-gold/10">
+                     Schedule Consultation
+                  </button>
+                  <button className="qsi-button w-full py-5 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2">
+                     <MessageCircle size={16} /> Secure Message
+                  </button>
+               </div>
+
+               <div className="feed-card bg-bg-secondary border-border-subtle p-8">
+                  <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-6">Operational Network</h4>
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-secondary">Network ID</span>
+                        <span className="text-xs font-mono text-white">QSI-MIN-8271</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-secondary">Status</span>
+                        <span className="text-xs font-black text-success-green uppercase">Synchronized</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-secondary">Resonance</span>
+                        <span className="text-xs font-bold text-white">99.4%</span>
+                     </div>
                   </div>
-                  <Title level={4} style={{ textTransform: 'uppercase', margin: 0, fontSize: '18px' }}>{insight.title}</Title>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <ThunderboltOutlined style={{ fontSize: '24px', color: 'var(--baobab-emerald)' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+               </div>
+            </div>
+          </Col>
+        </Row>
       </section>
-
-      {/* Interaction Footer */}
-      <section className="section-py pattern-mudcloth" style={{ borderTop: '3px solid var(--onyx-black)' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <Title level={3} style={{ textTransform: 'uppercase', marginBottom: '40px' }}>Engage with this Sovereign Mind</Title>
-          <Space size="large" wrap>
-            <Button className="afro-button primary" size="large" style={{ height: '64px', padding: '0 48px' }}>SCHEDULE CONSULTATION</Button>
-            <Button className="afro-button" size="large" style={{ height: '64px', padding: '0 48px' }}>FOLLOW UPDATES</Button>
-          </Space>
-        </div>
-      </section>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}} />
     </div>
   );
 };

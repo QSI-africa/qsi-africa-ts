@@ -1,5 +1,5 @@
 import React from 'react';
-import { GeometricCard } from './AfroBauhausComponents';
+import { ChevronRight } from 'lucide-react';
 
 interface ChatTileProps {
   icon: React.ReactNode;
@@ -7,86 +7,38 @@ interface ChatTileProps {
   tagline: string;
   onClick?: () => void;
   color?: string;
+  active?: boolean;
 }
 
-const ChatTile: React.FC<ChatTileProps> = ({ icon, name, tagline, onClick, color }) => {
+const ChatTile: React.FC<ChatTileProps> = ({ icon, name, tagline, onClick, color, active }) => {
   return (
     <div 
       onClick={onClick}
-      style={{
-        cursor: 'pointer',
-        transition: 'var(--snappy)',
-      }}
+      className={`group flex items-center gap-5 p-5 mb-3 cursor-pointer transition-all border border-transparent hover:bg-bg-secondary hover:border-border-subtle rounded-2xl ${active ? 'bg-bg-secondary border-border-subtle' : ''}`}
     >
-      <GeometricCard 
-        className="chat-tile"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '20px',
-          padding: '24px',
-          marginBottom: '16px',
-          borderRadius: '0px',
-          position: 'relative',
-          overflow: 'hidden',
-          backgroundColor: 'var(--canvas-white)',
+      <div 
+        className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg transition-transform group-hover:scale-105"
+        style={{ 
+          backgroundColor: color || 'var(--bg-primary)',
+          color: 'white',
+          border: '1px solid rgba(255,255,255,0.1)'
         }}
       >
-        <div style={{
-          width: '60px',
-          height: '60px',
-          backgroundColor: color || 'var(--papyrus-off-white)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '28px',
-          color: 'var(--onyx-black)',
-          border: '2px solid var(--onyx-black)',
-          flexShrink: 0,
-        }}>
-          {icon}
-        </div>
-        
-        <div style={{ flex: 1 }}>
-          <h3 style={{ 
-            fontSize: '18px', 
-            margin: 0, 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.05em',
-            color: 'var(--onyx-black)'
-          }}>
-            {name}
-          </h3>
-          <p style={{ 
-            fontSize: '14px', 
-            margin: '4px 0 0 0', 
-            color: 'var(--ash-grey)',
-            fontFamily: 'var(--font-accent)',
-            fontWeight: 500
-          }}>
-            {tagline}
-          </p>
-        </div>
+        {icon}
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-black text-white uppercase tracking-tight truncate group-hover:text-accent-gold transition-colors">
+          {name}
+        </h3>
+        <p className="text-xs text-text-tertiary mt-1 font-medium truncate">
+          {tagline}
+        </p>
+      </div>
 
-        {/* Small "Arrow" or indicator like a chat bubble */}
-        <div style={{
-          fontSize: '20px',
-          opacity: 0.3,
-          fontFamily: 'var(--font-accent)'
-        }}>
-          &gt;
-        </div>
-      </GeometricCard>
-
-      <style>{`
-        .chat-tile {
-          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .chat-tile:hover {
-          transform: translateX(8px);
-          border-color: var(--baobab-emerald) !important;
-        }
-      `}</style>
+      <div className={`opacity-0 group-hover:opacity-40 transition-opacity ${active ? 'opacity-40' : ''}`}>
+        <ChevronRight size={18} className="text-white" />
+      </div>
     </div>
   );
 };
