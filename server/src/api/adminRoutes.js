@@ -1092,4 +1092,59 @@ router.get("/mobility/vehicle-hires", isSuperUserOrAdmin, async (req, res) => {
   }
 });
 
+// =========================================================================
+// 11. SERVICE MODULE MANAGEMENT (SUPER_USER/ADMIN)
+// =========================================================================
+
+// GET all service modules
+router.get("/service-modules", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const modules = await prisma.serviceModule.findMany({
+      orderBy: { order: "asc" }
+    });
+    res.json(modules);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch service modules." });
+  }
+});
+
+// POST a new service module
+router.post("/service-modules", isSuperUserOrAdmin, async (req, res) => {
+  const { title, description, image, category, path, isChat, isActive, order } = req.body;
+  try {
+    const newModule = await prisma.serviceModule.create({
+      data: { title, description, image, category, path, isChat, isActive, order }
+    });
+    res.status(201).json(newModule);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create service module." });
+  }
+});
+
+// PUT (Update) a service module
+router.put("/service-modules/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, image, category, path, isChat, isActive, order } = req.body;
+  try {
+    const updatedModule = await prisma.serviceModule.update({
+      where: { id },
+      data: { title, description, image, category, path, isChat, isActive, order }
+    });
+    res.json(updatedModule);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update service module." });
+  }
+});
+
+// DELETE a service module
+router.delete("/service-modules/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.serviceModule.delete({ where: { id } });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete service module." });
+  }
+});
+
 module.exports = router;

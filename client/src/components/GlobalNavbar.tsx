@@ -61,7 +61,6 @@ const GlobalNavbar: React.FC = () => {
   );
 
   const navItems = [
-    { label: 'Services', path: '/services', dropdown: servicesMenu },
     { label: 'Impact', path: '#', dropdown: impactMenu },
     { label: 'About', path: '/about-us' },
   ];
@@ -216,12 +215,6 @@ const GlobalNavbar: React.FC = () => {
         >
           <Menu.Item key="home" onClick={() => navigate('/')}>Home</Menu.Item>
           
-          <Menu.SubMenu key="services" title="Services">
-            <Menu.Item key="infra" onClick={() => navigate('/chat/infrastructure')}>Smart Infrastructure</Menu.Item>
-            <Menu.Item key="vision" onClick={() => navigate('/chat/vision')}>Vision Space</Menu.Item>
-            <Menu.Item key="mobility" onClick={() => navigate('/mobility')}>PanX Mobility</Menu.Item>
-            <Menu.Item key="healing-m" onClick={() => navigate('/chat/healing')}>Healing and Wisdom</Menu.Item>
-          </Menu.SubMenu>
 
           <Menu.SubMenu key="impact" title="Impact">
             <Menu.Item key="projects" onClick={() => navigate('/demos')}>Pilot Projects</Menu.Item>

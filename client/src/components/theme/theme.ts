@@ -132,9 +132,9 @@ export const qsiTheme = {
 
     // Layout - Enhanced contrast
     Layout: {
-      colorBgHeader: "#0f0f0f", // Slightly lighter
-      colorBgBody: "#0f0f0f", // Slightly lighter
-      colorBgTrigger: "rgba(255, 255, 255, 0.08)", // Enhanced visibility
+      headerBg: "#0f0f0f", // Slightly lighter
+      bodyBg: "#0f0f0f", // Slightly lighter
+      triggerBg: "rgba(255, 255, 255, 0.08)", // Enhanced visibility
     },
 
     // Divider - More visible

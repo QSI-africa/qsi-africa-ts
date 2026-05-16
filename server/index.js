@@ -64,9 +64,9 @@ app.use("/api/network", require("./src/api/networkRoutes"));
 app.use("/api/upload", require("./src/api/uploadRoutes"));
 app.use("/api/logic", require("./src/api/logicRoutes"));
 app.use("/api/lab", require("./src/api/labRoutes"));
-app.use("/api/music", require("./src/api/musicRoutes"));
 app.use("/api/notifications", require("./src/api/notificationRoutes"));
 app.use("/api/messaging", require("./src/api/messagingRoutes"));
+app.use("/api/config", require("./src/api/configRoutes"));
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "Server is running" });

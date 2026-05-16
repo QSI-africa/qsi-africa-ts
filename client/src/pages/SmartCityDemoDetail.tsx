@@ -1,40 +1,48 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Row,
-  Col,
+  ConfigProvider,
   Spin,
   Typography,
-  Button,
-  Tag,
-  Divider,
   Grid,
-  Space,
   Modal,
   Form,
   Input,
   message,
   Radio,
 } from "antd";
+
+
+
+
+const GREEN = '#10B981';
+
+
 import {
   ArrowLeft,
-  User,
-  Mail,
-  MessageCircle,
   Users,
   Lightbulb,
   MapPin,
-  Phone,
-  Zap,
   TrendingUp,
   Handshake,
-  ArrowRight
+  ArrowRight,
+  Building2, 
+  Wifi, 
+  Droplets, 
+  Wind,
+  ShieldCheck,
+  Zap,
+  Activity,
+  Terminal,
+  X
 } from "lucide-react";
+import { FaTwitter, FaLinkedin } from "react-icons/fa6";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import DetailMetadataGrid from '../components/DetailMetadataGrid';
+import EngagementModal from '../components/EngagementModal';
 
-const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const SmartCityDemoDetail: React.FC = () => {
@@ -43,46 +51,12 @@ const SmartCityDemoDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
   const [engagementModalVisible, setEngagementModalVisible] = useState<boolean>(false);
-  const [engagementLoading, setEngagementLoading] = useState<boolean>(false);
-  const [form] = Form.useForm();
   const screens = useBreakpoint();
   const navigate = useNavigate();
-  const [selectedEngagementType, setSelectedEngagementType] =
-    useState<string>("partner");
 
-  const engagementOptions = useMemo(
-    () => [
-      {
-        value: "invest",
-        label: "Invest",
-        description: "Explore investment opportunities",
-        icon: <TrendingUp size={24} />,
-        color: "#ff4d4f",
-      },
-      {
-        value: "participate",
-        label: "Participate",
-        description: "Engage as a participant",
-        icon: <Users size={24} />,
-        color: "var(--success-green)",
-      },
-      {
-        value: "learn",
-        label: "Learn",
-        description: "Request more information",
-        icon: <Lightbulb size={24} />,
-        color: "var(--accent-primary)",
-      },
-      {
-        value: "collaborate",
-        label: "Collaborate",
-        description: "Offer technical collaboration",
-        icon: <Handshake size={24} />,
-        color: "var(--text-tertiary)",
-      },
-    ],
-    []
-  );
+  const infrastructureMetrics = useMemo(() => {
+    return (demo?.metrics && Array.isArray(demo.metrics)) ? demo.metrics : [];
+  }, [demo?.metrics]);
 
   const fetchDemoDetail = useCallback(async () => {
     setLoading(true);
@@ -98,34 +72,6 @@ const SmartCityDemoDetail: React.FC = () => {
     }
   }, [id]);
 
-  const handleEngagementSubmit = useCallback(
-    async (values: any) => {
-      setEngagementLoading(true);
-      try {
-        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-        const payload = {
-          pilotKey: id,
-          pilotTitle: demo?.title,
-          engagementType: values.engagementType,
-          customIntent: values.customIntent,
-          message: values.message,
-          contactName: values.contactName,
-          contactEmail: values.contactEmail,
-          contactPhone: values.contactPhone,
-          timestamp: new Date().toISOString(),
-        };
-        await axios.post(`${baseURL}/submit/pilot-engagement`, payload);
-        message.success("Submission synchronized successfully!");
-        setEngagementModalVisible(false);
-        form.resetFields();
-      } catch (error) {
-        message.error("Failed to synchronize request.");
-      } finally {
-        setEngagementLoading(false);
-      }
-    },
-    [id, demo?.title, form]
-  );
 
   useEffect(() => {
     if (id) fetchDemoDetail();
@@ -133,183 +79,220 @@ const SmartCityDemoDetail: React.FC = () => {
 
   const styles = useMemo(() => ({
     markdown: {
-      h3: (props: any) => <h3 className="text-2xl font-bold text-white mt-12 mb-6 uppercase tracking-tight" {...props} />,
-      h4: (props: any) => <h4 className="text-xl font-bold text-white mt-8 mb-4 uppercase tracking-tight" {...props} />,
-      p: (props: any) => <p className="text-lg text-text-secondary leading-relaxed mb-6" {...props} />,
-      li: (props: any) => <li className="text-lg text-text-secondary mb-3 list-disc ml-6" {...props} />,
+      h3: (props: any) => <h3 style={{ fontSize: screens.md ? '24px' : '20px', fontWeight: 900, color: 'white', marginTop: '48px', marginBottom: '20px', letterSpacing: '-0.02em', textTransform: 'uppercase' }} {...props} />,
+      h4: (props: any) => <h4 style={{ fontSize: screens.md ? '18px' : '16px', fontWeight: 800, color: GREEN, marginTop: '32px', marginBottom: '12px', letterSpacing: '0.05em', textTransform: 'uppercase' }} {...props} />,
+      p: (props: any) => <p style={{ fontSize: '15px', lineHeight: '1.8', color: 'rgba(255,255,255,0.6)', marginBottom: '24px' }} {...props} />,
+      li: (props: any) => <li style={{ fontSize: '15px', lineHeight: '1.8', color: 'rgba(255,255,255,0.6)', marginBottom: '12px' }} {...props} />,
+
       strong: (props: any) => <strong className="font-black text-white" {...props} />,
+      blockquote: (props: any) => (
+        <blockquote className="border-l-4 border-accent-primary bg-white/5 p-12 my-16 italic text-white rounded-[40px] shadow-2xl backdrop-blur-md" {...props} />
+      ),
     }
   }), []);
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !demo) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center">
-        <h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Demonstrator Not Found"}</h2>
-        <button className="qsi-button primary px-8 py-3" onClick={() => navigate("/demos")}>Back to Demos</button>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen"><Spin size="large" /></div>;
+  if (error || !demo) return <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center"><h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Demonstrator Not Found"}</h2><button className="qsi-button primary px-8 py-3" onClick={() => navigate("/demos")}>Back to Demos</button></div>;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-      {/* Detail Hero */}
-      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex justify-between items-center mb-12">
-            <button 
-              onClick={() => navigate("/demos")} 
-              className="qsi-button flex items-center gap-2 py-2 px-4"
-            >
-              <ArrowLeft size={18} /> Back
-            </button>
-            <Tag className={`rounded-full px-4 py-1 font-black uppercase text-[10px] ${demo.status === 'ACTIVE' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-primary-soft text-accent-primary border-accent-primary-soft'}`}>
-              {demo.status || "PROPOSED"}
-            </Tag>
-          </div>
+    <>
+      <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      <div style={{
+        padding: '24px 32px',
+        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+        <button onClick={() => navigate('/demos')} className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 16px', borderRadius: '10px' }}>
+          <ArrowLeft size={16} /> Exit
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+            Demonstrator Analysis
+          </span>
+        </div>
+        <div style={{ width: '80px' }} />
+      </div>
 
-          <h1 className="text-4xl lg:text-7xl font-black text-white mb-6 uppercase tracking-tighter leading-none">
-            {demo.title}
-          </h1>
-
-          {demo.city && (
-            <div className="flex items-center gap-2 text-accent-primary">
-              <MapPin size={20} />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">{demo.city}</span>
-            </div>
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
+        {/* Cinematic Hero */}
+        <div style={{
+          borderRadius: '24px', overflow: 'hidden', position: 'relative',
+          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+          border: `1px solid ${GREEN}20`, marginBottom: '32px', padding: '48px 40px'
+        }}>
+          {demo.image && (
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('${demo.image}')`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15, pointerEvents: 'none', mixBlendMode: 'luminosity' }} />
           )}
-        </div>
-        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Zap size={500} className="text-accent-primary" />
-        </div>
-      </header>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            <div className="flex items-center gap-4 mb-6">
+              <span className="qsi-tag qsi-tag-primary" style={{ padding: '3px 10px', borderRadius: '8px' }}>
+                {demo.status || "ACTIVE"}
+              </span>
+              <div className="h-[1px] w-12 bg-white/20" />
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">MISSION STATUS: NOMINAL</span>
+            </div>
 
-      {/* Main Content Area */}
-      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
-        <Row gutter={[64, 64]}>
-          <Col xs={24} lg={16}>
+            <h2 style={{ fontSize: screens.md ? '32px' : '22px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '24px', maxWidth: '600px' }}>
+              {demo.title}
+            </h2>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
+              {demo.city && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block' }}>Zone</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>{demo.city}</span>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
+                  <Zap size={18} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block' }}>Layer</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>Technical</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block' }}>System</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'white' }}>Sovereign Infrastructure</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Infrastructure Metrics Section - Data Driven */}
+        {infrastructureMetrics.length > 0 && (
+          <div style={{ marginBottom: '64px' }}>
+            <DetailMetadataGrid title="Infrastructure Sync Parameters" metrics={infrastructureMetrics} />
+          </div>
+        )}
+
+        {/* Content Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ marginBottom: '64px' }}>
+          <div className="md:col-span-2 space-y-12 reveal-up" style={{ animationDelay: '0.2s' }}>
             <article className="prose prose-invert max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={styles.markdown}
-              >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={styles.markdown}>
                 {demo.expandedView || demo.shortDescription}
               </ReactMarkdown>
             </article>
-          </Col>
 
-          <Col xs={24} lg={8}>
-            <div className="sticky top-12">
-              <div className="feed-card bg-bg-secondary border-border-subtle p-8 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-success-green via-accent-primary to-red-500" />
-                <span className="eyebrow">Participation</span>
-                <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-tight">Engage With Demo</h3>
-                <p className="text-text-secondary text-sm leading-relaxed mb-8">
-                  Join us in shaping the future of this demonstrator. We are actively seeking strategic partners, visionary investors, and technical participants to actualize this infrastructure.
+            {/* Visual Callout */}
+            <div className="mt-24 p-1 rounded-[40px] bg-gradient-to-br from-accent-primary/20 via-transparent to-white/5 reveal-up" style={{ animationDelay: '0.3s' }}>
+              <div className="p-12" style={{ backgroundColor: 'rgba(24, 36, 30, 0.6)', backdropFilter: 'blur(24px)', borderRadius: '38px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h3 className="text-xl md:text-2xl font-black text-white mb-6 uppercase tracking-tighter">Operational Blueprint</h3>
+                <p className="text-text-secondary text-sm leading-relaxed mb-10 font-medium">
+                  This demonstrator represents a high-fidelity realization of our technological coherence framework. It is currently operating under supervised autonomy within the specified deployment zone.
                 </p>
-                <button 
-                  className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2 shadow-xl shadow-accent-primary/10"
-                  onClick={() => setEngagementModalVisible(true)}
-                >
-                  Request Collaboration <ArrowRight size={18} />
-                </button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {['Scalable Architecture', 'Biometric Security', 'Autonomous Governance'].map(feat => (
+                    <div key={feat} className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" />
+                      <span className="text-[10px] font-black text-white uppercase tracking-widest">{feat}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </Col>
-        </Row>
-      </section>
-
-      {/* Engagement Modal */}
-      <Modal
-        title={null}
-        open={engagementModalVisible}
-        onCancel={() => setEngagementModalVisible(false)}
-        footer={null}
-        width={700}
-        destroyOnClose
-        centered
-        className="dark-modal"
-      >
-        <div className="p-8 lg:p-12 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
-          <div className="text-center mb-10">
-            <span className="eyebrow">Project Engagement</span>
-            <h3 className="text-3xl font-black text-white uppercase tracking-tight mt-2 mb-4">{demo.title}</h3>
-            <div className="w-12 h-1 bg-accent-primary mx-auto" />
           </div>
-          
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleEngagementSubmit}
-            initialValues={{ engagementType: selectedEngagementType }}
-            className="space-y-6"
-          >
-            <Form.Item
-              name="engagementType"
-              label={<span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Engagement Pathway</span>}
-              rules={[{ required: true }]}
-            >
-              <Radio.Group className="w-full">
-                <Row gutter={[12, 12]}>
-                  {engagementOptions.map((option) => (
-                    <Col span={6} key={option.value}>
-                      <div
-                        onClick={() => {
-                          setSelectedEngagementType(option.value);
-                          form.setFieldValue("engagementType", option.value);
-                        }}
-                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer h-full ${selectedEngagementType === option.value ? 'bg-bg-primary border-accent-primary' : 'bg-bg-primary border-border-subtle hover:border-text-muted'}`}
-                      >
-                        <div className={`mb-3 ${selectedEngagementType === option.value ? 'text-accent-primary' : 'text-text-tertiary'}`}>
-                          {option.icon}
-                        </div>
-                        <span className={`text-[9px] font-black uppercase tracking-widest text-center ${selectedEngagementType === option.value ? 'text-white' : 'text-text-tertiary'}`}>
-                          {option.label}
-                        </span>
-                      </div>
-                    </Col>
-                  ))}
-                </Row>
-              </Radio.Group>
-            </Form.Item>
 
-            <div className="pt-6 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Form.Item name="contactName" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Full Name</span>} rules={[{ required: true }]}>
-                  <Input className="bg-bg-primary border-border-subtle text-white h-10 rounded-xl" placeholder="Full Identity" />
-                </Form.Item>
-                <Form.Item name="contactEmail" label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Network Email</span>} rules={[{ required: true, type: 'email' }]}>
-                  <Input className="bg-bg-primary border-border-subtle text-white h-10 rounded-xl" placeholder="Email@domain.com" />
-                </Form.Item>
-            </div>
-            
-            <Form.Item 
-              name="message" 
-              label={<span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Brief Intent</span>} 
-              rules={[{ required: true }]}
-            >
-              <Input.TextArea rows={3} className="bg-bg-primary border-border-subtle text-white rounded-xl resize-none" placeholder="Describe your collaboration goals..." />
-            </Form.Item>
+          <div className="space-y-6 reveal-up" style={{ animationDelay: '0.4s' }}>
+            {/* Mission Control Panel */}
+            <div style={{
+              borderRadius: '32px', 
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(10,16,24,0.4)', 
+              backdropFilter: 'blur(20px)',
+              position: 'sticky', 
+              top: '120px',
+              overflow: 'hidden'
+            }}>
+              <div className="p-10 border-b border-white/5 bg-gradient-to-br from-white/5 to-transparent">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse" />
+                  <span className="text-[10px] font-black text-accent-primary uppercase tracking-[0.4em] block">Status: Online</span>
+                </div>
+                <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Mission Control</h3>
+                <p className="text-white/40 text-xs leading-relaxed mb-0 font-bold uppercase tracking-wide">
+                  Establish physical infrastructure sync within the QSI ecosystem.
+                </p>
+              </div>
+              
+              <div className="p-10 space-y-8">
+                <button 
+                  className="qsi-btn qsi-btn-primary group relative overflow-hidden"
+                  style={{ width: '100%', height: '64px', borderRadius: '16px' }}
+                  onClick={() => setEngagementModalVisible(true)}
+                >
+                  <span className="relative z-10 text-[11px] font-black tracking-[0.3em]">INITIATE LINK</span>
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                </button>
+                
+              </div>
 
-            <div className="flex gap-4 pt-4">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={engagementLoading}>
-                {engagementLoading ? 'SYNCHRONIZING...' : 'SUBMIT REQUEST'}
-              </button>
-              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setEngagementModalVisible(false)}>
-                CANCEL
-              </button>
+              <div className="px-10 pb-8 flex items-center justify-end">
+                <div className="flex gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <div className="w-1 h-1 rounded-full bg-accent-primary shadow-[0_0_8px_var(--accent-primary)]" />
+                </div>
+              </div>
             </div>
-          </Form>
+
+            <div style={{ padding: '28px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest block mb-6">Sovereign Distribution</span>
+              <div className="flex gap-4">
+                {[
+                  { icon: <FaTwitter size={16} />, label: 'Twitter' },
+                  { icon: <FaLinkedin size={16} />, label: 'LinkedIn' },
+                  { icon: <Terminal size={16} />, label: 'Terminal' }
+                ].map(social => (
+                  <button 
+                    key={social.label} 
+                    className="qsi-btn qsi-btn-secondary"
+                    style={{ width: '40px', height: '40px', borderRadius: '10px', padding: 0, color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    {social.icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </Modal>
+      </div>
+
+      <EngagementModal 
+        visible={engagementModalVisible}
+        onClose={() => setEngagementModalVisible(false)}
+        pilotId={id || ''}
+        pilotTitle={demo?.title || ''}
+        category="demo"
+      />
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
-  );
+  </>
+);
 };
 
 export default SmartCityDemoDetail;

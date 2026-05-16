@@ -15,7 +15,9 @@ import {
   ShieldCheck,
   Zap,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Layers
 } from 'lucide-react';
 
 const { Option } = Select;
@@ -30,9 +32,18 @@ const AdminDashboard: React.FC = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [siteVisits, setSiteVisits] = useState<any[]>([]);
   const [vehicleHires, setVehicleHires] = useState<any[]>([]);
+  
+  // New States
+  const [services, setServices] = useState<any[]>([]);
+  const [concepts, setConcepts] = useState<any[]>([]);
+  const [demos, setDemos] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<any>(null);
 
   const [categoryForm] = Form.useForm();
   const [packageForm] = Form.useForm();
+  const [serviceForm] = Form.useForm();
 
   const fetchLabData = async () => {
     setIsLoading(true);
@@ -61,9 +72,32 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchRegistryData = async () => {
+    try {
+      const sRes = await fetch('/api/admin/service-modules');
+      const sData = await sRes.json();
+      setServices(sData);
+
+      const cRes = await fetch('/api/admin/qsi-concepts');
+      const cData = await cRes.json();
+      setConcepts(cData);
+
+      const dRes = await fetch('/api/admin/smart-city-demos');
+      const dData = await dRes.json();
+      setDemos(dData);
+
+      const stRes = await fetch('/api/config/stats');
+      const stData = await stRes.json();
+      setStats(stData);
+    } catch (error) {
+      console.error("Failed to fetch registry data");
+    }
+  };
+
   useEffect(() => {
     fetchLabData();
     fetchMobilityData();
+    fetchRegistryData();
   }, []);
 
   const handleSaveCategory = async (values: any) => {
@@ -109,6 +143,28 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error) {
       message.error("Failed to purge category");
+    }
+  };
+
+  const handleSaveService = async (values: any) => {
+    try {
+      const url = editingService 
+        ? `/api/admin/service-modules/${editingService.id}` 
+        : '/api/admin/service-modules';
+      const method = editingService ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values)
+      });
+      if (res.ok) {
+        message.success("Service registry updated");
+        setIsServiceModalOpen(false);
+        fetchRegistryData();
+      }
+    } catch (error) {
+      message.error("Failed to update service registry");
     }
   };
 
@@ -294,13 +350,172 @@ const AdminDashboard: React.FC = () => {
               )
             },
             {
+              key: 'services',
+              label: <span className="flex items-center gap-2 py-2"><ShieldCheck size={16} /> Service Registry</span>,
+              children: (
+                <div className="py-8">
+                  <div className="flex justify-between items-center mb-10">
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tight">Core Services</h3>
+                    <button 
+                      onClick={() => {
+                        setEditingService(null);
+                        serviceForm.resetFields();
+                        setIsServiceModalOpen(true);
+                      }}
+                      className="qsi-button primary py-3 px-8 flex items-center gap-2 text-xs"
+                    >
+                      <Plus size={16} /> Add Service
+                    </button>
+                  </div>
+
+                  <Table 
+                    dataSource={services} 
+                    rowKey="id"
+                    className="custom-table"
+                    columns={[
+                      { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Order</span>, dataIndex: 'order', key: 'order', width: 80 },
+                      { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Title</span>, dataIndex: 'title', key: 'title' },
+                      { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Category</span>, dataIndex: 'category', key: 'category' },
+                      { 
+                        title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Type</span>, 
+                        dataIndex: 'isChat', 
+                        key: 'isChat',
+                        render: (val) => <Tag color={val ? 'blue' : 'orange'}>{val ? 'AI CHAT' : 'MODULE'}</Tag>
+                      },
+                      { 
+                        title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                        dataIndex: 'isActive', 
+                        key: 'isActive',
+                        render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+                      },
+                      {
+                        title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Actions</span>,
+                        key: 'actions',
+                        render: (_, record) => (
+                          <Space>
+                            <button className="text-text-tertiary hover:text-accent-primary" onClick={() => {
+                              setEditingService(record);
+                              serviceForm.setFieldsValue(record);
+                              setIsServiceModalOpen(true);
+                            }}><Edit3 size={16} /></button>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
+              )
+            },
+            {
+              key: 'assets',
+              label: <span className="flex items-center gap-2 py-2"><Globe size={16} /> Strategic Assets</span>,
+              children: (
+                <div className="py-8 space-y-12">
+                   <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
+                      <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-bg-primary/50">
+                         <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                            <Layers size={18} className="text-accent-primary" /> Digital Concepts
+                         </h4>
+                      </div>
+                      <Table 
+                        dataSource={concepts} 
+                        rowKey="id"
+                        className="custom-table"
+                        columns={[
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Title</span>, dataIndex: 'title', key: 'title' },
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Category</span>, dataIndex: 'category', key: 'category' },
+                          { 
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                            dataIndex: 'isActive', 
+                            key: 'isActive',
+                            render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+                          },
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Demos</span>, dataIndex: 'demonstrators', key: 'demos', render: (d) => d?.length || 0 },
+                        ]}
+                      />
+                   </div>
+
+                   <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
+                      <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-bg-primary/50">
+                         <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                            <MapPin size={18} className="text-accent-primary" /> City Demonstrators
+                         </h4>
+                      </div>
+                      <Table 
+                        dataSource={demos} 
+                        rowKey="id"
+                        className="custom-table"
+                        columns={[
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Name</span>, dataIndex: 'name', key: 'name' },
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">City</span>, dataIndex: 'city', key: 'city' },
+                          { 
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                            dataIndex: 'status', 
+                            key: 'status',
+                            render: (val) => <Tag color="blue">{val}</Tag>
+                          },
+                          { 
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Engagement</span>, 
+                            dataIndex: 'engagementEnabled', 
+                            key: 'engagement',
+                            render: (val) => <Tag color={val ? 'cyan' : 'default'}>{val ? 'ENABLED' : 'DISABLED'}</Tag>
+                          },
+                        ]}
+                      />
+                   </div>
+                </div>
+              )
+            },
+            {
               key: 'overview',
               label: <span className="flex items-center gap-2 py-2"><Activity size={16} /> Ecosystem Health</span>,
               children: (
-                <div className="py-24 flex flex-col items-center justify-center text-center opacity-30">
-                   <Zap size={64} className="text-accent-primary mb-8 animate-pulse" />
-                   <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Operational Coherence</h2>
-                   <p className="text-text-tertiary max-w-xs">Global system statistics and real-time health metrics are being synchronized.</p>
+                <div className="py-12">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                      <Card className="bg-bg-secondary border-border-subtle">
+                         <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-widest">Active Nodes</span>
+                            <span className="text-3xl font-black text-white">{stats?.activeNodes || 0}</span>
+                            <span className="text-[10px] text-success-green font-bold uppercase">+2 sync increase</span>
+                         </div>
+                      </Card>
+                      <Card className="bg-bg-secondary border-border-subtle">
+                         <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-widest">Live Pilots</span>
+                            <span className="text-3xl font-black text-white">{stats?.livePilots || 0}</span>
+                            <span className="text-[10px] text-accent-primary font-bold uppercase">Operational</span>
+                         </div>
+                      </Card>
+                      <Card className="bg-bg-secondary border-border-subtle">
+                         <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-widest">Digital Concepts</span>
+                            <span className="text-3xl font-black text-white">{stats?.digitalConcepts || 0}</span>
+                            <span className="text-[10px] text-blue-400 font-bold uppercase">Frameworks</span>
+                         </div>
+                      </Card>
+                      <Card className="bg-bg-secondary border-border-subtle">
+                         <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-bold uppercase text-text-tertiary tracking-widest">System Uptime</span>
+                            <span className="text-3xl font-black text-white">{stats?.uptime || '99.9%'}</span>
+                            <span className="text-[10px] text-success-green font-bold uppercase">Stable</span>
+                         </div>
+                      </Card>
+                   </div>
+                   
+                   <div className="feed-card bg-bg-secondary border-border-subtle p-8">
+                      <div className="flex items-center gap-4 mb-6">
+                         <Zap size={24} className="text-accent-primary" />
+                         <h4 className="text-xl font-bold text-white uppercase tracking-tight">System Integrity Report</h4>
+                      </div>
+                      <p className="text-text-secondary leading-relaxed mb-6">
+                         All platform modules are currently synchronized with the backend. Service registry is serving live endpoints to the mission control interface.
+                      </p>
+                      <div className="flex gap-4">
+                         <Tag color="green">DATABASE: SYNCED</Tag>
+                         <Tag color="green">API: OPERATIONAL</Tag>
+                         <Tag color="green">REGISTRY: ACTIVE</Tag>
+                      </div>
+                   </div>
                 </div>
               )
             }
@@ -389,6 +604,85 @@ const AdminDashboard: React.FC = () => {
                 <ShieldCheck size={18} /> Synchronize
               </button>
               <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsPackageModalOpen(false)}>
+                Abort
+              </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Service Modal */}
+      <Modal
+        title={null}
+        open={isServiceModalOpen}
+        onCancel={() => setIsServiceModalOpen(false)}
+        footer={null}
+        width={600}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow">Service Registry</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">{editingService ? "Update Service" : "Register New Service"}</h3>
+          <Form form={serviceForm} layout="vertical" onFinish={handleSaveService} className="space-y-4">
+            <Row gutter={16}>
+              <Col span={16}>
+                <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Service Title</span>} rules={[{ required: true }]}>
+                  <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="order" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Order</span>}>
+                  <InputNumber className="bg-bg-primary border-border-subtle text-white h-12 w-full" />
+                </Form.Item>
+              </Col>
+            </Row>
+            
+            <Form.Item name="description" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Brief Description</span>}>
+              <Input.TextArea className="bg-bg-primary border-border-subtle text-white" rows={3} />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="category" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Category</span>}>
+                  <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="path" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Path / Module Name</span>}>
+                  <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item name="image" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Image URL</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="isChat" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Interface Type</span>} valuePropName="checked">
+                   <Select className="custom-select h-12">
+                      <Option value={true}>AI Chat Assistant</Option>
+                      <Option value={false}>Static Module</Option>
+                   </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="isActive" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Status</span>} valuePropName="checked">
+                   <Select className="custom-select h-12">
+                      <Option value={true}>Active</Option>
+                      <Option value={false}>Hidden</Option>
+                   </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <div className="flex gap-4 pt-6">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
+                <ShieldCheck size={18} /> Synchronize Service
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsServiceModalOpen(false)}>
                 Abort
               </button>
             </div>

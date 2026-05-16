@@ -440,12 +440,17 @@ router.post("/vision", async (req, res) => {
 
 // --- QSI Concepts (Now fetching from PilotProject where type='CONCEPT') ---
 router.get("/concepts", async (req, res) => {
+  const { category } = req.query;
   try {
+    const where = { 
+      isActive: true,
+      type: "CONCEPT"
+    };
+    if (category && category !== 'all') {
+      where.category = category;
+    }
     const concepts = await prisma.pilotProject.findMany({
-      where: { 
-        isActive: true,
-        type: "CONCEPT"
-      },
+      where,
       orderBy: { createdAt: "asc" },
     });
     res.json(concepts);
@@ -477,12 +482,17 @@ router.get("/concepts/:id", async (req, res) => {
 
 // --- Smart City Demos (Now fetching from PilotProject where type='DEMO') ---
 router.get("/demos", async (req, res) => {
+  const { category } = req.query;
   try {
+    const where = { 
+      isActive: true,
+      type: "DEMO"
+    };
+    if (category && category !== 'all') {
+      where.category = category;
+    }
     const demos = await prisma.pilotProject.findMany({
-      where: { 
-        isActive: true,
-        type: "DEMO"
-      },
+      where,
       orderBy: { createdAt: "asc" },
     });
     res.json(demos);

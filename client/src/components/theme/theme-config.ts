@@ -58,9 +58,9 @@ export const lightTheme: ThemeConfig = {
       boxShadowTertiary: "none",
     },
     Layout: {
-      colorBgHeader: "#0B0F19",
-      colorBgBody: "#0B0F19",
-      colorBgTrigger: "#111827",
+      headerBg: "#0B0F19",
+      bodyBg: "#0B0F19",
+      triggerBg: "#111827",
     },
     Menu: {
       colorItemBgSelected: "rgba(212, 175, 55, 0.12)",

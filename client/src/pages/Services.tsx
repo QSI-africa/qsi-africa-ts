@@ -47,44 +47,28 @@ const ServicesPage: React.FC = () => {
     try {
       const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
       
-      const [conceptsRes, demosRes] = await Promise.allSettled([
+      const [registryRes, conceptsRes, demosRes] = await Promise.allSettled([
+        axios.get(`${baseURL}/config/services`),
         axios.get(`${baseURL}/submit/concepts`),
         axios.get(`${baseURL}/submit/demos`)
       ]);
 
       let allProducts: Product[] = [];
 
-      // Add Chatbots as primary services
-      const chatServices: Product[] = [
-        { 
-          id: 'chat-infra', 
-          title: 'Infrastructure AI', 
-          category: 'infrastructure', 
-          description: 'High-performance AI assistant for architectural coherence and structural building.',
-          isChat: true,
-          moduleName: 'infrastructure',
-          image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800'
-        },
-        { 
-          id: 'chat-healing', 
-          title: 'Healing Assistant', 
-          category: 'healing', 
-          description: 'Restorative guidance protocol for holistic sovereignty and frequency alignment.',
-          isChat: true,
-          moduleName: 'healing',
-          image: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&q=80&w=800'
-        },
-        { 
-          id: 'chat-vision', 
-          title: 'Vision Translator', 
-          category: 'vision', 
-          description: 'Strategic AI interface for translating imagination into actionable renaissance frameworks.',
-          isChat: true,
-          moduleName: 'vision',
-          image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800'
-        }
-      ];
+      // 1. Add Registry Services (formerly hardcoded chatServices)
+      if (registryRes.status === 'fulfilled' && Array.isArray(registryRes.value.data)) {
+        allProducts = [...allProducts, ...registryRes.value.data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          description: item.description,
+          isChat: item.isChat,
+          moduleName: item.path,
+          image: item.image || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800'
+        }))];
+      }
 
+      // 2. Add Concepts
       if (conceptsRes.status === 'fulfilled' && Array.isArray(conceptsRes.value.data)) {
         allProducts = [...allProducts, ...conceptsRes.value.data.map((item: any) => ({
           id: item.id || item._id,
@@ -96,6 +80,7 @@ const ServicesPage: React.FC = () => {
         }))];
       }
 
+      // 3. Add Demos
       if (demosRes.status === 'fulfilled' && Array.isArray(demosRes.value.data)) {
         allProducts = [...allProducts, ...demosRes.value.data.map((item: any) => ({
           id: item.id || item._id,
@@ -107,7 +92,7 @@ const ServicesPage: React.FC = () => {
         }))];
       }
 
-      setProducts([...chatServices, ...allProducts]);
+      setProducts(allProducts);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       message.error("Failed to load products.");

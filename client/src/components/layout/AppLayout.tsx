@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Rss,
@@ -29,7 +29,9 @@ import {
   Lightbulb,
   ChevronRight,
   Cpu,
-  Sparkles
+  Sparkles,
+  Menu,
+  X
 } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
@@ -42,11 +44,11 @@ interface AppLayoutProps {
 const DefaultSidebarContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setIsMobileMenuOpen } = useSidebar();
   const [searchQuery, setSearchQuery] = useState('');
   
   const categories = [
     { name: 'Ecosystem', icon: <Globe size={28} />, path: '/', description: 'Unified control center for the QSI infrastructure.' },
-    { name: 'Services', icon: <Layers size={28} />, path: '/services', description: 'Explore operational modules and technical services.' },
     { name: 'QSI TV', icon: <Tv size={28} />, path: '/tv', description: 'HD broadcast and media streaming services.' },
     { name: 'Infrastructure', icon: <Cpu size={28} />, path: '/chat/infrastructure', description: 'Strategic AI interface for structural building.' },
     { name: 'Mobility', icon: <Truck size={28} />, path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
@@ -54,6 +56,7 @@ const DefaultSidebarContent = () => {
     { name: 'Vision', icon: <Sparkles size={28} />, path: '/chat/vision', description: 'Translate imagination into actionable frameworks.' },
     { name: 'Digital Lab', icon: <Zap size={28} />, path: '/lab', description: 'Specialized research and lab documentation.' },
     { name: 'Sovereign', icon: <Lightbulb size={28} />, path: '/network', description: 'Strategic intelligence and mental sovereignty.' },
+    { name: 'Concepts', icon: <Lightbulb size={28} />, path: '/concepts', description: 'Strategic conceptual frameworks and blueprints.' },
     { name: 'Smart City', icon: <Building2 size={28} />, path: '/demos', description: 'Next-gen urban planning and simulation.' },
     { name: 'Finance', icon: <CreditCard size={28} />, path: '/invoices', description: 'Automated billing and transaction tracking.' },
   ];
@@ -76,8 +79,8 @@ const DefaultSidebarContent = () => {
           padding: "0 24px"
         }}>
           <div className="flex items-baseline gap-3">
-            <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">PANX</h2>
-            <p className="text-[9px] font-black text-accent-primary uppercase tracking-[0.2em] opacity-70 whitespace-nowrap">Powered by QSI</p>
+            <h2 className="text-lg md:text-3xl font-black text-white tracking-tighter uppercase leading-none">PANX</h2>
+            <p className="text-[7px] md:text-[9px] font-black text-accent-primary uppercase tracking-[0.2em] opacity-70 whitespace-nowrap">Powered by QSI</p>
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <button 
@@ -161,7 +164,10 @@ const DefaultSidebarContent = () => {
             return (
               <button
                 key={cat.name}
-                onClick={() => navigate(cat.path)}
+                onClick={() => {
+                  navigate(cat.path);
+                  setIsMobileMenuOpen(false);
+                }}
                 style={{
                   display: "flex",
                   flexDirection: "column",
@@ -250,6 +256,7 @@ const DefaultSidebarContent = () => {
             <Link 
               key={cat.name} 
               to={cat.path}
+              onClick={() => setIsMobileMenuOpen(false)}
               className={`operation-card !p-3 group mb-2 ${isActive ? 'active' : ''}`}
               style={{
                 display: "flex",
@@ -265,7 +272,7 @@ const DefaultSidebarContent = () => {
                 border: isActive ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(255, 255, 255, 0.05)"
               }}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shrink-0 transition-all ${isActive ? 'bg-accent-primary text-black' : 'bg-white/5 text-white border border-white/10 group-hover:border-accent-primary/40 group-hover:text-accent-primary'}`}>
+              <div className={`w-10 h-10 rounded-xl hidden md:flex items-center justify-center font-black text-lg shrink-0 transition-all ${isActive ? 'bg-accent-primary text-black' : 'bg-white/5 text-white border border-white/10 group-hover:border-accent-primary/40 group-hover:text-accent-primary'}`}>
                 {React.cloneElement(cat.icon as React.ReactElement, { size: 18 })}
               </div>
 
@@ -294,35 +301,6 @@ const DefaultSidebarContent = () => {
           </div>
         )}
 
-        <button 
-          type="button"
-          onClick={() => {}}
-          style={{
-            width: "100%",
-            height: "48px",
-            background: "var(--accent-primary)",
-            border: "none",
-            borderRadius: "14px",
-            color: "white",
-            fontSize: "10px",
-            fontWeight: "900",
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-            cursor: "pointer",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-            marginTop: "16px",
-            boxShadow: "0 10px 20px -5px var(--accent-primary-glow), inset 0 0 12px rgba(255,255,255,0.5)",
-            textShadow: "0 2px 4px rgba(0,0,0,0.2)"
-          }}
-          className="hover:scale-[1.02] active:scale-[0.98] hover:brightness-110 transition-all"
-        >
-          <Plus size={16} strokeWidth={3} />
-          Establish New Cluster
-        </button>
       </div>
     </div>
   );
@@ -331,13 +309,13 @@ const DefaultSidebarContent = () => {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarContent } = useSidebar();
+  const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen } = useSidebar();
   const [showDetails, setShowDetails] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
     { icon: <Bell size={22} />, path: '/notifications', id: 'updates', label: 'Updates' },
-    { icon: <Briefcase size={22} />, path: '/dashboard', id: 'office', label: 'Office' },
     { icon: <MessageCircle size={22} />, path: '/inbox', id: 'chats', label: 'Chats' },
     { icon: <Settings size={22} />, path: '/settings', id: 'settings', label: 'Settings' },
   ];
@@ -346,94 +324,126 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { icon: <User size={22} />, path: '/profile', id: 'profile' },
   ];
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className={`app-grid ${showDetails ? 'with-details' : ''}`}>
-      {/* 1. Left Rail (72px) */}
-      <aside className="left-rail py-6 flex flex-col items-center">
-        <div className="flex-1 w-full flex flex-col items-center">
+    <div className={`app-grid ${showDetails ? 'with-details' : ''} ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+      {/* 0. Mobile Overlay */}
+      <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
 
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <div 
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                style={{
-                  width: "52px",
-                  height: "52px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "16px",
-                  cursor: "pointer",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                  background: isActive 
-                    ? "var(--accent-primary)" 
-                    : "rgba(255, 255, 255, 0.02)",
-                  border: isActive 
-                    ? "none" 
-                    : "1.5px solid rgba(16, 185, 129, 0.1)",
-                  boxShadow: isActive 
-                    ? "0 10px 20px -5px var(--accent-primary-glow)" 
-                    : "none",
-                  color: isActive ? "#000" : "var(--text-tertiary)",
-                  position: "relative"
-                }}
-                title={item.label}
-              >
-                {isActive && (
-                  <div style={{
-                    position: "absolute",
-                    left: "-20px",
-                    width: "4px",
-                    height: "24px",
-                    background: "var(--accent-primary)",
-                    borderRadius: "0 4px 4px 0",
-                    boxShadow: "0 0 15px var(--accent-primary)"
-                  }} />
-                )}
-                {item.icon}
-              </div>
-            );
-          })}
-        </div>
+      {/* 1. Left Rail (72px) - Hidden on Mobile */}
+      {!isMobile && (
+        <aside className="left-rail py-6 flex flex-col items-center">
+          <div className="flex-1 w-full flex flex-col items-center">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <div 
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    width: "52px",
+                    height: "52px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "16px",
+                    cursor: "pointer",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    background: isActive 
+                      ? "var(--accent-primary)" 
+                      : "rgba(255, 255, 255, 0.02)",
+                    border: isActive 
+                      ? "none" 
+                      : "1.5px solid rgba(16, 185, 129, 0.1)",
+                    boxShadow: isActive 
+                      ? "0 10px 20px -5px var(--accent-primary-glow)" 
+                      : "none",
+                    color: isActive ? "#000" : "var(--text-tertiary)",
+                    position: "relative"
+                  }}
+                  title={item.label}
+                >
+                  {isActive && (
+                    <div style={{
+                      position: "absolute",
+                      left: "-20px",
+                      width: "4px",
+                      height: "24px",
+                      background: "var(--accent-primary)",
+                      borderRadius: "0 4px 4px 0",
+                      boxShadow: "0 0 15px var(--accent-primary)"
+                    }} />
+                  )}
+                  {item.icon}
+                </div>
+              );
+            })}
+          </div>
 
-        <div className="w-full flex flex-col items-center gap-2 p-4 border-t border-white/5">
-          {bottomNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <div 
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                style={{
-                  width: "52px",
-                  height: "52px",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  transition: "all 0.4s ease",
-                  background: isActive 
-                    ? "var(--accent-primary)" 
-                    : "rgba(255, 255, 255, 0.05)",
-                  border: isActive 
-                    ? "none" 
-                    : "1.5px solid rgba(255, 255, 255, 0.1)",
-                  color: isActive ? "#000" : "var(--text-tertiary)"
-                }}
-                title="Profile"
-              >
-                {item.icon}
-              </div>
-            );
-          })}
-        </div>
-      </aside>
+          <div className="w-full flex flex-col items-center gap-2 p-4 border-t border-white/5">
+            {bottomNavItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <div 
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    width: "52px",
+                    height: "52px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "all 0.4s ease",
+                    background: isActive 
+                      ? "var(--accent-primary)" 
+                      : "rgba(255, 255, 255, 0.05)",
+                    border: isActive 
+                      ? "none" 
+                      : "1.5px solid rgba(255, 255, 255, 0.1)",
+                    color: isActive ? "#000" : "var(--text-tertiary)"
+                  }}
+                  title="Profile"
+                >
+                  {item.icon}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+      )}
 
       {/* 2. Sidebar Panel (360px) */}
       <aside className="sidebar-panel">
+        <div className="md:hidden flex justify-end p-6 border-b border-white/5">
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+            }}
+            className="hover:scale-105 active:scale-95"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
+        </div>
         {sidebarContent || <DefaultSidebarContent />}
       </aside>
 
@@ -442,7 +452,25 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      {/* 4. Details Panel (Optional) */}
+      {/* 4. Mobile Bottom Bar */}
+      <nav className="mobile-nav-bar">
+        <button 
+          className={`mobile-nav-item ${isMobileMenuOpen ? 'active' : ''}`}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <Menu size={24} />
+          <span className="mobile-nav-label">Menus</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
+          onClick={() => navigate('/profile')}
+        >
+          <User size={24} />
+          <span className="mobile-nav-label">Profile</span>
+        </button>
+      </nav>
+
+      {/* 5. Details Panel (Optional) */}
       {showDetails && (
         <aside className="details-panel">
           <header className="p-6 border-b border-border-subtle">
@@ -463,5 +491,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     </div>
   );
 };
+
 
 export default AppLayout;

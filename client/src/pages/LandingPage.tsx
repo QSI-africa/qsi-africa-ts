@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Grid } from 'antd';
+
+const { useBreakpoint } = Grid;
 
 interface FeedItem {
   id: string;
@@ -124,11 +127,7 @@ const FeedCard: React.FC<{ post: FeedItem; onClick: () => void }> = ({ post, onC
                 {post.author}
               </span>
               {post.badge && (
-                <span style={{
-                  padding: '3px 10px', borderRadius: '6px', fontSize: '9px', fontWeight: 900,
-                  letterSpacing: '0.15em', textTransform: 'uppercase',
-                  background: `${color}15`, color, border: `1px solid ${color}25`
-                }}>
+                <span className="qsi-tag qsi-tag-primary" style={{ padding: '3px 10px', borderRadius: '6px' }}>
                   {post.badge}
                 </span>
               )}
@@ -211,12 +210,8 @@ const FeedCard: React.FC<{ post: FeedItem; onClick: () => void }> = ({ post, onC
 
         <button
           onClick={e => { e.stopPropagation(); setBookmarked(!bookmarked); }}
-          style={{
-            width: '36px', height: '36px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-            background: bookmarked ? `${color}15` : 'rgba(255,255,255,0.04)',
-            color: bookmarked ? color : 'rgba(255,255,255,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
+          className="qsi-btn qsi-btn-secondary"
+          style={{ width: '36px', height: '36px', borderRadius: '10px', padding: 0, color: bookmarked ? color : 'rgba(255,255,255,0.4)', background: bookmarked ? `${color}15` : 'rgba(255,255,255,0.04)' }}
         >
           <Bookmark size={15} style={{ fill: bookmarked ? color : 'none' }} />
         </button>
@@ -225,12 +220,8 @@ const FeedCard: React.FC<{ post: FeedItem; onClick: () => void }> = ({ post, onC
 
         <button
           onClick={e => { e.stopPropagation(); }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
-            borderRadius: '10px', border: `1px solid ${color}30`, background: `${color}10`,
-            color, cursor: 'pointer', fontSize: '10px', fontWeight: 800,
-            textTransform: 'uppercase', letterSpacing: '0.1em'
-          }}
+          className="qsi-btn qsi-btn-outline"
+          style={{ padding: '8px 16px', borderRadius: '10px' }}
         >
           View <ArrowRight size={12} />
         </button>
@@ -240,14 +231,30 @@ const FeedCard: React.FC<{ post: FeedItem; onClick: () => void }> = ({ post, onC
 };
 
 const LandingPage: React.FC = () => {
+  const screens = useBreakpoint();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeNodes: 0,
+    livePilots: 0,
+    digitalConcepts: 0,
+    uptime: '99.9%'
+  });
   const [visibleItems, setVisibleItems] = useState(5);
   const [activeFilter, setActiveFilter] = useState('All');
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.qsi.africa/api';
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await axios.get(`${baseURL}/config/stats`);
+      setStats(res.data);
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+    }
+  }, [baseURL]);
 
   const fetchFeedData = useCallback(async () => {
     setRefreshing(true);
@@ -365,7 +372,10 @@ const LandingPage: React.FC = () => {
     }
   }, [baseURL]);
 
-  useEffect(() => { fetchFeedData(); }, [fetchFeedData]);
+  useEffect(() => { 
+    fetchFeedData(); 
+    fetchStats();
+  }, [fetchFeedData, fetchStats]);
 
   const filters = ['All', 'System', 'Concept', 'Demo', 'Pilot'];
 
@@ -399,7 +409,7 @@ const LandingPage: React.FC = () => {
             <Globe size={20} />
           </div>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <h1 style={{ fontSize: screens.md ? '18px' : '16px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
               Ecosystem Feed
             </h1>
             <p style={{ fontSize: '10px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
@@ -410,21 +420,16 @@ const LandingPage: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Live indicator */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px',
-            borderRadius: '10px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)'
-          }}>
+          <div className="qsi-tag qsi-tag-primary" style={{ gap: '8px', padding: '8px 14px', borderRadius: '10px' }}>
             <div style={{
               width: '7px', height: '7px', borderRadius: '50%', background: '#10B981',
               boxShadow: '0 0 8px #10B981', animation: 'pulse 2s infinite'
             }} />
-            <span style={{ fontSize: '10px', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Live
-            </span>
+            <span>Live</span>
           </div>
 
           <button
-            onClick={fetchFeedData}
+            onClick={() => { fetchFeedData(); fetchStats(); }}
             style={{
               width: '38px', height: '38px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)',
               background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
@@ -440,10 +445,10 @@ const LandingPage: React.FC = () => {
 
         {/* Stats Bar */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-          <StatBar label="Active Nodes" value="48" trend="+2" color="#10B981" />
-          <StatBar label="Uptime" value="99.9%" color="#10B981" />
-          <StatBar label="Live Pilots" value="12" trend="Active" color="#F59E0B" />
-          <StatBar label="Concepts" value={`${feedItems.filter(f => f.type === 'concept').length || '—'}`} color="#6366F1" />
+          <StatBar label="Active Nodes" value={stats.activeNodes.toString()} trend="+2" color="#10B981" />
+          <StatBar label="Uptime" value={stats.uptime} color="#10B981" />
+          <StatBar label="Live Pilots" value={stats.livePilots.toString()} trend="Active" color="#F59E0B" />
+          <StatBar label="Concepts" value={stats.digitalConcepts.toString()} color="#6366F1" />
         </div>
 
         {/* Composer */}
@@ -479,12 +484,7 @@ const LandingPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <button style={{
-                  padding: '10px 24px', borderRadius: '12px', border: 'none',
-                  background: '#10B981', color: 'white', cursor: 'pointer',
-                  fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em',
-                  boxShadow: '0 8px 20px -5px rgba(16,185,129,0.4)'
-                }}>
+                <button className="qsi-btn qsi-btn-primary" style={{ padding: '10px 24px', borderRadius: '12px' }}>
                   Broadcast
                 </button>
               </div>
@@ -498,25 +498,14 @@ const LandingPage: React.FC = () => {
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              style={{
-                padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                transition: 'all 0.2s',
-                background: activeFilter === f ? '#10B981' : 'rgba(255,255,255,0.04)',
-                color: activeFilter === f ? 'white' : 'rgba(255,255,255,0.4)',
-                boxShadow: activeFilter === f ? '0 6px 16px -4px rgba(16,185,129,0.4)' : 'none',
-              }}
+              className={`qsi-btn ${activeFilter === f ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
+              style={{ padding: '8px 18px', borderRadius: '10px' }}
             >
               {f}
             </button>
           ))}
           <div style={{ flex: 1 }} />
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px',
-            borderRadius: '10px', border: '1px solid rgba(255,255,255,0.07)',
-            background: 'rgba(255,255,255,0.03)', cursor: 'pointer',
-            fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)'
-          }}>
+          <button className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.4)' }}>
             <Filter size={13} /> Sort
           </button>
         </div>
@@ -548,14 +537,8 @@ const LandingPage: React.FC = () => {
             {visibleItems < filteredItems.length && (
               <button
                 onClick={() => setVisibleItems(prev => prev + 5)}
-                style={{
-                  width: '100%', padding: '16px', borderRadius: '16px',
-                  border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)',
-                  color: '#10B981', cursor: 'pointer', fontSize: '11px', fontWeight: 900,
-                  textTransform: 'uppercase', letterSpacing: '0.2em',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'all 0.2s', marginTop: '8px'
-                }}
+                className="qsi-btn qsi-btn-secondary"
+                style={{ width: '100%', padding: '16px', borderRadius: '16px', color: '#10B981' }}
               >
                 <Plus size={16} /> Load More Intelligence
               </button>

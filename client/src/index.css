@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -13,6 +17,7 @@
   --accent-primary-soft: rgba(16, 185, 129, 0.12);
   --accent-primary-hover: #059669; /* Emerald 600 */
   --accent-primary-glow: rgba(16, 185, 129, 0.25);
+  /* Removed --accent-gold to enforce Emerald Green Mission Control aesthetic */
   
   --success-green: #22C55E;
   --success-green-soft: rgba(34, 197, 94, 0.1);
@@ -170,7 +175,7 @@ body {
 }
 
 .search-input-container:focus-within {
-  border-color: var(--accent-gold);
+  border-color: var(--accent-primary);
 }
 
 .search-input-container input {
@@ -191,6 +196,7 @@ body {
   overflow-x: auto;
 }
 
+/* Category Pills (Classic) */
 .pill {
   padding: 8px 18px;
   border-radius: 12px;
@@ -207,7 +213,7 @@ body {
 }
 
 .pill:hover {
-  background-color: var(--bg-hover);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   border-color: rgba(255,255,255,0.1);
   transform: translateY(-1px);
@@ -218,6 +224,112 @@ body {
   color: var(--accent-primary);
   border-color: var(--accent-primary-soft);
   box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.2);
+}
+
+/* --- QSI Design System v2 (Mission Control) --- */
+
+/* Standard Buttons */
+.qsi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: var(--font-primary);
+  white-space: nowrap;
+}
+
+.qsi-btn:hover {
+  transform: translateY(-2px);
+}
+
+.qsi-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.qsi-btn-primary {
+  background: var(--accent-primary);
+  color: #0B1018; /* Deepest background color for contrast */
+  box-shadow: 0 8px 20px -5px rgba(16, 185, 129, 0.5);
+}
+
+.qsi-btn-primary:hover {
+  background: var(--accent-primary-hover);
+  box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.6);
+}
+
+.qsi-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.qsi-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.qsi-btn-ghost {
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
+.qsi-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.qsi-btn-outline {
+  background: transparent;
+  border: 1px solid var(--accent-primary-soft);
+  color: var(--accent-primary);
+}
+
+.qsi-btn-outline:hover {
+  background: var(--accent-primary-soft);
+  border-color: var(--accent-primary);
+}
+
+/* Standard Tags / Badges */
+.qsi-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  line-height: 1;
+  font-family: var(--font-primary);
+  border: 1px solid transparent;
+}
+
+.qsi-tag-primary {
+  background: var(--accent-primary-soft);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary-glow);
+}
+
+.qsi-tag-success {
+  background: var(--success-green-soft);
+  color: var(--success-green);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.qsi-tag-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .service-tile.active .w-14 {
@@ -418,10 +530,100 @@ body {
 @media (max-width: 768px) {
   .app-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 70px;
+    grid-template-rows: 1fr;
   }
-  .left-rail { display: none; }
-  .sidebar-panel { display: none; }
+
+  .left-rail { 
+    display: none !important; 
+  }
+
+  .sidebar-panel { 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 85%;
+    max-width: 360px;
+    height: 100vh;
+    transform: translateX(-105%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    border-right: 1px solid var(--border-light);
+    background-color: var(--bg-secondary);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+    display: flex !important;
+  }
+
+  .mobile-menu-open .sidebar-panel {
+    transform: translateX(0);
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .mobile-menu-open .mobile-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-nav-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 64px;
+    background: rgba(24, 36, 30, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 800;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5), 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-tertiary);
+    transition: all 0.3s ease;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--accent-primary);
+  }
+
+  .mobile-nav-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .main-workspace {
+    padding-bottom: 72px; /* Space for bottom nav */
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-nav-bar, .mobile-overlay {
+    display: none !important;
+  }
 }
 
 /* Design System Components */
@@ -429,7 +631,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 12px;
-  color: var(--accent-gold);
+  color: var(--accent-primary);
   font-weight: 700;
   margin-bottom: 8px;
   display: block;
@@ -451,8 +653,8 @@ body {
 }
 
 .qsi-button.primary {
-  background: var(--accent-gold);
-  color: #000;
+  background: var(--accent-primary);
+  color: #111827;
   border: none;
 }
 
@@ -475,7 +677,23 @@ body {
 }
 
 @keyframes revealUp {
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.glass-morphism {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
 }
 /* Custom Ant Design Overrides */
 .custom-tabs .ant-tabs-nav {
@@ -494,10 +712,10 @@ body {
   letter-spacing: 0.1em !important;
 }
 .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--accent-gold) !important;
+  color: var(--accent-primary) !important;
 }
 .custom-tabs .ant-tabs-ink-bar {
-  background: var(--accent-gold) !important;
+  background: var(--accent-primary) !important;
   height: 3px !important;
 }
 
@@ -571,3 +789,33 @@ a:visited {
 .mb-2 { margin-bottom: 8px !important; }
 .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
 .transition-colors { transition: color 0.15s, background-color 0.15s, border-color 0.15s !important; }
+
+.md\:hidden {
+  display: flex !important;
+}
+
+@media (min-width: 769px) {
+  .md\:hidden {
+    display: none !important;
+  }
+}
+
+/* Premium Glass Modal Overrides */
+.premium-glass-modal .ant-modal-content {
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+.premium-glass-modal .ant-modal-mask {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: rgba(0,0,0,0.5) !important;
+}
+
+.premium-glass-modal .ant-modal-body {
+  padding: 0 !important;
+}

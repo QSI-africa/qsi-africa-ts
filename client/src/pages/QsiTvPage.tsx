@@ -80,12 +80,8 @@ const QsiTvPage: React.FC = () => {
         }}>
           <button
             onClick={() => { setActiveRoomId(null); setIsBroadcasting(false); setActiveViewerRoom(null); }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
-              borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.04)', color: 'white', cursor: 'pointer',
-              fontSize: '12px', fontWeight: 700
-            }}
+            className="qsi-btn qsi-btn-secondary"
+            style={{ padding: '8px 16px', borderRadius: '10px' }}
           >
             <ArrowLeft size={16} /> Exit
           </button>
@@ -148,12 +144,7 @@ const QsiTvPage: React.FC = () => {
 
         <button
           onClick={handleStartBroadcast}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 22px',
-            borderRadius: '12px', border: 'none', background: GREEN, color: 'white',
-            cursor: 'pointer', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase',
-            letterSpacing: '0.12em', boxShadow: `0 8px 20px -5px ${GREEN}60`
-          }}
+          className="qsi-btn qsi-btn-primary"
         >
           <Radio size={15} /> Go Live
         </button>
@@ -255,11 +246,7 @@ const QsiTvPage: React.FC = () => {
                 Active Transmissions
               </h2>
               {streams.length > 0 && (
-                <span style={{
-                  padding: '3px 10px', borderRadius: '8px',
-                  background: `${GREEN}15`, border: `1px solid ${GREEN}25`,
-                  fontSize: '10px', fontWeight: 800, color: GREEN
-                }}>
+                <span className="qsi-tag qsi-tag-primary" style={{ padding: '3px 10px', borderRadius: '8px' }}>
                   {streams.length} Live
                 </span>
               )}
@@ -302,12 +289,8 @@ const QsiTvPage: React.FC = () => {
               </div>
               <button
                 onClick={handleStartBroadcast}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px',
-                  borderRadius: '12px', border: `1px solid ${GREEN}30`, background: `${GREEN}10`,
-                  color: GREEN, cursor: 'pointer', fontSize: '11px', fontWeight: 800,
-                  textTransform: 'uppercase', letterSpacing: '0.1em'
-                }}
+                className="qsi-btn qsi-btn-outline"
+                style={{ padding: '10px 20px', borderRadius: '12px' }}
               >
                 <Plus size={14} /> Start Broadcast
               </button>
@@ -357,12 +340,7 @@ const QsiTvPage: React.FC = () => {
                   </div>
 
                   {/* Join CTA */}
-                  <div style={{
-                    marginTop: '20px', padding: '10px', borderRadius: '12px',
-                    background: `${GREEN}10`, border: `1px solid ${GREEN}20`,
-                    color: GREEN, fontSize: '11px', fontWeight: 800,
-                    textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center'
-                  }}>
+                  <div className="qsi-btn qsi-btn-outline" style={{ marginTop: '20px', width: '100%', padding: '10px', borderRadius: '12px' }}>
                     Join Stream
                   </div>
                 </button>

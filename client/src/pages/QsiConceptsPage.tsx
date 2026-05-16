@@ -1,118 +1,185 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Typography, Spin, Empty } from "antd";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Row, Col, Typography, Spin, App as AntApp, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Lightbulb,
-  ArrowRight,
   Zap,
-  Globe,
   Layers,
   Activity
 } from "lucide-react";
 
-const { Title, Paragraph, Text } = Typography;
+
+const GREEN = '#10B981';
 
 const QsiConceptsPage: React.FC = () => {
   const [pilots, setPilots] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const navigate = useNavigate();
+  const screens = Grid.useBreakpoint();
 
-  useEffect(() => {
-    const fetchConcepts = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-        const response = await axios.get(`${baseURL}/submit/concepts`);
-        if (Array.isArray(response.data)) {
-          setPilots(response.data);
-        } else {
-          setError("Received invalid data format.");
-        }
-      } catch (err) {
-        setError("Could not load digital concepts.");
-      } finally {
-        setLoading(false);
+  const fetchConcepts = useCallback(async (cat: string = 'all') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+      const response = await axios.get(`${baseURL}/submit/concepts`, {
+        params: { category: cat }
+      });
+      if (Array.isArray(response.data)) {
+        setPilots(response.data);
+      } else {
+        setError("Received invalid data format.");
       }
-    };
-    fetchConcepts();
+    } catch (err) {
+      setError("Could not load digital concepts.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return (
-    <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-      {/* Hero Section */}
-      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
-        <div className="max-w-6xl mx-auto relative z-10">
-          <span className="eyebrow">Culture Engineered</span>
-          <h1 className="text-5xl lg:text-8xl font-black text-white mt-4 mb-8 tracking-tighter uppercase leading-none">
-            Digital <br/><span className="text-accent-primary">Concepts</span>
-          </h1>
-          <p className="text-xl text-text-secondary max-w-2xl leading-relaxed">
-            Brand-anchored innovation concepts merging culture, technology, and consciousness. Each concept operates as a collaborative technical framework.
-          </p>
-        </div>
-        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-5 pointer-events-none">
-           <Layers size={600} className="text-accent-primary" />
-        </div>
-      </header>
+  useEffect(() => {
+    fetchConcepts(activeCategory);
+  }, [fetchConcepts, activeCategory]);
 
-      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12">
-        {loading ? (
-          <div className="py-24 text-center">
-            <Spin />
-            <p className="text-xs text-text-tertiary uppercase tracking-widest font-black mt-4 animate-pulse">Retrieving Vision Models...</p>
+
+
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      <div style={{
+        padding: screens.md ? '24px 32px' : '16px 20px',
+        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', 
+        flexDirection: screens.md ? 'row' : 'column',
+        alignItems: screens.md ? 'center' : 'flex-start', 
+        justifyContent: 'space-between',
+        gap: screens.md ? '0' : '20px',
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/30 flex items-center justify-center text-accent-primary shrink-0">
+              <Lightbulb size={20} />
+            </div>
+            <div>
+              <h1 className="text-base md:text-lg font-black text-white tracking-tight leading-none uppercase">CONCEPTS</h1>
+              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.2em] mt-1 opacity-80">Strategic Blueprints</p>
+            </div>
           </div>
-        ) : error ? (
-          <div className="py-12 px-8 border border-red-500/20 bg-red-500/5 rounded-2xl text-center">
-            <Text type="danger" className="font-bold uppercase tracking-widest">{error}</Text>
+
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px',
+            width: screens.md ? 'auto' : '100%',
+            overflowX: screens.md ? 'visible' : 'auto',
+            paddingBottom: screens.md ? '0' : '4px',
+          }} className="no-scrollbar">
+            {['all', 'infrastructure', 'governance', 'renaissance'].map((cat) => (
+              <button 
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{ whiteSpace: 'nowrap' }}
+                className={`qsi-btn ${activeCategory === cat ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-        ) : (
-          <Row gutter={[32, 32]}>
-            {pilots.length > 0 ? (
-              pilots.map((pilot) => (
-                <Col key={pilot.id} xs={24} sm={12} md={8}>
+        </div>
+
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+          {/* Immersive Hero Section */}
+          <div style={{
+            borderRadius: '24px', overflow: 'hidden', position: 'relative',
+            background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+            border: `1px solid ${GREEN}20`, marginBottom: '32px', 
+            padding: screens.md ? '48px 40px' : '40px 24px',
+            display: 'flex', 
+            flexDirection: screens.md ? 'row' : 'column',
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '24px',
+            textAlign: screens.md ? 'left' : 'center'
+          }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            
+            <div className="relative z-10 max-w-xl">
+              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.3em] mb-6">Strategic Innovation</p>
+              <h2 className={`${screens.md ? 'text-5xl lg:text-7xl' : 'text-2xl'} font-black text-white tracking-tighter leading-tight mb-8 uppercase`}>
+                Architecting<br />Future Consciousness
+              </h2>
+              <p className="text-base lg:text-lg text-text-secondary leading-relaxed font-medium">
+                High-fidelity conceptual frameworks bridging cultural legacy with advanced technical coherence.
+              </p>
+            </div>
+
+            <div className="relative z-10 opacity-10 text-accent-primary hidden lg:block">
+              <Layers size={280} />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="py-32 text-center"><Spin size="large" /></div>
+          ) : error ? (
+            <div className="p-12 border border-red-500/20 bg-red-500/5 rounded-[32px] text-center">
+              <span className="text-red-500 font-black uppercase tracking-[0.2em]">{error}</span>
+            </div>
+          ) : (
+            <Row gutter={[32, 32]}>
+              {pilots.map((pilot) => (
+                <Col key={pilot.id} xs={24} lg={12}>
                   <div 
-                    className="feed-card bg-bg-secondary border-border-subtle p-8 h-full flex flex-col justify-between cursor-pointer hover:border-accent-primary/40 transition-all group"
                     onClick={() => navigate(`/concepts/${pilot.id}`)}
+                    style={{
+                      padding: '28px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)',
+                      background: 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'left',
+                      transition: 'all 0.25s', position: 'relative', overflow: 'hidden'
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}30`;
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.07)';
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                    }}
                   >
-                    <div>
-                      <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-xl bg-bg-primary flex items-center justify-center text-accent-primary border border-border-subtle group-hover:border-accent-primary/30 transition-colors">
-                          <Lightbulb size={20} />
-                        </div>
-                        <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Innovation Model</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-4 group-hover:text-accent-primary transition-colors">
-                        {pilot.title}
-                      </h3>
-                      <p className="text-sm text-text-secondary leading-relaxed mb-8 line-clamp-4">
-                        {pilot.shortDescription}
-                      </p>
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, marginBottom: '16px'
+                    }}>
+                      <Lightbulb size={20} />
                     </div>
-                    <div className="flex justify-between items-center pt-6 border-t border-border-subtle/50">
-                      <span className="text-[10px] font-black text-accent-primary uppercase tracking-widest">
-                        Explore Concept
-                      </span>
-                      <ArrowRight size={18} className="text-accent-primary transform group-hover:translate-x-1 transition-transform" />
+                    <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '6px', letterSpacing: '-0.02em' }}>{pilot.title}</h3>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{pilot.shortDescription}</p>
+                    <div style={{ position: 'absolute', bottom: '20px', right: '20px', color: GREEN, opacity: 0.05 }}>
+                      <Zap size={40} />
                     </div>
                   </div>
                 </Col>
-              ))
-            ) : (
-              <Col span={24}>
-                <div className="py-24 text-center">
-                   <Activity size={48} className="mx-auto text-text-tertiary opacity-10 mb-6" />
-                   <p className="text-text-tertiary uppercase font-black tracking-widest">No concepts registered in this cycle.</p>
-                </div>
-              </Col>
-            )}
-          </Row>
-        )}
-      </section>
+              ))}
+              {pilots.length === 0 && (
+                <Col span={24}>
+                  <div className="py-32 text-center opacity-20">
+                    <Activity size={64} className="mx-auto mb-8" />
+                    <p className="text-xs font-black uppercase tracking-[0.3em]">No concepts found</p>
+                  </div>
+                </Col>
+              )}
+            </Row>
+          )}
+        </div>
+
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
-  );
+);
 };
 
 export default QsiConceptsPage;

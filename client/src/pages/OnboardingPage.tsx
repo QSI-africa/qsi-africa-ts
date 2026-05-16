@@ -83,7 +83,7 @@ const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-bg-primary p-6 lg:p-12 relative overflow-hidden">
+    <div className="min-h-screen w-[100%] flex items-center justify-center bg-bg-primary p-6 lg:p-12 relative overflow-hidden">
       {/* Background Decorative Element */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none -z-0">
          <Zap size={800} className="text-accent-primary" />

@@ -1,21 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Typography, Spin, Tag, Empty } from "antd";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Row, Col, Typography, Spin, App as AntApp, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
-  MapPin,
-  ArrowRight,
-  Zap,
-  Globe,
-  Activity,
-  Box,
-  TrendingUp,
   Building2,
-  ChevronRight,
-  Wind,
-  Layers,
+  Activity,
+  MapPin,
   Map
 } from "lucide-react";
+
 
 const GREEN = '#10B981';
 
@@ -23,170 +16,170 @@ const SmartCityDemosPage: React.FC = () => {
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const navigate = useNavigate();
+  const screens = Grid.useBreakpoint();
+
+  const fetchFrameworks = useCallback(async (cat: string = 'all') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+      const response = await axios.get(`${baseURL}/submit/demos`, {
+        params: { category: cat }
+      });
+      if (Array.isArray(response.data)) {
+        setFrameworks(response.data);
+      } else {
+        setError("Received invalid data format.");
+      }
+    } catch (err) {
+      setError("Could not load city demonstrators.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchFrameworks = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-        const response = await axios.get(`${baseURL}/submit/demos`);
-        if (Array.isArray(response.data)) {
-          setFrameworks(response.data);
-        } else {
-          setError("Received invalid data format.");
-        }
-      } catch (err) {
-        setError("Could not load city demonstrators.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFrameworks();
-  }, []);
+    fetchFrameworks(activeCategory);
+  }, [fetchFrameworks, activeCategory]);
+
+
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
-      {/* Header */}
       <div style={{
-        padding: '24px 32px',
+        padding: screens.md ? '24px 32px' : '16px 20px',
         background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', 
+        flexDirection: screens.md ? 'row' : 'column',
+        alignItems: screens.md ? 'center' : 'flex-start', 
+        justifyContent: 'space-between',
+        gap: screens.md ? '0' : '20px',
         position: 'sticky', top: 0, zIndex: 20
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/30 flex items-center justify-center text-accent-primary shrink-0">
+              <Building2 size={20} />
+            </div>
+            <div>
+              <h1 className="text-base md:text-lg font-black text-white tracking-tight leading-none uppercase">SMART CITY</h1>
+              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.2em] mt-1 opacity-80">Physical Demonstrators</p>
+            </div>
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px',
+            width: screens.md ? 'auto' : '100%',
+            overflowX: screens.md ? 'visible' : 'auto',
+            paddingBottom: screens.md ? '0' : '4px',
+          }} className="no-scrollbar">
+            {['all', 'infrastructure', 'energy', 'mobility'].map((cat) => (
+              <button 
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{ whiteSpace: 'nowrap' }}
+                className={`qsi-btn ${activeCategory === cat ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+          {/* Immersive Hero Section */}
           <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
+            borderRadius: '24px', overflow: 'hidden', position: 'relative',
+            background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+            border: `1px solid ${GREEN}20`, marginBottom: '32px', 
+            padding: screens.md ? '48px 40px' : '40px 24px',
+            display: 'flex', 
+            flexDirection: screens.md ? 'row' : 'column',
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '24px',
+            textAlign: screens.md ? 'left' : 'center'
           }}>
-            <Building2 size={20} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              SMART CITY
-            </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              Physical Demonstrators
-            </p>
-          </div>
-        </div>
-      </div>
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            
+            <div className="relative z-10 max-w-xl">
+              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.3em] mb-6">Physical Infrastructure</p>
+              <h2 className={`${screens.md ? 'text-5xl lg:text-7xl' : 'text-2xl'} font-black text-white tracking-tighter leading-tight mb-8 uppercase`}>
+                African Urbanism<br />Lived, Not Imagined
+              </h2>
+              <p className="text-base lg:text-lg text-text-secondary leading-relaxed font-medium">
+                Tangible physical demonstrators where real-world prototypes of technological coherence are deployed.
+              </p>
+            </div>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
-        
-        {/* Hero Section */}
-        <div style={{
-          borderRadius: '24px', overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-        }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Physical Infrastructure
-            </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
-              African Urbanism<br />Lived, Not Imagined
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '480px' }}>
-              Tangible physical demonstrators where real-world prototypes of technological coherence are deployed.
-            </p>
+            <div className="relative z-10 opacity-10 text-accent-primary hidden lg:block">
+              <Map size={280} />
+            </div>
           </div>
 
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
-            <Map size={240} />
-          </div>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: '100px 0', textAlign: 'center' }}><Spin /></div>
-        ) : error ? (
-          <div style={{ padding: '32px', borderRadius: '24px', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', textAlign: 'center' }}>
-            <p style={{ color: '#EF4444', fontWeight: 700, margin: 0 }}>{error}</p>
-          </div>
-        ) : (
-          <Row gutter={[24, 24]}>
-            {frameworks.length > 0 ? frameworks.map((demo) => (
-              <Col key={demo.id} xs={24} sm={12}>
-                <div 
-                  onClick={() => navigate(`/demos/${demo.id}`)}
-                  style={{
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '24px', padding: '32px', height: '100%',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}40`;
-                    (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
-                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)';
-                    (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
-                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                      <div style={{ 
-                        width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', 
-                        border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-                      }}>
-                        <Layers size={20} />
-                      </div>
-                      <span style={{ 
-                        fontSize: '9px', fontWeight: 900, background: demo.status === 'ACTIVE' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)', 
-                        color: demo.status === 'ACTIVE' ? GREEN : 'rgba(255,255,255,0.4)', 
-                        padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.1em'
-                      }}>
-                        {demo.status || "PROPOSED"}
-                      </span>
+          {loading ? (
+            <div className="py-32 text-center"><Spin size="large" /></div>
+          ) : error ? (
+            <div className="p-12 border border-red-500/20 bg-red-500/5 rounded-[32px] text-center">
+              <span className="text-red-500 font-black uppercase tracking-[0.2em]">{error}</span>
+            </div>
+          ) : (
+            <Row gutter={[32, 32]}>
+              {frameworks.map((demo) => (
+                <Col key={demo.id} xs={24} lg={12}>
+                  <div 
+                    onClick={() => navigate(`/demos/${demo.id}`)}
+                    style={{
+                      padding: '28px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)',
+                      background: 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'left',
+                      transition: 'all 0.25s', position: 'relative', overflow: 'hidden'
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}30`;
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.07)';
+                      (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                    }}
+                  >
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, marginBottom: '16px'
+                    }}>
+                      <Building2 size={20} />
                     </div>
-
-                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', marginBottom: '8px', letterSpacing: '-0.02em' }}>{demo.title}</h3>
-                    
-                    {demo.city && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
-                        <MapPin size={12} color={GREEN} />
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{demo.city}</span>
-                      </div>
-                    )}
-
-                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '32px' }}>
-                      {demo.shortDescription}
-                    </p>
+                    <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '6px', letterSpacing: '-0.02em' }}>{demo.title}</h3>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{demo.shortDescription}</p>
+                    <div style={{ position: 'absolute', bottom: '20px', right: '20px', color: GREEN, opacity: 0.05 }}>
+                      <MapPin size={40} />
+                    </div>
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>View Prototype</span>
-                    <ArrowRight size={18} color={GREEN} />
+                </Col>
+              ))}
+              {frameworks.length === 0 && (
+                <Col span={24}>
+                  <div className="py-32 text-center opacity-20">
+                    <Activity size={64} className="mx-auto mb-8" />
+                    <p className="text-xs font-black uppercase tracking-[0.3em]">No demonstrators found</p>
                   </div>
-                </div>
-              </Col>
-            )) : (
-              <Col span={24}>
-                <div style={{ padding: '100px 0', textAlign: 'center' }}>
-                  <Activity size={48} color="rgba(255,255,255,0.05)" style={{ marginBottom: '24px' }} />
-                  <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>No physical demonstrators registered.</p>
-                </div>
-              </Col>
-            )}
-          </Row>
-        )}
-      </div>
+                </Col>
+              )}
+            </Row>
+          )}
+        </div>
+
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
-  );
+);
 };
 
 export default SmartCityDemosPage;

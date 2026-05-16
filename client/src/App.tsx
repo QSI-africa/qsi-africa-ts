@@ -8,7 +8,6 @@ import { Activity } from "lucide-react";
 
 // Page Imports
 import LandingPage from "./pages/LandingPage";
-import ServicesPage from "./pages/Services";
 import ChatWindow from "./components/ChatWindow";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
@@ -85,7 +84,7 @@ const App: React.FC = () => {
   return (
     <ConfigProvider theme={lightTheme}>
       <AntApp>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
             <SidebarProvider>
               <AppLayout>
@@ -127,7 +126,6 @@ const App: React.FC = () => {
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/chat/:moduleName" element={<ChatWindow />} />
                   <Route path="/healing" element={<HealingPage />} />
-                  <Route path="/services" element={<ServicesPage />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
                   <Route path="/concepts" element={<QsiConceptsPage />} />
@@ -146,10 +144,8 @@ const App: React.FC = () => {
                   <Route path="/tv" element={<QsiTvPage />} />
                   
                   {/* === New PANX Routes === */}
-                  <Route path="/office" element={<PlaceholderPage name="Office" />} />
                   <Route path="/lab" element={<LabPage />} />
                   <Route path="/inbox" element={<InboxPage />} />
-                  <Route path="/music" element={<PlaceholderPage name="Music" />} />
 
                   {/* Add these public routes */}
                   <Route path="/terms" element={<TermsAndConditions />} />
