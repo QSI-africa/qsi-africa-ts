@@ -1,401 +1,283 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Heart,
-  MessageCircle,
-  Share2,
-  Zap,
-  Globe,
-  Plus,
-  ArrowRight,
-  RefreshCw,
-  Activity,
-  Layers,
-  TrendingUp,
-  MoreHorizontal,
-  Bookmark,
-  Filter,
-  Radio,
+import { 
+  CheckCircle2, Plus, Globe, 
+  Heart, MessageCircle, Repeat, Send, Trash2, Bookmark,
+  Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass, RefreshCw
 } from 'lucide-react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Grid } from 'antd';
+import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 const { useBreakpoint } = Grid;
 
-interface FeedItem {
+interface ReplyItem {
   id: string;
-  author: string;
-  avatar: string;
-  badge?: string;
-  badgeColor?: string;
-  timestamp: string;
-  category: string;
   content: string;
-  images: string[];
-  likes: number;
-  comments: number;
-  type: 'concept' | 'demo' | 'pilot' | 'system';
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    location: string | null;
+  };
 }
 
-const categoryColors: Record<string, string> = {
-  concept: '#10B981',
-  demo: '#6366F1',
-  pilot: '#F59E0B',
-  system: '#EC4899',
-};
+interface PostItem {
+  id: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    location: string | null;
+    isFollowing: boolean;
+  };
+  replies: ReplyItem[];
+  hasLiked: boolean;
+  hasReposted: boolean;
+  likesCount: number;
+  repostsCount: number;
+  repliesCount: number;
+}
 
-const StatBar: React.FC<{ label: string; value: string; trend?: string; color?: string }> = ({
-  label, value, trend, color = '#10B981'
-}) => (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    padding: '16px 20px',
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: '16px',
-    flex: 1,
-    minWidth: '120px'
-  }}>
-    <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.4)' }}>{label}</span>
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-      <span style={{ fontSize: '22px', fontWeight: 900, color, letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</span>
-      {trend && <span style={{ fontSize: '9px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase' }}>{trend}</span>}
-    </div>
-  </div>
-);
-
-const FeedCard: React.FC<{ post: FeedItem; onClick: () => void }> = ({ post, onClick }) => {
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const color = categoryColors[post.type] || '#10B981';
-
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: '24px',
-        padding: '28px',
-        cursor: 'pointer',
-        position: 'relative',
-        overflow: 'hidden',
-        transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
-        marginBottom: '16px',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.border = `1px solid ${color}30`;
-        (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.border = '1px solid rgba(255,255,255,0.06)';
-        (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-      }}
-    >
-      {/* Top accent bar */}
-      <div style={{
-        position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px',
-        background: `linear-gradient(90deg, transparent, ${color}60, transparent)`,
-      }} />
-
-      {/* Left type indicator */}
-      <div style={{
-        position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '2px',
-        background: color, borderRadius: '0 4px 4px 0', opacity: 0.6
-      }} />
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Avatar */}
-          <div style={{
-            width: '48px', height: '48px', borderRadius: '16px', flexShrink: 0,
-            background: `linear-gradient(135deg, ${color}30, ${color}10)`,
-            border: `1.5px solid ${color}40`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px', fontWeight: 900, color,
-          }}>
-            {post.avatar}
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <span style={{ fontWeight: 800, fontSize: '14px', color: 'white', letterSpacing: '-0.02em' }}>
-                {post.author}
-              </span>
-              {post.badge && (
-                <span className="qsi-tag qsi-tag-primary" style={{ padding: '3px 10px', borderRadius: '6px' }}>
-                  {post.badge}
-                </span>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '10px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                {post.category}
-              </span>
-              <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'inline-block' }} />
-              <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
-                {post.timestamp}
-              </span>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={e => e.stopPropagation()}
-          style={{ width: '36px', height: '36px', borderRadius: '10px', border: 'none', background: 'rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}
-        >
-          <MoreHorizontal size={16} />
-        </button>
-      </div>
-
-      {/* Content */}
-      <p style={{
-        fontSize: '14px', lineHeight: '1.75', color: 'rgba(255,255,255,0.75)',
-        fontWeight: 500, marginBottom: '20px'
-      }}>
-        {post.content}
-      </p>
-
-      {/* Images */}
-      {post.images.length > 0 && (
-        <div style={{
-          borderRadius: '16px', overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.06)', marginBottom: '20px',
-          maxHeight: '240px'
-        }}>
-          <img src={post.images[0]} alt="Post" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-      )}
-
-      {/* Footer */}
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)'
-        }}
-      >
-        <button
-          onClick={e => { e.stopPropagation(); setLiked(!liked); }}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px',
-            borderRadius: '10px', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-            background: liked ? `${color}15` : 'rgba(255,255,255,0.04)',
-            color: liked ? color : 'rgba(255,255,255,0.4)'
-          }}
-        >
-          <Heart size={15} style={{ fill: liked ? color : 'none', stroke: liked ? color : 'currentColor' }} />
-          <span style={{ fontSize: '11px', fontWeight: 700 }}>{post.likes + (liked ? 1 : 0)}</span>
-        </button>
-
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px',
-          borderRadius: '10px', border: 'none', cursor: 'pointer',
-          background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)'
-        }}>
-          <MessageCircle size={15} />
-          <span style={{ fontSize: '11px', fontWeight: 700 }}>{post.comments}</span>
-        </button>
-
-        <button style={{
-          width: '36px', height: '36px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-          background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Share2 size={15} />
-        </button>
-
-        <button
-          onClick={e => { e.stopPropagation(); setBookmarked(!bookmarked); }}
-          className="qsi-btn qsi-btn-secondary"
-          style={{ width: '36px', height: '36px', borderRadius: '10px', padding: 0, color: bookmarked ? color : 'rgba(255,255,255,0.4)', background: bookmarked ? `${color}15` : 'rgba(255,255,255,0.04)' }}
-        >
-          <Bookmark size={15} style={{ fill: bookmarked ? color : 'none' }} />
-        </button>
-
-        <div style={{ flex: 1 }} />
-
-        <button
-          onClick={e => { e.stopPropagation(); }}
-          className="qsi-btn qsi-btn-outline"
-          style={{ padding: '8px 16px', borderRadius: '10px' }}
-        >
-          View <ArrowRight size={12} />
-        </button>
-      </div>
-    </div>
-  );
-};
 
 const LandingPage: React.FC = () => {
   const screens = useBreakpoint();
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    activeNodes: 0,
-    livePilots: 0,
-    digitalConcepts: 0,
-    uptime: '99.9%'
-  });
-  const [visibleItems, setVisibleItems] = useState(5);
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
+  const authContext = useAuth();
+  const user = authContext?.user;
 
-  const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.qsi.africa/api';
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'for_you' | 'enterprise' | 'placebo' | 'heritage_flame' | 'future_craft' | 'sovereign_minds' | 'others' | 'following'>('for_you');
+  const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [newPostText, setNewPostText] = useState('');
+  const [submittingPost, setSubmittingPost] = useState(false);
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Record<string, boolean>>({});
+  const [visibleItems, setVisibleItems] = useState(10);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await axios.get(`${baseURL}/config/stats`);
-      setStats(res.data);
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-    }
-  }, [baseURL]);
-
-  const fetchFeedData = useCallback(async () => {
+  const fetchPosts = useCallback(async () => {
     setRefreshing(true);
-    setLoading(true);
     try {
-      const [conceptsRes, demosRes, pilotsRes] = await Promise.allSettled([
-        axios.get(`${baseURL}/submit/concepts`),
-        axios.get(`${baseURL}/submit/demos`),
-        axios.get(`${baseURL}/submit/pilots`),
-      ]);
-
-      let items: FeedItem[] = [];
-
-      if (conceptsRes.status === 'fulfilled') {
-        items = [...items, ...conceptsRes.value.data.map((c: any) => ({
-          id: c.id || c._id,
-          author: 'Architectural Review',
-          avatar: 'A',
-          badge: 'Concept',
-          timestamp: 'Recently added',
-          category: 'Vision',
-          content: `${c.title}: ${c.description || 'A new sovereign conceptual framework has been established.'}`,
-          images: c.image || c.imageUrl ? [c.image || c.imageUrl] : [],
-          likes: Math.floor(Math.random() * 200),
-          comments: Math.floor(Math.random() * 50),
-          type: 'concept' as const,
-        }))];
-      }
-
-      if (demosRes.status === 'fulfilled') {
-        items = [...items, ...demosRes.value.data.map((d: any) => ({
-          id: d.id || d._id,
-          author: 'Lab Operations',
-          avatar: 'L',
-          badge: 'Live Demo',
-          timestamp: 'System ready',
-          category: 'Infrastructure',
-          content: `${d.title}: Live demonstration of technical coherence is now accessible for operational audit.`,
-          images: d.image || d.imageUrl ? [d.image || d.imageUrl] : [],
-          likes: Math.floor(Math.random() * 300),
-          comments: Math.floor(Math.random() * 80),
-          type: 'demo' as const,
-        }))];
-      }
-
-      if (pilotsRes.status === 'fulfilled') {
-        items = [...items, ...pilotsRes.value.data.map((p: any) => ({
-          id: p.id || p._id,
-          author: 'Strategic Deployment',
-          avatar: 'S',
-          badge: 'Pilot',
-          timestamp: 'In Progress',
-          category: 'Pilot',
-          content: `${p.text}: Pilot project initiated to test structural resonance in real-world environments.`,
-          images: [],
-          likes: Math.floor(Math.random() * 150),
-          comments: Math.floor(Math.random() * 30),
-          type: 'pilot' as const,
-        }))];
-      }
-
-      items.push({
-        id: 'sys-1',
-        author: 'QSI Global',
-        avatar: 'Q',
-        badge: 'Core',
-        timestamp: 'Just now',
-        category: 'System',
-        content: 'Synchronization of the 4-panel workspace architecture is now complete across the Pan-African corridor. Operational efficiency is at 99.9%.',
-        images: [],
-        likes: 1024,
-        comments: 256,
-        type: 'system',
-      });
-
-      setFeedItems(items.sort(() => Math.random() - 0.5));
+      const response = await api.get('/panx/posts');
+      setPosts(response.data);
     } catch (error) {
-      console.error('Failed to fetch feed data:', error);
-      // Fallback static data so the page always looks good
-      setFeedItems([
-        {
-          id: 'sys-1', author: 'QSI Global', avatar: 'Q', badge: 'Core',
-          timestamp: 'Just now', category: 'System',
-          content: 'Synchronization of the 4-panel workspace architecture is now complete across the Pan-African corridor. Operational efficiency is at 99.9%.',
-          images: [], likes: 1024, comments: 256, type: 'system',
-        },
-        {
-          id: 'demo-1', author: 'Lab Operations', avatar: 'L', badge: 'Live Demo',
-          timestamp: '2h ago', category: 'Infrastructure',
-          content: 'Smart City simulation environment is now live. Real-time urban data streams have been integrated across 12 city nodes.',
-          images: [], likes: 342, comments: 78, type: 'demo',
-        },
-        {
-          id: 'concept-1', author: 'Architectural Review', avatar: 'A', badge: 'Concept',
-          timestamp: 'Yesterday', category: 'Vision',
-          content: 'Pan-African Digital Sovereignty Framework v2.0: A new architectural paradigm for distributed governance and decentralised infrastructure has been ratified.',
-          images: [], likes: 198, comments: 44, type: 'concept',
-        },
-        {
-          id: 'pilot-1', author: 'Strategic Deployment', avatar: 'S', badge: 'Pilot',
-          timestamp: '3 days ago', category: 'Pilot',
-          content: 'MaliDriver fleet optimization pilot shows 34% efficiency gain in last-mile delivery across Bamako Metro Zone. Phase 2 deployment approved.',
-          images: [], likes: 127, comments: 31, type: 'pilot',
-        },
-        {
-          id: 'sys-2', author: 'QSI Healing', avatar: 'H', badge: 'Health',
-          timestamp: '4 days ago', category: 'Wellness',
-          content: 'Telemedicine uptime reached 99.7% this quarter. Over 12,000 consultations completed across 8 African countries.',
-          images: [], likes: 512, comments: 89, type: 'system',
-        },
-      ]);
+      console.error('Failed to fetch posts:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [baseURL]);
+  }, []);
 
-  useEffect(() => { 
-    fetchFeedData(); 
-    fetchStats();
-  }, [fetchFeedData, fetchStats]);
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
-  const filters = ['All', 'System', 'Concept', 'Demo', 'Pilot'];
-
-  const filteredItems = feedItems.filter(item =>
-    activeFilter === 'All' || item.type === activeFilter.toLowerCase()
-  );
-
-  const handlePostClick = (item: FeedItem) => {
-    if (item.type === 'concept') navigate(`/concepts/${item.id}`);
-    else if (item.type === 'demo') navigate(`/demos/${item.id}`);
-    else if (item.type === 'pilot') navigate(`/mobility`);
+  const handleInteractionGuard = () => {
+    if (!user) {
+      navigate('/login');
+      return true;
+    }
+    return false;
   };
+
+  const handleFollowToggle = async (authorId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (handleInteractionGuard()) return;
+    try {
+      const response = await api.post(`/panx/users/${authorId}/follow`);
+      const { following } = response.data;
+      setPosts(prev => prev.map(post => {
+        if (post.author?.id === authorId) {
+          return {
+            ...post,
+            author: {
+              ...post.author,
+              isFollowing: following
+            }
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error("Failed to follow/unfollow user", error);
+    }
+  };
+
+  const handleLikeToggle = async (postId: string) => {
+    if (handleInteractionGuard()) return;
+    try {
+      const response = await api.post(`/panx/posts/${postId}/like`);
+      const { liked, likesCount } = response.data;
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            hasLiked: liked,
+            likesCount
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error("Failed to toggle like", error);
+    }
+  };
+
+  const handleRepostToggle = async (postId: string) => {
+    if (handleInteractionGuard()) return;
+    try {
+      const response = await api.post(`/panx/posts/${postId}/repost`);
+      const { reposted, repostsCount } = response.data;
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            hasReposted: reposted,
+            repostsCount
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error("Failed to toggle repost", error);
+    }
+  };
+
+  const handlePostReply = async (postId: string) => {
+    if (handleInteractionGuard()) return;
+    if (!replyText.trim()) return;
+    try {
+      const response = await api.post(`/panx/posts/${postId}/reply`, { content: replyText });
+      const newReply = response.data;
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            replies: [...post.replies, newReply],
+            repliesCount: post.repliesCount + 1
+          };
+        }
+        return post;
+      }));
+      setReplyText('');
+      setActiveReplyPostId(null);
+    } catch (error) {
+      console.error("Failed to post reply", error);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (handleInteractionGuard()) return;
+    if (!newPostText.trim()) return;
+    setSubmittingPost(true);
+    try {
+      const response = await api.post("/panx/posts", { content: newPostText });
+      const newPost = response.data;
+      setPosts(prev => [newPost, ...prev]);
+      setNewPostText('');
+    } catch (error) {
+      console.error("Failed to create post", error);
+    } finally {
+      setSubmittingPost(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (handleInteractionGuard()) return;
+    if (!window.confirm("Are you sure you want to delete this thread?")) return;
+    try {
+      await api.delete(`/panx/posts/${postId}`);
+      setPosts(prev => prev.filter(post => post.id !== postId));
+    } catch (error) {
+      console.error("Failed to delete post", error);
+    }
+  };
+
+  const formatTimestamp = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'now';
+    if (diffMins < 60) return `${diffMins}m`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d`;
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#6366F1", "#8B5CF6", "#EC4899"
+    ];
+    let sum = 0;
+    for (let i = 0; i < name.length; i++) {
+      sum += name.charCodeAt(i);
+    }
+    return colors[sum % colors.length];
+  };
+
+  const getAuthorCategory = (author: any) => {
+    if (!author) return 'others';
+    
+    const org = (author.organization || '').toLowerCase();
+    const name = (author.name || '').toLowerCase();
+    const role = (author.role || '').toLowerCase();
+
+    if (org.includes('placebo') || name.includes('placebo') || role.includes('medical') || role.includes('doctor') || role.includes('healer') || role.includes('wellness') || role.includes('health')) {
+      return 'placebo';
+    }
+    if (org.includes('heritage') || name.includes('heritage') || org.includes('flame') || name.includes('flame') || role.includes('energy') || role.includes('solar')) {
+      return 'heritage_flame';
+    }
+    if (org.includes('craft') || name.includes('craft') || org.includes('futurecraft') || name.includes('futurecraft') || role.includes('production') || role.includes('designer') || role.includes('architect') || role.includes('craft')) {
+      return 'future_craft';
+    }
+    if (org.includes('enterprise') || name.includes('enterprise') || org.includes('capital') || name.includes('capital') || role.includes('admin') || author.role === 'SUPER_USER' || author.role === 'ADMIN') {
+      return 'enterprise';
+    }
+    if (author.role === 'ENGINEER' || author.role === 'ARCHITECT' || author.role === 'QUANTITY_SURVEYOR' || role.includes('engineer') || role.includes('architect') || role.includes('surveyor') || org.includes('sovereign') || role.includes('sovereign')) {
+      return 'sovereign_minds';
+    }
+    
+    return 'others';
+  };
+
+  const filteredPosts = posts.filter(post => {
+    if (!post.author) return false;
+    if (activeFilter === 'for_you') return true;
+    if (activeFilter === 'following') return post.author.isFollowing || post.author.id === user?.id;
+    return getAuthorCategory(post.author) === activeFilter;
+  });
+
+  const filterTabs = user 
+    ? (['for_you', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others', 'following'] as const)
+    : (['for_you', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const);
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Sticky Header */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 20,
-        background: 'rgba(10, 16, 24, 0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         padding: '20px 32px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         gap: '16px'
@@ -409,10 +291,10 @@ const LandingPage: React.FC = () => {
             <Globe size={20} />
           </div>
           <div>
-            <h1 style={{ fontSize: screens.md ? '18px' : '16px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <h1 style={{ fontSize: screens.md ? '18px' : '16px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
               Ecosystem Feed
             </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8, margin: '4px 0 0 0' }}>
               QSI Live Intelligence
             </p>
           </div>
@@ -420,7 +302,7 @@ const LandingPage: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Live indicator */}
-          <div className="qsi-tag qsi-tag-primary" style={{ gap: '8px', padding: '8px 14px', borderRadius: '10px' }}>
+          <div className="qsi-tag qsi-tag-primary" style={{ gap: '8px', padding: '8px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center' }}>
             <div style={{
               width: '7px', height: '7px', borderRadius: '50%', background: '#10B981',
               boxShadow: '0 0 8px #10B981', animation: 'pulse 2s infinite'
@@ -429,7 +311,7 @@ const LandingPage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => { fetchFeedData(); fetchStats(); }}
+            onClick={() => { fetchPosts(); }}
             style={{
               width: '38px', height: '38px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)',
               background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
@@ -441,110 +323,522 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
-
-        {/* Stats Bar */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-          <StatBar label="Active Nodes" value={stats.activeNodes.toString()} trend="+2" color="#10B981" />
-          <StatBar label="Uptime" value={stats.uptime} color="#10B981" />
-          <StatBar label="Live Pilots" value={stats.livePilots.toString()} trend="Active" color="#F59E0B" />
-          <StatBar label="Concepts" value={stats.digitalConcepts.toString()} color="#6366F1" />
-        </div>
-
-        {/* Composer */}
-        <div style={{
-          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: '24px', padding: '24px', marginBottom: '32px'
-        }}>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        
+        {/* Composer or Guest CTA Card */}
+        {user ? (
+          <div style={{
+            display: 'flex',
+            gap: '14px',
+            padding: '20px',
+            borderRadius: '24px',
+            background: 'rgba(255, 255, 255, 0.015)',
+            border: '1px solid rgba(255, 255, 255, 0.05)'
+          }}>
             <div style={{
-              width: '44px', height: '44px', borderRadius: '14px', flexShrink: 0,
-              background: 'rgba(16,185,129,0.2)', border: '1.5px solid rgba(16,185,129,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '16px', fontWeight: 900, color: '#10B981'
-            }}>U</div>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: '14px', padding: '14px 18px',
-                color: 'rgba(255,255,255,0.3)', fontSize: '14px', cursor: 'text',
-                transition: 'border-color 0.2s'
-              }}>
-                Broadcast an operational update...
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[Zap, Globe, Radio, Layers].map((Icon, i) => (
-                    <button key={i} style={{
-                      width: '34px', height: '34px', borderRadius: '10px', border: 'none',
-                      background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)'
-                    }}>
-                      <Icon size={16} />
-                    </button>
-                  ))}
-                </div>
-                <button className="qsi-btn qsi-btn-primary" style={{ padding: '10px 24px', borderRadius: '12px' }}>
-                  Broadcast
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              background: getAvatarColor(user.name || 'User'),
+              color: 'black',
+              fontSize: '13px'
+            }}>
+              {getInitials(user.name || 'User')}
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <textarea
+                placeholder={`What's on your mind, ${user.name?.split(' ')[0] || 'builder'}?`}
+                value={newPostText}
+                onChange={(e) => setNewPostText(e.target.value)}
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  background: 'transparent',
+                  border: 'none',
+                  resize: 'none',
+                  color: 'white',
+                  fontSize: '13.5px',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  lineHeight: 1.5
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                <button
+                  onClick={handleCreatePost}
+                  disabled={!newPostText.trim() || submittingPost}
+                  style={{
+                    background: 'var(--accent-primary)',
+                    color: 'black',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '8px 20px',
+                    fontSize: '11px',
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    opacity: newPostText.trim() && !submittingPost ? 1 : 0.5,
+                    transition: 'all 0.2s',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Plus size={12} strokeWidth={3} />
+                  {submittingPost ? 'Posting...' : 'Post'}
                 </button>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          {filters.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`qsi-btn ${activeFilter === f ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
-              style={{ padding: '8px 18px', borderRadius: '10px' }}
-            >
-              {f}
-            </button>
-          ))}
-          <div style={{ flex: 1 }} />
-          <button className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.4)' }}>
-            <Filter size={13} /> Sort
-          </button>
-        </div>
-
-        {/* Feed */}
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: '16px' }}>
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '50%',
-              border: '2px solid rgba(16,185,129,0.2)', borderTop: '2px solid #10B981',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-              Establishing Resonance...
-            </span>
-          </div>
         ) : (
-          <div>
-            {filteredItems.slice(0, visibleItems).map(post => (
-              <FeedCard key={post.id} post={post} onClick={() => handlePostClick(post)} />
-            ))}
-
-            {filteredItems.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                No signals in this channel
-              </div>
-            )}
-
-            {visibleItems < filteredItems.length && (
-              <button
-                onClick={() => setVisibleItems(prev => prev + 5)}
-                className="qsi-btn qsi-btn-secondary"
-                style={{ width: '100%', padding: '16px', borderRadius: '16px', color: '#10B981' }}
-              >
-                <Plus size={16} /> Load More Intelligence
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.015)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            borderRadius: '24px',
+            padding: '24px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '13px', fontWeight: 900, color: 'white', letterSpacing: '0.05em' }}>JOIN THE PANX ECOSYSTEM</span>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', maxWidth: '420px', margin: 0, lineHeight: 1.6 }}>
+              Log in or register an account to broadcast operational updates, interact with threads, and follow ecosystem builders.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <button className="qsi-btn qsi-btn-primary" onClick={() => navigate('/login')} style={{ padding: '8px 20px', borderRadius: '12px', fontSize: '11px', fontWeight: 900 }}>
+                LOG IN
               </button>
-            )}
+              <button className="qsi-btn qsi-btn-secondary" onClick={() => navigate('/register')} style={{ padding: '8px 20px', borderRadius: '12px', fontSize: '11px', fontWeight: 900 }}>
+                REGISTER
+              </button>
+            </div>
           </div>
         )}
+
+        {/* Filter Tabs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }} className="no-scrollbar">
+            {filterTabs.map(filter => {
+              const isSelected = activeFilter === filter;
+              const getFilterIcon = (filterName: string) => {
+                switch (filterName) {
+                  case 'for_you':
+                    return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'enterprise':
+                    return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'placebo':
+                    return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'heritage_flame':
+                    return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'future_craft':
+                    return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'sovereign_minds':
+                    return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'others':
+                    return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  case 'following':
+                    return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  default:
+                    return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                }
+              };
+              return (
+                <button 
+                  key={filter}
+                  onClick={() => setActiveFilter(filter)}
+                  className={`pill ${isSelected ? 'active' : ''}`}
+                  style={{
+                    textTransform: 'uppercase',
+                    fontWeight: 800,
+                    fontSize: '11px',
+                    letterSpacing: '0.05em',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                    background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                    color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.2s',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onMouseEnter={e => {
+                    const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                    if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
+                  }}
+                  onMouseLeave={e => {
+                    const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                    if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
+                  }}
+                >
+                  {getFilterIcon(filter)}
+                  {filter.replace('_', ' ')}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Threads List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
+            </div>
+          ) : (
+            filteredPosts.slice(0, visibleItems).map(post => {
+              const author = post.author;
+              if (!author) return null;
+              const isFollowing = author.isFollowing;
+              const isOwnPost = author.id === user?.id;
+              const isBookmarked = !!bookmarkedPosts[post.id];
+              
+              return (
+                <div 
+                  key={post.id}
+                  style={{
+                    display: 'flex',
+                    gap: '14px',
+                    padding: '20px',
+                    borderRadius: '24px',
+                    background: 'rgba(255, 255, 255, 0.015)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Left Column: Avatar & Thread line */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    flexShrink: 0
+                  }}>
+                    {/* Profile Picture (Initials Avatar) */}
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profiles/${author.id}`);
+                      }}
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                        background: getAvatarColor(author.name),
+                        color: 'black',
+                        fontWeight: 800,
+                        fontSize: '13px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {getInitials(author.name)}
+                    </div>
+
+                    {/* Vertical Thread Line */}
+                    <div style={{
+                      width: '2px',
+                      flexGrow: 1,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      margin: '8px 0',
+                      borderRadius: '1px'
+                    }} />
+
+                    {/* Mini overlapping avatars for replies */}
+                    <div style={{
+                      display: 'flex',
+                      position: 'relative',
+                      width: '28px',
+                      height: '20px',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {post.replies?.slice(0, 3).map((rep, idx) => (
+                        <div 
+                          key={rep.id}
+                          style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            border: '1.5px solid #060b08',
+                            position: 'absolute',
+                            left: idx * 8,
+                            zIndex: 3 - idx,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 800,
+                            fontSize: '5px',
+                            background: getAvatarColor(rep.author?.name || 'User'),
+                            color: 'black'
+                          }}
+                        >
+                          {getInitials(rep.author?.name || 'U')}
+                        </div>
+                      ))}
+                      {(!post.replies || post.replies.length === 0) && (
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Content & Interactivity */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Header Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/profiles/${author.id}`);
+                          }}
+                          style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'uppercase', cursor: 'pointer' }}
+                          className="hover:underline"
+                        >
+                          {author.name}
+                        </span>
+                        {(author.role === "SUPER_USER" || author.role === "ADMIN" || author.role === "ENGINEER") && (
+                          <CheckCircle2 size={13} fill="var(--accent-primary)" stroke="black" strokeWidth={2.5} />
+                        )}
+                        <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.25)', margin: '0 4px' }}>•</span>
+                        <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                          {formatTimestamp(post.createdAt)}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {!isOwnPost && (
+                          <button 
+                            onClick={(e) => handleFollowToggle(author.id, e)}
+                            style={{
+                              background: isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)',
+                              border: isFollowing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(16, 185, 129, 0.2)',
+                              color: isFollowing ? 'rgba(255, 255, 255, 0.4)' : 'var(--accent-primary)',
+                              borderRadius: '12px',
+                              padding: '4px 10px',
+                              fontSize: '10px',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                              if (!isFollowing) {
+                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.18)';
+                                e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.background = isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)';
+                              e.currentTarget.style.borderColor = isFollowing ? '1.5px solid rgba(255, 255, 255, 0.1)' : 'rgba(16, 185, 129, 0.2)';
+                            }}
+                          >
+                            {isFollowing ? <UserCheck size={11} /> : <UserPlus size={11} />}
+                            {isFollowing ? 'Following' : 'Follow'}
+                          </button>
+                        )}
+                        {isOwnPost && (
+                          <button 
+                            onClick={() => handleDeletePost(post.id)}
+                            className="std-delete-btn"
+                            title="Delete Post"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Post Content */}
+                    <p style={{
+                      fontSize: '13.5px',
+                      lineHeight: '1.5',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      margin: '0 0 12px 0',
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {post.content}
+                    </p>
+
+                    {/* Interactive Action Icons Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <button 
+                        onClick={() => handleLikeToggle(post.id)}
+                        className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
+                        title="Like post"
+                      >
+                        <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          if (handleInteractionGuard()) return;
+                          setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id);
+                        }}
+                        className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
+                        title="Reply to post"
+                      >
+                        <MessageCircle size={15} />
+                      </button>
+
+                      <button 
+                        onClick={() => handleRepostToggle(post.id)}
+                        className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
+                        title="Repost"
+                      >
+                        <Repeat size={15} />
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/#${post.id}`);
+                          alert('Link copied to clipboard!');
+                        }}
+                        className="std-action-btn"
+                        title="Copy link to clipboard"
+                      >
+                        <Send size={15} />
+                      </button>
+
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBookmarkedPosts(prev => ({
+                            ...prev,
+                            [post.id]: !prev[post.id]
+                          }));
+                        }}
+                        className={`std-action-btn ${isBookmarked ? 'active-green' : ''}`}
+                        title="Bookmark post"
+                      >
+                        <Bookmark size={15} fill={isBookmarked ? 'var(--accent-primary)' : 'none'} />
+                      </button>
+                    </div>
+
+                    {/* Replies Thread List */}
+                    {post.replies && post.replies.length > 0 && (
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '12px 16px',
+                        background: 'rgba(255, 255, 255, 0.01)',
+                        borderLeft: '2px solid rgba(16, 185, 129, 0.2)',
+                        borderRadius: '0 12px 12px 0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px'
+                      }}>
+                        {post.replies.map(rep => (
+                          <div key={rep.id} style={{ display: 'flex', gap: '8px' }}>
+                            <div 
+                              style={{ 
+                                width: '18px', 
+                                height: '18px', 
+                                borderRadius: '50%', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                fontWeight: 800,
+                                fontSize: '6px',
+                                background: getAvatarColor(rep.author?.name || 'User'),
+                                color: 'black' 
+                              }} 
+                            >
+                              {getInitials(rep.author?.name || 'U')}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
+                                <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
+                              </div>
+                              <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply Input Area */}
+                    {activeReplyPostId === post.id && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Write a reply..."
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          style={{
+                            flex: 1,
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '12px',
+                            padding: '8px 12px',
+                            color: 'white',
+                            fontSize: '12px',
+                            outline: 'none'
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handlePostReply(post.id);
+                          }}
+                        />
+                        <button 
+                          onClick={() => handlePostReply(post.id)}
+                          style={{
+                            background: 'var(--accent-primary)',
+                            color: 'black',
+                            border: 'none',
+                            borderRadius: '12px',
+                            padding: '0 16px',
+                            fontSize: '11px',
+                            fontWeight: 900,
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <Send size={11} />
+                          Reply
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {!loading && filteredPosts.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 0', opacity: 0.4 }}>
+              <Globe size={40} style={{ margin: '0 auto 16px auto' }} />
+              <p style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>No posts found</p>
+            </div>
+          )}
+
+          {visibleItems < filteredPosts.length && (
+            <button
+              onClick={() => setVisibleItems(prev => prev + 10)}
+              className="qsi-btn qsi-btn-secondary"
+              style={{ width: '100%', padding: '16px', borderRadius: '16px', color: '#10B981' }}
+            >
+              <Plus size={16} /> Load More Intelligence
+            </button>
+          )}
+        </div>
       </div>
 
       <style>{`

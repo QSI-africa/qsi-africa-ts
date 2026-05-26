@@ -1,86 +1,349 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Tag, Spin, Space, Empty } from 'antd';
 import { 
-  Play, 
-  ArrowRight, 
-  Code, 
-  Rocket, 
-  Lightbulb,
-  Zap,
-  Activity,
-  Radio,
-  ExternalLink,
-  FlaskConical,
-  Dna,
-  Cpu,
-  Binary,
-  Layers,
-  ChevronRight
+  FlaskConical, Cpu, Code, Layers, Sparkles, Binary, Rocket, 
+  ArrowRight, Search, BookOpen, CheckCircle, Award, Hourglass,
+  Video, Music, Lock, Play, Upload, X, Trash2, 
+  Tv, AlertCircle, RefreshCw
 } from 'lucide-react';
-import { socketService } from '../services/socket';
-import { useAuth } from '../context/AuthContext';
+import { message, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 const GREEN = '#10B981';
 
+interface LabPackage {
+  id: string;
+  name: string;
+  level: string;
+  duration: string;
+  description: string | null;
+  isActive: boolean;
+  order: number;
+}
+
+interface LabCategory {
+  id: string;
+  title: string;
+  descriptor: string;
+  icon: string;
+  packages: LabPackage[];
+}
+
+interface LabRecording {
+  id: string;
+  title: string;
+  description: string;
+  categoryId: string;
+  categoryTitle: string;
+  channelId: string;
+  channelTitle: string;
+  teacherName: string;
+  mimeType: string;
+  createdAt: string;
+  isLocked: boolean;
+  mediaUrl: string | null;
+}
+
+interface TvChannel {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 const LabPage: React.FC = () => {
-  const { token } = useAuth() || { token: null };
+  const [activeTab, setActiveTab] = useState<'programs' | 'lectures' | 'studio'>('programs');
+  
+  // Dynamic categories & packages
+  const [categories, setCategories] = useState<LabCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [enrolledPackageIds, setEnrolledPackageIds] = useState<string[]>([]);
+  const [onlyEnrolledMissions, setOnlyEnrolledMissions] = useState(false);
+
+  // Recordings & Search
+  const [recordings, setRecordings] = useState<LabRecording[]>([]);
+  const [recordingsLoading, setRecordingsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+
+  // Channel (Teacher Profile)
+  const [myChannel, setMyChannel] = useState<TvChannel | null>(null);
+  const [channelLoading, setChannelLoading] = useState(true);
+  
+  // Applications & uploads
+  const [newChannelTitle, setNewChannelTitle] = useState('');
+  const [newChannelDesc, setNewChannelDesc] = useState('');
+  const [isSubmittingChannel, setIsSubmittingChannel] = useState(false);
+
+  const [newRecTitle, setNewRecTitle] = useState('');
+  const [newRecDesc, setNewRecDesc] = useState('');
+  const [newRecMime, setNewRecMime] = useState('video/mp4');
+  const [newRecCategory, setNewRecCategory] = useState('');
+  const [newRecFile, setNewRecFile] = useState<File | null>(null);
+  const [isUploadingRec, setIsUploadingRec] = useState(false);
+
+  // Playback Modal
+  const [playbackRecording, setPlaybackRecording] = useState<LabRecording | null>(null);
+  const [subscribingChannelId, setSubscribingChannelId] = useState<string | null>(null);
+
   const navigate = useNavigate();
-  const [activeBroadcast, setActiveBroadcast] = useState<any>(null);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const authContext = useAuth();
+  const isAuthenticated = authContext?.isAuthenticated ?? false;
 
   useEffect(() => {
-    // Fetch Lab Categories
-    const fetchLabData = async () => {
-      try {
-        const res = await fetch('/api/lab/categories');
-        const data = await res.json();
-        setCategories(data);
-      } catch (error) {
-        console.error("Failed to fetch lab categories:", error);
-      } finally {
-        setIsLoading(false);
+    fetchCategories();
+    fetchRecordings();
+    if (isAuthenticated) {
+      fetchMyChannel();
+      fetchEnrollments();
+    } else {
+      setChannelLoading(false);
+      setEnrolledPackageIds([]);
+    }
+  }, [isAuthenticated]);
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const res = await api.get('/lab/categories');
+      setCategories(res.data);
+      if (res.data.length > 0 && !newRecCategory) {
+        setNewRecCategory(res.data[0].id);
       }
-    };
-
-    fetchLabData();
-
-    socketService.connect(token || undefined);
-
-    socketService.on('broadcast-list-updated', (streams: any[]) => {
-      if (streams.length > 0) {
-        setActiveBroadcast(streams[0]);
-      } else {
-        setActiveBroadcast(null);
-      }
-    });
-
-    socketService.emit('get-active-broadcasts');
-
-    return () => {
-      socketService.off('broadcast-list-updated');
-    };
-  }, [token]);
-
-  const getIcon = (iconName: string) => {
-    switch(iconName) {
-      case 'CodeOutlined': return <Code size={20} />;
-      case 'BulbOutlined': return <Lightbulb size={20} />;
-      default: return <Zap size={20} />;
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load categories.");
+    } finally {
+      setCategoriesLoading(false);
     }
   };
+
+  // Fetch recordings
+  const fetchRecordings = async (search = searchQuery, catId = selectedCategoryId) => {
+    try {
+      setRecordingsLoading(true);
+      const params: any = {};
+      if (search) params.search = search;
+      if (catId) params.categoryId = catId;
+      
+      const res = await api.get('/lab/recordings', { params });
+      setRecordings(res.data);
+    } catch (err: any) {
+      console.error(err);
+      // Only show error message if it is not an expected 401 Unauthorized
+      if (err.response?.status !== 401) {
+        message.error("Failed to load recordings.");
+      }
+    } finally {
+      setRecordingsLoading(false);
+    }
+  };
+
+  // Fetch teacher/channel status
+  const fetchMyChannel = async () => {
+    try {
+      setChannelLoading(true);
+      const res = await api.get('/tv/channels/my-channel');
+      setMyChannel(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setChannelLoading(false);
+    }
+  };
+
+  // Fetch user package enrollments from backend
+  const fetchEnrollments = async () => {
+    try {
+      const res = await api.get('/lab/enrollments');
+      setEnrolledPackageIds(res.data);
+    } catch (err) {
+      console.error("Failed to load enrollments:", err);
+    }
+  };
+
+  // Handle Search Trigger
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchRecordings(searchQuery, selectedCategoryId);
+  };
+
+  // Handle Category Filter Pill Click
+  const handleCategoryFilter = (catId: string) => {
+    const updatedCatId = selectedCategoryId === catId ? '' : catId;
+    setSelectedCategoryId(updatedCatId);
+    fetchRecordings(searchQuery, updatedCatId);
+  };
+
+  // Toggle Module Enrollment in backend
+  const handleEnrollToggle = async (packageId: string) => {
+    if (!isAuthenticated) {
+      message.info("Please log in or register to enroll in academy modules.");
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    try {
+      const res = await api.post(`/lab/packages/${packageId}/enroll`);
+      setEnrolledPackageIds(res.data);
+      const isEnrolled = res.data.includes(packageId);
+      if (isEnrolled) {
+        message.success("Successfully enrolled in mission!");
+      } else {
+        message.success("Successfully left mission.");
+      }
+    } catch (err: any) {
+      message.error(err.response?.data?.error || "Failed to toggle enrollment.");
+    }
+  };
+
+  // Request/create Teacher channel
+  const handleRequestChannel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      message.info("Authentication required.");
+      navigate('/login');
+      return;
+    }
+    if (!newChannelTitle || !newChannelDesc) {
+      message.warning("Channel title and description are required.");
+      return;
+    }
+    try {
+      setIsSubmittingChannel(true);
+      const res = await api.post('/tv/channels/request', {
+        title: newChannelTitle,
+        description: newChannelDesc
+      });
+      setMyChannel(res.data);
+      message.success("Teacher profile requested! Admin approval pending.");
+    } catch (err: any) {
+      message.error(err.response?.data?.error || "Failed to submit request.");
+    } finally {
+      setIsSubmittingChannel(false);
+    }
+  };
+
+  // Upload and publish recording
+  const handlePublishRecording = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRecTitle || !newRecCategory || !newRecFile) {
+      message.warning("Please fill out all fields and select a media file.");
+      return;
+    }
+
+    try {
+      setIsUploadingRec(true);
+      
+      // 1. Upload media file via /api/upload/document
+      const formData = new FormData();
+      formData.append('document', newRecFile);
+      formData.append('category', 'LAB_RECORDING');
+      
+      const uploadRes = await api.post('/upload/document', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const fileUrl = uploadRes.data.document.url;
+
+      // 2. Create the LabRecording record
+      await api.post('/lab/recordings', {
+        title: newRecTitle,
+        description: newRecDesc,
+        mediaUrl: fileUrl,
+        mimeType: newRecMime,
+        categoryId: newRecCategory
+      });
+
+      message.success("Recording published successfully!");
+      setNewRecTitle('');
+      setNewRecDesc('');
+      setNewRecFile(null);
+      
+      // Refresh recordings and update channel view
+      fetchRecordings();
+    } catch (err: any) {
+      console.error(err);
+      message.error(err.response?.data?.error || "Failed to publish recording.");
+    } finally {
+      setIsUploadingRec(false);
+    }
+  };
+
+  // Delete recording (as teacher)
+  const handleDeleteRecording = async (recordingId: string) => {
+    try {
+      await api.delete(`/lab/recordings/${recordingId}`);
+      message.success("Recording deleted.");
+      fetchRecordings();
+    } catch (err) {
+      message.error("Failed to delete recording.");
+    }
+  };
+
+  // Subscribe directly to a channel
+  const handleSubscribe = async (channelId: string) => {
+    if (!isAuthenticated) {
+      message.info("Please sign in or create an account to subscribe to channels.");
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    try {
+      setSubscribingChannelId(channelId);
+      await api.post(`/tv/channels/${channelId}/subscribe`);
+      message.success("Subscribed successfully! Content unlocked.");
+      
+      // Refresh recordings list
+      const updatedRecordings = await api.get('/lab/recordings');
+      setRecordings(updatedRecordings.data);
+      
+      // Update playback record
+      const match = updatedRecordings.data.find((r: any) => r.id === playbackRecording?.id);
+      if (match) {
+        setPlaybackRecording(match);
+      }
+    } catch (err: any) {
+      message.error(err.response?.data?.error || "Failed to subscribe.");
+    } finally {
+      setSubscribingChannelId(null);
+    }
+  };
+
+  // Helper for Lucide icons based on category icon string
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'CodeOutlined': return <Code size={20} />;
+      case 'CpuOutlined': return <Cpu size={20} />;
+      case 'LayersOutlined': return <Layers size={20} />;
+      case 'BulbOutlined': return <Sparkles size={20} />;
+      case 'BinaryOutlined': return <Binary size={20} />;
+      case 'RocketOutlined': return <Rocket size={20} />;
+      default: return <FlaskConical size={20} />;
+    }
+  };
+
+  // Filter dynamic categories based on enrollment tab
+  const filteredCategories = categories.map(cat => {
+    const matchingPackages = cat.packages.filter(pkg => {
+      return !onlyEnrolledMissions || enrolledPackageIds.includes(pkg.id);
+    });
+    return { ...cat, packages: matchingPackages };
+  }).filter(cat => cat.packages.length > 0);
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
       <div style={{
         padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
+        background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 20
-      }}>
+      }} className="lab-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
             width: '40px', height: '40px', borderRadius: '12px',
@@ -90,156 +353,1003 @@ const LabPage: React.FC = () => {
             <FlaskConical size={20} />
           </div>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              THE LAB
+            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
+              PANX LAB
             </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              R&D Environment
+            <p style={{ fontSize: '9px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8, margin: '2px 0 0 0' }}>
+              Virtual Academy & Skill Ecosystem
             </p>
+          </div>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div style={{ display: 'flex', gap: '20px' }} className="lab-metrics">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BookOpen size={16} color={GREEN} />
+            <div>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Missions Active</div>
+              <div style={{ fontSize: '14px', fontWeight: 900, color: 'white' }}>{enrolledPackageIds.length} Modules</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={16} color="#3B82F6" />
+            <div>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Channel Status</div>
+              <div style={{ 
+                fontSize: '11px', 
+                fontWeight: 900, 
+                color: myChannel?.status === 'APPROVED' ? GREEN : myChannel?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB' 
+              }}>
+                {myChannel ? myChannel.status : 'STUDENT'}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }} className="lab-container">
         
-        {/* Hero Section */}
-        <div style={{
-          borderRadius: '24px', overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-        }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Build. Learn. Apply.
-            </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
-              High-Performance<br />R&D Environment
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '480px' }}>
-              Researching sovereign infrastructure and technical coherence through immersive building modules.
-            </p>
-          </div>
-
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
-            <Cpu size={240} />
-          </div>
-
-          {activeBroadcast && (
-            <div style={{
-              position: 'absolute', bottom: '24px', right: '24px', width: '280px',
-              background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
-              border: `1px solid ${GREEN}40`, borderRadius: '20px', padding: '20px',
-              boxShadow: `0 12px 32px -8px rgba(0,0,0,0.5), 0 0 16px ${GREEN}15`, zIndex: 5
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', animation: 'pulse-live 1.5s infinite' }} />
-                <span style={{ fontSize: '9px', fontWeight: 900, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Live on PanX TV</span>
+        {!isAuthenticated && (
+          <div style={{
+            background: 'linear-gradient(90deg, rgba(16,185,129,0.06) 0%, rgba(59,130,246,0.03) 100%)',
+            border: '1px solid rgba(16,185,129,0.15)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            marginBottom: '28px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
+                <Sparkles size={18} />
               </div>
-              <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'white', marginBottom: '16px', lineHeight: 1.4 }}>{activeBroadcast.title}</h4>
+              <div>
+                <h4 style={{ color: 'white', fontSize: '14px', fontWeight: 800, margin: 0 }}>Browsing in Guest Mode</h4>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '2px 0 0 0' }}>
+                  Create an account or log in to enroll in dynamic syllabus modules, subscribe to teacher channels, or broadcast live.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button 
-                onClick={() => navigate(`/tv?view=${activeBroadcast.roomId}`)}
+                onClick={() => navigate('/login')}
                 style={{
-                  width: '100%', padding: '10px', borderRadius: '10px', border: 'none', background: GREEN, color: 'white',
-                  fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  background: GREEN, border: 'none', color: 'black', padding: '8px 16px',
+                  borderRadius: '10px', fontWeight: 800, fontSize: '12px', cursor: 'pointer'
                 }}
               >
-                <Play size={14} fill="currentColor" /> Join Now
+                Log In
+              </button>
+              <button 
+                onClick={() => navigate('/register')}
+                style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
+                  padding: '8px 16px', borderRadius: '10px', fontWeight: 800, fontSize: '12px', cursor: 'pointer'
+                }}
+              >
+                Register
               </button>
             </div>
-          )}
+          </div>
+        )}
+        
+        {/* Navigation Tabs */}
+        <div style={{
+          display: 'flex', 
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: '16px',
+          padding: '4px',
+          marginBottom: '32px',
+          maxWidth: '520px'
+        }} className="lab-tabs no-scrollbar">
+          <button 
+            onClick={() => setActiveTab('programs')}
+            style={{
+              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              background: activeTab === 'programs' ? 'rgba(16,185,129,0.12)' : 'transparent',
+              color: activeTab === 'programs' ? GREEN : 'rgba(255,255,255,0.5)',
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            Academic Programs
+          </button>
+          <button 
+            onClick={() => setActiveTab('lectures')}
+            style={{
+              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              background: activeTab === 'lectures' ? 'rgba(16,185,129,0.12)' : 'transparent',
+              color: activeTab === 'lectures' ? GREEN : 'rgba(255,255,255,0.5)',
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            Virtual Lectures
+          </button>
+          <button 
+            onClick={() => setActiveTab('studio')}
+            style={{
+              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              background: activeTab === 'studio' ? 'rgba(16,185,129,0.12)' : 'transparent',
+              color: activeTab === 'studio' ? GREEN : 'rgba(255,255,255,0.5)',
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            Teacher Studio
+          </button>
         </div>
 
-        {/* Categories Section */}
-        {isLoading ? (
-          <div style={{ padding: '100px 0', textAlign: 'center' }}>
-            <Spin />
-            <p style={{ marginTop: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Initializing Core Modules...</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '64px' }}>
-            {categories.map((cat, index) => (
-              <div key={cat.id || index}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <div style={{ color: GREEN }}>{getIcon(cat.icon)}</div>
-                      <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{cat.title}</h2>
-                    </div>
-                    <p style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.2em' }}>{cat.descriptor}</p>
-                  </div>
-                  <button style={{ 
-                    background: 'none', border: 'none', color: GREEN, fontSize: '11px', fontWeight: 800, cursor: 'pointer',
-                    textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px'
-                  }}>
-                    View All <ChevronRight size={14} />
-                  </button>
-                </div>
+        {/* Dynamic Tab Panels */}
 
-                <div className="no-scrollbar" style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '12px' }}>
-                  {cat.packages?.map((pkg: any) => (
-                    <div 
-                      key={pkg.id}
-                      style={{
-                        width: '300px', flexShrink: 0, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                        height: '340px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer'
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = `${GREEN}40`;
-                        (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
-                        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)';
-                        (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
-                        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-                      }}
-                    >
+        {/* 1. Academic Programs Tab */}
+        {activeTab === 'programs' && (
+          <div>
+            {/* Hero Section */}
+            <div style={{
+              borderRadius: '28px', overflow: 'hidden', position: 'relative',
+              background: `linear-gradient(135deg, ${GREEN}08 0%, rgba(59,130,246,0.02) 100%)`,
+              border: `1px solid rgba(255,255,255,0.06)`, marginBottom: '40px', padding: '48px 40px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
+            }} className="lab-hero">
+              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
+              
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: '9px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.25em', display: 'inline-block', marginBottom: '12px' }}>
+                  Future-Tech Infrastructure
+                </span>
+                <h2 style={{ fontSize: '32px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: '16px' }} className="lab-hero-title">
+                  African Skill Ecosystem<br />Virtual Academy
+                </h2>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, maxWidth: '520px' }}>
+                  Immersive, high-fidelity engineering and scientific research pathways for sovereign continental integration.
+                </p>
+              </div>
+              <div style={{ flexShrink: 0, color: GREEN, opacity: 0.08, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }} className="lab-hero-logo">
+                <FlaskConical size={200} />
+              </div>
+            </div>
+
+            {/* Program Filters */}
+            <div style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+              marginBottom: '32px', paddingBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)'
+            }} className="lab-filters">
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setOnlyEnrolledMissions(false)}
+                  style={{
+                    background: !onlyEnrolledMissions ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
+                    border: !onlyEnrolledMissions ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.08)',
+                    color: !onlyEnrolledMissions ? GREEN : 'rgba(255,255,255,0.6)',
+                    padding: '8px 16px', borderRadius: '16px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  All Programs
+                </button>
+                <button 
+                  onClick={() => setOnlyEnrolledMissions(true)}
+                  style={{
+                    background: onlyEnrolledMissions ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
+                    border: onlyEnrolledMissions ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.08)',
+                    color: onlyEnrolledMissions ? GREEN : 'rgba(255,255,255,0.6)',
+                    padding: '8px 16px', borderRadius: '16px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  Active Missions ({enrolledPackageIds.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Categories */}
+            {categoriesLoading ? (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                {filteredCategories.map((cat) => (
+                  <div key={cat.id}>
+                    {/* Category Title */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                      <div style={{ color: GREEN, background: `${GREEN}12`, padding: '8px', borderRadius: '10px' }}>
+                        {getIcon(cat.icon)}
+                      </div>
                       <div>
-                        <span style={{ 
-                          fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', 
-                          background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase',
-                          marginBottom: '20px', display: 'inline-block'
-                        }}>
-                          {pkg.level}
-                        </span>
-                        <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'white', marginBottom: '12px', letterSpacing: '-0.02em' }}>{pkg.name}</h3>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
-                          Technical briefing and operational integration for {pkg.name} systems.
+                        <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
+                          {cat.title}
+                        </h3>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '2px 0 0 0' }}>
+                          {cat.descriptor}
                         </p>
                       </div>
+                    </div>
 
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                          <Rocket size={14} color={GREEN} />
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{pkg.duration} Mission</span>
-                        </div>
-                        <button style={{
-                          width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${GREEN}30`,
-                          background: 'transparent', color: GREEN, cursor: 'pointer',
-                          fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
-                          transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                        }}>
-                          Enroll Module <ArrowRight size={14} />
-                        </button>
+                    {/* Modules Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                      {cat.packages.map((pkg) => {
+                        const isEnrolled = enrolledPackageIds.includes(pkg.id);
+                        return (
+                          <div 
+                            key={pkg.id}
+                            style={{
+                              background: 'rgba(255,255,255,0.015)', 
+                              border: isEnrolled ? `1px solid ${GREEN}40` : '1px solid rgba(255,255,255,0.05)',
+                              borderRadius: '20px', 
+                              padding: '24px', 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              justifyContent: 'space-between',
+                              minHeight: '260px',
+                              position: 'relative',
+                              overflow: 'hidden'
+                            }}
+                          >
+                            {isEnrolled && (
+                              <div style={{ position: 'absolute', top: 0, right: 0, width: '4px', height: '100%', background: GREEN }} />
+                            )}
+
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                                <span style={{ 
+                                  fontSize: '9px', fontWeight: 900, 
+                                  color: pkg.level === 'Advanced' ? '#8B5CF6' : pkg.level === 'Intermediate' ? '#3B82F6' : GREEN, 
+                                  background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase'
+                                }}>
+                                  {pkg.level}
+                                </span>
+                                {isEnrolled && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', fontWeight: 900, color: GREEN, textTransform: 'uppercase' }}>
+                                    <CheckCircle size={10} /> Active
+                                  </div>
+                                )}
+                              </div>
+                              <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '8px', letterSpacing: '-0.01em', margin: 0 }}>
+                                {pkg.name}
+                              </h4>
+                              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginTop: '8px' }}>
+                                {pkg.description || "Interactive engineering module designed for high-impact capability acquisition."}
+                              </p>
+                            </div>
+
+                            <div style={{ marginTop: '20px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+                                <Hourglass size={12} />
+                                <span>{pkg.duration} Duration</span>
+                              </div>
+                              
+                              <button 
+                                onClick={() => handleEnrollToggle(pkg.id)}
+                                style={{
+                                  width: '100%', padding: '12px', borderRadius: '12px', 
+                                  border: isEnrolled ? `1px solid ${GREEN}40` : '1px solid rgba(255,255,255,0.1)',
+                                  background: isEnrolled ? 'rgba(16, 185, 129, 0.08)' : 'transparent', 
+                                  color: isEnrolled ? GREEN : 'white', 
+                                  cursor: 'pointer',
+                                  fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                }}
+                              >
+                                {isEnrolled ? 'Leave Mission' : 'Enroll Module'} <ArrowRight size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {filteredCategories.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '80px 0', opacity: 0.3 }}>
+                    <FlaskConical size={48} style={{ margin: '0 auto 16px auto', color: GREEN }} />
+                    <h4 style={{ color: 'white', fontSize: '15px', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>No Enrolled Modules</h4>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Enroll in modules to see them in this view.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 2. Virtual Lectures Tab */}
+        {activeTab === 'lectures' && (
+          <div>
+            {/* Search and Category Filter Pllls */}
+            <div style={{ marginBottom: '32px' }}>
+              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', marginBottom: '20px' }} className="lab-search-form">
+                <div style={{
+                  flex: 1, display: 'flex', alignItems: 'center', gap: '10px',
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '16px', padding: '12px 18px'
+                }}>
+                  <Search size={16} color="rgba(255,255,255,0.3)" />
+                  <input 
+                    type="text" 
+                    placeholder="Search recorded lectures, topics, or teachers..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      background: 'transparent', border: 'none', outline: 'none', color: 'white', fontSize: '14px', width: '100%'
+                    }}
+                  />
+                </div>
+                <button type="submit" style={{
+                  background: GREEN, color: 'black', border: 'none', padding: '12px 24px', 
+                  borderRadius: '16px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer'
+                }}>
+                  Search
+                </button>
+              </form>
+
+              {/* Category Pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }} className="lab-filter-pills">
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginRight: '8px' }}>Filter by:</span>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryFilter(cat.id)}
+                    style={{
+                      background: selectedCategoryId === cat.id ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.02)',
+                      border: selectedCategoryId === cat.id ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.06)',
+                      color: selectedCategoryId === cat.id ? GREEN : 'rgba(255,255,255,0.5)',
+                      padding: '6px 14px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer'
+                    }}
+                  >
+                    {cat.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recordings Grid */}
+            {recordingsLoading ? (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                {recordings.map(rec => (
+                  <div
+                    key={rec.id}
+                    onClick={() => setPlaybackRecording(rec)}
+                    style={{
+                      background: 'rgba(255,255,255,0.015)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: '20px',
+                      padding: '24px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minHeight: '220px',
+                      position: 'relative'
+                    }}
+                    className="recording-card"
+                  >
+                    {/* Media Type Tag (Floating) */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <span style={{ 
+                        fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', 
+                        background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase'
+                      }}>
+                        {rec.categoryTitle}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: rec.mimeType.startsWith('video') ? '#3B82F6' : '#EC4899' }}>
+                        {rec.mimeType.startsWith('video') ? <Video size={12} /> : <Music size={12} />}
+                        <span style={{ fontWeight: 800, textTransform: 'uppercase' }}>{rec.mimeType.split('/')[0]}</span>
                       </div>
                     </div>
-                  ))}
+
+                    <div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '6px', margin: 0 }}>
+                        {rec.title}
+                      </h4>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineBreak: 'anywhere', margin: '4px 0 12px 0' }}>
+                        {rec.description}
+                      </p>
+                    </div>
+
+                    <div style={{ 
+                      marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center' 
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'white' }}>{rec.teacherName}</div>
+                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: '2px' }}>{rec.channelTitle}</div>
+                      </div>
+                      
+                      {rec.isLocked ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#EF4444', background: 'rgba(239,68,68,0.1)', padding: '6px 10px', borderRadius: '10px' }}>
+                          <Lock size={12} />
+                          <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Locked</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: GREEN, background: 'rgba(16,185,129,0.1)', padding: '6px 10px', borderRadius: '10px' }}>
+                          <Play size={12} fill={GREEN} />
+                          <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Watch</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {recordings.length === 0 && (
+                  <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px 0', opacity: 0.3 }}>
+                    <Video size={48} style={{ margin: '0 auto 16px auto', color: GREEN }} />
+                    <h4 style={{ color: 'white', fontSize: '15px', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>No Lectures Found</h4>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>Try another search query or category filter.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 3. Teacher Studio Tab */}
+        {activeTab === 'studio' && (
+          <div>
+            {!isAuthenticated ? (
+              /* Guest mode for Studio */
+              <div style={{
+                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
+                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px',
+                textAlign: 'center', backdropFilter: 'blur(20px)'
+              }}>
+                <Tv size={48} color={GREEN} style={{ marginBottom: '20px', opacity: 0.8 }} />
+                <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: '0 0 12px 0' }}>
+                  Broadcaster Account Required
+                </h3>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: '28px' }}>
+                  To request a broadcaster profile, stream live lectures, and publish virtual academy courses, you need a registered account.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => navigate('/login')}
+                    style={{
+                      background: GREEN, border: 'none', color: 'black', padding: '12px 24px',
+                      borderRadius: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+                    }}
+                  >
+                    Log In <ArrowRight size={16} />
+                  </button>
+                  <button 
+                    onClick={() => navigate('/register')}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
+                      padding: '12px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer'
+                    }}
+                  >
+                    Create Account
+                  </button>
                 </div>
               </div>
-            ))}
+            ) : channelLoading ? (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
+            ) : !myChannel ? (
+              /* No Channel - Request Profile */
+              <div style={{
+                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
+                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                  <Tv size={40} color={GREEN} style={{ marginBottom: '16px' }} />
+                  <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>
+                    Become a Teacher & Broadcaster
+                  </h3>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
+                    Teachers can publish audio/visual lessons to the Panx Lab, configure subscription access gating, and run live TV streams.
+                  </p>
+                </div>
+
+                <form onSubmit={handleRequestChannel}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                      Channel/Profile Name
+                    </label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Dr. Kwame's Tech Lab"
+                      value={newChannelTitle}
+                      onChange={(e) => setNewChannelTitle(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', 
+                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '28px' }}>
+                    <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                      Teaching Focus & Description
+                    </label>
+                    <textarea 
+                      placeholder="Provide details about your experience and the syllabus you plan to deliver..."
+                      value={newChannelDesc}
+                      onChange={(e) => setNewChannelDesc(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', 
+                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', outline: 'none', resize: 'vertical'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingChannel}
+                    style={{
+                      width: '100%', padding: '14px', background: GREEN, color: 'black',
+                      border: 'none', borderRadius: '14px', fontSize: '12px', fontWeight: 900,
+                      textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                    }}
+                  >
+                    {isSubmittingChannel ? 'Submitting...' : 'Submit Profile Application'}
+                    <ArrowRight size={14} />
+                  </button>
+                </form>
+              </div>
+            ) : myChannel.status === 'PENDING' ? (
+              /* Application Pending Approval */
+              <div style={{
+                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
+                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px',
+                textAlign: 'center'
+              }}>
+                <AlertCircle size={40} color="#F59E0B" style={{ marginBottom: '16px' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>
+                  Application Under Review
+                </h3>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
+                  Your profile <strong>"{myChannel.title}"</strong> is currently pending review by our administrator. Once approved, you can start streaming and publishing lessons.
+                </p>
+                <div style={{ 
+                  marginTop: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', 
+                  background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
+                  padding: '8px 16px', borderRadius: '12px', fontSize: '11px', color: '#F59E0B', fontWeight: 800
+                }}>
+                  <RefreshCw size={12} className="animate-spin" /> Pending Approval
+                </div>
+              </div>
+            ) : myChannel.status === 'REJECTED' ? (
+              /* Application Rejected */
+              <div style={{
+                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
+                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px',
+                textAlign: 'center'
+              }}>
+                <AlertCircle size={40} color="#EF4444" style={{ marginBottom: '16px' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>
+                  Application Rejected
+                </h3>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
+                  Unfortunately, your request to become an instructor was not approved at this time. Please contact support or revise your request specifications.
+                </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      setChannelLoading(true);
+                      await api.delete('/tv/channels/my-channel');
+                      setMyChannel(null);
+                    } catch(err) {
+                      message.error("Failed to reset application.");
+                    } finally {
+                      setChannelLoading(false);
+                    }
+                  }}
+                  style={{
+                    marginTop: '24px', background: 'rgba(255,255,255,0.04)', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '10px 20px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer'
+                  }}
+                >
+                  Create New Application
+                </button>
+              </div>
+            ) : (
+              /* Approved Teacher Console */
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px' }} className="teacher-console-grid">
+                
+                {/* Upload Form */}
+                <div style={{
+                  background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: '24px', padding: '24px'
+                }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Upload size={16} color={GREEN} /> Publish Lecture
+                  </h3>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', marginBottom: '20px' }}>
+                    Upload educational media under a category. Access is subscription-gated automatically.
+                  </p>
+
+                  <form onSubmit={handlePublishRecording}>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                        Lecture Title
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Intro to Modern Rust"
+                        value={newRecTitle}
+                        onChange={(e) => setNewRecTitle(e.target.value)}
+                        style={{
+                          width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', 
+                          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', outline: 'none', fontSize: '12px'
+                        }}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                        Short Description
+                      </label>
+                      <textarea 
+                        placeholder="Provide details about what students will learn in this lecture."
+                        value={newRecDesc}
+                        onChange={(e) => setNewRecDesc(e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', 
+                          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', outline: 'none', fontSize: '12px', resize: 'vertical'
+                        }}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                      <div>
+                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                          Category
+                        </label>
+                        <select
+                          value={newRecCategory}
+                          onChange={(e) => setNewRecCategory(e.target.value)}
+                          style={{
+                            width: '100%', padding: '10px', background: 'rgba(20, 25, 35, 1)', 
+                            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', outline: 'none', fontSize: '12px'
+                          }}
+                        >
+                          {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.title}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                          Media Type
+                        </label>
+                        <select
+                          value={newRecMime}
+                          onChange={(e) => setNewRecMime(e.target.value)}
+                          style={{
+                            width: '100%', padding: '10px', background: 'rgba(20, 25, 35, 1)', 
+                            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: 'white', outline: 'none', fontSize: '12px'
+                          }}
+                        >
+                          <option value="video/mp4">Video (MP4)</option>
+                          <option value="audio/mpeg">Audio (MP3)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '24px' }}>
+                      <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '6px' }}>
+                        Media File
+                      </label>
+                      <input 
+                        type="file" 
+                        accept={newRecMime.startsWith('video') ? 'video/*' : 'audio/*'}
+                        onChange={(e) => setNewRecFile(e.target.files ? e.target.files[0] : null)}
+                        style={{
+                          width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.01)', 
+                          border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '10px', color: 'rgba(255,255,255,0.6)', outline: 'none', fontSize: '11px'
+                        }}
+                        required
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingRec}
+                      style={{
+                        width: '100%', padding: '12px', background: GREEN, color: 'black',
+                        border: 'none', borderRadius: '12px', fontSize: '11px', fontWeight: 900,
+                        textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                      }}
+                    >
+                      {isUploadingRec ? 'Uploading Media...' : 'Publish Recording'}
+                      <Upload size={12} />
+                    </button>
+                  </form>
+                </div>
+
+                {/* Teacher's Recorded Lectures list */}
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                    Your Published Lectures
+                  </h3>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {recordings
+                      .filter(rec => rec.channelId === myChannel.id)
+                      .map(rec => (
+                        <div
+                          key={rec.id}
+                          style={{
+                            background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)',
+                            borderRadius: '16px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                          }}
+                        >
+                          <div>
+                            <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'white', margin: 0 }}>
+                              {rec.title}
+                            </h4>
+                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '4px 0 0 0' }}>
+                              {rec.categoryTitle} • {rec.mimeType.startsWith('video') ? 'Video' : 'Audio'}
+                            </p>
+                          </div>
+                          
+                          <button
+                            onClick={() => handleDeleteRecording(rec.id)}
+                            style={{
+                              background: 'rgba(239,68,68,0.1)', border: 'none', padding: '8px', 
+                              borderRadius: '8px', color: '#EF4444', cursor: 'pointer'
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+
+                    {recordings.filter(rec => rec.channelId === myChannel.id).length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '40px 0', opacity: 0.3, border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '16px' }}>
+                        <BookOpen size={24} style={{ margin: '0 auto 8px auto', color: GREEN }} />
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800 }}>No Lectures Published</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 
       </div>
 
+      {/* 4. Playback / Subscription Modal */}
+      {playbackRecording && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(5, 5, 8, 0.85)', backdropFilter: 'blur(10px)', padding: '20px'
+        }}>
+          <div style={{
+            background: 'rgba(15, 20, 30, 0.95)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '28px', maxWidth: '640px', width: '100%', overflow: 'hidden', position: 'relative',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              borderBottom: '1px solid rgba(255,255,255,0.05)'
+            }}>
+              <div>
+                <span style={{ fontSize: '9px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  {playbackRecording.categoryTitle} Lecture
+                </span>
+                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: '2px 0 0 0', letterSpacing: '-0.02em' }}>
+                  {playbackRecording.title}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setPlaybackRecording(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)', border: 'none', padding: '8px', 
+                  borderRadius: '10px', color: 'white', cursor: 'pointer'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div style={{ padding: '24px' }}>
+              {playbackRecording.isLocked ? (
+                /* LOCKED SCREEN (Access Denied) */
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{
+                    width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239,68,68,0.08)',
+                    border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#EF4444', margin: '0 auto 20px auto'
+                  }}>
+                    <Lock size={28} />
+                  </div>
+                  <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0 }}>
+                    Subscription Required
+                  </h4>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5, maxWidth: '400px', margin: '8px auto 24px auto' }}>
+                    This lecture is locked. Subscribe to <strong>{playbackRecording.teacherName}</strong>'s channel (<strong>{playbackRecording.channelTitle}</strong>) on Panx TV to unlock this and all of their premium recorded content.
+                  </p>
+
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '320px', margin: '0 auto'
+                  }}>
+                    <button
+                      onClick={() => handleSubscribe(playbackRecording.channelId)}
+                      disabled={subscribingChannelId !== null}
+                      style={{
+                        width: '100%', padding: '14px', background: GREEN, color: 'black', border: 'none',
+                        borderRadius: '14px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                      }}
+                    >
+                      {subscribingChannelId ? 'Processing...' : `Subscribe to Channel ($5.00/mo)`}
+                      <Tv size={14} />
+                    </button>
+                    
+                    <button
+                      onClick={() => setPlaybackRecording(null)}
+                      style={{
+                        width: '100%', padding: '12px', background: 'transparent', color: 'rgba(255,255,255,0.6)', 
+                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', fontSize: '11px', 
+                        fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer'
+                      }}
+                    >
+                      Close Window
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* UNLOCKED SCREEN (Media Player) */
+                <div>
+                  {playbackRecording.mimeType.startsWith('video') ? (
+                    /* Video Player */
+                    <div style={{ background: 'black', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <video 
+                        src={playbackRecording.mediaUrl || ''} 
+                        controls 
+                        autoPlay 
+                        style={{ width: '100%', display: 'block', maxHeight: '360px' }}
+                      />
+                    </div>
+                  ) : (
+                    /* Audio Player */
+                    <div style={{
+                      background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: '20px', padding: '32px', textAlign: 'center'
+                    }}>
+                      <div style={{
+                        width: '96px', height: '96px', borderRadius: '50%', background: `${GREEN}12`,
+                        border: `1px solid ${GREEN}30`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: GREEN, margin: '0 auto 24px auto', position: 'relative'
+                      }} className="rotating-audio-disc">
+                        <Music size={40} />
+                      </div>
+                      
+                      <div style={{ marginBottom: '24px' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 800, color: 'white' }}>{playbackRecording.title}</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+                          Voice Lesson by {playbackRecording.teacherName}
+                        </div>
+                      </div>
+
+                      <audio 
+                        src={playbackRecording.mediaUrl || ''} 
+                        controls 
+                        autoPlay 
+                        style={{ width: '100%', outline: 'none' }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: '20px' }}>
+                    <h5 style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 4px 0' }}>
+                      Lecture Synopsis
+                    </h5>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, margin: 0 }}>
+                      {playbackRecording.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes pulse-live { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.2); } }
+        @media (max-width: 768px) {
+          .teacher-console-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+          .lab-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            padding: 16px 20px !important;
+          }
+          .lab-metrics {
+            width: 100% !important;
+            justify-content: space-between !important;
+          }
+          .lab-container {
+            padding: 16px 12px !important;
+          }
+          .lab-tabs {
+            width: 100% !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+          }
+          .lab-tabs button {
+            flex-shrink: 0 !important;
+            min-width: 120px !important;
+            padding: 8px 4px !important;
+            font-size: 10px !important;
+          }
+          .lab-hero {
+            padding: 32px 20px !important;
+            margin-bottom: 24px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+          }
+          .lab-hero-title {
+            font-size: 24px !important;
+            line-height: 1.2 !important;
+          }
+          .lab-hero-logo {
+            display: none !important;
+          }
+          .lab-filters {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px !important;
+          }
+          .lab-filters > div {
+            width: 100% !important;
+            justify-content: space-between !important;
+          }
+        }
+        
+        @media (max-width: 500px) {
+          .lab-search-form {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .lab-search-form button {
+            width: 100% !important;
+            text-align: center !important;
+            padding: 12px !important;
+          }
+          .lab-filter-pills {
+            width: 100% !important;
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            padding-bottom: 4px !important;
+          }
+          .lab-filter-pills span {
+            display: none !important;
+          }
+          .lab-filter-pills button {
+            flex-shrink: 0 !important;
+          }
+        }
+        
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .recording-card:hover {
+          background: rgba(255, 255, 255, 0.035) !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          transform: translateY(-2px);
+        }
       `}</style>
     </div>
   );

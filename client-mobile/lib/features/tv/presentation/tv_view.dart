@@ -5,158 +5,95 @@ import 'package:qsi_client_mobile/theme/app_theme.dart';
 import 'video_player_page.dart';
 import 'broadcast_page.dart';
 
-class TvView extends StatelessWidget {
+class TvView extends StatefulWidget {
   const TvView({super.key});
 
   @override
+  State<TvView> createState() => _TvViewState();
+}
+
+class _TvViewState extends State<TvView> {
+  @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // Premium App Bar
-        SliverAppBar(
-          expandedHeight: 120.0,
-          floating: true,
-          pinned: true,
-          backgroundColor: AppColors.bgPrimary,
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            title: Row(
-              children: [
-                Icon(LucideIcons.tv, color: AppColors.accentPrimary, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'QSI TV',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: StreamBuilder<List<dynamic>>(
+        stream: context.read<SocketManager>().broadcastStreams,
+        builder: (context, snapshot) {
+          final streams = snapshot.data ?? [];
+          final activeBroadcast = streams.isNotEmpty ? streams.first : null;
+
+          return CustomScrollView(
+            slivers: [
+              // Premium App Bar
+              SliverAppBar(
+                expandedHeight: 120.0,
+                floating: true,
+                pinned: true,
+                backgroundColor: AppColors.bgPrimary,
+                leading: IconButton(
+                  icon: Icon(LucideIcons.chevronLeft, color: AppColors.textSecondary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  title: Row(
+                    children: [
+                      const SizedBox(width: 32),
+                      Icon(LucideIcons.tv, color: AppColors.accentPrimary, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'QSI TV',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(LucideIcons.radio, size: 14, color: AppColors.accentPrimary),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const BroadcastPage()),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-
-        // Live Now Section
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionHeader('LIVE NOW', LucideIcons.activity),
-                const SizedBox(height: 16),
-                _buildLiveCard(
-                  context,
-                  'Sovereign Infrastructure Sync',
-                  'Engineering Team • 422 viewers',
-                  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Categories
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildCategoryChip('ALL NODES', true),
-                _buildCategoryChip('ENGINEERING', false),
-                _buildCategoryChip('CULTURE', false),
-                _buildCategoryChip('STRATEGY', false),
-              ],
-            ),
-          ),
-        ),
-
-        // Lab Tracks (Previously missing method implemented)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSectionHeader('LAB TRACKS', LucideIcons.beaker),
-                    Text(
-                      'SEE ALL',
-                      style: TextStyle(color: AppColors.accentPrimary, fontSize: 10, fontWeight: FontWeight.w900),
+                actions: [
+                  IconButton(
+                    icon: Icon(LucideIcons.radio, size: 14, color: AppColors.accentPrimary),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BroadcastPage()),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildLabTrack(
-                  context,
-                  'Sovereign Cloud',
-                  'Module 1: Infrastructure',
-                  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
-                ),
-                _buildLabTrack(
-                  context,
-                  'Mobility Nodes',
-                  'Module 4: Urban Sync',
-                  'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800',
-                ),
-                _buildLabTrack(
-                  context,
-                  'Renaissance Art',
-                  'Module 2: Creative AI',
-                  'https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?auto=format&fit=crop&q=80&w=800',
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Broadcast Archive
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _buildSectionHeader('BROADCAST ARCHIVE', LucideIcons.signal),
-          ),
-        ),
-
-        SliverPadding(
-          padding: const EdgeInsets.all(20),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.8,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildArchiveCard(
-                context,
-                'Regional Summit ${2026 - index}',
-                'Strategy Node',
-                'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=400',
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
-              childCount: 4,
-            ),
-          ),
-        ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
+              // Live Now Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('LIVE NOW', LucideIcons.activity),
+                      const SizedBox(height: 16),
+                      if (activeBroadcast != null)
+                        _buildLiveCard(
+                          context,
+                          activeBroadcast['title'] ?? 'Live Strategic Sync',
+                          'QSI Engineering Node • ${activeBroadcast['viewers'] ?? '0'} watching',
+                          activeBroadcast['streamUrl'],
+                        )
+                      else
+                        _buildEmptyLiveState(context),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -178,13 +115,50 @@ class TvView extends StatelessWidget {
     );
   }
 
-  Widget _buildLiveCard(BuildContext context, String title, String subtitle, String imageUrl) {
+  Widget _buildEmptyLiveState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          Icon(LucideIcons.radioTower, color: AppColors.textTertiary.withOpacity(0.3), size: 48),
+          const SizedBox(height: 16),
+          const Text(
+            'BROADCAST STANDBY',
+            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No active nodes currently broadcasting from the field.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BroadcastPage())),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.accentPrimary.withOpacity(0.3)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('START BROADCAST', style: TextStyle(color: AppColors.accentPrimary, fontSize: 11, fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveCard(BuildContext context, String title, String subtitle, String? streamUrl) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => VideoPlayerPage(
-            streamUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+            streamUrl: streamUrl ?? 'https://demo.unified-streaming.com/k8s/live/stable/scte35.isml/.m3u8',
             title: title,
           ),
         ),
@@ -193,148 +167,36 @@ class TvView extends StatelessWidget {
         height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
+          color: AppColors.bgSecondary,
           border: Border.all(color: AppColors.borderSubtle),
-          image: DecorationImage(
-            image: NetworkImage(imageUrl),
-            fit: BoxFit.cover,
-          ),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-            ),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
-                    child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
-                  ),
-                  const Spacer(),
-                  Icon(LucideIcons.play, size: 48, color: Colors.white.withOpacity(0.05)),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabTrack(BuildContext context, String title, String module, String imageUrl) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              width: 64,
-              height: 64,
-              fit: BoxFit.cover,
-              errorWidget: (context, url, error) => Icon(LucideIcons.imageMinus, color: AppColors.textTertiary),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
+                  child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  module,
-                  style: const TextStyle(color: AppColors.textTertiary, fontSize: 10, fontWeight: FontWeight.w600),
-                ),
+                const Spacer(),
+                Icon(LucideIcons.play, size: 48, color: AppColors.accentPrimary.withOpacity(0.1)),
               ],
             ),
-          ),
-          Icon(LucideIcons.circlePlay, color: AppColors.accentPrimary, size: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildArchiveCard(BuildContext context, String title, String node, String imageUrl) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Icon(LucideIcons.user, size: 12, color: AppColors.textTertiary),
-            const SizedBox(width: 4),
+            const Spacer(),
             Text(
-              node,
-              style: const TextStyle(color: AppColors.textTertiary, fontSize: 10, fontWeight: FontWeight.w600),
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.accentPrimary : AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isSelected ? AppColors.accentPrimary : AppColors.borderSubtle),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.black : AppColors.textSecondary,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
         ),
       ),
     );

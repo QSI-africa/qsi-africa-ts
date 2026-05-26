@@ -1,16 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:qsi_client_mobile/theme/app_theme.dart';
+import 'package:qsi_client_mobile/core/api/api_client.dart';
 import '../../logic/presentation/chat_page.dart';
-import '../../portfolio/data/models/portfolio_item.dart';
+import '../../portfolio/presentation/portfolio_page.dart';
 import 'search_page.dart';
-import 'widgets/intelligence_feed.dart';
+import '../../network/presentation/network_view.dart';
+import '../../finance/presentation/finance_view.dart';
+import '../../lab/presentation/lab_view.dart';
+import '../../tv/presentation/tv_view.dart';
+import '../../mobility/presentation/mobility_view.dart';
+import '../../healing/presentation/healing_view.dart';
+import '../../vision/presentation/vision_view.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
   @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  List<dynamic> _services = [];
+  Map<String, dynamic>? _stats;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    try {
+      final apiClient = context.read<ApiClient>();
+      final servicesResponse = await apiClient.get('/config/services');
+      final statsResponse = await apiClient.get('/config/stats');
+
+      if (mounted) {
+        setState(() {
+          _services = servicesResponse.data;
+          _stats = statsResponse.data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Failed to fetch dashboard data: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary));
+    }
+
     return CustomScrollView(
       slivers: [
         // Premium AppBar
@@ -58,23 +104,24 @@ class HomeView extends StatelessWidget {
           ],
         ),
 
-        // Summary Stats
-        SliverToBoxAdapter(
-          child: Container(
-            height: 110,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildSummaryTile('ACTIVE PROJECTS', '12', LucideIcons.layers, AppColors.accentPrimary),
-                _buildSummaryTile('SYSTEM HEALTH', '98%', LucideIcons.activity, Colors.blue),
-                _buildSummaryTile('ACTIVE ALERTS', '03', LucideIcons.triangleAlert, Colors.orange),
-                _buildSummaryTile('NETWORK', '4.2k', LucideIcons.users, Colors.purple),
-              ],
+        // Summary Stats (Dynamic)
+        if (_stats != null)
+          SliverToBoxAdapter(
+            child: Container(
+              height: 110,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _buildSummaryTile('ACTIVE NODES', _stats!['activeNodes'].toString(), LucideIcons.users, AppColors.accentPrimary),
+                  _buildSummaryTile('LIVE PILOTS', _stats!['livePilots'].toString(), LucideIcons.layers, Colors.blue),
+                  _buildSummaryTile('DIGITAL CONCEPTS', _stats!['digitalConcepts'].toString(), LucideIcons.lightbulb, Colors.purple),
+                  _buildSummaryTile('UPTIME', _stats!['uptime'] ?? '99.9%', LucideIcons.activity, Colors.green),
+                ],
+              ),
             ),
           ),
-        ),
 
         // Module Navigation
         SliverToBoxAdapter(
@@ -93,61 +140,27 @@ class HomeView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                GridView.count(
+                GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.1,
-                  children: [
-                    _buildModuleCard(context, LucideIcons.wrench, 'TOOLS', 'System Management', AppColors.accentPrimary, 'infrastructure'),
-                    _buildModuleCard(context, LucideIcons.tv, 'TV', 'Broadcasting Node', Colors.blue, 'vision'),
-                    _buildModuleCard(context, LucideIcons.music, 'MUSIC', 'Sonic Atmosphere', Colors.purple, 'healing'),
-                    _buildModuleCard(context, LucideIcons.layers, 'VISION', 'Hyper Infrastructure', Colors.orange, 'vision'),
-                  ],
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: _services.length,
+                  itemBuilder: (context, index) {
+                    final service = _services[index];
+                    return _buildModuleCard(context, service);
+                  },
                 ),
               ],
             ),
           ),
         ),
 
-        // Intelligence Feed Header
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-            child: Row(
-              children: [
-                const Text(
-                  'INTELLIGENCE FEED',
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: Row(
-                    children: [
-                      const Text('FILTER', style: TextStyle(color: AppColors.textTertiary, fontSize: 10, fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 4),
-                      Icon(LucideIcons.filter, size: 16, color: AppColors.textTertiary),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Feed List
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 100),
-          sliver: IntelligenceFeed(),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
   }
@@ -171,7 +184,7 @@ class HomeView extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 8,
                   fontWeight: FontWeight.w800,
@@ -194,11 +207,57 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildModuleCard(BuildContext context, IconData icon, String title, String subtitle, Color accent, String tag) {
+  Widget _buildModuleCard(BuildContext context, dynamic service) {
+    final title = service['title'] ?? 'MODULE';
+    final category = service['category'] ?? 'generic';
+    
+    final Map<String, IconData> iconMap = {
+      'infrastructure': LucideIcons.layoutGrid,
+      'vision': LucideIcons.brain,
+      'healing': LucideIcons.sparkles,
+      'network': LucideIcons.users,
+      'finance': LucideIcons.receipt,
+      'mobility': LucideIcons.truck,
+      'lab': LucideIcons.beaker,
+      'tv': LucideIcons.tv,
+      'portfolio': LucideIcons.layers,
+    };
+
+    final Map<String, Color> colorMap = {
+      'infrastructure': AppColors.accentPrimary,
+      'vision': Colors.cyan,
+      'healing': Colors.purple,
+      'network': Colors.blue,
+      'finance': Colors.green,
+      'mobility': Colors.orange,
+      'lab': Colors.red,
+      'tv': Colors.pink,
+      'portfolio': Colors.teal,
+    };
+
+    final icon = iconMap[category] ?? LucideIcons.activity;
+    final accent = colorMap[category] ?? AppColors.accentPrimary;
+
     return GestureDetector(
       onTap: () {
-        if (title == 'TOOLS') {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(moduleName: title)));
+        if (category == 'infrastructure') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPage(moduleName: 'infrastructure')));
+        } else if (category == 'vision') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const VisionView()));
+        } else if (category == 'healing') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const HealingView()));
+        } else if (category == 'network') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const NetworkView()));
+        } else if (category == 'finance') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceView()));
+        } else if (category == 'mobility') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const MobilityView()));
+        } else if (category == 'lab') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const LabView()));
+        } else if (category == 'tv') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const TvView()));
+        } else if (category == 'portfolio') {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const PortfolioPage()));
         }
       },
       child: Container(
@@ -224,17 +283,17 @@ class HomeView extends StatelessWidget {
               title,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              subtitle,
-              style: TextStyle(
+              category.toString().toUpperCase(),
+              style: const TextStyle(
                 color: AppColors.textTertiary,
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: FontWeight.w600,
               ),
             ),

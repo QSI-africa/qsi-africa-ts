@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Link2, Radio, Eye, StopCircle
+  MessageSquare, Radio, Eye, Lock, Globe
 } from 'lucide-react';
 import { App } from 'antd';
 import { socketService } from '../services/socket';
@@ -12,6 +12,8 @@ const GREEN = '#10B981';
 
 interface LiveBroadcastProps {
   onStop: () => void;
+  title: string;
+  isPrivate: boolean;
 }
 
 const ControlBtn: React.FC<{
@@ -36,7 +38,7 @@ const ControlBtn: React.FC<{
   </button>
 );
 
-const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
+const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, isPrivate }) => {
   const { message } = App.useApp();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -44,8 +46,6 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
-  const [title, setTitle] = useState('My Live Broadcast');
-  const [isEditing, setIsEditing] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -78,6 +78,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
     socketService.off('answer');
     socketService.off('ice-candidate');
     socketService.off('user-disconnected');
+    socketService.off('broadcast-error');
 
     onStop();
   };
@@ -90,7 +91,13 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
 
-        socketService.emit('start-broadcast', roomId.current, { title });
+        // Setup error handler first
+        socketService.on('broadcast-error', ({ message: errMsg }) => {
+          message.error(errMsg || 'Failed to start broadcast');
+          handleStopBroadcast();
+        });
+
+        socketService.emit('start-broadcast', roomId.current, { title, isPrivate });
 
         socketService.on('viewer-joined', async ({ viewerId }) => {
           setViewerCount(prev => prev + 1);
@@ -144,68 +151,104 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
 
       } catch (err) {
         console.error('Broadcast error:', err);
+        message.error('Could not access media devices for broadcasting.');
+        onStop();
       }
     };
 
     startBroadcasting();
 
     return () => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      peerConnections.current.forEach(pc => pc.close());
-      socketService.emit('stop-broadcast', roomId.current);
+      // Cleanup events just in case
       socketService.off('viewer-joined');
       socketService.off('answer');
       socketService.off('ice-candidate');
+      socketService.off('user-disconnected');
+      socketService.off('broadcast-error');
     };
-  }, []);
+  }, [title, isPrivate]);
 
+  // Toggle audio track
   const toggleMute = () => {
-    if (localStream) {
-      localStream.getAudioTracks()[0].enabled = isMuted;
-      setIsMuted(!isMuted);
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
     }
   };
 
+  // Toggle video track
   const toggleVideo = () => {
-    if (localStream) {
-      const track = localStream.getVideoTracks()[0];
-      if (track) { track.enabled = isVideoOff; setIsVideoOff(!isVideoOff); }
+    if (streamRef.current) {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOff(!videoTrack.enabled);
+      }
     }
   };
 
+  // Share screen implementation
   const toggleScreenShare = async () => {
     try {
       if (!isScreenSharing) {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = screenStream.getVideoTracks()[0];
-        peerConnections.current.forEach(pc => {
-          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
-          if (sender) sender.replaceTrack(screenTrack);
-        });
-        if (videoRef.current) videoRef.current.srcObject = screenStream;
-        screenTrack.onended = () => stopScreenShare();
-        setIsScreenSharing(true);
-      } else {
-        stopScreenShare();
-      }
-    } catch (err) { console.error('Screen sharing error:', err); }
-  };
 
-  const stopScreenShare = () => {
-    if (localStream && videoRef.current) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      peerConnections.current.forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
-        if (sender) sender.replaceTrack(videoTrack);
-      });
-      videoRef.current.srcObject = localStream;
-      setIsScreenSharing(false);
+        if (streamRef.current && screenTrack) {
+          const localVideoTrack = streamRef.current.getVideoTracks()[0];
+          if (localVideoTrack) {
+            streamRef.current.removeTrack(localVideoTrack);
+            localVideoTrack.stop();
+          }
+          streamRef.current.addTrack(screenTrack);
+          if (videoRef.current) videoRef.current.srcObject = streamRef.current;
+
+          // Replace track in all peer connections
+          peerConnections.current.forEach(pc => {
+            const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+            if (sender) sender.replaceTrack(screenTrack);
+          });
+
+          screenTrack.onended = () => {
+            stopScreenShare();
+          };
+          setIsScreenSharing(true);
+        }
+      } else {
+        await stopScreenShare();
+      }
+    } catch (err) {
+      console.error('Screen sharing error:', err);
     }
   };
 
-  const copyShareLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/tv?view=${roomId.current}`);
-    message.success('Share link copied!');
+  const stopScreenShare = async () => {
+    try {
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const cameraTrack = cameraStream.getVideoTracks()[0];
+
+      if (streamRef.current && cameraTrack) {
+        const screenTrack = streamRef.current.getVideoTracks()[0];
+        if (screenTrack) {
+          streamRef.current.removeTrack(screenTrack);
+          screenTrack.stop();
+        }
+        streamRef.current.addTrack(cameraTrack);
+        if (videoRef.current) videoRef.current.srcObject = streamRef.current;
+
+        // Replace track in all peer connections
+        peerConnections.current.forEach(pc => {
+          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) sender.replaceTrack(cameraTrack);
+        });
+        setIsScreenSharing(false);
+      }
+    } catch (err) {
+      console.error('Failed to restore camera track:', err);
+    }
   };
 
   return (
@@ -213,120 +256,144 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
       display: 'grid',
       gridTemplateColumns: !isMobile && showChat ? '1fr 340px' : '1fr',
       height: '100%',
-      background: '#0a1018',
-      overflow: 'hidden',
-      maxHeight: '100%'
+      background: '#070c14',
+      overflow: 'hidden'
     }}>
-      {/* ── Broadcast Area ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', padding: '12px 16px', gap: '10px', overflow: 'hidden', height: '100%' }}>
-
-        {/* Broadcast Info Row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-            {/* Live badge */}
+      {/* --- Main Broadcasting Screen Area --- */}
+      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+        
+        {/* Broadcaster HUD */}
+        <div style={{
+          position: 'absolute', top: '16px', left: '16px', right: '16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          zIndex: 10, pointerEvents: 'none'
+        }}>
+          {/* Metadata Badges */}
+          <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
             <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px',
-              borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)'
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(239,68,68,0.15)', backdropFilter: 'blur(12px)',
+              padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)'
             }}>
-              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 6px #EF4444', animation: 'pulse 1.5s infinite' }} />
-              <span style={{ fontSize: '10px', fontWeight: 900, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Live</span>
+              <Radio size={14} className="animate-pulse" color="#EF4444" />
+              <span style={{ fontSize: '10px', fontWeight: 900, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                ON AIR
+              </span>
             </div>
 
-            {/* Editable Title */}
-            {isEditing ? (
-              <input
-                autoFocus
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                onBlur={() => setIsEditing(false)}
-                onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-                style={{
-                  background: 'rgba(255,255,255,0.05)', border: `1px solid ${GREEN}40`,
-                  borderRadius: '10px', padding: '6px 14px', color: 'white',
-                  fontSize: '14px', fontWeight: 700, outline: 'none', flex: 1
-                }}
-              />
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                style={{
-                  background: 'none', border: 'none', cursor: 'text',
-                  fontSize: '14px', fontWeight: 700, color: 'white'
-                }}
-              >
-                {title}
-              </button>
-            )}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)',
+              padding: '6px 12px', borderRadius: '10px'
+            }}>
+              {isPrivate ? <Lock size={12} color="#F59E0B" /> : <Globe size={12} color={GREEN} />}
+              <span style={{ fontSize: '10px', fontWeight: 800, color: isPrivate ? '#F59E0B' : '#FFF', textTransform: 'uppercase' }}>
+                {isPrivate ? 'SUBSCRIBERS ONLY' : 'PUBLIC'}
+              </span>
+            </div>
+            
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)',
+              padding: '6px 12px', borderRadius: '10px'
+            }}>
+              <Eye size={12} color="rgba(255,255,255,0.6)" />
+              <span style={{ fontSize: '10px', fontWeight: 800, color: 'white' }}>
+                {viewerCount}
+              </span>
+            </div>
           </div>
 
-          {/* Viewer Count */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)' }}>
-            <Eye size={14} color="rgba(255,255,255,0.5)" />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{viewerCount}</span>
-          </div>
-        </div>
-
-        {/* Video Preview */}
-        <div style={{
-          flex: 1, minHeight: 0, position: 'relative', borderRadius: '16px', overflow: 'hidden',
-          background: '#0d1520', border: `1px solid ${GREEN}20`
-        }}>
-          <video ref={videoRef} autoPlay playsInline muted
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-
-          {/* Corner Indicator */}
+          {/* Broadcast Title HUD */}
           <div style={{
-            position: 'absolute', top: '16px', left: '16px',
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            padding: '4px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px'
+            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)',
+            padding: '6px 12px', borderRadius: '10px', color: 'white',
+            fontSize: '11px', fontWeight: 700, pointerEvents: 'auto'
           }}>
-            <Radio size={12} color={GREEN} />
-            <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Broadcasting</span>
+            {title}
           </div>
         </div>
 
-        {/* Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
-          <ControlBtn onClick={toggleMute} danger={isMuted} title={isMuted ? 'Unmute' : 'Mute'}>
-            {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
-          </ControlBtn>
-          <ControlBtn onClick={toggleVideo} danger={isVideoOff} title={isVideoOff ? 'Camera On' : 'Camera Off'}>
-            {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
-          </ControlBtn>
-          {!isMobile && (
-            <ControlBtn onClick={toggleScreenShare} active={isScreenSharing} title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}>
-              {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
-            </ControlBtn>
+        {/* Local Stream Canvas */}
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+          {localStream ? (
+            <video
+              ref={videoRef} autoPlay muted playsInline
+              style={{
+                width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                transform: 'scaleX(-1)' // Mirror local stream for natural feel
+              }}
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                border: `2px solid ${GREEN}25`, borderTop: `2px solid ${GREEN}`,
+                animation: 'spin 1s linear infinite'
+              }} />
+              <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Initializing Feed...
+              </span>
+            </div>
           )}
 
-          <div style={{ width: '1px', height: '28px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+          {/* Video Off Overlay */}
+          {isVideoOff && (
+            <div style={{
+              position: 'absolute', inset: 0, background: '#070c14',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px'
+            }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)'
+              }}>
+                <VideoOff size={24} />
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Camera is paused</span>
+            </div>
+          )}
+        </div>
+
+        {/* Media Controller dock */}
+        <div style={{
+          padding: '20px 24px', background: 'linear-gradient(to top, rgba(7,12,20,1) 0%, rgba(7,12,20,0.8) 80%, rgba(7,12,20,0) 100%)',
+          display: 'flex', justifyContent: 'center', gap: '12px', zIndex: 10
+        }}>
+          <ControlBtn onClick={toggleMute} active={!isMuted} danger={isMuted} title={isMuted ? 'Unmute Mic' : 'Mute Mic'}>
+            {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+          </ControlBtn>
+          
+          <ControlBtn onClick={toggleVideo} active={!isVideoOff} danger={isVideoOff} title={isVideoOff ? 'Turn Video On' : 'Turn Video Off'}>
+            {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
+          </ControlBtn>
+
+          <ControlBtn onClick={toggleScreenShare} active={isScreenSharing} title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}>
+            {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
+          </ControlBtn>
 
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={18} />
           </ControlBtn>
-          <ControlBtn onClick={copyShareLink} title="Copy Share Link">
-            <Link2 size={18} />
-          </ControlBtn>
 
-          <div style={{ width: '1px', height: '28px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+          <div style={{ width: '1px', height: '48px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }} />
 
-          {/* Stop Broadcast */}
           <button
             onClick={handleStopBroadcast}
+            className="qsi-btn qsi-btn-primary"
             style={{
-              height: '48px', padding: '0 22px', borderRadius: '14px',
-              background: 'rgba(239,68,68,0.15)', color: '#EF4444', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
-              border: '1px solid rgba(239,68,68,0.25)', transition: 'all 0.2s'
+              padding: '0 24px', height: '48px', borderRadius: '14px',
+              background: '#EF4444', border: 'none', color: 'white', fontWeight: 800,
+              fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em',
+              display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
             }}
           >
-            <StopCircle size={16} /> End Broadcast
+            End Live
           </button>
         </div>
+
       </div>
 
-      {/* ── Chat Sidebar ── */}
+      {/* --- Chat Sidebar Panel --- */}
       {showChat && !isMobile && (
         <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.06)',
@@ -338,21 +405,18 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop }) => {
           }}>
             <MessageSquare size={15} color={GREEN} />
             <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Live Chat
+              Transmission Chat
             </span>
-            <span style={{
-              marginLeft: 'auto', padding: '2px 8px', borderRadius: '6px',
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-              fontSize: '9px', fontWeight: 900, color: '#EF4444'
-            }}>Live</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <RoomChat roomId={roomId.current} userName="Broadcaster" />
+            <RoomChat roomId={roomId} userName="Broadcaster" />
           </div>
         </div>
       )}
-
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+      
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

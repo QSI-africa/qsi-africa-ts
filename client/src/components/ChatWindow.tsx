@@ -9,7 +9,10 @@ import {
   App as AntApp,
   Spin,
   Input,
-  Modal
+  Modal,
+  Drawer,
+  Dropdown,
+  Menu
 } from "antd";
 import {
   Send,
@@ -20,7 +23,8 @@ import {
   Brain,
   Sparkles,
   ChevronLeft,
-  LayoutGrid
+  LayoutGrid,
+  Menu as LucideMenu
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -34,21 +38,48 @@ const moduleDetails = {
     status: "online",
     icon: <LayoutGrid size={24} />,
     endpoint: "/infrastructure",
-    slogan: "Building coherence..."
+    slogan: "Building coherence...",
+    description: "The Infrastructure AI is your intelligent project intake specialist for Hyper Civil Engineers. It guides you through describing your infrastructure project — from new builds and road repairs to drainage systems — and automatically compiles a comprehensive quote request.",
+    purpose: "Submit infrastructure project requests and receive professional quotations.",
+    capabilities: [
+      "Gather project type, location, and scope details through natural conversation",
+      "Support document attachments (plans, images, reports)",
+      "Auto-generate a structured quote request on your behalf",
+      "Receive a follow-up quotation within 24–48 hours",
+    ],
+    tips: "Be as specific as possible about your project scope and location. Attaching relevant documents or images will speed up the quotation process.",
   },
   healing: {
     title: "Healing Assistant",
     status: "ready",
     icon: <Sparkles size={24} />,
     endpoint: "/healing-chat",
-    slogan: "Guiding you..."
+    slogan: "Guiding you...",
+    description: "The QSI Healing Assistant is a compassionate AI guide designed to understand your emotional, relational, or personal challenges and recommend the most relevant healing packages and trajectories from the QSI ecosystem.",
+    purpose: "Receive personalized healing package recommendations based on your unique journey.",
+    capabilities: [
+      "Empathetic conversational exploration of your challenges",
+      "Intelligent matching of your situation to curated healing packages",
+      "Browse and inquire about specific healing trajectories",
+      "Submit a healing inquiry for a follow-up from the QSI team",
+    ],
+    tips: "Share openly about what you are experiencing. The more context you provide, the more tailored and insightful the recommendations will be.",
   },
   vision: {
     title: "Vision Translator",
     status: "active",
     icon: <Brain size={24} />,
     endpoint: "/vision",
-    slogan: "Translate imagination..."
+    slogan: "Translate imagination...",
+    description: "The Vision Translator is a collaborative AI architect that transforms your raw ideas and ambitions into a structured, professional Vision Document. It guides you section by section — from context and focus areas to institutional engagement and strategic invitations.",
+    purpose: "Co-create a comprehensive, investment-ready vision document for your project or initiative.",
+    capabilities: [
+      "Structured, section-by-section document creation (A–G)",
+      "Summarize and confirm each section before proceeding",
+      "Produce a polished Markdown vision document",
+      "Save the final document to your Digital Vault for future reference",
+    ],
+    tips: "Start with a broad description of your idea. The AI will ask targeted questions to help you articulate and refine each section. You can always revise a section before moving on.",
   },
 };
 
@@ -73,6 +104,9 @@ const ChatWindow: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inquiryLoading, setInquiryLoading] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerType, setDrawerType] = useState<'suggestions' | 'packages' | null>(null);
+  const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
 
   const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
 
@@ -189,6 +223,12 @@ const ChatWindow: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialPrompt = params.get('prompt');
+    if (initialPrompt) {
+      setUserInput(initialPrompt);
+    }
+
     const initialMessage = {
       sender: "ai",
       text: `Welcome, ${user?.name || 'Sovereign'}. ${moduleName === "infrastructure" ? "What infrastructure project are you considering today?" : moduleName === "healing" ? "What are you currently experiencing?" : "I'm excited to help you create impact. What's your vision today?"}`,
@@ -302,6 +342,41 @@ const ChatWindow: React.FC = () => {
     return () => setSidebarContent(null);
   }, [fetchedSuggestions, fetchedPackages, details, moduleName, setSidebarContent, handleSendMessage, navigate]);
 
+  const menuItems = (
+    <Menu 
+      theme="dark"
+      style={{ 
+        background: '#14201A', 
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '12px',
+        padding: '6px'
+      }}
+    >
+      <Menu.Item 
+        key="suggestions" 
+        onClick={() => {
+          setDrawerType('suggestions');
+          setIsDrawerOpen(true);
+        }}
+        style={{ color: 'rgba(255,255,255,0.85)', borderRadius: '8px' }}
+      >
+        Suggested Focus Areas
+      </Menu.Item>
+      {moduleName === 'healing' && (
+        <Menu.Item 
+          key="packages" 
+          onClick={() => {
+            setDrawerType('packages');
+            setIsDrawerOpen(true);
+          }}
+          style={{ color: 'rgba(255,255,255,0.85)', borderRadius: '8px', marginTop: '4px' }}
+        >
+          Healing Trajectories
+        </Menu.Item>
+      )}
+    </Menu>
+  );
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
@@ -329,41 +404,51 @@ const ChatWindow: React.FC = () => {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '16px', color: 'rgba(255,255,255,0.3)' }}>
-          <Info size={20} style={{ cursor: 'pointer' }} />
-          <MoreVertical size={20} style={{ cursor: 'pointer' }} />
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
+          <Info
+            size={20}
+            style={{ cursor: 'pointer' }}
+            className="hover:text-white transition-colors"
+            onClick={() => setIsInfoDrawerOpen(true)}
+          />
+          <Dropdown overlay={menuItems} trigger={['click']} placement="bottomRight">
+            <LucideMenu size={20} style={{ cursor: 'pointer' }} className="hover:text-white transition-colors" />
+          </Dropdown>
         </div>
       </header>
 
       {/* Messages Area */}
-      <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="p-4 md:p-8 no-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {messages.map((msg, idx) => (
-          <div 
-            key={idx} 
-            style={{ 
-              alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '80%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
-            }}
-          >
-            <div style={{ 
-              padding: '16px 20px', borderRadius: '24px', 
-              background: msg.sender === 'user' ? GREEN : 'rgba(255,255,255,0.05)',
-              color: msg.sender === 'user' ? 'white' : 'rgba(255,255,255,0.9)',
-              border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
-              fontSize: '15px', lineHeight: 1.6,
-              boxShadow: msg.sender === 'user' ? `0 8px 24px -8px ${GREEN}60` : 'none',
-              borderBottomRightRadius: msg.sender === 'user' ? '4px' : '24px',
-              borderBottomLeftRadius: msg.sender === 'user' ? '24px' : '4px',
-            }}>
-              {msg.text}
+          <React.Fragment key={idx}>
+            <div 
+              style={{ 
+                alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: msg.sender === 'user' ? '80%' : '100%',
+                width: msg.sender === 'user' ? 'auto' : '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
+              }}
+            >
+              <div style={{ 
+                padding: '16px 20px', borderRadius: '24px', 
+                background: msg.sender === 'user' ? GREEN : 'rgba(255,255,255,0.05)',
+                color: msg.sender === 'user' ? 'white' : 'rgba(255,255,255,0.9)',
+                border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                fontSize: '15px', lineHeight: 1.6,
+                boxShadow: msg.sender === 'user' ? `0 8px 24px -8px ${GREEN}60` : 'none',
+                borderBottomRightRadius: msg.sender === 'user' ? '4px' : '24px',
+                borderBottomLeftRadius: msg.sender === 'user' ? '24px' : '4px',
+                maxWidth: msg.sender === 'user' ? '100%' : '80%',
+              }}>
+                {msg.text}
+              </div>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', marginTop: '8px', textTransform: 'uppercase' }}>
+                {msg.timestamp}
+              </span>
             </div>
-            <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', marginTop: '8px', textTransform: 'uppercase' }}>
-              {msg.timestamp}
-            </span>
-          </div>
+          </React.Fragment>
         ))}
         {loading && (
           <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -380,12 +465,14 @@ const ChatWindow: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <footer style={{ 
-        padding: '24px 32px 40px', 
-        background: 'transparent',
-        position: 'relative',
-        zIndex: 10
-      }}>
+      <footer 
+        className="px-4 md:px-8 py-6 pb-10"
+        style={{ 
+          background: 'transparent',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <div style={{ 
           maxWidth: '900px', 
           margin: '0 auto', 
@@ -608,6 +695,219 @@ const ChatWindow: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      <Drawer
+        title={
+          <span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {drawerType === 'suggestions' ? 'Suggested Focus Areas' : 'Healing Trajectories'}
+          </span>
+        }
+        placement="right"
+        onClose={() => setIsDrawerOpen(false)}
+        open={isDrawerOpen}
+        width={380}
+        styles={{
+          header: { borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(10, 20, 15, 0.95)', padding: '24px' },
+          body: { background: 'rgba(10, 20, 15, 0.95)', padding: '24px' }
+        }}
+        closeIcon={<span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '18px' }}>✕</span>}
+      >
+        {drawerType === 'suggestions' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {fetchedSuggestions.length > 0 ? (
+              fetchedSuggestions.map((s, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    handleSendMessage(s.text);
+                    setIsDrawerOpen(false);
+                  }}
+                  style={{
+                    padding: '16px 20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)',
+                    fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = `${GREEN}60`;
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                  }}
+                >
+                  <span>{s.text}</span>
+                  <span style={{ color: GREEN, fontSize: '16px', fontWeight: 'bold' }}>→</span>
+                </div>
+              ))
+            ) : (
+              <div style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '40px 0' }}>
+                No focus areas available.
+              </div>
+            )}
+          </div>
+        )}
+
+        {drawerType === 'packages' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {fetchedPackages.length > 0 ? (
+              fetchedPackages.map((p, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: '24px', borderRadius: '24px', background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column',
+                    justifyContent: 'space-between', gap: '20px'
+                  }}
+                >
+                  <div>
+                    <h5 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>{p.title}</h5>
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.6 }}>{p.description}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block' }}>Fee</span>
+                      <span style={{ fontSize: '18px', fontWeight: 900, color: 'white' }}>${p.fee}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedPackage(p);
+                        setIsModalVisible(true);
+                        setIsDrawerOpen(false);
+                      }}
+                      style={{
+                        padding: '10px 20px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white',
+                        fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer',
+                        boxShadow: `0 6px 16px -2px ${GREEN}40`
+                      }}
+                    >
+                      Explore
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '40px 0' }}>
+                No trajectories available.
+              </div>
+            )}
+          </div>
+        )}
+      </Drawer>
+
+      <Drawer
+        open={isInfoDrawerOpen}
+        onClose={() => setIsInfoDrawerOpen(false)}
+        placement="right"
+        width={Math.min(window.innerWidth, 420)}
+        styles={{
+          body: { background: 'rgba(10, 18, 14, 0.98)', padding: 0 },
+          header: { display: 'none' },
+          wrapper: { boxShadow: '-8px 0 48px rgba(0,0,0,0.6)' },
+        }}
+      >
+        <div style={{ height: '100%', overflowY: 'auto', padding: '28px 24px' }} className="no-scrollbar">
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '14px',
+                background: `${GREEN}18`, border: `1px solid ${GREEN}35`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0
+              }}>
+                {details.icon}
+              </div>
+              <div>
+                <h3 style={{ fontSize: '15px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {details.title}
+                </h3>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Page Overview
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsInfoDrawerOpen(false)}
+              style={{
+                width: '36px', height: '36px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'rgba(255,255,255,0.5)', flexShrink: 0
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '28px' }} />
+
+          {/* Purpose */}
+          <div style={{ marginBottom: '28px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 10px' }}>
+              Purpose
+            </p>
+            <div style={{
+              padding: '16px 18px', borderRadius: '14px',
+              background: `${GREEN}0D`, border: `1px solid ${GREEN}25`
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0, lineHeight: 1.6 }}>
+                {(details as any).purpose}
+              </p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: '28px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 10px' }}>
+              About This Module
+            </p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.7 }}>
+              {(details as any).description}
+            </p>
+          </div>
+
+          {/* Capabilities */}
+          <div style={{ marginBottom: '28px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 12px' }}>
+              What You Can Do
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {((details as any).capabilities || []).map((cap: string, i: number) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '12px',
+                  padding: '12px 14px', borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+                }}>
+                  <div style={{
+                    width: '20px', height: '20px', borderRadius: '6px', background: `${GREEN}20`,
+                    border: `1px solid ${GREEN}30`, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexShrink: 0, marginTop: '1px'
+                  }}>
+                    <span style={{ fontSize: '11px', color: GREEN, fontWeight: 900 }}>✓</span>
+                  </div>
+                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{cap}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tips */}
+          {(details as any).tips && (
+            <div style={{
+              padding: '16px 18px', borderRadius: '14px',
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 8px' }}>
+                💡 Pro Tip
+              </p>
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>
+                {(details as any).tips}
+              </p>
+            </div>
+          )}
+        </div>
+      </Drawer>
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }

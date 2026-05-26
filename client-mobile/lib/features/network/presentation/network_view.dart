@@ -60,33 +60,40 @@ class _NetworkViewState extends State<NetworkView> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // Premium AppBar
-        SliverAppBar(
-          expandedHeight: 120.0,
-          floating: true,
-          pinned: true,
-          backgroundColor: AppColors.bgPrimary,
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            title: Row(
-              children: [
-                Icon(LucideIcons.users, color: AppColors.accentPrimary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'SOVEREIGN MINDS',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: CustomScrollView(
+        slivers: [
+          // Premium AppBar
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: true,
+            pinned: true,
+            backgroundColor: AppColors.bgPrimary,
+            leading: IconButton(
+              icon: Icon(LucideIcons.chevronLeft, color: AppColors.textSecondary),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              title: Row(
+                children: [
+                  const SizedBox(width: 32), // Space for back button
+                  Icon(LucideIcons.users, color: AppColors.accentPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SOVEREIGN MINDS',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
 
         // Tabs Section
         SliverToBoxAdapter(
@@ -166,7 +173,8 @@ class _NetworkViewState extends State<NetworkView> {
               ),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 

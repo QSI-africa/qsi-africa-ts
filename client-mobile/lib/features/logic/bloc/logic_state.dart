@@ -12,17 +12,19 @@ class LogicInitial extends LogicState {}
 
 class LogicChatUpdated extends LogicState {
   final List<ChatMessage> messages;
+  final List<dynamic> suggestions;
   final bool isTyping;
   final String currentPersona;
 
   const LogicChatUpdated({
     required this.messages,
+    this.suggestions = const [],
     this.isTyping = false,
     this.currentPersona = 'infrastructure',
   });
 
   @override
-  List<Object?> get props => [messages, isTyping, currentPersona];
+  List<Object?> get props => [messages, suggestions, isTyping, currentPersona];
 }
 
 class LogicFailure extends LogicState {

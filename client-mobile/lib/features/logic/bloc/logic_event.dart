@@ -25,3 +25,12 @@ class PersonaChanged extends LogicEvent {
   @override
   List<Object?> get props => [persona];
 }
+
+class FetchSuggestions extends LogicEvent {
+  final String module;
+
+  const FetchSuggestions({required this.module});
+
+  @override
+  List<Object?> get props => [module];
+}

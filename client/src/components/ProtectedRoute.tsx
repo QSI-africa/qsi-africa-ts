@@ -3,6 +3,7 @@ import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Spin } from "antd";
+import AccountRequiredPage from "../pages/AccountRequiredPage";
 
 const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -24,8 +25,8 @@ const ProtectedRoute: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    // User not authenticated, redirect to login
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Render AccountRequiredPage instead of forcing a redirect to login
+    return <AccountRequiredPage />;
   }
 
   // We need to update AuthContext to fetch the user *with* their profile

@@ -167,4 +167,24 @@ router.post("/insights", authMiddleware, async (req, res) => {
   }
 });
 
+// 7. Get individual sovereign insight
+router.get("/insights/:id", async (req, res) => {
+  try {
+    const insight = await prisma.sovereignInsight.findUnique({
+      where: { id: req.params.id },
+      include: {
+        profile: {
+          include: {
+            user: { select: { name: true, role: true } }
+          }
+        }
+      }
+    });
+    if (!insight) return res.status(404).json({ error: "Insight not found." });
+    res.status(200).json(insight);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 module.exports = router;

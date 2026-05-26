@@ -31,9 +31,8 @@ const ProfileDetailPage: React.FC = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/network/engineers');
-      const found = response.data.find((eng: any) => eng.id === id);
-      setProfile(found);
+      const response = await api.get(`/network/profile/${id}`);
+      setProfile(response.data);
     } catch (error) {
       console.error("Fetch profile error:", error);
     } finally {
@@ -43,15 +42,17 @@ const ProfileDetailPage: React.FC = () => {
 
   const getServerUrl = (path: string) => {
     if (!path) return '';
-    return path.startsWith('http') ? path : `https://api.qsi.africa${path}`;
+    if (path.startsWith('http')) return path;
+    const apiBase = api.defaults.baseURL || '';
+    const rootUrl = apiBase.endsWith('/api') ? apiBase.slice(0, -4) : apiBase;
+    return `${rootUrl}${path}`;
   };
 
-  const mockInsights = [
-    { id: '1', title: 'Decolonizing the Urban Grid', date: 'Oct 24', category: 'THOUGHT' },
-    { id: '2', title: 'Coherence in Infrastructure', date: 'Oct 12', category: 'DESIGN' },
-    { id: '3', title: 'The Psychology of Building', date: 'Sep 28', category: 'MENTAL' },
-    { id: '4', title: 'Sovereign Resource Loops', date: 'Sep 15', category: 'ECOLOGY' },
-  ];
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   if (loading) {
     return (
@@ -185,20 +186,30 @@ const ProfileDetailPage: React.FC = () => {
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {mockInsights.map((insight) => (
-                        <div key={insight.id} className="feed-card bg-bg-secondary border-border-subtle p-8 hover:border-accent-primary/40 transition-all cursor-pointer group">
-                           <div className="flex justify-between items-center mb-6">
-                              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle">
-                                 {insight.category}
-                              </span>
-                              <span className="text-[9px] font-bold text-text-tertiary uppercase">{insight.date}</span>
-                           </div>
-                           <h4 className="text-lg font-bold text-white uppercase tracking-tight mb-8 group-hover:text-accent-primary transition-colors">{insight.title}</h4>
-                           <div className="flex justify-end">
-                              <Zap size={18} className="text-accent-primary opacity-20 group-hover:opacity-100 transition-opacity" />
-                           </div>
+                      {profile.insights && profile.insights.length > 0 ? (
+                        profile.insights.map((insight: any) => (
+                          <div key={insight.id} onClick={() => navigate(`/insights/${insight.id}`)} className="feed-card bg-bg-secondary border-border-subtle p-8 hover:border-accent-primary/40 transition-all cursor-pointer group flex flex-col justify-between">
+                             <div>
+                               <div className="flex justify-between items-center mb-6">
+                                  <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest bg-bg-primary px-3 py-1 rounded-full border border-border-subtle">
+                                     {insight.category || 'INSIGHT'}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-text-tertiary uppercase">{formatDate(insight.createdAt)}</span>
+                               </div>
+                               <h4 className="text-lg font-bold text-white uppercase tracking-tight mb-4 group-hover:text-accent-primary transition-colors">{insight.title}</h4>
+                               <p className="text-text-secondary leading-relaxed mb-6 text-xs line-clamp-4">{insight.content}</p>
+                             </div>
+                             <div className="flex justify-end">
+                                <Zap size={18} className="text-accent-primary opacity-20 group-hover:opacity-100 transition-opacity" />
+                             </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-full p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center w-full">
+                           <BookOpen size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
+                           <p className="text-text-tertiary font-bold uppercase tracking-widest">No Sovereign Insights Logged Yet</p>
                         </div>
-                      ))}
+                      )}
                    </div>
                 </div>
              </div>
@@ -223,7 +234,7 @@ const ProfileDetailPage: React.FC = () => {
                   <div className="space-y-4">
                      <div className="flex items-center justify-between">
                         <span className="text-xs text-text-secondary">Network ID</span>
-                        <span className="text-xs font-mono text-white">QSI-MIN-8271</span>
+                        <span className="text-xs font-mono text-white">QSI-MIN-{profile.id.slice(-4).toUpperCase()}</span>
                      </div>
                      <div className="flex items-center justify-between">
                         <span className="text-xs text-text-secondary">Status</span>
@@ -231,7 +242,9 @@ const ProfileDetailPage: React.FC = () => {
                      </div>
                      <div className="flex items-center justify-between">
                         <span className="text-xs text-text-secondary">Resonance</span>
-                        <span className="text-xs font-bold text-white">99.4%</span>
+                        <span className="text-xs font-bold text-white">
+                           {(95 + (profile.user.name.length % 5) + (profile.bio ? profile.bio.length % 10 : 0) / 10).toFixed(1)}%
+                        </span>
                      </div>
                   </div>
                </div>

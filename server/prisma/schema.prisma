@@ -81,6 +81,21 @@ model User {
   notifications        Notification[]
   conversations        ConversationParticipant[]
   messages             Message[]
+
+  // PANX TV Relations
+  tvChannel            TvChannel?                @relation("UserTvChannel")
+  tvSubscriptions      TvSubscription[]          @relation("UserTvSubscriptions")
+
+  // New relations for PanX Feed
+  panxPosts            PanxPost[]                @relation("UserPanxPosts")
+  panxReplies          PanxReply[]               @relation("UserPanxReplies")
+  panxLikes            PanxLike[]                @relation("UserPanxLikes")
+  panxReposts          PanxRepost[]              @relation("UserPanxReposts")
+  
+  followers            UserFollows[]             @relation("following")
+  following            UserFollows[]             @relation("follower")
+
+  labEnrollments       LabEnrollment[]
 }
 
 model FrequencyScan {
@@ -491,14 +506,15 @@ model SovereignInsight {
 }
 
 model LabCategory {
-  id          String       @id @default(cuid())
-  title       String       @unique
-  descriptor  String
-  icon        String?      // Icon name (e.g. CodeOutlined)
-  order       Int          @default(0)
-  packages    LabPackage[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String         @id @default(cuid())
+  title         String         @unique
+  descriptor    String
+  icon          String?        // Icon name (e.g. CodeOutlined)
+  order         Int            @default(0)
+  packages      LabPackage[]
+  labRecordings LabRecording[] @relation("CategoryRecordings")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model LabPackage {
@@ -513,6 +529,19 @@ model LabPackage {
   order       Int         @default(0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  enrollments LabEnrollment[]
+}
+
+model LabEnrollment {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  packageId String
+  package   LabPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, packageId])
 }
 
 
@@ -576,5 +605,113 @@ model Message {
   metadata       Json?        // For file attachments, etc.
   createdAt      DateTime     @default(now())
 }
+
+model TvChannel {
+  id            String           @id @default(cuid())
+  userId        String           @unique
+  user          User             @relation("UserTvChannel", fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String           @db.Text
+  status        String           @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  subscriptions TvSubscription[] @relation("ChannelSubscriptions")
+  contents      TvContent[]      @relation("ChannelContents")
+  labRecordings LabRecording[]   @relation("ChannelLabRecordings")
+}
+
+model TvSubscription {
+  id           String    @id @default(cuid())
+  subscriberId String
+  subscriber   User      @relation("UserTvSubscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  channelId    String
+  channel      TvChannel @relation("ChannelSubscriptions", fields: [channelId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+
+  @@unique([subscriberId, channelId])
+}
+
+model TvContent {
+  id          String    @id @default(cuid())
+  channelId   String
+  channel     TvChannel @relation("ChannelContents", fields: [channelId], references: [id], onDelete: Cascade)
+  title       String
+  description String?   @db.Text
+  mediaUrl    String?   // URL of uploaded media/video
+  mimeType    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LabRecording {
+  id          String      @id @default(cuid())
+  channelId   String
+  channel     TvChannel   @relation("ChannelLabRecordings", fields: [channelId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    LabCategory @relation("CategoryRecordings", fields: [categoryId], references: [id], onDelete: Cascade)
+  title       String
+  description String?     @db.Text
+  mediaUrl    String
+  mimeType    String      // e.g. "AUDIO", "VIDEO"
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model PanxPost {
+  id        String       @id @default(cuid())
+  content   String       @db.Text
+  authorId  String
+  author    User         @relation("UserPanxPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  likes     PanxLike[]
+  reposts   PanxRepost[]
+  replies   PanxReply[]
+}
+
+model PanxReply {
+  id        String       @id @default(cuid())
+  content   String       @db.Text
+  postId    String
+  post      PanxPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User         @relation("UserPanxReplies", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model PanxLike {
+  id        String       @id @default(cuid())
+  postId    String
+  post      PanxPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation("UserPanxLikes", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([postId, userId])
+}
+
+model PanxRepost {
+  id        String       @id @default(cuid())
+  postId    String
+  post      PanxPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation("UserPanxReposts", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([postId, userId])
+}
+
+model UserFollows {
+  followerId  String
+  follower    User   @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
+
 
 

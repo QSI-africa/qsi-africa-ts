@@ -43,6 +43,12 @@ class _ChatPageState extends State<ChatPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    context.read<LogicBloc>().add(FetchSuggestions(module: widget.moduleName));
+  }
+
+  @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
@@ -117,63 +123,69 @@ class _ChatPageState extends State<ChatPage> {
         ],
         backgroundColor: AppColors.bgPrimary.withOpacity(0.8),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocConsumer<LogicBloc, LogicState>(
-              listener: (context, state) {
-                if (state is LogicChatUpdated) {
-                  _scrollToBottom();
-                }
-              },
-              builder: (context, state) {
-                List<ChatMessage> messages = [];
-                bool isTyping = false;
+      body: BlocConsumer<LogicBloc, LogicState>(
+        listener: (context, state) {
+          if (state is LogicChatUpdated) {
+            _scrollToBottom();
+          }
+        },
+        builder: (context, state) {
+          List<ChatMessage> messages = [];
+          bool isTyping = false;
+          List<dynamic> suggestions = [];
 
-                if (state is LogicChatUpdated) {
-                  messages = state.messages;
-                  isTyping = state.isTyping;
-                }
+          if (state is LogicChatUpdated) {
+            messages = state.messages;
+            isTyping = state.isTyping;
+            suggestions = state.suggestions;
+          }
 
-                if (messages.isEmpty && state is! LogicLoading) {
-                  return _buildWelcomeState(details);
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(24),
-                  itemCount: messages.length + (isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == messages.length) {
-                      return _buildTypingIndicator();
+          return Column(
+            children: [
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (messages.isEmpty && state is! LogicLoading) {
+                      return _buildWelcomeState(details);
                     }
-                    return _buildChatBubble(messages[index]);
+
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(24),
+                      itemCount: messages.length + (isTyping ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == messages.length) {
+                          return _buildTypingIndicator();
+                        }
+                        return _buildChatBubble(messages[index]);
+                      },
+                    );
                   },
-                );
-              },
-            ),
-          ),
+                ),
+              ),
 
           // Strategic Actions Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildActionChip('Review Project Nodes', LucideIcons.layers),
-                  const SizedBox(width: 12),
-                  _buildActionChip('Audit Strategic Assets', LucideIcons.shieldCheck),
-                  const SizedBox(width: 12),
-                  _buildActionChip('Network Expansion', LucideIcons.users),
-                ],
+          if (suggestions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: suggestions.map((s) {
+                    final text = s is String ? s : (s['suggestion'] ?? s['title'] ?? 'Strategic Action');
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: _buildActionChip(text, LucideIcons.sparkles),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _buildInputArea(details['endpoint']),
-
-        ],
+              const SizedBox(height: 16),
+              _buildInputArea(details['endpoint']),
+            ],
+          );
+        },
       ),
     );
   }

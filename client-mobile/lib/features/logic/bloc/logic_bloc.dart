@@ -11,6 +11,25 @@ class LogicBloc extends Bloc<LogicEvent, LogicState> {
   LogicBloc({required this.apiClient}) : super(LogicInitial()) {
     on<MessageSent>(_onMessageSent);
     on<PersonaChanged>(_onPersonaChanged);
+    on<FetchSuggestions>(_onFetchSuggestions);
+  }
+
+  List<dynamic> _suggestions = [];
+
+  Future<void> _onFetchSuggestions(
+    FetchSuggestions event,
+    Emitter<LogicState> emit,
+  ) async {
+    try {
+      final response = await apiClient.get('/submit/${event.module}-suggestions');
+      _suggestions = response.data;
+      emit(LogicChatUpdated(
+        messages: List.from(_messages),
+        suggestions: List.from(_suggestions),
+      ));
+    } catch (e) {
+      print('Failed to fetch suggestions: $e');
+    }
   }
 
   Future<void> _onMessageSent(
@@ -24,7 +43,11 @@ class LogicBloc extends Bloc<LogicEvent, LogicState> {
     );
     _messages.add(userMessage);
     
-    emit(LogicChatUpdated(messages: List.from(_messages), isTyping: true));
+    emit(LogicChatUpdated(
+      messages: List.from(_messages),
+      suggestions: List.from(_suggestions),
+      isTyping: true,
+    ));
 
     try {
       final response = await apiClient.post(
@@ -44,7 +67,11 @@ class LogicBloc extends Bloc<LogicEvent, LogicState> {
       );
       _messages.add(aiMessage);
 
-      emit(LogicChatUpdated(messages: List.from(_messages), isTyping: false));
+      emit(LogicChatUpdated(
+        messages: List.from(_messages),
+        suggestions: List.from(_suggestions),
+        isTyping: false,
+      ));
     } catch (e) {
       emit(LogicFailure(message: e.toString()));
     }

@@ -24,6 +24,8 @@ import {
   MessageOutlined,
   UserOutlined,
   DollarCircleOutlined,
+  PlayCircleOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -155,6 +157,18 @@ const AdminLayout = () => {
       key: "/pilot-enquiries",
       icon: <UserOutlined />,
       label: <Link to="/pilot-enquiries">Demo and Concept Enquiries</Link>,
+      roles: ["ADMIN", "SUPER_USER"],
+    },
+    {
+      key: "/tv",
+      icon: <PlayCircleOutlined />,
+      label: <Link to="/tv">PANX TV Management</Link>,
+      roles: ["ADMIN", "SUPER_USER"],
+    },
+    {
+      key: "/lab-management",
+      icon: <BookOutlined />,
+      label: <Link to="/lab-management">PANX Lab Management</Link>,
       roles: ["ADMIN", "SUPER_USER"],
     },
   ];
@@ -363,9 +377,9 @@ const AdminLayout = () => {
               }}
             >
               Welcome,{" "}
-              <span style={{ color: token.colorPrimary, fontWeight: 600 }}>
+              <Link to="/profile" style={{ color: token.colorPrimary, fontWeight: 600 }}>
                 {user?.name || user?.email}
-              </span>
+              </Link>
             </Text>
           </Space>
 

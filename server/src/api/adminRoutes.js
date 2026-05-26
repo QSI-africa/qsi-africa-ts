@@ -1147,4 +1147,140 @@ router.delete("/service-modules/:id", isSuperUserOrAdmin, async (req, res) => {
   }
 });
 
+// TV Moderation: Get all channels (pending, approved, rejected)
+router.get("/tv/channels", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const channels = await prisma.tvChannel.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        _count: {
+          select: {
+            subscriptions: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+    res.json(channels);
+  } catch (error) {
+    console.error("Admin: failed to fetch channels:", error);
+    res.status(500).json({ error: "Failed to fetch channels." });
+  }
+});
+
+// TV Moderation: Update channel status (approve/reject)
+router.put("/tv/channels/:channelId/status", isSuperUserOrAdmin, async (req, res) => {
+  const { channelId } = req.params;
+  const { status } = req.body;
+
+  if (!["PENDING", "APPROVED", "REJECTED"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status value." });
+  }
+
+  try {
+    const updated = await prisma.tvChannel.update({
+      where: { id: channelId },
+      data: { status }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error("Admin: failed to update channel status:", error);
+    res.status(500).json({ error: "Failed to update channel status." });
+  }
+});
+
+// TV Moderation: Delete channel
+router.delete("/tv/channels/:channelId", isSuperUserOrAdmin, async (req, res) => {
+  const { channelId } = req.params;
+  try {
+    await prisma.tvChannel.delete({
+      where: { id: channelId }
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error("Admin: failed to delete channel:", error);
+    res.status(500).json({ error: "Failed to delete channel." });
+  }
+});
+
+// TV Moderation: List content in a channel
+router.get("/tv/channels/:channelId/content", isSuperUserOrAdmin, async (req, res) => {
+  const { channelId } = req.params;
+  try {
+    const contents = await prisma.tvContent.findMany({
+      where: { channelId },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json(contents);
+  } catch (error) {
+    console.error("Admin: failed to fetch channel contents:", error);
+    res.status(500).json({ error: "Failed to fetch channel contents." });
+  }
+});
+
+// TV Moderation: Delete content post
+router.delete("/tv/channels/:channelId/content/:contentId", isSuperUserOrAdmin, async (req, res) => {
+  const { contentId } = req.params;
+  try {
+    await prisma.tvContent.delete({
+      where: { id: contentId }
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error("Admin: failed to delete content:", error);
+    res.status(500).json({ error: "Failed to delete content." });
+  }
+});
+
+// --- Lab Moderation Endpoints ---
+
+// Get all lab recordings for moderation
+router.get("/lab/recordings", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const recordings = await prisma.labRecording.findMany({
+      include: {
+        category: true,
+        channel: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json(recordings);
+  } catch (error) {
+    console.error("Admin: failed to fetch lab recordings:", error);
+    res.status(500).json({ error: "Failed to fetch lab recordings." });
+  }
+});
+
+// Delete a lab recording
+router.delete("/lab/recordings/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.labRecording.delete({
+      where: { id }
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error("Admin: failed to delete lab recording:", error);
+    res.status(500).json({ error: "Failed to delete lab recording." });
+  }
+});
+
 module.exports = router;

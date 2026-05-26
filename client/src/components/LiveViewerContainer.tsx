@@ -1,6 +1,6 @@
 // client/src/components/LiveViewerContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, X, Signal } from 'lucide-react';
+import { MessageSquare, X, Signal, Lock } from 'lucide-react';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +17,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [connecting, setConnecting] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
@@ -41,6 +42,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     socketService.off('offer');
     socketService.off('ice-candidate');
     socketService.off('broadcast-ended');
+    socketService.off('join-error');
     onClose();
   };
 
@@ -91,13 +93,20 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
         if (endedRoomId === roomId) handleClose();
       });
 
+      socketService.on('join-error', ({ roomId: errRoomId, message: errMsg }) => {
+        if (errRoomId === roomId) {
+          setError(errMsg);
+          setConnecting(false);
+        }
+      });
+
       socketService.emit('request-join-broadcast', roomId);
     };
 
     initPC();
 
     const retryInterval = setInterval(() => {
-      if (!remoteStream && pc.current) {
+      if (!remoteStream && pc.current && !error) {
         socketService.emit('request-join-broadcast', roomId);
       }
     }, 3000);
@@ -108,13 +117,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       socketService.off('offer');
       socketService.off('ice-candidate');
       socketService.off('broadcast-ended');
+      socketService.off('join-error');
     };
-  }, [roomId]);
+  }, [roomId, error]);
 
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: !isMobile && showChat ? '1fr 340px' : '1fr',
+      gridTemplateColumns: !isMobile && showChat && !error ? '1fr 340px' : '1fr',
       height: '100%',
       background: '#0a1018',
       overflow: 'hidden'
@@ -142,18 +152,20 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
-            <button
-              onClick={() => setShowChat(!showChat)}
-              style={{
-                width: '40px', height: '40px', borderRadius: '12px', border: 'none',
-                background: showChat ? `${GREEN}20` : 'rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(12px)',
-                color: showChat ? GREEN : 'rgba(255,255,255,0.7)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              <MessageSquare size={16} />
-            </button>
+            {!error && (
+              <button
+                onClick={() => setShowChat(!showChat)}
+                style={{
+                  width: '40px', height: '40px', borderRadius: '12px', border: 'none',
+                  background: showChat ? `${GREEN}20` : 'rgba(0,0,0,0.6)',
+                  backdropFilter: 'blur(12px)',
+                  color: showChat ? GREEN : 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                <MessageSquare size={16} />
+              </button>
+            )}
             <button
               onClick={handleClose}
               style={{
@@ -168,9 +180,32 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           </div>
         </div>
 
-        {/* Video / Connecting State */}
+        {/* Video / Connecting / Error State */}
         <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
-          {remoteStream ? (
+          {error ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '40px', maxWidth: '400px', textAlign: 'center' }}>
+              <div style={{
+                width: '64px', height: '64px', borderRadius: '20px',
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444'
+              }}>
+                <Lock size={28} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>Locked Transmission</h3>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
+                  {error}
+                </p>
+              </div>
+              <button 
+                onClick={handleClose}
+                className="qsi-btn qsi-btn-outline" 
+                style={{ padding: '10px 20px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                Return to Frequencies
+              </button>
+            </div>
+          ) : remoteStream ? (
             <video
               ref={videoRef} autoPlay playsInline
               style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
@@ -196,7 +231,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       </div>
 
       {/* ── Chat Sidebar ── */}
-      {showChat && !isMobile && (
+      {showChat && !isMobile && !error && (
         <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.06)',
           overflow: 'hidden', display: 'flex', flexDirection: 'column'

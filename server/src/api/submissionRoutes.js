@@ -453,7 +453,13 @@ router.get("/concepts", async (req, res) => {
       where,
       orderBy: { createdAt: "asc" },
     });
-    res.json(concepts);
+    // Map to include description and text fields for frontend compatibility
+    const mapped = concepts.map(c => ({
+      ...c,
+      text: c.title,
+      description: c.shortDescription
+    }));
+    res.json(mapped);
   } catch (error) {
     console.error("Failed to fetch concepts:", error);
     res.status(500).json({ error: "Failed to fetch concepts." });
@@ -473,7 +479,11 @@ router.get("/concepts/:id", async (req, res) => {
     if (!concept || !concept.isActive) {
       return res.status(404).json({ error: "Concept not found." });
     }
-    res.json(concept);
+    res.json({
+      ...concept,
+      text: concept.title,
+      description: concept.shortDescription
+    });
   } catch (error) {
     console.error(`Failed to fetch concept ${id}:`, error);
     res.status(500).json({ error: "Failed to fetch concept details." });
@@ -495,7 +505,13 @@ router.get("/demos", async (req, res) => {
       where,
       orderBy: { createdAt: "asc" },
     });
-    res.json(demos);
+    // Map to include description and text fields for frontend compatibility
+    const mapped = demos.map(d => ({
+      ...d,
+      text: d.title,
+      description: d.shortDescription
+    }));
+    res.json(mapped);
   } catch (error) {
     console.error("Failed to fetch demos:", error);
     res.status(500).json({ error: "Failed to fetch demos." });
@@ -512,7 +528,12 @@ router.get("/demo", async (req, res) => {
       },
       orderBy: { createdAt: "asc" },
     });
-    res.json(demos);
+    const mapped = demos.map(d => ({
+      ...d,
+      text: d.title,
+      description: d.shortDescription
+    }));
+    res.json(mapped);
   } catch (error) {
     console.error("Failed to fetch demos:", error);
     res.status(500).json({ error: "Failed to fetch demos." });
@@ -532,7 +553,11 @@ router.get("/demos/:id", async (req, res) => {
     if (!demo || !demo.isActive) {
       return res.status(404).json({ error: "Demonstrator not found." });
     }
-    res.json(demo);
+    res.json({
+      ...demo,
+      text: demo.title,
+      description: demo.shortDescription
+    });
   } catch (error) {
     console.error(`Failed to fetch demo ${id}:`, error);
     res.status(500).json({ error: "Failed to fetch demonstrator details." });
@@ -553,10 +578,70 @@ router.get("/demo/:id", async (req, res) => {
     if (!demo || !demo.isActive) {
       return res.status(404).json({ error: "Demonstrator not found." });
     }
-    res.json(demo);
+    res.json({
+      ...demo,
+      text: demo.title,
+      description: demo.shortDescription
+    });
   } catch (error) {
     console.error(`Failed to fetch demo ${id}:`, error);
     res.status(500).json({ error: "Failed to fetch demonstrator details." });
+  }
+});
+
+// --- Pilots (Fetch all PilotProject items and map text/description for compatibility) ---
+router.get("/pilots", async (req, res) => {
+  const { type } = req.query;
+  try {
+    const where = { 
+      isActive: true,
+    };
+    if (type && type !== 'all') {
+      where.type = type;
+    }
+    const pilots = await prisma.pilotProject.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+    });
+    // Map to include description and text fields for frontend compatibility
+    const mapped = pilots.map(p => ({
+      ...p,
+      text: p.title,
+      description: p.shortDescription
+    }));
+    res.json(mapped);
+  } catch (error) {
+    console.error("Failed to fetch pilots:", error);
+    res.status(500).json({ error: "Failed to fetch pilots." });
+  }
+});
+
+// Get single pilot by key or id
+router.get("/pilots/:keyOrId", async (req, res) => {
+  const { keyOrId } = req.params;
+  try {
+    let pilot = await prisma.pilotProject.findUnique({
+      where: { key: keyOrId },
+    });
+
+    if (!pilot) {
+      // Fallback to checking by id
+      pilot = await prisma.pilotProject.findUnique({
+        where: { id: keyOrId },
+      });
+    }
+
+    if (!pilot || !pilot.isActive) {
+      return res.status(404).json({ error: "Pilot project not found." });
+    }
+    res.json({
+      ...pilot,
+      text: pilot.title,
+      description: pilot.shortDescription
+    });
+  } catch (error) {
+    console.error(`Failed to fetch pilot project ${keyOrId}:`, error);
+    res.status(500).json({ error: "Failed to fetch pilot project details." });
   }
 });
 

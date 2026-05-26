@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   /* Product Vision: Smart Infrastructure Ecosystem (WhatsApp-Web Inspired) */
@@ -586,7 +586,7 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 10px;
     z-index: 800;
     box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5), 0 5px 15px rgba(0, 0, 0, 0.2);
   }
@@ -596,23 +596,34 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    color: var(--text-tertiary);
+    color: rgba(255, 255, 255, 0.6);
     transition: all 0.3s ease;
     background: none;
     border: none;
-    padding: 8px;
+    padding: 6px 4px;
     cursor: pointer;
+    flex: 1;
+    min-width: 0;
   }
 
   .mobile-nav-item.active {
     color: var(--accent-primary);
   }
 
+  .mobile-nav-item.active .mobile-nav-label {
+    color: #ffffff;
+  }
+
   .mobile-nav-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 65px;
   }
 
   .main-workspace {
@@ -749,6 +760,91 @@ body {
 }
 .custom-select .ant-select-arrow { color: var(--text-tertiary) !important; }
 
+/* Ant Design Input & Standard Form Fields Dark Theme Overrides */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-password,
+.ant-input-affix-wrapper-password {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: white !important;
+}
+
+.ant-input::placeholder,
+.ant-input-affix-wrapper input::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.ant-input-affix-wrapper > input.ant-input {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: white !important;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper:hover,
+.ant-input:hover {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Also style standard input fields */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+textarea {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: white !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* autofill prevention */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(20, 30, 25, 1) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .dark-modal .ant-modal-content {
   background-color: var(--bg-secondary) !important;
   color: white !important;
@@ -818,4 +914,467 @@ a:visited {
 
 .premium-glass-modal .ant-modal-body {
   padding: 0 !important;
+}
+
+/* Horizontal Category Buttons Styles */
+.category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-btn:hover {
+  transform: translateY(-6px);
+}
+
+.category-btn-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  overflow: hidden;
+}
+
+.category-btn:hover .category-btn-icon-wrapper {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.category-btn.active {
+  transform: translateY(-4px);
+}
+
+.category-btn.active .category-btn-icon-wrapper {
+  background: white;
+  border-color: transparent;
+  box-shadow: 0 12px 24px -8px rgba(255, 255, 255, 0.1);
+  color: var(--accent-primary);
+}
+
+.category-btn-label {
+  font-size: 8.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  width: 60px;
+  line-height: 1.2;
+  color: white;
+  transition: color 0.4s ease;
+}
+
+.category-btn:hover .category-btn-label {
+  color: var(--accent-primary);
+}
+
+.category-btn.active .category-btn-label {
+  color: var(--accent-primary);
+}
+
+/* PanX Tools Visual Separation & Card Styling */
+.panx-tools-container {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+  margin: 0 16px 20px 16px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.panx-tool-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  border-radius: 14px;
+  min-height: 72px;
+  padding: 12px !important;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.panx-tool-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  background: var(--accent-primary);
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.panx-tool-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.panx-tool-card.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.2);
+}
+
+.panx-tool-card.active::before {
+  opacity: 1;
+  top: 15%;
+  bottom: 15%;
+}
+
+.panx-tool-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 50% !important; /* Completely round */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.panx-tool-card.active .panx-tool-icon-wrapper {
+  background: var(--accent-primary) !important;
+  color: black !important;
+  border-color: transparent;
+}
+
+.panx-tool-label {
+  font-size: 13px !important; /* Increased by 1 step (from 11px) */
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: white;
+  transition: color 0.3s ease;
+}
+
+.panx-tool-card:hover .panx-tool-label {
+  color: var(--accent-primary);
+}
+
+.panx-tool-card.active .panx-tool-label {
+  color: var(--accent-primary);
+}
+
+.panx-tool-description {
+  font-size: 11px !important; /* Increased by 1 step (from 9px) */
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.45);
+  transition: color 0.3s ease;
+}
+
+.panx-tool-card:hover .panx-tool-description {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.panx-tool-card.active .panx-tool-description {
+  color: rgba(16, 185, 129, 0.8);
+}
+
+/* Ecosystem Section WhatsApp Channels Style */
+.ecosystem-container {
+  padding: 0 16px 24px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 12px;
+  padding-top: 20px;
+}
+
+.ecosystem-heading {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: white;
+  opacity: 0.6;
+  margin-bottom: 12px;
+}
+
+.channel-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.channel-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.channel-card.active {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.2) !important;
+}
+
+.channel-card.active .panx-tool-icon-wrapper {
+  background-color: var(--accent-primary) !important;
+  color: black !important;
+  border-color: transparent !important;
+}
+
+.channel-card.active .channel-name {
+  color: var(--accent-primary) !important;
+}
+
+.channel-card:hover .channel-name {
+  color: var(--accent-primary) !important;
+}
+
+.channel-avatar-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.channel-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.channel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.channel-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.channel-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.channel-followers {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 1px;
+}
+
+.follow-btn {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-primary);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.follow-btn:hover {
+  background: var(--accent-primary);
+  color: black;
+  border-color: transparent;
+  transform: scale(1.03);
+}
+
+.follow-btn.following {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.follow-btn.following:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.ecosystem-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ecosystem-btn-explore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ecosystem-btn-explore:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ecosystem-btn-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-primary);
+  color: black;
+  border: none;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ecosystem-btn-create:hover {
+  background: var(--accent-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Standardized Icon Avatar Class for Sidebar Ecosystem Items */
+.std-icon-avatar {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% !important;
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  color: var(--accent-primary) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.channel-card:hover .std-icon-avatar {
+  transform: scale(1.1) rotate(6deg) !important;
+  background-color: var(--accent-primary) !important;
+  color: black !important;
+  box-shadow: 0 0 10px var(--accent-primary-glow) !important;
+}
+
+/* Standardized Icon Wrapper for Action Buttons (Like, Reply, Repost, etc.) */
+.std-action-btn {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.std-action-btn:hover {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
+  transform: scale(1.05) translateY(-1px) !important;
+}
+
+.std-action-btn.active-green {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  color: var(--accent-primary) !important;
+}
+
+.std-action-btn.active-red {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+  color: #EF4444 !important;
+}
+
+.std-action-btn.active-red:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: #EF4444 !important;
+  color: #EF4444 !important;
+}
+
+/* Standardized Delete Action Button */
+.std-delete-btn {
+  background: rgba(239, 68, 68, 0.05) !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 6px !important;
+  color: #EF4444 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.std-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #EF4444 !important;
+  transform: scale(1.05) translateY(-1px) !important;
 }

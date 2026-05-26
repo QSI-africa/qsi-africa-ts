@@ -24,6 +24,8 @@ import LogicAssistant from "./components/LogicAssistant";
 import MobilityPage from "./pages/MobilityPage";
 import SovereignMindsPage from "./pages/SovereignMindsPage";
 import ProfileDetailPage from "./pages/ProfileDetailPage";
+import InsightDetailPage from "./pages/InsightDetailPage";
+import ProfilePage from "./pages/ProfilePage";
 import EngineerDashboard from "./pages/EngineerDashboard";
 import HealingPage from "./pages/HealingPage";
 import LabPage from "./pages/LabPage";
@@ -33,6 +35,7 @@ import BottomNavigationBar from "./components/BottomNavigationBar";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import InvoicesPage from "./pages/InvoicesPage";
 import InboxPage from "./pages/InboxPage";
+import EcosystemPage from "./pages/EcosystemPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 
@@ -115,6 +118,8 @@ const App: React.FC = () => {
                     <Route path="/invoices" element={<InvoicesPage />} />
                     <Route path="/engineer/dashboard" element={<EngineerDashboard />} />
                     <Route path="/dashboard" element={<MyRequestsPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<ProfilePage />} />
                   </Route>
 
                   {/* === Admin Routes === */}
@@ -141,11 +146,17 @@ const App: React.FC = () => {
                   <Route path="/mobility" element={<MobilityPage />} />
                   <Route path="/network" element={<SovereignMindsPage />} />
                   <Route path="/profiles/:id" element={<ProfileDetailPage />} />
+                  <Route path="/insights/:id" element={<InsightDetailPage />} />
                   <Route path="/tv" element={<QsiTvPage />} />
                   
                   {/* === New PANX Routes === */}
-                  <Route path="/lab" element={<LabPage />} />
-                  <Route path="/inbox" element={<InboxPage />} />
+                   <Route path="/lab" element={<LabPage />} />
+                   <Route path="/ecosystem" element={<EcosystemPage />} />
+                   <Route path="/inbox" element={<InboxPage />} />
+                   <Route path="/status" element={<PlaceholderPage name="System Status" />} />
+                   <Route path="/music" element={<PlaceholderPage name="PanX Music" />} />
+                   <Route path="/enterprise" element={<PlaceholderPage name="PanX Enterprise" />} />
+                   <Route path="/others" element={<PlaceholderPage name="Other Ecosystem Nodes" />} />
 
                   {/* Add these public routes */}
                   <Route path="/terms" element={<TermsAndConditions />} />
@@ -155,6 +166,7 @@ const App: React.FC = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Content>
+              <LogicAssistant />
             </AppLayout>
           </SidebarProvider>
         </AuthProvider>

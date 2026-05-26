@@ -3,6 +3,8 @@
 
 const rateLimit = require('express-rate-limit');
 
+const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+
 // General API rate limiter - 100 requests per 15 minutes
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -12,6 +14,7 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: () => isDev,
 });
 
 // Strict rate limiter for authentication endpoints
@@ -24,6 +27,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful logins
+  skip: () => isDev,
 });
 
 // Rate limiter for registration - prevent spam accounts
@@ -35,6 +39,7 @@ const registrationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
 });
 
 // Rate limiter for password reset - prevent email bombing
@@ -46,6 +51,7 @@ const passwordResetLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
 });
 
 module.exports = {

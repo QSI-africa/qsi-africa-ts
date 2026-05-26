@@ -39,109 +39,116 @@ class _LabViewState extends State<LabView> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<dynamic>>(
-      stream: context.read<SocketManager>().broadcastStreams,
-      builder: (context, snapshot) {
-        final streams = snapshot.data ?? [];
-        _activeBroadcast = streams.isNotEmpty ? streams.first : null;
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: StreamBuilder<List<dynamic>>(
+        stream: context.read<SocketManager>().broadcastStreams,
+        builder: (context, snapshot) {
+          final streams = snapshot.data ?? [];
+          _activeBroadcast = streams.isNotEmpty ? streams.first : null;
 
-        return CustomScrollView(
-          slivers: [
-            // Premium AppBar
-            SliverAppBar(
-              expandedHeight: 120.0,
-              floating: true,
-              pinned: true,
-              backgroundColor: AppColors.bgPrimary,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                title: Row(
+          return CustomScrollView(
+            slivers: [
+              // Premium AppBar
+              SliverAppBar(
+                expandedHeight: 120.0,
+                floating: true,
+                pinned: true,
+                backgroundColor: AppColors.bgPrimary,
+                leading: IconButton(
+                  icon: Icon(LucideIcons.chevronLeft, color: AppColors.textSecondary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  title: Row(
+                    children: [
+                      const SizedBox(width: 32),
+                      Icon(LucideIcons.flaskConical, color: AppColors.accentPrimary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'THE LAB',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Hero Section
+              SliverToBoxAdapter(
+                child: Stack(
                   children: [
-                    Icon(LucideIcons.flaskConical, color: AppColors.accentPrimary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'THE LAB',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
+                    Container(
+                      margin: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.accentPrimary.withOpacity(0.1), Colors.transparent],
+                        ),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: AppColors.accentPrimary.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'BUILD. LEARN. APPLY.',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.accentPrimary, letterSpacing: 2),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'High-Performance\nR&D Environment',
+                            style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Researching sovereign infrastructure and technical coherence through immersive building modules.',
+                            style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+                          ),
+                        ],
                       ),
                     ),
+                    if (_activeBroadcast != null) _buildLiveNotification(),
                   ],
                 ),
               ),
-            ),
 
-            // Hero Section
-            SliverToBoxAdapter(
-              child: Stack(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(40),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.accentPrimary.withOpacity(0.1), Colors.transparent],
-                      ),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: AppColors.accentPrimary.withOpacity(0.2)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'BUILD. LEARN. APPLY.',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.accentPrimary, letterSpacing: 2),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'High-Performance\nR&D Environment',
-                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Researching sovereign infrastructure and technical coherence through immersive building modules.',
-                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
-                        ),
-                      ],
-                    ),
+              // Categories & Packages
+              if (_isLoading)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(60.0),
+                    child: Center(child: CircularProgressIndicator(color: AppColors.accentPrimary)),
                   ),
-                  if (_activeBroadcast != null) _buildLiveNotification(),
-                ],
-              ),
-            ),
+                )
+              else if (_categories.isEmpty)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Text('No lab modules available.', style: TextStyle(color: AppColors.textTertiary)),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return _buildCategorySection(_categories[index]);
+                    },
+                    childCount: _categories.length,
+                  ),
+                ),
 
-            // Categories & Packages
-            if (_isLoading)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(60.0),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              )
-            else if (_categories.isEmpty)
-              SliverToBoxAdapter(
-                child: Center(
-                  child: Text('No lab modules available.', style: TextStyle(color: AppColors.textTertiary)),
-                ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return _buildCategorySection(_categories[index]);
-                  },
-                  childCount: _categories.length,
-                ),
-              ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        );
-      },
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -296,7 +303,7 @@ class _LabViewState extends State<LabView> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Technical briefing and operational integration for ${package['name']} systems.',
+            package['description'] ?? 'Technical briefing and operational integration.',
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,

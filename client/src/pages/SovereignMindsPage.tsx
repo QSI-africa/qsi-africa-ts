@@ -12,15 +12,12 @@ import {
   Zap,
   MoreVertical,
   Activity,
-  ArrowRight,
   Shield,
-  Star,
   Users,
   SearchCode
 } from 'lucide-react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
-import ProfileCard from '../components/ProfileCard';
 
 const GREEN = '#10B981';
 
@@ -65,11 +62,6 @@ const SovereignMindsPage: React.FC = () => {
     return result;
   }, [engineers, searchQuery, activeTab]);
 
-  const getServerUrl = (path: string) => {
-    if (!path) return '';
-    return path.startsWith('http') ? path : `https://api.qsi.africa${path}`;
-  };
-
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
@@ -79,7 +71,7 @@ const SovereignMindsPage: React.FC = () => {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 20
-      }}>
+      }} className="sovereign-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
             width: '40px', height: '40px', borderRadius: '12px',
@@ -98,10 +90,10 @@ const SovereignMindsPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px' }} className="sovereign-header-tabs no-scrollbar">
            {[
              { label: 'All Members', key: 'ALL' },
-             { label: 'Verified Minds', key: 'SOVEREIGN' },
+             { label: 'Sovereign Minds', key: 'SOVEREIGN' },
              { label: 'Professionals', key: 'PROFESSIONALS' }
            ].map((tab) => (
              <button 
@@ -122,7 +114,7 @@ const SovereignMindsPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }} className="sovereign-container">
         
         {/* Hero Section */}
         <div style={{
@@ -130,14 +122,14 @@ const SovereignMindsPage: React.FC = () => {
           background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
           border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
           display: 'flex', flexDirection: 'column', gap: '32px'
-        }}>
+        }} className="sovereign-hero">
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
           
           <div style={{ position: 'relative', zIndex: 1 }}>
             <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
               Collective of Decolonized Thinkers
             </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }} className="sovereign-hero-title">
               Intellectual Leadership<br />across the Renaissance
             </h2>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '560px' }}>
@@ -151,7 +143,7 @@ const SovereignMindsPage: React.FC = () => {
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '16px', display: 'flex', alignItems: 'center', padding: '4px 4px 4px 20px',
             boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
-          }}>
+          }} className="sovereign-search-container">
             <Search size={18} color="rgba(255,255,255,0.3)" />
             <input 
               style={{
@@ -171,7 +163,7 @@ const SovereignMindsPage: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
+          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }} className="sovereign-hero-globe">
             <Globe size={240} />
           </div>
         </div>
@@ -209,28 +201,14 @@ const SovereignMindsPage: React.FC = () => {
                 onClick={() => navigate(`/profiles/${engineer.id}`)}
                 >
                   <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{ 
-                        width: '72px', height: '72px', borderRadius: '20px', overflow: 'hidden',
-                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)'
-                      }}>
-                        <img src={getServerUrl(engineer.avatarUrl)} alt={engineer.user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                      {engineer.isVerified && (
-                        <div style={{ 
-                          position: 'absolute', bottom: '-4px', right: '-4px',
-                          width: '24px', height: '24px', borderRadius: '50%',
-                          background: GREEN, border: '3px solid #0a1018',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-                        }}>
-                          <Shield size={12} fill="currentColor" />
-                        </div>
-                      )}
-                    </div>
-
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                         <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>{engineer.user.name}</h3>
+                         <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                           {engineer.user.name}
+                           {engineer.isVerified && (
+                             <Shield size={16} fill="currentColor" style={{ color: GREEN }} />
+                           )}
+                         </h3>
                          <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><MoreVertical size={18} /></button>
                       </div>
                       <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>{engineer.specialization}</p>
@@ -266,6 +244,59 @@ const SovereignMindsPage: React.FC = () => {
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @media (max-width: 768px) {
+          .sovereign-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            padding: 16px 20px !important;
+          }
+          .sovereign-header-tabs {
+            width: 100% !important;
+            display: flex !important;
+            overflow-x: auto !important;
+            padding-bottom: 4px !important;
+            margin-top: 8px !important;
+          }
+          .sovereign-header-tabs button {
+            flex-shrink: 0 !important;
+            padding: 6px 12px !important;
+            font-size: 10px !important;
+          }
+          .sovereign-container {
+            padding: 16px 12px !important;
+          }
+          .sovereign-hero {
+            padding: 32px 20px !important;
+            gap: 20px !important;
+            margin-bottom: 24px !important;
+          }
+          .sovereign-hero-title {
+            font-size: 26px !important;
+            line-height: 1.2 !important;
+            margin-bottom: 12px !important;
+          }
+          .sovereign-hero-globe {
+            display: none !important;
+          }
+        }
+        
+        @media (max-width: 500px) {
+          .sovereign-search-container {
+            flex-direction: column !important;
+            padding: 12px !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .sovereign-search-container input {
+            padding: 4px 0 !important;
+          }
+          .sovereign-search-container button {
+            width: 100% !important;
+            text-align: center !important;
+          }
+        }
       `}</style>
     </div>
   );

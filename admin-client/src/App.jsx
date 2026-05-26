@@ -22,6 +22,9 @@ import ClientDetailPage from "./pages/ClientDetailPage";
 import SuggestionManagementPage from "./pages/SuggestionManagementPage";
 import PilotEnquiriesPage from "./pages/PilotEnquiriesPage";
 import InvoicesPage from "./pages/InvoicesPage";
+import PanxTvManagementPage from "./pages/PanxTvManagementPage";
+import LabManagementPage from "./pages/LabManagementPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -175,6 +178,9 @@ function App() {
               />
               <Route path="/pilot-enquiries" element={<PilotEnquiriesPage />} />
               <Route path="/invoicing" element={<InvoicesPage />} />
+              <Route path="/tv" element={<PanxTvManagementPage />} />
+              <Route path="/lab-management" element={<LabManagementPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Route>
 

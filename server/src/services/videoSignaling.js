@@ -1,6 +1,7 @@
 // server/src/services/videoSignaling.js
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
+const prisma = require("../config/prisma");
 const JWT_SECRET = process.env.JWT_SECRET || "your-default-secret-change-me";
 
 const setupVideoSignaling = (server) => {
@@ -36,9 +37,7 @@ const setupVideoSignaling = (server) => {
       next();
     } catch (err) {
       console.error(`[Socket.io] Invalid token attempt from ${socket.id}:`, err.message);
-      // Even with invalid token, we might want to allow them as a guest instead of rejecting?
-      // For now, let's just let them in as a guest if the token is invalid but provided.
-      // But it's safer to just proceed without setting socket.user.
+      // Even with invalid token, proceed as guest
       next();
     }
   });
@@ -49,17 +48,53 @@ const setupVideoSignaling = (server) => {
     console.log("Verified connection established:", socket.id);
 
     // --- Broadcasting Events ---
-    socket.on("start-broadcast", (roomId, broadcastInfo) => {
-      socket.join(roomId);
-      activeBroadcasts.set(roomId, {
-        roomId,
-        broadcasterId: socket.id,
-        broadcasterName: socket.user?.name || "Anonymous",
-        title: broadcastInfo?.title || "Untitled Live",
-        startTime: new Date().toISOString()
-      });
-      console.log(`[Broadcast] Registered on server: ${roomId} (Broadcaster: ${socket.id})`);
-      io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
+    socket.on("start-broadcast", async (roomId, broadcastInfo) => {
+      if (!socket.user) {
+        socket.emit("broadcast-error", { roomId, message: "Authentication required to start a broadcast." });
+        return;
+      }
+
+      const userId = socket.user.userId || socket.user.id;
+
+      try {
+        // Automatically ensure broadcaster has an APPROVED channel so they can broadcast immediately
+        let channel = await prisma.tvChannel.findUnique({
+          where: { userId }
+        });
+
+        if (!channel) {
+          channel = await prisma.tvChannel.create({
+            data: {
+              userId,
+              title: `${socket.user?.name || "User"}'s Broadcast Channel`,
+              description: "Technical livestream and media archive channel",
+              status: "APPROVED"
+            }
+          });
+        } else if (channel.status !== "APPROVED") {
+          channel = await prisma.tvChannel.update({
+            where: { userId },
+            data: { status: "APPROVED" }
+          });
+        }
+
+        socket.join(roomId);
+        activeBroadcasts.set(roomId, {
+          roomId,
+          broadcasterId: socket.id,
+          broadcasterUserId: userId,
+          broadcasterName: socket.user?.name || "Anonymous",
+          title: broadcastInfo?.title || "Untitled Live",
+          isPrivate: !!broadcastInfo?.isPrivate,
+          startTime: new Date().toISOString()
+        });
+
+        console.log(`[Broadcast] Registered on server: ${roomId} (Private: ${!!broadcastInfo?.isPrivate}, Broadcaster: ${socket.id})`);
+        io.emit("broadcast-list-updated", Array.from(activeBroadcasts.values()));
+      } catch (error) {
+        console.error("Error checking channel for broadcast:", error);
+        socket.emit("broadcast-error", { roomId, message: "Failed to verify channel approval." });
+      }
     });
 
     socket.on("get-active-broadcasts", () => {
@@ -77,10 +112,57 @@ const setupVideoSignaling = (server) => {
     });
 
     // --- WebRTC signaling for viewers ---
-    socket.on("request-join-broadcast", (roomId) => {
+    socket.on("request-join-broadcast", async (roomId) => {
       console.log(`[Viewer] Requesting join for broadcast: ${roomId} from ${socket.id}`);
       const broadcast = activeBroadcasts.get(roomId);
+      
       if (broadcast) {
+        // Check private broadcast permissions
+        if (broadcast.isPrivate) {
+          if (!socket.user) {
+            console.log(`[Viewer] Denied join to private broadcast ${roomId}: Guest not authenticated`);
+            socket.emit("join-error", { roomId, message: "Authentication required to join private broadcast." });
+            return;
+          }
+
+          const viewerUserId = socket.user.userId || socket.user.id;
+          const broadcasterUserId = broadcast.broadcasterUserId;
+
+          // Channel owner is always allowed to join their own broadcast
+          if (viewerUserId !== broadcasterUserId) {
+            try {
+              const channel = await prisma.tvChannel.findUnique({
+                where: { userId: broadcasterUserId }
+              });
+
+              if (!channel) {
+                console.log(`[Viewer] Denied join: Broadcaster channel not found for userId ${broadcasterUserId}`);
+                socket.emit("join-error", { roomId, message: "Broadcaster channel not found." });
+                return;
+              }
+
+              const sub = await prisma.tvSubscription.findUnique({
+                where: {
+                  subscriberId_channelId: {
+                    subscriberId: viewerUserId,
+                    channelId: channel.id
+                  }
+                }
+              });
+
+              if (!sub) {
+                console.log(`[Viewer] Denied join: User ${viewerUserId} is not subscribed to channel ${channel.id}`);
+                socket.emit("join-error", { roomId, message: "Locked. You must subscribe to this channel to watch this broadcast." });
+                return;
+              }
+            } catch (error) {
+              console.error("Error validating subscription during join:", error);
+              socket.emit("join-error", { roomId, message: "Failed to verify subscription status." });
+              return;
+            }
+          }
+        }
+
         console.log(`[Viewer] Found broadcast. Notifying broadcaster: ${broadcast.broadcasterId}`);
         socket.join(roomId);
         io.to(broadcast.broadcasterId).emit("viewer-joined", { 
@@ -141,7 +223,6 @@ const setupVideoSignaling = (server) => {
     });
 
     // --- Secure WebRTC Signaling Relay ---
-    // We always override senderUserId with the actual socket.id for security
     socket.on("offer", (payload) => {
       if (payload.targetUserId) {
         io.to(payload.targetUserId).emit("offer", { ...payload, senderUserId: socket.id });

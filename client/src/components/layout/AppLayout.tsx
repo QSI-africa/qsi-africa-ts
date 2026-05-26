@@ -1,69 +1,194 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home,
-  Rss,
-  Layers,
-  MessageSquare,
-  Bot,
-  FileText,
-  Gavel,
-  Truck,
-  BarChart3,
   Bell,
   Settings,
   User,
   Search,
-  Filter,
   Plus,
-  Briefcase,
   MessageCircle,
-  MoreHorizontal,
   MoreVertical,
-  Tv,
-  Zap,
-  Shield,
-  Activity,
-  Globe,
-  Building2,
-  CreditCard,
-  Lightbulb,
   ChevronRight,
-  Cpu,
-  Sparkles,
   Menu,
-  X
+  X,
+  Briefcase,
+  Heart,
+  Flame,
+  Hammer,
+  Layers,
+  Globe,
+  Lightbulb,
+  Building2,
+  Users,
+  Activity,
+  FlaskConical
 } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
-import { Button } from 'antd';
+import api from '../../api';
+import panxWordmark from '../../assets/images/panx_wordmark.png';
+import qsiLogo from '../../assets/images/qsi_light_logo.png';
+import panxIcon from '../../assets/images/panx.png';
+import labIcon from '../../assets/images/smart-infrastructure.png';
+import mobilityIcon from '../../assets/images/mobility.png';
+import tvIcon from '../../assets/images/vision-space.png';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
+
+const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: boolean) => {
+  const iconStyle: React.CSSProperties = isVertical 
+    ? { width: '18px', height: '18px', objectFit: 'contain' } 
+    : { width: '28px', height: '28px', objectFit: 'contain' };
+
+  // For horizontal/circular items (isVertical = false), we want a pure white/green stencil effect
+  const filterStyle = !isVertical
+    ? (isActive 
+        ? { filter: 'brightness(0) invert(53%) sepia(93%) saturate(452%) hue-rotate(113deg) brightness(97%) contrast(90%)' }
+        : { filter: 'brightness(0) invert(1)' }
+      )
+    : (isActive 
+        ? { filter: 'brightness(0)' }
+        : { filter: 'invert(1)' }
+      );
+
+  const mergedStyle = { ...iconStyle, ...filterStyle };
+
+  switch (catName) {
+    case 'PanX':
+      return <img src={panxIcon} alt="PanX" style={mergedStyle} />;
+    case 'Smart Infrastructure':
+    case 'PanX Lab':
+      return <img src={labIcon} alt={catName} style={mergedStyle} />;
+    case 'PanX Mobility':
+      return <img src={mobilityIcon} alt="PanX Mobility" style={mergedStyle} />;
+    case 'Vision Space':
+      return <img src={tvIcon} alt={catName} style={mergedStyle} />;
+    case 'PanX TV':
+      return (
+        <svg viewBox="0 0 100 100" style={iconStyle} fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="32" width="80" height="56" rx="8" stroke={isActive ? "var(--accent-primary)" : "white"} strokeWidth="8" strokeLinejoin="round"/>
+          <path d="M30 12L50 32L70 12" stroke={isActive ? "var(--accent-primary)" : "white"} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+          <line x1="25" y1="72" x2="75" y2="72" stroke={isActive ? "var(--accent-primary)" : "white"} strokeWidth="6" strokeLinecap="round"/>
+        </svg>
+      );
+    case 'PanX Music':
+      return (
+        <svg viewBox="0 0 100 100" style={iconStyle} fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 68V32L68 24V60" stroke={isActive ? "var(--accent-primary)" : "white"} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="32" cy="68" r="10" fill={isActive ? "var(--accent-primary)" : "white"}/>
+          <circle cx="60" cy="60" r="10" fill={isActive ? "var(--accent-primary)" : "white"}/>
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
 
 const DefaultSidebarContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setIsMobileMenuOpen } = useSidebar();
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const categories = [
-    { name: 'Ecosystem', icon: <Globe size={28} />, path: '/', description: 'Unified control center for the QSI infrastructure.' },
-    { name: 'QSI TV', icon: <Tv size={28} />, path: '/tv', description: 'HD broadcast and media streaming services.' },
-    { name: 'Infrastructure', icon: <Cpu size={28} />, path: '/chat/infrastructure', description: 'Strategic AI interface for structural building.' },
-    { name: 'Mobility', icon: <Truck size={28} />, path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
-    { name: 'Healing', icon: <Activity size={28} />, path: '/chat/healing', description: 'Integrated healthcare and wellness management.' },
-    { name: 'Vision', icon: <Sparkles size={28} />, path: '/chat/vision', description: 'Translate imagination into actionable frameworks.' },
-    { name: 'Digital Lab', icon: <Zap size={28} />, path: '/lab', description: 'Specialized research and lab documentation.' },
-    { name: 'Sovereign', icon: <Lightbulb size={28} />, path: '/network', description: 'Strategic intelligence and mental sovereignty.' },
-    { name: 'Concepts', icon: <Lightbulb size={28} />, path: '/concepts', description: 'Strategic conceptual frameworks and blueprints.' },
-    { name: 'Smart City', icon: <Building2 size={28} />, path: '/demos', description: 'Next-gen urban planning and simulation.' },
-    { name: 'Finance', icon: <CreditCard size={28} />, path: '/invoices', description: 'Automated billing and transaction tracking.' },
+  const [concepts, setConcepts] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get("/submit/concepts")
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setConcepts(res.data);
+        }
+      })
+      .catch(err => console.error("Failed to load concepts for sidebar", err));
+  }, []);
+
+  const placeboConcept = concepts.find(c => c.key === "placebo");
+  const heritageConcept = concepts.find(c => c.key === "heritage_flame");
+  const futureCraftConcept = concepts.find(c => c.key === "futurecraft");
+
+  const ecosystemItems = [
+    {
+      id: 'panx-enterprise',
+      name: 'Panx enterprise',
+      description: 'Enterprise pilots & frameworks',
+      path: '/enterprise',
+      icon: <Briefcase size={18} />
+    },
+    {
+      id: 'sovereign-minds',
+      name: 'Profiles',
+      description: 'Verified professional network',
+      path: '/network',
+      icon: <Users size={18} />
+    },
+    {
+      id: 'placebo',
+      name: 'Placebo',
+      description: 'Strategic healing & medical systems',
+      path: placeboConcept ? `/concepts/${placeboConcept.id}` : '/concepts',
+      icon: <Heart size={18} />
+    },
+    {
+      id: 'heritage-flame',
+      name: 'Heritage flame',
+      description: 'Cultural & renewable energy networks',
+      path: heritageConcept ? `/concepts/${heritageConcept.id}` : '/concepts',
+      icon: <Flame size={18} />
+    },
+    {
+      id: 'future-craft',
+      name: 'Future craft',
+      description: 'Cooperative digital production',
+      path: futureCraftConcept ? `/concepts/${futureCraftConcept.id}` : '/concepts',
+      icon: <Hammer size={18} />
+    },
+    {
+      id: 'concepts',
+      name: 'Concepts',
+      description: 'Digital concepts & frameworks',
+      path: '/concepts',
+      icon: <Lightbulb size={18} />
+    },
+    {
+      id: 'demos',
+      name: 'Smart City Demos',
+      description: 'Physical demonstrators & systems',
+      path: '/demos',
+      icon: <Building2 size={18} />
+    },
+    {
+      id: 'others',
+      name: 'Others',
+      description: 'Other ecosystem initiatives',
+      path: '/others',
+      icon: <Layers size={18} />
+    }
   ];
 
-  const filteredCategories = categories.filter(cat => 
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    cat.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+
+  const categories = [
+    { name: 'PanX', shortName: 'PanX', path: '/', description: 'Unified control center for the QSI infrastructure.' },
+    { name: 'PanX Lab', shortName: 'Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
+    { name: 'PanX Mobility', shortName: 'Mobility', path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
+    { name: 'PanX TV', shortName: 'TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
+    { name: 'PanX Music', shortName: 'Music', path: '/music', description: 'Premium audio streaming and music production.' },
+  ];
+
+  const panxTools = [
+    { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Strategic AI interface for structural building and smart city modeling.' },
+    { name: 'Vision Space', path: '/chat/vision', description: 'Translate imagination into actionable ecosystem blueprints.' }
+  ];
+
+  const filteredTools = panxTools.filter(tool => 
+    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredEcosystemItems = ecosystemItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -78,13 +203,21 @@ const DefaultSidebarContent = () => {
           marginBottom: "24px",
           padding: "0 24px"
         }}>
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-lg md:text-3xl font-black text-white tracking-tighter uppercase leading-none">PANX</h2>
-            <p className="text-[7px] md:text-[9px] font-black text-accent-primary uppercase tracking-[0.2em] opacity-70 whitespace-nowrap">Powered by QSI</p>
+          <div className="flex items-center justify-between flex-1 mr-4 gap-4">
+            <Link to="/" className="flex items-center shrink-0">
+              <img src={panxWordmark} alt="PANX" className="h-6 md:h-7 object-contain" />
+            </Link>
+            <div className="flex items-center gap-1.5 opacity-80 shrink-0">
+              <span className="text-[9px] md:text-[10px] font-semibold text-white/50 tracking-wider">powered by</span>
+              <img src={qsiLogo} alt="QSI" className="h-4 w-4 md:h-5 md:w-5 object-contain" />
+            </div>
           </div>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="hidden md:flex" style={{ gap: "10px" }}>
             <button 
-              onClick={() => {}}
+              onClick={() => {
+                navigate('/chat/infrastructure');
+                setIsMobileMenuOpen(false);
+              }}
               style={{
                 width: "42px",
                 height: "42px",
@@ -103,7 +236,10 @@ const DefaultSidebarContent = () => {
               <Plus size={18} strokeWidth={3} />
             </button>
             <button 
-              onClick={() => {}}
+              onClick={() => {
+                navigate('/ecosystem');
+                setIsMobileMenuOpen(false);
+              }}
               style={{
                 width: "42px",
                 height: "42px",
@@ -136,7 +272,7 @@ const DefaultSidebarContent = () => {
             <Search size={16} style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
             <input
               type="text"
-              placeholder="SEARCH ECOSYSTEM..."
+              placeholder="SEARCH FEED..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
@@ -149,14 +285,13 @@ const DefaultSidebarContent = () => {
         </div>
 
         <div 
-          className="no-scrollbar"
           style={{
             display: "flex",
             alignItems: "flex-start",
-            gap: "32px",
-            overflowX: "auto",
-            padding: "8px 24px 32px 24px",
-            scrollBehavior: "smooth"
+            justifyContent: "space-between",
+            gap: "8px",
+            padding: "8px 16px 24px 16px",
+            overflowX: "hidden"
           }}
         >
           {categories.map((cat) => {
@@ -168,42 +303,9 @@ const DefaultSidebarContent = () => {
                   navigate(cat.path);
                   setIsMobileMenuOpen(false);
                 }}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "14px",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform: isActive ? "translateY(-4px)" : "none"
-                }}
+                className={`category-btn ${isActive ? 'active' : ''}`}
               >
-                <div 
-                  style={{
-                    width: "68px",
-                    height: "68px",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                    background: isActive 
-                      ? "var(--accent-primary)" 
-                      : "rgba(255, 255, 255, 0.03)",
-                    border: isActive 
-                      ? "none" 
-                      : "1.5px solid rgba(255, 255, 255, 0.1)",
-                    boxShadow: isActive 
-                      ? "0 12px 24px -8px var(--accent-primary-glow), inset 0 0 12px rgba(255,255,255,0.4)" 
-                      : "0 4px 12px rgba(0,0,0,0.2)",
-                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                    color: isActive ? "#000" : "white"
-                  }}
-                >
+                <div className="category-btn-icon-wrapper">
                   {!isActive && (
                     <div style={{
                       position: "absolute",
@@ -213,22 +315,10 @@ const DefaultSidebarContent = () => {
                       pointerEvents: "none"
                     }} />
                   )}
-                  {cat.icon}
+                  {renderCategoryIcon(cat.name, false, isActive)}
                 </div>
-                <span 
-                  style={{
-                    fontSize: "9px",
-                    fontWeight: "900",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.15em",
-                    textAlign: "center",
-                    width: "72px",
-                    lineHeight: "1.4",
-                    color: isActive ? "var(--accent-primary)" : "white",
-                    transition: "color 0.4s ease"
-                  }}
-                >
-                  {cat.name}
+                <span className="category-btn-label">
+                  {cat.shortName}
                 </span>
               </button>
             );
@@ -249,58 +339,115 @@ const DefaultSidebarContent = () => {
         </div>
       </header>
 
-      <div className="p-4 flex flex-col" style={{ paddingBottom: "100px" }}>
-        {filteredCategories.map((cat, i) => {
-          const isActive = location.pathname === cat.path;
-          return (
-            <Link 
-              key={cat.name} 
-              to={cat.path}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`operation-card !p-3 group mb-2 ${isActive ? 'active' : ''}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                width: "100%",
-                borderRadius: "16px",
-                minHeight: "68px",
-                textDecoration: "none",
-                color: "inherit",
-                background: isActive ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.02)",
-                border: isActive ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(255, 255, 255, 0.05)"
+      <div style={{ paddingBottom: "100px" }}>
+        {/* PanX Tools Section */}
+        <div className="panx-tools-container">
+          {filteredTools.map((tool) => {
+            const isActive = location.pathname === tool.path;
+            return (
+              <Link 
+                key={tool.name} 
+                to={tool.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`panx-tool-card ${isActive ? 'active' : ''}`}
+              >
+                <div className="panx-tool-icon-wrapper">
+                  {renderCategoryIcon(tool.name, true, isActive)}
+                </div>
+
+                <div className="flex-1 min-w-0" style={{ paddingLeft: "4px" }}>
+                  <div className="flex items-center gap-2">
+                    <h4 className="panx-tool-label truncate">
+                      {tool.name}
+                    </h4>
+                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse shadow-[0_0_8px_var(--accent-primary)]"></div>}
+                  </div>
+                  <p className="panx-tool-description line-clamp-2">
+                    {tool.description}
+                  </p>
+                </div>
+
+                <div className={`transition-all duration-300 ${isActive ? 'text-accent-primary translate-x-1' : 'text-white opacity-20'}`}>
+                  <ChevronRight size={16} strokeWidth={3} />
+                </div>
+              </Link>
+            );
+          })}
+
+          {filteredTools.length === 0 && (
+            <div className="py-10 text-center opacity-40 text-[10px] uppercase font-black tracking-widest">
+              No tools match search
+            </div>
+          )}
+        </div>
+
+        {/* Ecosystem Section */}
+        <div className="ecosystem-container">
+          <h3 className="ecosystem-heading">PanX Ecosystem</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {filteredEcosystemItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <div 
+                  key={item.id} 
+                  className={`channel-card ${isActive ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    navigate(item.path);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <div className="panx-tool-icon-wrapper">
+                    {item.icon}
+                  </div>
+                  
+                  <div className="channel-info">
+                    <div className="channel-name-row">
+                      <span className="channel-name">{item.name}</span>
+                    </div>
+                    <div className="channel-followers">
+                      {item.description}
+                    </div>
+                  </div>
+                  
+                  <ChevronRight size={14} className="opacity-40" />
+                </div>
+              );
+            })}
+
+            {filteredEcosystemItems.length === 0 && (
+              <div className="py-6 text-center opacity-40 text-[9px] uppercase font-black tracking-widest">
+                No items match search
+              </div>
+            )}
+          </div>
+
+          <div className="ecosystem-actions">
+            <button 
+              className="ecosystem-btn-explore"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => {
+                navigate('/ecosystem');
+                setIsMobileMenuOpen(false);
               }}
             >
-              <div className={`w-10 h-10 rounded-xl hidden md:flex items-center justify-center font-black text-lg shrink-0 transition-all ${isActive ? 'bg-accent-primary text-black' : 'bg-white/5 text-white border border-white/10 group-hover:border-accent-primary/40 group-hover:text-accent-primary'}`}>
-                {React.cloneElement(cat.icon as React.ReactElement, { size: 18 })}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                   <h4 className={`font-black truncate text-[11px] uppercase tracking-tighter transition-colors ${isActive ? 'text-accent-primary' : 'text-white group-hover:text-accent-primary'}`}>
-                    {cat.name}
-                  </h4>
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse shadow-[0_0_8px_var(--accent-primary)]"></div>}
-                </div>
-                <p className={`text-[9px] font-medium leading-tight line-clamp-1 transition-colors ${isActive ? 'text-accent-primary opacity-70' : 'text-white opacity-40 group-hover:opacity-70 group-hover:text-accent-primary'}`}>
-                  {cat.description}
-                </p>
-              </div>
-
-              <div className={`transition-all duration-300 ${isActive ? 'text-accent-primary translate-x-1' : 'text-white opacity-20 group-hover:opacity-100 group-hover:text-white group-hover:translate-x-1'}`}>
-                <ChevronRight size={16} strokeWidth={3} />
-              </div>
-            </Link>
-          );
-        })}
-        
-        {filteredCategories.length === 0 && (
-          <div className="py-10 text-center opacity-40 text-[10px] uppercase font-black tracking-widest">
-            No clusters found
+              <Globe size={11} />
+              Explore Feed
+            </button>
+            <button 
+              className="ecosystem-btn-create"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => {
+                navigate('/chat/infrastructure');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <Plus size={11} strokeWidth={2.5} />
+              Create Venture
+            </button>
           </div>
-        )}
-
+        </div>
       </div>
     </div>
   );
@@ -310,13 +457,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen } = useSidebar();
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
     { icon: <Bell size={22} />, path: '/notifications', id: 'updates', label: 'Updates' },
     { icon: <MessageCircle size={22} />, path: '/inbox', id: 'chats', label: 'Chats' },
+    { icon: <Users size={22} />, path: '/network', id: 'sovereign-minds-shortcut', label: 'Sovereign Minds' },
+    { icon: <Activity size={22} />, path: '/status', id: 'status', label: 'Status' },
     { icon: <Settings size={22} />, path: '/settings', id: 'settings', label: 'Settings' },
   ];
 
@@ -356,15 +505,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                     cursor: "pointer",
                     transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                     background: isActive 
-                      ? "var(--accent-primary)" 
+                      ? "white" 
                       : "rgba(255, 255, 255, 0.02)",
                     border: isActive 
                       ? "none" 
-                      : "1.5px solid rgba(16, 185, 129, 0.1)",
+                      : "1.5px solid rgba(255, 255, 255, 0.1)",
                     boxShadow: isActive 
-                      ? "0 10px 20px -5px var(--accent-primary-glow)" 
+                      ? "0 10px 20px -5px rgba(255, 255, 255, 0.1)" 
                       : "none",
-                    color: isActive ? "#000" : "var(--text-tertiary)",
+                    color: isActive ? "var(--accent-primary)" : "white",
                     position: "relative"
                   }}
                   title={item.label}
@@ -401,17 +550,32 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    transition: "all 0.4s ease",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                     background: isActive 
-                      ? "var(--accent-primary)" 
-                      : "rgba(255, 255, 255, 0.05)",
+                      ? "white" 
+                      : "rgba(255, 255, 255, 0.02)",
                     border: isActive 
                       ? "none" 
                       : "1.5px solid rgba(255, 255, 255, 0.1)",
-                    color: isActive ? "#000" : "var(--text-tertiary)"
+                    boxShadow: isActive 
+                      ? "0 10px 20px -5px rgba(255, 255, 255, 0.1)" 
+                      : "none",
+                    color: isActive ? "var(--accent-primary)" : "white",
+                    position: "relative"
                   }}
                   title="Profile"
                 >
+                  {isActive && (
+                    <div style={{
+                      position: "absolute",
+                      left: "-20px",
+                      width: "4px",
+                      height: "24px",
+                      background: "var(--accent-primary)",
+                      borderRadius: "0 4px 4px 0",
+                      boxShadow: "0 0 15px var(--accent-primary)"
+                    }} />
+                  )}
                   {item.icon}
                 </div>
               );
@@ -460,6 +624,38 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         >
           <Menu size={24} />
           <span className="mobile-nav-label">Menus</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${location.pathname === '/ecosystem' ? 'active' : ''}`}
+          onClick={() => {
+            navigate('/ecosystem');
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <img 
+            src={panxIcon} 
+            alt="Ecosystem" 
+            style={{ 
+              width: '24px', 
+              height: '24px', 
+              objectFit: 'contain',
+              filter: location.pathname === '/ecosystem' 
+                ? 'brightness(0) invert(53%) sepia(93%) saturate(452%) hue-rotate(113deg) brightness(97%) contrast(90%) drop-shadow(0 0 4px var(--accent-primary))' 
+                : 'brightness(0) invert(0.6)',
+              transition: 'all 0.3s ease'
+            }} 
+          />
+          <span className="mobile-nav-label">Ecosystem</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${location.pathname === '/lab' ? 'active' : ''}`}
+          onClick={() => {
+            navigate('/lab');
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <FlaskConical size={24} />
+          <span className="mobile-nav-label">Lab</span>
         </button>
         <button 
           className={`mobile-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}

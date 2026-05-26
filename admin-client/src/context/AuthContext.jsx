@@ -74,11 +74,26 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
+  const refetchUser = useCallback(async () => {
+    const currentToken = localStorage.getItem("token");
+    if (currentToken) {
+      try {
+        api.defaults.headers.common["Authorization"] = `Bearer ${currentToken}`;
+        const response = await api.get("/auth/me");
+        setUser(response.data);
+      } catch (e) {
+        console.error("Token refetch failed", e);
+        logout();
+      }
+    }
+  }, [logout]);
+
   const value = {
     user,
     token,
     login,
     logout,
+    refetchUser,
     // Base authentication on the *user object*, not just the presence of a token
     isAuthenticated: !!user,
   };

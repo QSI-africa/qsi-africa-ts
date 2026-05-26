@@ -61,7 +61,8 @@ const SubmissionForm: React.FC = () => {
     };
 
     try {
-      const endpoint = `https://api.qsi.africa/apisubmit${endpointMap[selectedModule]}`;
+      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+      const endpoint = `${baseURL}/submit${endpointMap[selectedModule]}`;
       const response = await axios.post(endpoint, payloadMap[selectedModule]);
 
       message.success("Operational brief synchronized successfully.");

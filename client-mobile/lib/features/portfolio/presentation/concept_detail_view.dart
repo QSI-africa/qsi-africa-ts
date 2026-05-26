@@ -9,6 +9,7 @@ import '../bloc/portfolio_event.dart';
 import '../bloc/portfolio_state.dart';
 import '../data/models/portfolio_item.dart';
 import 'widgets/strategic_metrics_grid.dart';
+import 'widgets/strategic_suggestions.dart';
 import 'engagement_portal_sheet.dart';
 
 class ConceptDetailView extends StatefulWidget {
@@ -152,6 +153,10 @@ class _ConceptDetailViewState extends State<ConceptDetailView> {
                         listBullet: const TextStyle(color: AppColors.accentPrimary),
                       ),
                     ),
+                    const SizedBox(height: 40),
+
+                    // AI Suggestions
+                    const StrategicSuggestions(module: 'infrastructure'),
                     const SizedBox(height: 40),
 
                     // Engagement Portal Button

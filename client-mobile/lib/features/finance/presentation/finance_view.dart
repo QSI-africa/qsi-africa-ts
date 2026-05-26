@@ -12,61 +12,68 @@ class FinanceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FinanceBloc, FinanceState>(
-      builder: (context, state) {
-        if (state.status == FinanceStatus.loading) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary));
-        }
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: BlocBuilder<FinanceBloc, FinanceState>(
+        builder: (context, state) {
+          if (state.status == FinanceStatus.loading) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.accentPrimary));
+          }
 
-        if (state.status == FinanceStatus.failure) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(LucideIcons.triangleAlert, color: Colors.orange, size: 48),
-                const SizedBox(height: 16),
-                Text(state.errorMessage ?? 'Financial sync failed', style: const TextStyle(color: Colors.white)),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => context.read<FinanceBloc>().add(FetchFinanceData()),
-                  child: const Text('RETRY SYNC'),
-                ),
-              ],
-            ),
-          );
-        }
+          if (state.status == FinanceStatus.failure) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(LucideIcons.triangleAlert, color: Colors.orange, size: 48),
+                  const SizedBox(height: 16),
+                  Text(state.errorMessage ?? 'Financial sync failed', style: const TextStyle(color: Colors.white)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<FinanceBloc>().add(FetchFinanceData()),
+                    child: const Text('RETRY SYNC'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            context.read<FinanceBloc>().add(FetchFinanceData());
-          },
-          child: CustomScrollView(
-            slivers: [
-              // Premium AppBar
-              SliverAppBar(
-                expandedHeight: 80.0,
-                floating: true,
-                pinned: true,
-                backgroundColor: AppColors.bgPrimary,
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  title: Row(
-                    children: [
-                      Icon(LucideIcons.receipt, color: AppColors.accentPrimary, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'FINANCE',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<FinanceBloc>().add(FetchFinanceData());
+            },
+            child: CustomScrollView(
+              slivers: [
+                // Premium AppBar
+                SliverAppBar(
+                  expandedHeight: 120.0,
+                  floating: true,
+                  pinned: true,
+                  backgroundColor: AppColors.bgPrimary,
+                  leading: IconButton(
+                    icon: Icon(LucideIcons.chevronLeft, color: AppColors.textSecondary),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  flexibleSpace: FlexibleSpaceBar(
+                    titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    title: Row(
+                      children: [
+                        const SizedBox(width: 32),
+                        Icon(LucideIcons.receipt, color: AppColors.accentPrimary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'FINANCE',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
               // Wallet Section
               SliverToBoxAdapter(

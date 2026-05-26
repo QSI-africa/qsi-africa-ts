@@ -3,29 +3,26 @@ import {
   Input, 
   Empty, 
   Spin,
-  Tooltip
+  Modal,
+  message,
+  Button
 } from 'antd';
 import { 
   Search, 
   Send, 
-  Filter,
   MoreVertical,
-  ArrowLeft,
   Info,
   User,
   Bot,
   Layers,
-  Activity,
   Plus,
-  Inbox,
   MessageSquare,
-  Circle,
-  Paperclip,
-  ChevronRight
+  Paperclip
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import api from '../api';
+import { socketService } from '../services/socket';
 
 const GREEN = '#10B981';
 
@@ -34,13 +31,14 @@ export interface Conversation {
   title: string;
   lastMessage: string;
   timestamp: string;
-  type: 'module' | 'operator' | 'project' | 'system-assisted';
+  type: 'module' | 'operator' | 'project' | 'system-assisted' | 'GENERAL' | 'DIRECT';
   unreadCount: number;
   status: 'online' | 'offline' | 'active';
 }
 
 const InboxPage: React.FC = () => {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
   const { setSidebarContent } = useSidebar();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,7 +48,71 @@ const InboxPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   
+  const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false);
+  const [discoverUsers, setDiscoverUsers] = useState<any[]>([]);
+  const [discoverSearchQuery, setDiscoverSearchQuery] = useState('');
+  const [discoverLoading, setDiscoverLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Connect socket on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      socketService.connect(token);
+    }
+    return () => {
+      socketService.disconnect();
+    };
+  }, []);
+
+  // Fetch discoverable users when modal is opened
+  useEffect(() => {
+    if (isDiscoverModalOpen) {
+      fetchDiscoverUsers();
+    }
+  }, [isDiscoverModalOpen]);
+
+  const fetchDiscoverUsers = async () => {
+    setDiscoverLoading(true);
+    try {
+      const response = await api.get('/messaging/users');
+      setDiscoverUsers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch discoverable users:", error);
+      message.error("Failed to fetch user list.");
+    } finally {
+      setDiscoverLoading(false);
+    }
+  };
+
+  const handleStartConversation = async (targetUserId: string) => {
+    try {
+      const response = await api.post('/messaging/conversations/direct', {
+        targetUserId
+      });
+      const newConv = response.data;
+      
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === newConv.id);
+        if (exists) return prev;
+        return [newConv, ...prev];
+      });
+      
+      setSelectedId(newConv.id);
+      setIsDiscoverModalOpen(false);
+      message.success("Conversation established.");
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+      message.error("Failed to start conversation.");
+    }
+  };
+
+  const filteredDiscoverUsers = discoverUsers.filter(u => 
+    u.name.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
+    u.role.toLowerCase().includes(discoverSearchQuery.toLowerCase())
+  );
 
   // 1. Fetch Conversations
   useEffect(() => {
@@ -74,10 +136,35 @@ const InboxPage: React.FC = () => {
     }
   };
 
-  // 2. Fetch Messages for Selected Conversation
+  // 2. Fetch Messages for Selected Conversation & setup socket room
   useEffect(() => {
     if (selectedId) {
       fetchMessages(selectedId);
+      
+      // Join conversation room
+      socketService.emit("join-room", selectedId);
+      console.log(`[Socket] Joined conversation room: ${selectedId}`);
+
+      const handleNewMessage = (messageObj: any) => {
+        if (messageObj.conversationId === selectedId) {
+          setMessages(prev => {
+            if (prev.some(msg => msg.id === messageObj.id)) return prev;
+            return [...prev, messageObj];
+          });
+          
+          setConversations(prev => prev.map(conv => 
+            conv.id === messageObj.conversationId 
+              ? { ...conv, lastMessage: messageObj.text, timestamp: 'Just now' } 
+              : conv
+          ));
+        }
+      };
+
+      socketService.on("new_message", handleNewMessage);
+
+      return () => {
+        socketService.off("new_message", handleNewMessage);
+      };
     }
   }, [selectedId]);
 
@@ -110,7 +197,10 @@ const InboxPage: React.FC = () => {
         text: textToSend
       });
       
-      setMessages(prev => [...prev, response.data]);
+      setMessages(prev => {
+        if (prev.some(msg => msg.id === response.data.id)) return prev;
+        return [...prev, response.data];
+      });
       setConversations(prev => prev.map(conv => 
         conv.id === selectedId 
           ? { ...conv, lastMessage: textToSend, timestamp: 'Just now' } 
@@ -131,10 +221,16 @@ const InboxPage: React.FC = () => {
         <header style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>INBOXES</h2>
-            <button style={{
-              width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)',
-              border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
+            <button 
+              onClick={() => setIsDiscoverModalOpen(true)}
+              style={{
+                width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)',
+                border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            >
               <Plus size={16} />
             </button>
           </div>
@@ -204,7 +300,7 @@ const InboxPage: React.FC = () => {
       </div>
     );
     return () => setSidebarContent(null);
-  }, [conversations, selectedId, searchQuery, loading, setSidebarContent]);
+  }, [conversations, selectedId, searchQuery, loading, setSidebarContent, setIsDiscoverModalOpen]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
@@ -391,6 +487,151 @@ const InboxPage: React.FC = () => {
            </p>
         </div>
       )}
+
+      {/* Discover People Modal */}
+      <Modal
+        title={
+          <div style={{ color: 'white', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Discover People
+          </div>
+        }
+        open={isDiscoverModalOpen}
+        onCancel={() => setIsDiscoverModalOpen(false)}
+        footer={null}
+        width={600}
+        styles={{
+          body: {
+            background: 'rgba(10, 16, 24, 0.98)',
+            padding: '24px 0 0',
+          },
+          content: {
+            background: 'rgba(10, 16, 24, 0.98)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+            borderRadius: '24px',
+            color: 'white',
+            overflow: 'hidden',
+          },
+          header: {
+            background: 'rgba(10, 16, 24, 0.98)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            padding: '20px 24px',
+            margin: 0
+          },
+          mask: {
+            backdropFilter: 'blur(8px)',
+            background: 'rgba(5, 8, 12, 0.85)'
+          }
+        }}
+      >
+        <div style={{ padding: '0 24px 20px' }}>
+          <div style={{ 
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', marginBottom: '20px'
+          }}>
+            <Search size={16} color="rgba(255,255,255,0.3)" />
+            <input 
+              style={{
+                background: 'none', border: 'none', outline: 'none', color: 'white',
+                padding: '12px', flex: 1, fontSize: '13px'
+              }}
+              placeholder="Search by name, email, or role..." 
+              value={discoverSearchQuery}
+              onChange={(e) => setDiscoverSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="no-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {discoverLoading ? (
+              <div style={{ padding: '40px 0', textAlign: 'center' }}><Spin size="default" /></div>
+            ) : filteredDiscoverUsers.length > 0 ? (
+              filteredDiscoverUsers.map(u => {
+                // Generate initials for avatar
+                const initials = u.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                // Custom gradient background for avatars
+                const gradientIndex = u.id.charCodeAt(0) % 5;
+                const gradients = [
+                  'linear-gradient(135deg, #10B981 0%, #047857 100%)',
+                  'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+                  'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+                  'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)',
+                  'linear-gradient(135deg, #F59E0B 0%, #B45309 100%)'
+                ];
+                return (
+                  <div 
+                    key={u.id}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '16px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.borderColor = 'rgba(16,185,129,0.3)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '12px',
+                        background: gradients[gradientIndex],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 800,
+                        color: 'white',
+                        fontSize: '14px',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {initials}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 800, color: 'white' }}>{u.name}</span>
+                          <span style={{ 
+                            fontSize: '9px', fontWeight: 900, background: 'rgba(255,255,255,0.05)',
+                            padding: '2px 6px', borderRadius: '6px', color: 'rgba(255,255,255,0.5)',
+                            textTransform: 'uppercase', letterSpacing: '0.05em'
+                          }}>{u.role}</span>
+                        </div>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{u.email}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      type="primary"
+                      onClick={() => handleStartConversation(u.id)}
+                      style={{
+                        background: GREEN,
+                        borderColor: GREEN,
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        height: '32px',
+                      }}
+                    >
+                      Message
+                    </Button>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'uppercase' }}>No matching users</span>} />
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }

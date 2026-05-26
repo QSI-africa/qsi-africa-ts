@@ -1,14 +1,21 @@
 const express = require("express");
 const prisma = require("../config/prisma");
+const { authMiddleware } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Helper to get conversation title based on type and participants
 const getConversationTitle = (conversation, currentUserId) => {
   if (conversation.title) return conversation.title;
   
-  if (conversation.type === 'OPERATOR') {
+  if (conversation.participants && conversation.participants.length > 0) {
     const otherParticipant = conversation.participants.find(p => p.userId !== currentUserId);
-    return otherParticipant ? otherParticipant.user.name : 'Operator';
+    if (otherParticipant && otherParticipant.user) {
+      return otherParticipant.user.name;
+    }
+  }
+  
+  if (conversation.type === 'OPERATOR') {
+    return 'Operator';
   }
   
   return 'New Discussion';
@@ -177,6 +184,125 @@ router.post("/conversations", async (req, res) => {
   } catch (error) {
     console.error("Create conversation error:", error);
     res.status(500).json({ error: "Failed to create conversation." });
+  }
+});
+
+// 5. Get all users for discovery
+router.get("/users", authMiddleware, async (req, res) => {
+  const currentUserId = req.user.id;
+
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          not: currentUserId
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        location: true,
+        organization: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error("Fetch discoverable users error:", error);
+    res.status(500).json({ error: "Failed to fetch users." });
+  }
+});
+
+// 6. Create or retrieve a direct conversation between two users
+router.post("/conversations/direct", authMiddleware, async (req, res) => {
+  const currentUserId = req.user.id;
+  const { targetUserId } = req.body;
+
+  if (!targetUserId) {
+    return res.status(400).json({ error: "Target user ID is required." });
+  }
+
+  try {
+    // Look for an existing conversation of type "GENERAL" with exactly the two participants
+    const existingConversation = await prisma.conversation.findFirst({
+      where: {
+        type: "GENERAL",
+        AND: [
+          {
+            participants: {
+              some: { userId: currentUserId }
+            }
+          },
+          {
+            participants: {
+              some: { userId: targetUserId }
+            }
+          }
+        ]
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (existingConversation) {
+      return res.status(200).json({
+        ...existingConversation,
+        title: getConversationTitle(existingConversation, currentUserId)
+      });
+    }
+
+    // Create a new direct conversation if none exists
+    const conversation = await prisma.conversation.create({
+      data: {
+        type: "GENERAL",
+        participants: {
+          create: [
+            { userId: currentUserId, role: "OWNER" },
+            { userId: targetUserId, role: "PARTICIPANT" }
+          ]
+        }
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      ...conversation,
+      title: getConversationTitle(conversation, currentUserId)
+    });
+  } catch (error) {
+    console.error("Create direct conversation error:", error);
+    res.status(500).json({ error: "Failed to establish conversation." });
   }
 });
 

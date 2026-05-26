@@ -148,6 +148,79 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+// 3.1 Update User Profile
+router.put("/profile", authMiddleware, async (req, res) => {
+  const { name, phone, location, organization } = req.body;
+
+  if (!name || name.trim() === "") {
+    return res.status(400).json({ error: "Name is required." });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        name,
+        phone: phone || null,
+        location: location || null,
+        organization: organization || null,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        phone: true,
+        location: true,
+        organization: true,
+      },
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 3.2 Change Password
+router.put("/change-password", authMiddleware, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current password and new password are required." });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Incorrect current password." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Failed to update password:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 // 4. Forgot Password (Rate limited: 3 attempts per hour)
 router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
   const { email } = req.body;

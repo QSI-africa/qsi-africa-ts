@@ -20,6 +20,7 @@ import {
   Brain,
   Shield
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,7 +28,9 @@ const GREEN = '#10B981';
 
 const HealingPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [packages, setPackages] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInquiryModalVisible, setIsInquiryModalVisible] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
@@ -35,6 +38,7 @@ const HealingPage: React.FC = () => {
 
   useEffect(() => {
     fetchPackages();
+    fetchSuggestions();
   }, []);
 
   const fetchPackages = async () => {
@@ -45,6 +49,15 @@ const HealingPage: React.FC = () => {
       console.error("Fetch packages error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    try {
+      const response = await api.get('/submit/healing-suggestions');
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error("Fetch suggestions error:", error);
     }
   };
 
@@ -106,20 +119,22 @@ const HealingPage: React.FC = () => {
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
         
         {/* Hero Section */}
-        <div style={{
-          borderRadius: '24px', overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-        }}>
+        <div 
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 sm:p-10 md:p-12 relative"
+          style={{
+            borderRadius: '24px', overflow: 'hidden',
+            background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
+            border: `1px solid ${GREEN}20`, marginBottom: '40px'
+          }}
+        >
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
           
           <div style={{ position: 'relative', zIndex: 1 }}>
             <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
               Holistic Sovereignty
             </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
-              Fix the Mind that<br />Builds Infrastructure
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-5">
+              Fix the Mind that<br className="hidden sm:inline" />Builds Infrastructure
             </h2>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '520px' }}>
               Structural harmony begins within. We provide high-coherence restoration paths for visionaries and engineering teams.
@@ -131,13 +146,50 @@ const HealingPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Systemic Reflections / Suggestions */}
+        {suggestions.length > 0 && (
+          <div style={{ marginBottom: '48px' }}>
+            <h3 style={{ fontSize: '11px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '16px' }}>
+              Systemic Reflections & Focus Areas
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {suggestions.map((s, i) => (
+                <div
+                  key={i}
+                  onClick={() => navigate(`/chat/healing?prompt=${encodeURIComponent(s.text)}`)}
+                  style={{
+                    padding: '18px 20px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)',
+                    fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = `${GREEN}60`;
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                  }}
+                >
+                  <span>{s.text}</span>
+                  <span style={{ color: GREEN, fontSize: '16px', fontWeight: 'bold' }}>→</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Row gutter={[40, 40]}>
           {/* Philosophy Section */}
           <Col xs={24} lg={10}>
-             <div style={{ 
-               background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', 
-               borderRadius: '24px', padding: '32px', position: 'sticky', top: '100px'
-             }}>
+             <div 
+               className="lg:sticky lg:top-[100px]"
+               style={{ 
+                 background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', 
+                 borderRadius: '24px', padding: '32px'
+               }}
+             >
                 <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '32px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   The QSI Approach
                 </h3>
@@ -189,7 +241,7 @@ const HealingPage: React.FC = () => {
             {loading ? (
               <div style={{ padding: '100px 0', textAlign: 'center' }}><Spin /></div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {packages.map(pkg => (
                   <div 
                     key={pkg.id}

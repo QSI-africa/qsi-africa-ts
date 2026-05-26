@@ -597,6 +597,52 @@ Placebo is more than clothing — it's self-awareness woven into fabric. It brin
   },
 ];
 
+const infrastructureSuggestions = [
+  "Review Regional Energy Nodes",
+  "Audit Smart City Coherence",
+  "Optimize Mobility Flow",
+  "Sync Decentralized Workforces",
+  "Inspect Roots Architecture",
+];
+
+const healingPackages = [
+  {
+    title: "Cognitive Restoration",
+    shortPreview: "Realign neural pathways for systemic clarity.",
+    fee: "$80",
+    duration: "60 min",
+    cta: "Start Healing Relationship",
+  },
+  {
+    title: "Systemic Alignment",
+    shortPreview: "Restore coherence between spirit and logic.",
+    fee: "$120",
+    duration: "90 min",
+    cta: "Begin Alignment",
+  },
+  {
+    title: "Renaissance Breathing",
+    shortPreview: "Ancient techniques for modern stress synchronization.",
+    fee: "$50",
+    duration: "45 min",
+    cta: "Practice Now",
+  }
+];
+
+const healingSuggestions = [
+  "I feel disconnected from my purpose",
+  "Struggling with urban fatigue",
+  "Seeking systemic alignment",
+  "Restore my creative flow",
+];
+
+const visionSuggestions = [
+  "Imagine a Sovereign Capital",
+  "Design a Coherent Village",
+  "Translate Ancestral Geometry",
+  "Sync Future Identities",
+];
+
 async function main() {
   console.log("Start seeding ...");
   const adminEmail = "super@qsi.africa";
@@ -652,11 +698,74 @@ async function main() {
     );
   }
 
+  // --- Seed Infrastructure Suggestions ---
+  console.log("Seeding infrastructure suggestions...");
+  for (const text of infrastructureSuggestions) {
+    await prisma.infrastructureSuggestion.upsert({
+      where: { text },
+      update: { isActive: true },
+      create: { text, isActive: true },
+    });
+  }
+
+  // --- Seed Healing Packages ---
+  console.log("Seeding healing packages...");
+  for (const pkg of healingPackages) {
+    await prisma.healingPackage.upsert({
+      where: { title: pkg.title },
+      update: { ...pkg, isActive: true },
+      create: { ...pkg, isActive: true },
+    });
+  }
+
+  // --- Seed Healing Suggestions ---
+  console.log("Seeding healing suggestions...");
+  for (const text of healingSuggestions) {
+    await prisma.healingSuggestion.upsert({
+      where: { text },
+      update: { isActive: true },
+      create: { text, isActive: true },
+    });
+  }
+
+  // --- Seed Vision Suggestions ---
+  console.log("Seeding vision suggestions...");
+  for (const text of visionSuggestions) {
+    await prisma.visionSuggestion.upsert({
+      where: { text },
+      update: { isActive: true },
+      create: { text, isActive: true },
+    });
+  }
+
   const demosCount = pilots.filter((p) => p.type === "DEMO").length;
   const conceptsCount = pilots.filter((p) => p.type === "CONCEPT").length;
   console.log(
     `Seeding completed: ${demosCount} demos, ${conceptsCount} concepts`
   );
+
+  // --- Seed Service Modules ---
+  console.log("Seeding service modules...");
+  const modules = [
+    { title: "SMART INFRASTRUCTURE", category: "infrastructure", order: 1, isChat: true, path: "/infrastructure" },
+    { title: "VISION SPACE", category: "vision", order: 2, isChat: false, path: "/vision" },
+    { title: "HEALING & THERAPY", category: "healing", order: 3, isChat: false, path: "/healing" },
+    { title: "NETWORK", category: "network", order: 4, isChat: false, path: "/network" },
+    { title: "FINANCE", category: "finance", order: 5, isChat: false, path: "/finance" },
+    { title: "MOBILITY", category: "mobility", order: 6, isChat: false, path: "/mobility" },
+    { title: "LAB", category: "lab", order: 7, isChat: false, path: "/lab" },
+    { title: "TV", category: "tv", order: 8, isChat: false, path: "/tv" },
+    { title: "ASSETS", category: "portfolio", order: 9, isChat: false, path: "/portfolio" },
+  ];
+
+  for (const mod of modules) {
+    await prisma.serviceModule.upsert({
+      where: { id: `mod-${mod.category}` }, // Using deterministic IDs for upsert
+      update: { ...mod, isActive: true },
+      create: { id: `mod-${mod.category}`, ...mod, isActive: true },
+    });
+  }
+  console.log("Service modules seeded.");
 
   console.log("Seeding finished.");
 }
