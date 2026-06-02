@@ -189,7 +189,7 @@ const setupVideoSignaling = (server) => {
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnecting", () => {
       // Cleanup any broadcasts hosted by this socket
       let wasBroadcasting = false;
       for (const [roomId, broadcast] of activeBroadcasts.entries()) {
@@ -206,7 +206,9 @@ const setupVideoSignaling = (server) => {
       
       // Notify rooms participant was in
       socket.rooms.forEach(room => {
-        socket.to(room).emit("user-disconnected", { socketId: socket.id });
+        if (room !== socket.id) {
+          socket.to(room).emit("user-disconnected", { socketId: socket.id });
+        }
       });
     });
 

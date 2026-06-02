@@ -8,11 +8,11 @@ class SocketService {
   private socket: Socket | null = null;
 
   connect(token?: string) {
-    // If already connected and token matches, do nothing
+    // If socket exists and token matches, do nothing (Socket.io will handle reconnects automatically)
     // @ts-ignore - access internal auth for comparison
-    if (this.socket?.connected && this.socket.auth?.token === token) return;
+    if (this.socket && this.socket.auth?.token === token) return;
 
-    // If token changed or not connected, disconnect existing and reconnect
+    // If token changed, disconnect existing and reconnect
     if (this.socket) {
       this.socket.disconnect();
     }
@@ -45,8 +45,8 @@ class SocketService {
     return this.socket;
   }
 
-  emit(event: string, data: any) {
-    this.socket?.emit(event, data);
+  emit(event: string, ...args: any[]) {
+    this.socket?.emit(event, ...args);
   }
 
   on(event: string, callback: (...args: any[]) => void) {

@@ -50,7 +50,8 @@ const ControlBtn: React.FC<{
 
 const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const { message } = App.useApp();
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteParticipants, setRemoteParticipants] = useState<RemoteParticipant[]>([]);
   const [isMuted, setIsMuted] = useState(false);
@@ -99,10 +100,44 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   useEffect(() => {
     const startCall = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera/microphone access is not supported by your browser or requires a secure origin (HTTPS or localhost).');
+        }
+
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (mediaErr) {
+          console.warn('Initial getUserMedia failed, attempting device-specific fallbacks...', mediaErr);
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasVideo = devices.some(d => d.kind === 'videoinput');
+            const hasAudio = devices.some(d => d.kind === 'audioinput');
+
+            if (hasVideo || hasAudio) {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: hasVideo,
+                audio: hasAudio
+              });
+            } else {
+              throw mediaErr;
+            }
+          } catch (fallbackErr) {
+            throw mediaErr;
+          }
+        }
+
         setLocalStream(stream);
         streamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+
+        // Sync local states based on acquired tracks
+        const hasVideoTrack = stream.getVideoTracks().length > 0;
+        const hasAudioTrack = stream.getAudioTracks().length > 0;
+        setIsVideoOff(!hasVideoTrack || !stream.getVideoTracks()[0].enabled);
+        setIsMuted(!hasAudioTrack || !stream.getAudioTracks()[0].enabled);
+
+        const pendingCandidates = new Map<string, RTCIceCandidate[]>();
 
         socketService.on('user-connected', async ({ socketId }) => {
           const pc = createPeerConnection(socketId, stream);
@@ -117,9 +152,15 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           socketService.emit('answer', { targetUserId: senderUserId, answer });
-        });
 
-        const pendingCandidates = new Map<string, RTCIceCandidate[]>();
+          // Drain queued ICE candidates received before the offer was set
+          const queue = pendingCandidates.get(senderUserId) || [];
+          while (queue.length > 0) {
+            const cand = queue.shift();
+            if (cand) await pc.addIceCandidate(cand);
+          }
+          pendingCandidates.delete(senderUserId);
+        });
 
         socketService.on('answer', async ({ answer, senderUserId }) => {
           const pc = peerConnections.current.get(senderUserId);
@@ -155,8 +196,9 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         });
 
         socketService.emit('join-room', roomId, user?.name || 'Guest-' + Math.random().toString(36).substring(7));
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error starting call:', err);
+        message.error(err.message || 'Could not access media devices for the call.');
       }
     };
 
@@ -192,16 +234,22 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   };
 
   const toggleMute = () => {
-    if (localStream) {
-      localStream.getAudioTracks()[0].enabled = isMuted;
-      setIsMuted(!isMuted);
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
     }
   };
 
   const toggleVideo = () => {
-    if (localStream) {
-      const track = localStream.getVideoTracks()[0];
-      if (track) { track.enabled = isVideoOff; setIsVideoOff(!isVideoOff); }
+    if (streamRef.current) {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOff(!videoTrack.enabled);
+      }
     }
   };
 

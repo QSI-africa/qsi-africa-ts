@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Radio, Eye, Lock, Globe
+  MessageSquare, Radio, Eye, Lock, Globe, Link2
 } from 'lucide-react';
 import { App } from 'antd';
 import { socketService } from '../services/socket';
@@ -86,10 +86,42 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   useEffect(() => {
     const startBroadcasting = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera/microphone access is not supported by your browser or requires a secure origin (HTTPS or localhost).');
+        }
+
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } catch (mediaErr) {
+          console.warn('Initial getUserMedia failed, attempting device-specific fallbacks...', mediaErr);
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasVideo = devices.some(d => d.kind === 'videoinput');
+            const hasAudio = devices.some(d => d.kind === 'audioinput');
+
+            if (hasVideo || hasAudio) {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: hasVideo,
+                audio: hasAudio
+              });
+            } else {
+              throw mediaErr;
+            }
+          } catch (fallbackErr) {
+            throw mediaErr;
+          }
+        }
+
         setLocalStream(stream);
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
+
+        // Sync local states based on acquired tracks
+        const hasVideoTrack = stream.getVideoTracks().length > 0;
+        const hasAudioTrack = stream.getAudioTracks().length > 0;
+        setIsVideoOff(!hasVideoTrack || !stream.getVideoTracks()[0].enabled);
+        setIsMuted(!hasAudioTrack || !stream.getAudioTracks()[0].enabled);
 
         // Setup error handler first
         socketService.on('broadcast-error', ({ message: errMsg }) => {
@@ -149,9 +181,9 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           }
         });
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Broadcast error:', err);
-        message.error('Could not access media devices for broadcasting.');
+        message.error(err.message || 'Could not access media devices for broadcasting.');
         onStop();
       }
     };
@@ -249,6 +281,11 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     } catch (err) {
       console.error('Failed to restore camera track:', err);
     }
+  };
+
+  const copyViewerLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/tv?view=${roomId.current}`);
+    message.success('Viewer link copied to clipboard!');
   };
 
   return (
@@ -375,6 +412,10 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             <MessageSquare size={18} />
           </ControlBtn>
 
+          <ControlBtn onClick={copyViewerLink} title="Copy Viewer Link">
+            <Link2 size={18} />
+          </ControlBtn>
+
           <div style={{ width: '1px', height: '48px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }} />
 
           <button
@@ -409,7 +450,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             </span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <RoomChat roomId={roomId} userName="Broadcaster" />
+            <RoomChat roomId={roomId.current} userName="Broadcaster" />
           </div>
         </div>
       )}
