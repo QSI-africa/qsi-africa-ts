@@ -77,7 +77,7 @@ const InsightDetailPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Top Bar / Navigation */}
-      <div className="max-w-4xl mx-auto w-full p-8 lg:p-12 pb-0">
+      <div className="max-w-4xl mx-auto w-full p-8 lg:p-8 pb-0">
         <button 
           onClick={() => profile?.id ? navigate(`/profiles/${profile.id}`) : navigate('/network')}
           className="qsi-button flex items-center gap-2 mb-12 py-2 px-4"
@@ -100,7 +100,7 @@ const InsightDetailPage: React.FC = () => {
             </div>
           </div>
 
-          <h1 className="text-4xl lg:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-8">
+          <h1 className="text-lg lg:text-3xl font-black text-white uppercase tracking-tighter leading-none mb-8">
             {insight.title}
           </h1>
 

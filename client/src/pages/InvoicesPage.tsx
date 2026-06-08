@@ -18,6 +18,7 @@ import {
   CreditCard
 } from "lucide-react";
 import api from "../api";
+import UnifiedHeader from "../components/layout/UnifiedHeader";
 
 const { useBreakpoint } = Grid;
 
@@ -102,31 +103,11 @@ const InvoicesPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <Receipt size={20} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              FINANCE
-            </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              Quoted & Invoiced
-            </p>
-          </div>
-        </div>
-      </div>
+      <UnifiedHeader
+        title="Finance"
+        subTitle="Quoted & Invoiced"
+        icon={<Receipt size={20} />}
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
         
@@ -148,7 +129,7 @@ const InvoicesPage: React.FC = () => {
                 {stat.icon}
               </div>
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>{stat.label}</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'none', display: 'block', marginBottom: '2px' }}>{stat.label}</span>
                 <span style={{ fontSize: '24px', fontWeight: 900, color: 'white' }}>{stat.value}</span>
               </div>
             </div>
@@ -158,7 +139,7 @@ const InvoicesPage: React.FC = () => {
         {/* Invoice List */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', overflow: 'hidden' }}>
           <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Documents</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0, textTransform: 'none', letterSpacing: '0.05em' }}>Recent Documents</h3>
             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>Displaying {invoices.length} entries</span>
           </div>
 
@@ -166,18 +147,18 @@ const InvoicesPage: React.FC = () => {
             <div style={{ padding: '80px 0', textAlign: 'center' }}><Spin /></div>
           ) : invoices.length === 0 ? (
             <div style={{ padding: '80px 0', textAlign: 'center' }}>
-               <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase' }}>No documents found</span>} />
+               <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none' }}>No documents found</span>} />
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Reference</th>
-                    {!isMobile && <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Issue Date</th>}
-                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Amount</th>
-                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Status</th>
-                    <th style={{ padding: '20px 32px', textAlign: 'right', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Actions</th>
+                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none' }}>Reference</th>
+                    {!isMobile && <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none' }}>Issue Date</th>}
+                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none' }}>Amount</th>
+                    <th style={{ padding: '20px 32px', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none' }}>Status</th>
+                    <th style={{ padding: '20px 32px', textAlign: 'right', fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -205,7 +186,7 @@ const InvoicesPage: React.FC = () => {
                           <div style={{ 
                             display: 'inline-flex', alignItems: 'center', gap: '6px', 
                             padding: '4px 10px', borderRadius: '8px', background: status.bg, 
-                            color: status.color, fontSize: '10px', fontWeight: 900, textTransform: 'uppercase' 
+                            color: status.color, fontSize: '10px', fontWeight: 900, textTransform: 'none' 
                           }}>
                             {status.icon} {status.label}
                           </div>
@@ -253,7 +234,7 @@ const InvoicesPage: React.FC = () => {
         }}>
           <div style={{ color: GREEN, marginTop: '2px' }}><DollarSign size={20} /></div>
           <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'white', marginBottom: '4px', textTransform: 'uppercase' }}>Financial Synchronization</h4>
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'white', marginBottom: '4px', textTransform: 'none' }}>Financial Synchronization</h4>
             <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>
               All invoices contain specific bank transfer details for operational settlement. Please ensure reference numbers are included in all transactions for automated coherence verification.
             </p>

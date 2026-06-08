@@ -355,8 +355,8 @@ const QsiTvPage: React.FC = () => {
     return (
       <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
         {/* Banner/Header */}
-        <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
-          <div className="max-w-5xl mx-auto relative z-10">
+        <header className="p-8 lg:p-12 bg-bg-secondary relative overflow-hidden">
+          <div className="max-w-5xl mx-auto relative z-10 flex justify-between items-center ">
             <button
               onClick={() => { setSelectedChannel(null); fetchChannels(); }}
               className="qsi-btn qsi-btn-secondary mb-6"
@@ -366,14 +366,11 @@ const QsiTvPage: React.FC = () => {
             </button>
             <div className="flex items-center justify-between flex-wrap gap-4 mt-4">
               <div>
-                <h1 className="text-3xl lg:text-5xl font-black text-white uppercase tracking-tight mb-2">
+                <h1 className="text-md lg:text-md font-black text-white uppercase tracking-tight mb-2">
                   {selectedChannel.title}
                 </h1>
                 <p className="text-xs text-text-tertiary font-bold uppercase tracking-widest flex items-center gap-2">
                   <User size={12} className="text-accent-primary" /> Creator: {selectedChannel.user?.name || 'Agent'}
-                </p>
-                <p className="text-text-secondary text-sm leading-relaxed max-w-2xl mt-4">
-                  {selectedChannel.description}
                 </p>
               </div>
               {!isOwner && (
@@ -493,19 +490,14 @@ const QsiTvPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary">
       {/* Header */}
-      <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10 flex items-center justify-between flex-wrap gap-4">
+      <header className="p-8 lg:p-6 bg-bg-secondary relative overflow-hidden">
+        <div className=" mx-auto relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="flex items-center gap-3 text-accent-primary mb-4">
+            <h1 className="text-md lg:text-3xl flex items-center gap-3 font-black text-white tracking-tighter  mb-4">
               <Tv size={20} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sovereign Network</span>
-            </div>
-            <h1 className="text-4xl lg:text-6xl font-black text-white tracking-tighter uppercase mb-4">
-              PANX <span className="text-accent-primary">TV</span>
+              PanX <span className="text-accent-primary">TV</span>
             </h1>
-            <p className="text-text-secondary max-w-2xl text-base leading-relaxed">
-              Broadcast secure real-time sessions, create subscription channels, and curate restricted digital technical media.
-            </p>
+          
           </div>
           <div className="flex gap-3">
             <button onClick={handleStartBroadcastClick} className="qsi-button primary flex items-center gap-2 py-3 px-6 text-xs">

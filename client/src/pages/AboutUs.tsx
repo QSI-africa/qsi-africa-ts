@@ -8,6 +8,7 @@ import {
   Shield,
   ArrowRight
 } from "lucide-react";
+import UnifiedHeader from "../components/layout/UnifiedHeader";
 
 const AboutUs: React.FC = () => {
   const coreAreas = [
@@ -36,34 +37,11 @@ const AboutUs: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-bg-primary no-scrollbar">
-      {/* Hero Section */}
-      <section className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
-           <Globe size={600} className="text-accent-primary translate-x-1/2 -translate-y-1/4" />
-        </div>
-        
-        <div className="max-w-4xl relative z-10">
-          <span className="eyebrow">Vision & Philosophy</span>
-          <h1 className="text-5xl lg:text-7xl font-extrabold text-white mb-8 leading-tight">
-            Architecting <br/>
-            <span className="text-accent-primary">Human Resonance</span>
-          </h1>
-          <p className="text-xl lg:text-2xl text-text-secondary leading-relaxed max-w-2xl">
-            QSI is a practical intelligence framework designed to help Africans think, build, and organize systems more coherently.
-          </p>
-          <div className="mt-12 flex gap-6">
-             <div className="flex flex-col">
-                <span className="text-4xl font-bold text-white">22%</span>
-                <span className="text-xs text-text-tertiary uppercase tracking-widest font-bold">Growth Rate</span>
-             </div>
-             <div className="w-px h-12 bg-border-subtle"></div>
-             <div className="flex flex-col">
-                <span className="text-4xl font-bold text-white">100%</span>
-                <span className="text-xs text-text-tertiary uppercase tracking-widest font-bold">Coherence</span>
-             </div>
-          </div>
-        </div>
-      </section>
+      <UnifiedHeader
+        title="About Us"
+        subTitle="Vision & Philosophy"
+        icon={<Globe size={20} />}
+      />
 
       {/* Core Areas */}
       <section className="p-8 lg:p-12">

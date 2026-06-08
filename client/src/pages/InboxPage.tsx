@@ -220,7 +220,7 @@ const InboxPage: React.FC = () => {
       <div style={{ height: '100%', background: 'rgba(10,16,24,0.95)', display: 'flex', flexDirection: 'column' }}>
         <header style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>INBOXES</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>Inboxes</h2>
             <button 
               onClick={() => setIsDiscoverModalOpen(true)}
               style={{
@@ -283,7 +283,7 @@ const InboxPage: React.FC = () => {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.title}</span>
+                       <span style={{ fontSize: '14px', fontWeight: 800, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.title}</span>
                       <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{conv.timestamp}</span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.lastMessage}</p>
@@ -293,7 +293,7 @@ const InboxPage: React.FC = () => {
             ))
           ) : (
             <div style={{ padding: '40px 0', textAlign: 'center' }}>
-              <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'uppercase' }}>No Discussions</span>} />
+              <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'none' }}>No Discussions</span>} />
             </div>
           )}
         </div>
@@ -325,8 +325,8 @@ const InboxPage: React.FC = () => {
                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0 }}>{activeConversation.title}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)' }} />
-                  <span style={{ fontSize: '10px', fontWeight: 800, color: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {activeConversation.status}
+                  <span style={{ fontSize: '10px', fontWeight: 800, color: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)', textTransform: 'none', letterSpacing: '0.05em' }}>
+                    {activeConversation.status.charAt(0).toUpperCase() + activeConversation.status.slice(1)}
                   </span>
                 </div>
               </div>
@@ -340,7 +340,7 @@ const InboxPage: React.FC = () => {
           {/* Messages Area */}
           <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {messagesLoading ? (
-              <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin /></div>
+               <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin /></div>
             ) : messages.length > 0 ? (
               messages.map((msg, idx) => (
                 <div 
@@ -365,14 +365,14 @@ const InboxPage: React.FC = () => {
                   }}>
                     {msg.text}
                   </div>
-                  <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', marginTop: '6px', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,0.2)', marginTop: '6px', textTransform: 'none' }}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               ))
             ) : (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Empty description={<span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'uppercase' }}>Synchronisation initiated</span>} />
+                <Empty description={<span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'none' }}>Synchronisation initiated</span>} />
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -481,7 +481,7 @@ const InboxPage: React.FC = () => {
            <div style={{ color: GREEN, opacity: 0.1, marginBottom: '32px' }}>
              <MessageSquare size={120} />
            </div>
-           <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Secure Channels</h2>
+           <h2 style={{ fontSize: '24px', fontWeight: 900, color: 'white', marginBottom: '12px', textTransform: 'none', letterSpacing: '-0.02em' }}>Secure Channels</h2>
            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', maxWidth: '360px', textAlign: 'center', lineHeight: 1.6 }}>
              Select a communication channel from the sidebar to begin operational synchronization and secure briefings.
            </p>
@@ -491,7 +491,7 @@ const InboxPage: React.FC = () => {
       {/* Discover People Modal */}
       <Modal
         title={
-          <div style={{ color: 'white', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ color: 'white', fontSize: '18px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.05em' }}>
             Discover People
           </div>
         }
@@ -601,8 +601,8 @@ const InboxPage: React.FC = () => {
                           <span style={{ 
                             fontSize: '9px', fontWeight: 900, background: 'rgba(255,255,255,0.05)',
                             padding: '2px 6px', borderRadius: '6px', color: 'rgba(255,255,255,0.5)',
-                            textTransform: 'uppercase', letterSpacing: '0.05em'
-                          }}>{u.role}</span>
+                            textTransform: 'none', letterSpacing: '0.05em'
+                          }}>{u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
                         </div>
                         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{u.email}</span>
                       </div>
@@ -626,7 +626,7 @@ const InboxPage: React.FC = () => {
               })
             ) : (
               <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'uppercase' }}>No matching users</span>} />
+                <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'none' }}>No matching users</span>} />
               </div>
             )}
           </div>

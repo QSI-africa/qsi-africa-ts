@@ -299,10 +299,12 @@ const LabPage: React.FC = () => {
       
       // Refresh recordings list
       const updatedRecordings = await api.get('/lab/recordings');
+      console.log(updatedRecordings.data, 'updatedRecordings.data');
       setRecordings(updatedRecordings.data);
       
       // Update playback record
       const match = updatedRecordings.data.find((r: any) => r.id === playbackRecording?.id);
+      console.log(match, 'match');
       if (match) {
         setPlaybackRecording(match);
       }
@@ -354,7 +356,7 @@ const LabPage: React.FC = () => {
           </div>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
-              PANX LAB
+              PanX Lab
             </h1>
             <p style={{ fontSize: '9px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8, margin: '2px 0 0 0' }}>
               Virtual Academy & Skill Ecosystem
@@ -486,30 +488,6 @@ const LabPage: React.FC = () => {
         {/* 1. Academic Programs Tab */}
         {activeTab === 'programs' && (
           <div>
-            {/* Hero Section */}
-            <div style={{
-              borderRadius: '28px', overflow: 'hidden', position: 'relative',
-              background: `linear-gradient(135deg, ${GREEN}08 0%, rgba(59,130,246,0.02) 100%)`,
-              border: `1px solid rgba(255,255,255,0.06)`, marginBottom: '40px', padding: '48px 40px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-            }} className="lab-hero">
-              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
-              
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: '9px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.25em', display: 'inline-block', marginBottom: '12px' }}>
-                  Future-Tech Infrastructure
-                </span>
-                <h2 style={{ fontSize: '32px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: '16px' }} className="lab-hero-title">
-                  African Skill Ecosystem<br />Virtual Academy
-                </h2>
-                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, maxWidth: '520px' }}>
-                  Immersive, high-fidelity engineering and scientific research pathways for sovereign continental integration.
-                </p>
-              </div>
-              <div style={{ flexShrink: 0, color: GREEN, opacity: 0.08, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }} className="lab-hero-logo">
-                <FlaskConical size={200} />
-              </div>
-            </div>
 
             {/* Program Filters */}
             <div style={{ 

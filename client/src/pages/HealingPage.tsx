@@ -23,6 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -90,66 +91,18 @@ const HealingPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <Heart size={20} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              HEALING
-            </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              Wisdom & Restoration
-            </p>
-          </div>
-        </div>
-      </div>
+      <UnifiedHeader
+        title="Healing"
+        subTitle="Wisdom & Restoration"
+        icon={<Heart size={20} />}
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
-        
-        {/* Hero Section */}
-        <div 
-          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 sm:p-10 md:p-12 relative"
-          style={{
-            borderRadius: '24px', overflow: 'hidden',
-            background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-            border: `1px solid ${GREEN}20`, marginBottom: '40px'
-          }}
-        >
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Holistic Sovereignty
-            </p>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight mb-5">
-              Fix the Mind that<br className="hidden sm:inline" />Builds Infrastructure
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '520px' }}>
-              Structural harmony begins within. We provide high-coherence restoration paths for visionaries and engineering teams.
-            </p>
-          </div>
-
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
-            <Waves size={240} />
-          </div>
-        </div>
 
         {/* Systemic Reflections / Suggestions */}
         {suggestions.length > 0 && (
           <div style={{ marginBottom: '48px' }}>
-            <h3 style={{ fontSize: '11px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '11px', fontWeight: 800, color: GREEN, textTransform: 'none', letterSpacing: '0.2em', marginBottom: '16px' }}>
               Systemic Reflections & Focus Areas
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -190,7 +143,7 @@ const HealingPage: React.FC = () => {
                  borderRadius: '24px', padding: '32px'
                }}
              >
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '32px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '32px', textTransform: 'none', letterSpacing: '0.05em' }}>
                   The QSI Approach
                 </h3>
                 
@@ -209,7 +162,7 @@ const HealingPage: React.FC = () => {
                         {item.icon}
                       </div>
                       <div>
-                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'white', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.title}</h4>
+                        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'white', marginBottom: '4px', textTransform: 'none', letterSpacing: '0.05em' }}>{item.title}</h4>
                         <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{item.desc}</p>
                       </div>
                     </div>
@@ -222,7 +175,7 @@ const HealingPage: React.FC = () => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <Shield size={14} color={GREEN} />
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Certified Alignment</span>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: GREEN, textTransform: 'none', letterSpacing: '0.1em' }}>Certified Alignment</span>
                   </div>
                   <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: 0 }}>
                     Practitioners are vetted by the Sovereign Minds Network to ensure Pan-African excellence.
@@ -234,7 +187,7 @@ const HealingPage: React.FC = () => {
           {/* Packages Section */}
           <Col xs={24} lg={14}>
             <div style={{ marginBottom: '32px' }}>
-              <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '8px' }}>Select Your Path</p>
+              <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'none', letterSpacing: '0.2em', marginBottom: '8px' }}>Select Your Path</p>
               <h2 style={{ fontSize: '28px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>Specialized Trajectories</h2>
             </div>
 
@@ -265,7 +218,7 @@ const HealingPage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <span style={{ 
                           fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', 
-                          background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase' 
+                          background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: '6px', textTransform: 'none' 
                         }}>
                           {pkg.duration}
                         </span>
@@ -279,14 +232,14 @@ const HealingPage: React.FC = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                       <div>
-                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block' }}>Fee</span>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', display: 'block' }}>Fee</span>
                         <span style={{ fontSize: '20px', fontWeight: 900, color: 'white' }}>${pkg.fee}</span>
                       </div>
                       <button 
                         onClick={() => handleInquiry(pkg)}
                         style={{
                           padding: '10px 20px', borderRadius: '10px', border: 'none', background: GREEN, color: 'white',
-                          fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer'
+                          fontSize: '11px', fontWeight: 800, textTransform: 'none', letterSpacing: '0.05em', cursor: 'pointer'
                         }}
                       >
                         {pkg.cta || 'Inquire'}
@@ -306,7 +259,7 @@ const HealingPage: React.FC = () => {
               </div>
               <Row align="middle" gutter={24}>
                 <Col xs={24} md={16}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', textTransform: 'uppercase' }}>Organizational Alignment</h3>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', textTransform: 'none' }}>Organizational Alignment</h3>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>
                     Workshops for engineering teams and visionary organizations looking to scale structural harmony.
                   </p>
@@ -315,7 +268,7 @@ const HealingPage: React.FC = () => {
                    <button style={{
                      width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid rgba(255,255,255,0.1)`, 
                      background: 'rgba(255,255,255,0.04)', color: 'white', cursor: 'pointer',
-                     fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em'
+                     fontSize: '11px', fontWeight: 800, textTransform: 'none', letterSpacing: '0.1em'
                    }}>
                       Contact Team
                    </button>
@@ -345,14 +298,14 @@ const HealingPage: React.FC = () => {
             }}>
               <Activity size={24} />
             </div>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '4px' }}>Trajectory Scan</p>
+            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'none', letterSpacing: '0.2em', marginBottom: '4px' }}>Trajectory Scan</p>
             <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>{selectedPackage?.title}</h3>
           </div>
           
           <Form form={form} layout="vertical" onFinish={onFinishInquiry}>
             <Form.Item 
               name="message" 
-              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Current Evolutionary Phase</span>} 
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'none', letterSpacing: '0.15em' }}>Current Evolutionary Phase</span>} 
               rules={[{ required: true, message: 'Please describe your state' }]}
             >
               <Input.TextArea 
@@ -382,7 +335,7 @@ const HealingPage: React.FC = () => {
             </Form.Item>
             <Form.Item 
               name="preference" 
-              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Session Mode</span>}
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Session Mode</span>}
             >
               <Select className="custom-select-dark" style={{ width: '100%' }}>
                 <Select.Option value="VIDEO">Secure Video (PanX TV)</Select.Option>
@@ -396,12 +349,12 @@ const HealingPage: React.FC = () => {
               disabled={loading}
               style={{
                 width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white',
-                fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+                fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '12px',
                 boxShadow: `0 8px 20px -5px ${GREEN}60`
               }}
             >
-              {loading ? 'SYNCHRONIZING...' : 'REQUEST SCAN'} <ArrowRight size={18} />
+              {loading ? 'Synchronizing...' : 'Request Scan'} <ArrowRight size={18} />
             </button>
           </Form>
         </div>

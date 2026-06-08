@@ -21,6 +21,8 @@ import {
   Bot
 } from 'lucide-react';
 
+import UnifiedHeader from '../components/layout/UnifiedHeader';
+
 const { Text } = Typography;
 const GREEN = '#10B981';
 
@@ -136,78 +138,40 @@ const ServicesPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <Layers size={20} />
+      <UnifiedHeader
+        title="Services"
+        subTitle="Operational Modules"
+        icon={<Layers size={20} />}
+        extra={
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['all', 'infrastructure', 'healing', 'vision', 'concepts', 'demos'].map((cat) => (
+              <button 
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{
+                  padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                  fontSize: '11px', fontWeight: 800, textTransform: 'none', letterSpacing: '0.1em',
+                  transition: 'all 0.2s',
+                  background: activeCategory === cat ? GREEN : 'rgba(255,255,255,0.04)',
+                  color: activeCategory === cat ? 'white' : 'rgba(255,255,255,0.4)',
+                  boxShadow: activeCategory === cat ? `0 6px 16px -4px ${GREEN}60` : 'none',
+                }}
+              >
+                {{
+                  all: 'All',
+                  infrastructure: 'Infrastructure',
+                  healing: 'Healing',
+                  vision: 'Vision',
+                  concepts: 'Concepts',
+                  demos: 'Demos'
+                }[cat] || cat}
+              </button>
+            ))}
           </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              SERVICES
-            </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              Operational Modules
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {['all', 'infrastructure', 'healing', 'vision', 'concepts', 'demos'].map((cat) => (
-            <button 
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              style={{
-                padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                transition: 'all 0.2s',
-                background: activeCategory === cat ? GREEN : 'rgba(255,255,255,0.04)',
-                color: activeCategory === cat ? 'white' : 'rgba(255,255,255,0.4)',
-                boxShadow: activeCategory === cat ? `0 6px 16px -4px ${GREEN}60` : 'none',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
-        
-        {/* Hero Section */}
-        <div style={{
-          borderRadius: '24px', overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-        }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Enterprise Solutions
-            </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
-              Operationalize<br />Pan-African Impact
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '520px' }}>
-              Explore high-performance infrastructure, restoration protocols, and visionary translation modules.
-            </p>
-          </div>
-
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
-            <Globe size={240} />
-          </div>
-        </div>
 
         {loading ? (
           <div style={{ padding: '100px 0', textAlign: 'center' }}><Spin /></div>
@@ -243,13 +207,13 @@ const ServicesPage: React.FC = () => {
                       display: 'flex', alignItems: 'center', gap: '8px'
                     }}>
                       <span style={{ color: GREEN }}>{getCategoryIcon(product.category)}</span>
-                      <span style={{ fontSize: '10px', fontWeight: 900, color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{product.category}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 900, color: 'white', textTransform: 'none', letterSpacing: '0.05em' }}>{product.category}</span>
                     </div>
                     {product.isChat && (
                       <div style={{ 
                         position: 'absolute', bottom: '16px', right: '16px',
                         background: GREEN, color: 'white', padding: '4px 12px', borderRadius: '8px',
-                        fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em'
+                        fontSize: '9px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em'
                       }}>
                         AI Enabled
                       </div>
@@ -268,16 +232,16 @@ const ServicesPage: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Shield size={12} color="rgba(255,255,255,0.2)" />
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>Secured</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'none' }}>Secured</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Zap size={12} color="rgba(255,255,255,0.2)" />
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>Optimized</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'none' }}>Optimized</span>
                       </div>
                       <div style={{ flex: 1 }} />
                       <button style={{ 
                         background: 'none', border: 'none', color: GREEN, fontSize: '11px', fontWeight: 800, 
-                        textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' 
+                        textTransform: 'none', letterSpacing: '0.1em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' 
                       }}>
                         {product.isChat ? 'Synchronize' : 'Operationalize'} <ChevronRight size={14} />
                       </button>
@@ -292,7 +256,7 @@ const ServicesPage: React.FC = () => {
         {!loading && filteredProducts.length === 0 && (
           <div style={{ padding: '100px 0', textAlign: 'center' }}>
             <Activity size={48} color="rgba(255,255,255,0.05)" style={{ marginBottom: '24px' }} />
-            <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>No modules found in this category.</p>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'none' }}>No modules found in this category.</p>
           </div>
         )}
       </div>

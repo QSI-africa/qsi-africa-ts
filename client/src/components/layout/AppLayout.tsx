@@ -110,7 +110,7 @@ const DefaultSidebarContent = () => {
   const ecosystemItems = [
     {
       id: 'panx-enterprise',
-      name: 'Panx enterprise',
+      name: 'PanX Enterprise',
       description: 'Enterprise pilots & frameworks',
       path: '/enterprise',
       icon: <Briefcase size={18} />
@@ -131,14 +131,14 @@ const DefaultSidebarContent = () => {
     },
     {
       id: 'heritage-flame',
-      name: 'Heritage flame',
+      name: 'Heritage Flame',
       description: 'Cultural & renewable energy networks',
       path: heritageConcept ? `/concepts/${heritageConcept.id}` : '/concepts',
       icon: <Flame size={18} />
     },
     {
       id: 'future-craft',
-      name: 'Future craft',
+      name: 'Future Craft',
       description: 'Cooperative digital production',
       path: futureCraftConcept ? `/concepts/${futureCraftConcept.id}` : '/concepts',
       icon: <Hammer size={18} />
@@ -170,10 +170,10 @@ const DefaultSidebarContent = () => {
 
   const categories = [
     { name: 'PanX', shortName: 'PanX', path: '/', description: 'Unified control center for the QSI infrastructure.' },
-    { name: 'PanX Lab', shortName: 'Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
-    { name: 'PanX Mobility', shortName: 'Mobility', path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
-    { name: 'PanX TV', shortName: 'TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
-    { name: 'PanX Music', shortName: 'Music', path: '/music', description: 'Premium audio streaming and music production.' },
+    { name: 'PanX Lab', shortName: 'PanX Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
+    { name: 'PanX Mobility', shortName: 'PanX Mobility', path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
+    { name: 'PanX TV', shortName: 'PanX TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
+    { name: 'PanX Music', shortName: 'PanX Music', path: '/music', description: 'Premium audio streaming and music production.' },
   ];
 
   const panxTools = [
@@ -208,11 +208,11 @@ const DefaultSidebarContent = () => {
               <img src={panxWordmark} alt="PANX" className="h-6 md:h-7 object-contain" />
             </Link>
             <div className="flex items-center gap-1.5 opacity-80 shrink-0">
-              <span className="text-[9px] md:text-[10px] font-semibold text-white/50 tracking-wider">powered by</span>
+              <span className="text-[12px] md:text-[14px] font-semibold text-white/50 tracking-wider">Powered by</span>
               <img src={qsiLogo} alt="QSI" className="h-4 w-4 md:h-5 md:w-5 object-contain" />
             </div>
           </div>
-          <div className="hidden md:flex" style={{ gap: "10px" }}>
+          {/* <div className="hidden md:flex" style={{ gap: "10px" }}>
             <button 
               onClick={() => {
                 navigate('/chat/infrastructure');
@@ -256,7 +256,7 @@ const DefaultSidebarContent = () => {
             >
               <MoreVertical size={18} />
             </button>
-          </div>
+          </div> */}
         </div>
         
         <div style={{ padding: "0 24px", marginBottom: "32px" }}>
@@ -272,7 +272,7 @@ const DefaultSidebarContent = () => {
             <Search size={16} style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
             <input
               type="text"
-              placeholder="SEARCH FEED..."
+              placeholder="Search Feed..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
@@ -334,14 +334,14 @@ const DefaultSidebarContent = () => {
             color: "white",
             opacity: 0.6
           }}>
-            PANX Tools
+            PanX Tools
           </h3>
         </div>
       </header>
 
       <div style={{ paddingBottom: "100px" }}>
         {/* PanX Tools Section */}
-        <div className="panx-tools-container">
+        <div className="panx-tools-container" >
           {filteredTools.map((tool) => {
             const isActive = location.pathname === tool.path;
             return (
@@ -376,7 +376,7 @@ const DefaultSidebarContent = () => {
 
           {filteredTools.length === 0 && (
             <div className="py-10 text-center opacity-40 text-[10px] uppercase font-black tracking-widest">
-              No tools match search
+              No Tools Match Search
             </div>
           )}
         </div>
@@ -418,7 +418,7 @@ const DefaultSidebarContent = () => {
 
             {filteredEcosystemItems.length === 0 && (
               <div className="py-6 text-center opacity-40 text-[9px] uppercase font-black tracking-widest">
-                No items match search
+                No Items Match Search
               </div>
             )}
           </div>
@@ -462,11 +462,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
-    { icon: <Bell size={22} />, path: '/notifications', id: 'updates', label: 'Updates' },
+    // { icon: <Bell size={22} />, path: '/notifications', id: 'updates', label: 'Updates' },
     { icon: <MessageCircle size={22} />, path: '/inbox', id: 'chats', label: 'Chats' },
     { icon: <Users size={22} />, path: '/network', id: 'sovereign-minds-shortcut', label: 'Sovereign Minds' },
-    { icon: <Activity size={22} />, path: '/status', id: 'status', label: 'Status' },
-    { icon: <Settings size={22} />, path: '/settings', id: 'settings', label: 'Settings' },
+    // { icon: <Activity size={22} />, path: '/status', id: 'status', label: 'Status' },
+    // { icon: <Settings size={22} />, path: '/settings', id: 'settings', label: 'Settings' },
   ];
 
   const bottomNavItems = [
@@ -645,7 +645,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               transition: 'all 0.3s ease'
             }} 
           />
-          <span className="mobile-nav-label">Ecosystem</span>
+          <span className="mobile-nav-label">Panx Ecosystem</span>
         </button>
         <button 
           className={`mobile-nav-item ${location.pathname === '/lab' ? 'active' : ''}`}
@@ -655,7 +655,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           }}
         >
           <FlaskConical size={24} />
-          <span className="mobile-nav-label">Lab</span>
+          <span className="mobile-nav-label">Panx Lab</span>
         </button>
         <button 
           className={`mobile-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}

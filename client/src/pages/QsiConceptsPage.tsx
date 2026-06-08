@@ -8,7 +8,7 @@ import {
   Layers,
   Activity
 } from "lucide-react";
-
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -44,31 +44,13 @@ const QsiConceptsPage: React.FC = () => {
     fetchConcepts(activeCategory);
   }, [fetchConcepts, activeCategory]);
 
-
-
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
-      <div style={{
-        padding: screens.md ? '24px 32px' : '16px 20px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', 
-        flexDirection: screens.md ? 'row' : 'column',
-        alignItems: screens.md ? 'center' : 'flex-start', 
-        justifyContent: 'space-between',
-        gap: screens.md ? '0' : '20px',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/30 flex items-center justify-center text-accent-primary shrink-0">
-              <Lightbulb size={20} />
-            </div>
-            <div>
-              <h1 className="text-base md:text-lg font-black text-white tracking-tight leading-none uppercase">CONCEPTS</h1>
-              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.2em] mt-1 opacity-80">Strategic Blueprints</p>
-            </div>
-          </div>
-
+      <UnifiedHeader
+        title="Concepts"
+        subTitle="Digital Concepts & Frameworks"
+        icon={<Lightbulb size={20} />}
+        extra={
           <div style={{ 
             display: 'flex', 
             gap: '8px',
@@ -83,48 +65,20 @@ const QsiConceptsPage: React.FC = () => {
                 style={{ whiteSpace: 'nowrap' }}
                 className={`qsi-btn ${activeCategory === cat ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
               >
-                {cat}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </button>
             ))}
           </div>
-        </div>
+        }
+      />
 
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
-          {/* Immersive Hero Section */}
-          <div style={{
-            borderRadius: '24px', overflow: 'hidden', position: 'relative',
-            background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-            border: `1px solid ${GREEN}20`, marginBottom: '32px', 
-            padding: screens.md ? '48px 40px' : '40px 24px',
-            display: 'flex', 
-            flexDirection: screens.md ? 'row' : 'column',
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            gap: '24px',
-            textAlign: screens.md ? 'left' : 'center'
-          }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            
-            <div className="relative z-10 max-w-xl">
-              <p className="text-[10px] font-black text-accent-primary uppercase tracking-[0.3em] mb-6">Strategic Innovation</p>
-              <h2 className={`${screens.md ? 'text-5xl lg:text-7xl' : 'text-2xl'} font-black text-white tracking-tighter leading-tight mb-8 uppercase`}>
-                Architecting<br />Future Consciousness
-              </h2>
-              <p className="text-base lg:text-lg text-text-secondary leading-relaxed font-medium">
-                High-fidelity conceptual frameworks bridging cultural legacy with advanced technical coherence.
-              </p>
-            </div>
-
-            <div className="relative z-10 opacity-10 text-accent-primary hidden lg:block">
-              <Layers size={280} />
-            </div>
-          </div>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
 
           {loading ? (
             <div className="py-32 text-center"><Spin size="large" /></div>
           ) : error ? (
             <div className="p-12 border border-red-500/20 bg-red-500/5 rounded-[32px] text-center">
-              <span className="text-red-500 font-black uppercase tracking-[0.2em]">{error}</span>
+              <span className="text-red-500 font-black tracking-tight">{error}</span>
             </div>
           ) : (
             <Row gutter={[32, 32]}>
@@ -165,7 +119,7 @@ const QsiConceptsPage: React.FC = () => {
                 <Col span={24}>
                   <div className="py-32 text-center opacity-20">
                     <Activity size={64} className="mx-auto mb-8" />
-                    <p className="text-xs font-black uppercase tracking-[0.3em]">No concepts found</p>
+                    <p className="text-xs font-black tracking-widest">No concepts found</p>
                   </div>
                 </Col>
               )}

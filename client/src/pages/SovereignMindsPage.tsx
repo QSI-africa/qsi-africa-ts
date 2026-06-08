@@ -82,9 +82,9 @@ const SovereignMindsPage: React.FC = () => {
           </div>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              SOVEREIGN MINDS
+              Sovereign Minds
             </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, letterSpacing: '0.15em', opacity: 0.8 }}>
               Ecosystem of Excellence
             </p>
           </div>
@@ -101,7 +101,7 @@ const SovereignMindsPage: React.FC = () => {
                onClick={() => setActiveTab(tab.key)}
                style={{
                  padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                 fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                 fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em',
                  transition: 'all 0.2s',
                  background: activeTab === tab.key ? GREEN : 'rgba(255,255,255,0.04)',
                  color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.4)',
@@ -120,28 +120,15 @@ const SovereignMindsPage: React.FC = () => {
         <div style={{
           borderRadius: '24px', overflow: 'hidden', position: 'relative',
           background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
+          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '20px 48px',
           display: 'flex', flexDirection: 'column', gap: '32px'
         }} className="sovereign-hero">
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Collective of Decolonized Thinkers
-            </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }} className="sovereign-hero-title">
-              Intellectual Leadership<br />across the Renaissance
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '560px' }}>
-              Connecting high-trust network interactions with visionary minds driving mental transformation and innovation.
-            </p>
-          </div>
-
           {/* Search Bar Redesign */}
           <div style={{ 
             position: 'relative', zIndex: 1, maxWidth: '600px',
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px', display: 'flex', alignItems: 'center', padding: '4px 4px 4px 20px',
+            borderRadius: '16px', display: 'flex', alignItems: 'center', padding: '2px 2px 2px 10px',
             boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
           }} className="sovereign-search-container">
             <Search size={18} color="rgba(255,255,255,0.3)" />

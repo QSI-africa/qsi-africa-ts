@@ -27,6 +27,7 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { socketService } from '../services/socket';
 import { useNavigate } from 'react-router-dom';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -188,78 +189,33 @@ const MobilityPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <Truck size={20} />
+      <UnifiedHeader
+        title="Mobility"
+        subTitle="Logistics & Infrastructure"
+        icon={<Truck size={20} />}
+        extra={
+          <div style={{ display: 'flex', gap: '8px' }}>
+             {['Site Viewings', 'Marketplace'].map((label, idx) => (
+               <button 
+                 key={label}
+                 onClick={() => setActiveTab((idx + 1).toString())}
+                 style={{
+                   padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                   fontSize: '11px', fontWeight: 800, textTransform: 'none', letterSpacing: '0.1em',
+                   transition: 'all 0.2s',
+                   background: activeTab === (idx + 1).toString() ? GREEN : 'rgba(255,255,255,0.04)',
+                   color: activeTab === (idx + 1).toString() ? 'white' : 'rgba(255,255,255,0.4)',
+                   boxShadow: activeTab === (idx + 1).toString() ? `0 6px 16px -4px ${GREEN}60` : 'none',
+                 }}
+               >
+                 {label}
+               </button>
+             ))}
           </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              MOBILITY
-            </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>
-              Logistics & Infrastructure
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-           {['Site Viewings', 'Marketplace'].map((label, idx) => (
-             <button 
-               key={label}
-               onClick={() => setActiveTab((idx + 1).toString())}
-               style={{
-                 padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                 fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                 transition: 'all 0.2s',
-                 background: activeTab === (idx + 1).toString() ? GREEN : 'rgba(255,255,255,0.04)',
-                 color: activeTab === (idx + 1).toString() ? 'white' : 'rgba(255,255,255,0.4)',
-                 boxShadow: activeTab === (idx + 1).toString() ? `0 6px 16px -4px ${GREEN}60` : 'none',
-               }}
-             >
-               {label}
-             </button>
-           ))}
-        </div>
-      </div>
+        }
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>
-        
-        {/* Hero Section */}
-        <div style={{
-          borderRadius: '24px', overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${GREEN}10 0%, rgba(255,255,255,0.01) 100%)`,
-          border: `1px solid ${GREEN}20`, marginBottom: '40px', padding: '56px 48px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px'
-        }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '12px' }}>
-              Coherence in Motion
-            </p>
-            <h2 style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '20px' }}>
-              Connecting Visionary<br />Infrastructure
-            </h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: '480px' }}>
-              Synchronizing reliable logistics and sustainable transport solutions across the Pan-African corridor.
-            </p>
-          </div>
-
-          <div style={{ flexShrink: 0, color: GREEN, opacity: 0.1, position: 'absolute', right: '40px', top: '50%', transform: 'translateY(-50%)' }}>
-            <Globe size={240} />
-          </div>
-        </div>
 
         {/* Dynamic Content */}
         {activeTab === '1' && (
@@ -288,7 +244,7 @@ const MobilityPage: React.FC = () => {
                   <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
                     <span style={{ 
                       background: 'rgba(16,185,129,0.2)', border: `1px solid ${GREEN}40`, color: GREEN,
-                      fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', padding: '4px 10px', borderRadius: '6px', letterSpacing: '0.1em'
+                      fontSize: '9px', fontWeight: 900, textTransform: 'none', padding: '4px 10px', borderRadius: '6px', letterSpacing: '0.1em'
                     }}>Active Site</span>
                   </div>
                 </div>
@@ -296,7 +252,7 @@ const MobilityPage: React.FC = () => {
                   <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', letterSpacing: '-0.02em' }}>{project.title}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                     <User size={14} color={GREEN} />
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'none', letterSpacing: '0.05em' }}>
                       {project.engineerProfile?.user?.name || 'Lead Architect'}
                     </span>
                     {project.engineerProfile?.isVerified && <ShieldCheck size={12} color={GREEN} />}
@@ -309,7 +265,7 @@ const MobilityPage: React.FC = () => {
                     style={{
                       width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${GREEN}30`,
                       background: `${GREEN}10`, color: GREEN, cursor: 'pointer',
-                      fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
+                      fontSize: '11px', fontWeight: 800, textTransform: 'none', letterSpacing: '0.1em',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                       transition: 'all 0.2s'
                     }}
@@ -320,7 +276,7 @@ const MobilityPage: React.FC = () => {
               </div>
             )) : (
               <div style={{ gridColumn: '1 / -1', padding: '80px 0', textAlign: 'center' }}>
-                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>No active projects</span>} />
+                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No active projects</span>} />
               </div>
             )}
           </div>
@@ -330,24 +286,24 @@ const MobilityPage: React.FC = () => {
           <Row gutter={[40, 40]}>
             <Col xs={24} lg={10}>
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '32px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deployment Brief</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Deployment Brief</h3>
                 <Form layout="vertical" onFinish={handleHireVehicle}>
-                  <Form.Item name="location" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Pickup Location</span>}>
+                  <Form.Item name="location" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Pickup Location</span>}>
                     <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Harare North" />
                   </Form.Item>
-                  <Form.Item name="duration" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Duration</span>}>
+                  <Form.Item name="duration" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Duration</span>}>
                     <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. 4 Hours" />
                   </Form.Item>
-                  <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Proposed Bounty (USD)</span>}>
+                  <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Proposed Bounty (USD)</span>}>
                     <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
                   </Form.Item>
-                  <Form.Item name="details" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Mission Details</span>}>
+                  <Form.Item name="details" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Mission Details</span>}>
                     <Input.TextArea rows={4} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Describe the mission scope..." />
                   </Form.Item>
                   <button style={{
                     width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
                     background: GREEN, color: 'white', cursor: 'pointer',
-                    fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em',
+                    fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.15em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                     boxShadow: `0 8px 20px -5px ${GREEN}60`
                   }}>
@@ -357,16 +313,16 @@ const MobilityPage: React.FC = () => {
               </div>
             </Col>
             <Col xs={24} lg={14}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inbound Requests</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Inbound Requests</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {incomingVisits.length > 0 ? incomingVisits.map(visit => (
                   <div key={visit.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                       <div>
                         <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{visit.user.name}</h4>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{visit.project?.title}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'none', letterSpacing: '0.05em' }}>{visit.project?.title}</span>
                       </div>
-                      <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>{visit.status}</span>
+                      <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 8px', borderRadius: '6px', textTransform: 'none' }}>{visit.status}</span>
                     </div>
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px' }}>
                       {visit.message}
@@ -379,7 +335,7 @@ const MobilityPage: React.FC = () => {
                 )) : (
                   <div style={{ padding: '60px', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: '24px', textAlign: 'center' }}>
                     <History size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '16px' }} />
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>No pending requests</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'none', letterSpacing: '0.1em' }}>No pending requests</p>
                   </div>
                 )}
               </div>
@@ -399,11 +355,11 @@ const MobilityPage: React.FC = () => {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', md: 'row', justifyContent: 'space-between', gap: '32px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                       <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 10px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Active Mission</span>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                       <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 10px', borderRadius: '6px', textTransform: 'none', letterSpacing: '0.1em' }}>Active Mission</span>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Activity size={12} color={GREEN} />
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Critical Deployment</span>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.05em' }}>Critical Deployment</span>
                        </div>
                     </div>
                     <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white', marginBottom: '12px', letterSpacing: '-0.02em' }}>{req.location}</h3>
@@ -426,7 +382,7 @@ const MobilityPage: React.FC = () => {
                   
                   <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: '24px' }}>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: '4px' }}>Mission Bounty</span>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em', display: 'block', marginBottom: '4px' }}>Mission Bounty</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: '4px' }}>
                         <span style={{ fontSize: '20px', fontWeight: 900, color: GREEN }}>$</span>
                         <span style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>{req.price}</span>
@@ -437,7 +393,7 @@ const MobilityPage: React.FC = () => {
                       style={{
                         padding: '16px 32px', borderRadius: '14px', border: 'none',
                         background: GREEN, color: 'white', cursor: 'pointer',
-                        fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em',
+                        fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em',
                         display: 'flex', alignItems: 'center', gap: '10px',
                         boxShadow: `0 8px 20px -5px ${GREEN}60`
                       }}
@@ -449,7 +405,7 @@ const MobilityPage: React.FC = () => {
               </div>
             )) : (
               <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em' }}>No active opportunities</span>} />
+                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No active opportunities</span>} />
               </div>
             )}
           </div>
@@ -477,14 +433,14 @@ const MobilityPage: React.FC = () => {
           </div>
           
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Target Site</span>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'none', letterSpacing: '0.1em' }}>Target Site</span>
             <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'white', marginTop: '4px', marginBottom: 0 }}>{selectedProject?.title}</h4>
           </div>
 
           <Form layout="vertical" onFinish={handleSubmitVisit}>
             <Form.Item 
               name="message" 
-              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Operational Intent</span>}
+              label={<span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Operational Intent</span>}
               rules={[{ required: true, message: 'Please state your purpose' }]}
             >
               <Input.TextArea rows={4} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Explain your operational interest in this site..." />
@@ -493,13 +449,13 @@ const MobilityPage: React.FC = () => {
             <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
               <button 
                 type="submit"
-                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer' }}
+                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em', cursor: 'pointer' }}
               >
                 Send Request
               </button>
               <button 
                 onClick={() => setRequestModalVisible(false)}
-                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer' }}
+                style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em', cursor: 'pointer' }}
               >
                 Cancel
               </button>

@@ -29,13 +29,24 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
   // Allowed file types (case insensitive)
   const allowedMimeTypes = [
+    // Documents
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
+    "text/plain",
+
+    // Images
     "image/jpeg",
     "image/png",
     "image/webp",
-    "text/plain",
+
+    // Video
+    "video/mp4",
+    "video/webm",
+    "video/quicktime", // .mov files (often from iOS)
+    "video/x-msvideo", // .avi files
+    "video/mpeg",
+    "video/ogg",
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
@@ -44,9 +55,9 @@ const fileFilter = (req, file, cb) => {
     // Reject the file with a specific error message
     cb(
       new Error(
-        `Unsupported file type: ${file.mimetype}. Please upload a PDF, DOC, DOCX, or common image format (JPEG/PNG/WebP).`
+        `Unsupported file type: ${file.mimetype}. Please upload a PDF, DOC, DOCX, or common image format (JPEG/PNG/WebP).`,
       ),
-      false
+      false,
     );
   }
 };
@@ -101,7 +112,7 @@ module.exports = {
       throw new Error(
         `At least ${requiredCount} file(s) required. Received: ${
           files ? files.length : 0
-        }`
+        }`,
       );
     }
 
