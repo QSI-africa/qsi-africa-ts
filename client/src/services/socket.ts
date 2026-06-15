@@ -1,8 +1,32 @@
 // client/src/services/socket.ts
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://api.qsi.africa');
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  const baseURL = import.meta.env.VITE_API_BASE_URL;
+  if (baseURL) {
+    try {
+      const origin = new URL(baseURL).origin;
+      if (origin && origin !== 'null') return origin;
+    } catch (e) {
+      // Fall through
+    }
+  }
+
+  // Local development fallback
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:3001';
+  }
+
+  // Production fallback
+  const protocol = window.location.protocol;
+  return `${protocol}//api.qsi.africa`;
+};
+
+const SOCKET_URL = getSocketUrl();
 
 class SocketService {
   private socket: Socket | null = null;

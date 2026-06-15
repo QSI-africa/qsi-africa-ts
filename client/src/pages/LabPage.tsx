@@ -54,6 +54,14 @@ interface TvChannel {
 }
 
 const LabPage: React.FC = () => {
+  const getServerUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    const origin = new URL(baseURL).origin;
+    return `${origin}${path}`;
+  };
+
   const [activeTab, setActiveTab] = useState<'programs' | 'lectures' | 'studio'>('programs');
   
   // Dynamic categories & packages
@@ -1185,7 +1193,7 @@ const LabPage: React.FC = () => {
                     /* Video Player */
                     <div style={{ background: 'black', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <video 
-                        src={playbackRecording.mediaUrl || ''} 
+                        src={getServerUrl(playbackRecording.mediaUrl || '')} 
                         controls 
                         autoPlay 
                         style={{ width: '100%', display: 'block', maxHeight: '360px' }}
@@ -1213,7 +1221,7 @@ const LabPage: React.FC = () => {
                       </div>
 
                       <audio 
-                        src={playbackRecording.mediaUrl || ''} 
+                        src={getServerUrl(playbackRecording.mediaUrl || '')} 
                         controls 
                         autoPlay 
                         style={{ width: '100%', outline: 'none' }}

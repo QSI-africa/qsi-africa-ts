@@ -192,7 +192,7 @@ const MyRequestsPage: React.FC = () => {
                                </div>
                             </div>
                            <a 
-                             href={getServerUrl(doc.filePath)} 
+                             href={getServerUrl(doc.filePath.startsWith('/uploads') ? doc.filePath : (doc.fileName ? `/uploads/${doc.fileName}` : doc.filePath))} 
                              target="_blank" 
                              rel="noopener noreferrer"
                              className="p-3 rounded-xl bg-bg-primary text-text-secondary hover:text-accent-primary border border-border-subtle transition-all"

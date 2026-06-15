@@ -97,6 +97,8 @@ services:
     restart: always
     expose: 
       - "80"
+    depends_on:
+      - server
 
 volumes:
   db_data:
