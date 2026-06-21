@@ -61,6 +61,17 @@ interface PostItem {
   repliesCount: number;
 }
 
+const filterLabels: Record<string, string> = {
+  for_you: "For You",
+  enterprise: "Enterprise",
+  placebo: "Placebo",
+  heritage_flame: "Heritage Flame",
+  future_craft: "Future Craft",
+  sovereign_minds: "Sovereign Minds",
+  others: "Others",
+  following: "Following"
+};
+
 const LandingPage: React.FC = () => {
   const screens = useBreakpoint();
   const navigate = useNavigate();
@@ -381,8 +392,8 @@ const LandingPage: React.FC = () => {
     >
       {/* Sticky Header */}
       <UnifiedHeader
-        title="Panx Feed"
-        subTitle="Qsi Live Intelligence"
+        title="PanX Feed"
+        subTitle="QSI Live Intelligence"
         icon={<Globe size={20} />}
        
       />
@@ -435,7 +446,7 @@ const LandingPage: React.FC = () => {
               }}
             >
               <textarea
-                placeholder={`What's on your mind, ${user.name?.split(" ")[0] || "builder"}?`}
+                placeholder={`whatsOnYourMind, ${user.name?.split(" ")[0] || "builder"}?`}
                 value={newPostText}
                 onChange={(e) => setNewPostText(e.target.value)}
                 style={{
@@ -469,7 +480,7 @@ const LandingPage: React.FC = () => {
                     padding: "8px 20px",
                     fontSize: "11px",
                     fontWeight: 900,
-                    textTransform: "uppercase",
+                    textTransform: "none",
                     cursor: "pointer",
                     opacity: newPostText.trim() && !submittingPost ? 1 : 0.5,
                     transition: "all 0.2s",
@@ -479,7 +490,7 @@ const LandingPage: React.FC = () => {
                   }}
                 >
                   <Plus size={12} strokeWidth={3} />
-                  {submittingPost ? "Posting..." : "Post"}
+                  {submittingPost ? "posting" : "post"}
                 </button>
               </div>
             </div>
@@ -504,9 +515,10 @@ const LandingPage: React.FC = () => {
                 fontWeight: 900,
                 color: "white",
                 letterSpacing: "0.05em",
+                textTransform: "none"
               }}
             >
-              JOIN THE PANX ECOSYSTEM
+              Join the PanX Ecosystem
             </span>
             <p
               style={{
@@ -517,8 +529,7 @@ const LandingPage: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              Log in or register an account to broadcast operational updates,
-              interact with threads, and follow ecosystem builders.
+              Log in or register an account to broadcast operational updates, interact with threads, and follow ecosystem builders.
             </p>
             <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
               <button
@@ -529,9 +540,10 @@ const LandingPage: React.FC = () => {
                   borderRadius: "12px",
                   fontSize: "11px",
                   fontWeight: 900,
+                  textTransform: "none"
                 }}
               >
-                LOG IN
+                Log In
               </button>
               <button
                 className="qsi-btn qsi-btn-secondary"
@@ -541,9 +553,10 @@ const LandingPage: React.FC = () => {
                   borderRadius: "12px",
                   fontSize: "11px",
                   fontWeight: 900,
+                  textTransform: "none"
                 }}
               >
-                REGISTER
+                Register
               </button>
             </div>
           </div>
@@ -671,7 +684,7 @@ const LandingPage: React.FC = () => {
                   onClick={() => setActiveFilter(filter)}
                   className={`pill ${isSelected ? "active" : ""}`}
                   style={{
-                    textTransform: "uppercase",
+                    textTransform: "none",
                     fontWeight: 800,
                     fontSize: "11px",
                     letterSpacing: "0.05em",
@@ -707,7 +720,7 @@ const LandingPage: React.FC = () => {
                   }}
                 >
                   {getFilterIcon(filter)}
-                  {filter.replace("_", " ")}
+                  {filterLabels[filter] || filter}
                 </button>
               );
             })}
@@ -968,7 +981,7 @@ const LandingPage: React.FC = () => {
                             ) : (
                               <UserPlus size={11} />
                             )}
-                            {isFollowing ? "Following" : "Follow"}
+                            {isFollowing ? "following" : "follow"}
                           </button>
                         )}
                         {isOwnPost && (
@@ -1008,7 +1021,7 @@ const LandingPage: React.FC = () => {
                       <button
                         onClick={() => handleLikeToggle(post.id)}
                         className={`std-action-btn ${post.hasLiked ? "active-red" : ""}`}
-                        title="Like post"
+                        title="Like Post"
                       >
                         <Heart
                           size={15}
@@ -1024,7 +1037,7 @@ const LandingPage: React.FC = () => {
                           );
                         }}
                         className={`std-action-btn ${activeReplyPostId === post.id ? "active-green" : ""}`}
-                        title="Reply to post"
+                        title="Reply to Post"
                       >
                         <MessageCircle size={15} />
                       </button>
@@ -1042,10 +1055,10 @@ const LandingPage: React.FC = () => {
                           navigator.clipboard.writeText(
                             `${window.location.origin}/#${post.id}`,
                           );
-                          alert("Link copied to clipboard!");
+                          alert("linkCopiedToClipboard");
                         }}
                         className="std-action-btn"
-                        title="Copy link to clipboard"
+                        title="Copy Link to Clipboard"
                       >
                         <Send size={15} />
                       </button>
@@ -1059,7 +1072,7 @@ const LandingPage: React.FC = () => {
                           }));
                         }}
                         className={`std-action-btn ${isBookmarked ? "active-green" : ""}`}
-                        title="Bookmark post"
+                        title="Bookmark Post"
                       >
                         <Bookmark
                           size={15}
@@ -1158,7 +1171,7 @@ const LandingPage: React.FC = () => {
                       >
                         <input
                           type="text"
-                          placeholder="Write a reply..."
+                          placeholder="writeAReply"
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           style={{
@@ -1185,7 +1198,7 @@ const LandingPage: React.FC = () => {
                             padding: "0 16px",
                             fontSize: "11px",
                             fontWeight: 900,
-                            textTransform: "uppercase",
+                            textTransform: "none",
                             cursor: "pointer",
                             display: "inline-flex",
                             alignItems: "center",
@@ -1193,7 +1206,7 @@ const LandingPage: React.FC = () => {
                           }}
                         >
                           <Send size={11} />
-                          Reply
+                          reply
                         </button>
                       </div>
                     )}
@@ -1212,7 +1225,7 @@ const LandingPage: React.FC = () => {
                 style={{
                   fontSize: "12px",
                   fontWeight: 800,
-                  textTransform: "uppercase",
+                  textTransform: "none",
                   letterSpacing: "0.2em",
                 }}
               >
@@ -1230,6 +1243,7 @@ const LandingPage: React.FC = () => {
                 padding: "16px",
                 borderRadius: "16px",
                 color: "#10B981",
+                textTransform: "none"
               }}
             >
               <Plus size={16} /> Load More Intelligence

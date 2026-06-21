@@ -58,7 +58,7 @@ const QsiConceptsPage: React.FC = () => {
             overflowX: screens.md ? 'visible' : 'auto',
             paddingBottom: screens.md ? '0' : '4px',
           }} className="no-scrollbar">
-            {['all', 'infrastructure', 'governance', 'renaissance'].map((cat) => (
+            {['all', 'infrastructure','renaissance'].map((cat) => (
               <button 
                 key={cat}
                 onClick={() => setActiveCategory(cat)}

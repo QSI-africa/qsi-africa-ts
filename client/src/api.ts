@@ -13,7 +13,7 @@ const api = axios.create({
 
 // Callback for auto-logout
 let onUnauthorizedCallback = () => {};
-export const setOnUnauthorizedCallback = (callback) => {
+export const setOnUnauthorizedCallback = (callback: () => void) => {
   onUnauthorizedCallback = callback;
 };
 
@@ -22,7 +22,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      onUnauthorizedCallback();
+      const url = error.config?.url || "";
+      const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register-user");
+      if (!isAuthEndpoint) {
+        onUnauthorizedCallback();
+        window.location.href = "/login";
+        return new Promise(() => {}); // Halt the promise chain to prevent page catch blocks from showing pop-up errors
+      }
     }
     return Promise.reject(error);
   }

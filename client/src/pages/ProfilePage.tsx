@@ -95,10 +95,10 @@ const ProfilePage: React.FC = () => {
             
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-wrap gap-3 justify-center md:justify-start items-center mb-3">
-                <Tag color="cyan" style={{ border: 'none', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                <Tag color="cyan" style={{ border: 'none', borderRadius: '4px', textTransform: 'none', fontWeight: 'bold', letterSpacing: '0.05em' }}>
                   {user.role}
                 </Tag>
-                <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Active Node</span>
+                <span className="text-[10px] font-bold text-text-tertiary tracking-widest" style={{ textTransform: 'none' }}>Active Node</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight leading-none mb-4">
                 {user.name}
@@ -113,7 +113,7 @@ const ProfilePage: React.FC = () => {
               <button 
                 onClick={handleLogoutClick}
                 className="qsi-button flex items-center gap-2 py-3 px-6 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors"
-                style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+                style={{ borderColor: 'rgba(255,255,255,0.08)', textTransform: 'none' }}
               >
                 <LogOut size={16} /> Disconnect
               </button>
@@ -143,7 +143,7 @@ const ProfilePage: React.FC = () => {
             items={[
               {
                 key: '1',
-                label: <span className="text-xs font-black uppercase tracking-widest px-2 py-1">Operational Profile</span>,
+                label: <span className="text-xs font-black tracking-widest px-2 py-1" style={{ textTransform: 'none' }}>Operational Profile</span>,
                 children: (
                   <Form
                     form={profileForm}
@@ -156,8 +156,8 @@ const ProfilePage: React.FC = () => {
                       <Col xs={24} md={12}>
                         <Form.Item
                           name="name"
-                          label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Full Name</span>}
-                          rules={[{ required: true, message: 'Please enter your name.' }]}
+                          label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Full Name</span>}
+                          rules={[{ required: true, message: 'pleaseEnterYourName' }]}
                         >
                           <Input
                             prefix={<User size={16} className="text-white/20 mr-2" />}
@@ -169,11 +169,11 @@ const ProfilePage: React.FC = () => {
                       <Col xs={24} md={12}>
                         <Form.Item
                           name="phone"
-                          label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Phone Number</span>}
+                          label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Phone Number</span>}
                         >
                           <Input
                             prefix={<Phone size={16} className="text-white/20 mr-2" />}
-                            placeholder="e.g. +234 803 123 4567"
+                            placeholder="eg2348031234567"
                             style={inputStyle}
                             className="custom-input-focus"
                           />
@@ -185,11 +185,11 @@ const ProfilePage: React.FC = () => {
                       <Col xs={24} md={12}>
                         <Form.Item
                           name="location"
-                          label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Location / Region</span>}
+                          label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Location / Region</span>}
                         >
                           <Input
                             prefix={<MapPin size={16} className="text-white/20 mr-2" />}
-                            placeholder="e.g. Lagos, Nigeria"
+                            placeholder="egLagosNigeria"
                             style={inputStyle}
                             className="custom-input-focus"
                           />
@@ -198,7 +198,7 @@ const ProfilePage: React.FC = () => {
                       <Col xs={24} md={12}>
                         <Form.Item
                           name="organization"
-                          label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Organization</span>}
+                          label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Organization</span>}
                         >
                           <Input
                             prefix={<Building size={16} className="text-white/20 mr-2" />}
@@ -216,12 +216,12 @@ const ProfilePage: React.FC = () => {
                         disabled={profileLoading}
                         style={{
                           background: GREEN, color: 'black', fontWeight: 900,
-                          fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.15em',
+                          fontSize: '11px', textTransform: 'none', letterSpacing: '0.15em',
                           padding: '16px 32px', borderRadius: '12px', border: 'none', cursor: 'pointer',
                           boxShadow: `0 8px 20px -6px ${GREEN}40`
                         }}
                       >
-                        {profileLoading ? 'SAVING DETAILS...' : 'SAVE PROFILE DETAILS'}
+                        {profileLoading ? 'Saving Details...' : 'Save Profile Details'}
                       </button>
                     </div>
                   </Form>
@@ -229,7 +229,7 @@ const ProfilePage: React.FC = () => {
               },
               {
                 key: '2',
-                label: <span className="text-xs font-black uppercase tracking-widest px-2 py-1">Security Key</span>,
+                label: <span className="text-xs font-black tracking-widest px-2 py-1" style={{ textTransform: 'none' }}>Security Key</span>,
                 children: (
                   <Form
                     form={passwordForm}
@@ -240,8 +240,8 @@ const ProfilePage: React.FC = () => {
                   >
                     <Form.Item
                       name="currentPassword"
-                      label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Current Key (Password)</span>}
-                      rules={[{ required: true, message: 'Please enter your current key.' }]}
+                      label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Current Key (Password)</span>}
+                      rules={[{ required: true, message: 'pleaseEnterYourCurrentKey' }]}
                     >
                       <Input.Password
                         prefix={<Lock size={16} className="text-white/20 mr-2" />}
@@ -253,10 +253,10 @@ const ProfilePage: React.FC = () => {
 
                     <Form.Item
                       name="newPassword"
-                      label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">New Key (Password)</span>}
+                      label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>New Key (Password)</span>}
                       rules={[
-                        { required: true, message: 'Please enter your new key.' },
-                        { min: 6, message: 'Password must be at least 6 characters.' }
+                        { required: true, message: 'pleaseEnterYourNewKey' },
+                        { min: 6, message: 'passwordMustBeAtLeast6Characters' }
                       ]}
                     >
                       <Input.Password
@@ -269,16 +269,16 @@ const ProfilePage: React.FC = () => {
 
                     <Form.Item
                       name="confirmPassword"
-                      label={<span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Confirm New Key</span>}
+                      label={<span className="text-[10px] font-black tracking-widest text-text-secondary" style={{ textTransform: 'none' }}>Confirm New Key</span>}
                       dependencies={['newPassword']}
                       rules={[
-                        { required: true, message: 'Confirm your password.' },
+                        { required: true, message: 'confirmYourPassword' },
                         ({ getFieldValue }) => ({
                           validator(_, value) {
                             if (!value || getFieldValue('newPassword') === value) {
                               return Promise.resolve();
                             }
-                            return Promise.reject(new Error('Passwords do not match.'));
+                            return Promise.reject(new Error('passwordsDoNotMatch'));
                           },
                         }),
                       ]}
@@ -297,12 +297,12 @@ const ProfilePage: React.FC = () => {
                         disabled={passwordLoading}
                         style={{
                           background: GREEN, color: 'black', fontWeight: 900,
-                          fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.15em',
+                          fontSize: '11px', textTransform: 'none', letterSpacing: '0.15em',
                           padding: '16px 32px', borderRadius: '12px', border: 'none', cursor: 'pointer',
                           boxShadow: `0 8px 20px -6px ${GREEN}40`
                         }}
                       >
-                        {passwordLoading ? 'UPDATING KEY...' : 'UPDATE SECURITY KEY'}
+                        {passwordLoading ? 'Updating Key...' : 'Update Security Key'}
                       </button>
                     </div>
                   </Form>
@@ -310,7 +310,7 @@ const ProfilePage: React.FC = () => {
               },
               {
                 key: '3',
-                label: <span className="text-xs font-black uppercase tracking-widest px-2 py-1">Node Registry</span>,
+                label: <span className="text-xs font-black tracking-widest px-2 py-1" style={{ textTransform: 'none' }}>Node Registry</span>,
                 children: (
                   <div style={{ marginTop: '24px' }}>
                     <Paragraph className="text-text-secondary leading-relaxed mb-6">
@@ -318,15 +318,15 @@ const ProfilePage: React.FC = () => {
                     </Paragraph>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                       <Card style={cardStyle} bodyStyle={{ padding: '20px' }}>
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Authority Role</span>
+                        <span className="text-[9px] font-black text-text-tertiary tracking-widest" style={{ textTransform: 'none' }}>Authority Role</span>
                         <div className="text-xl font-bold text-white uppercase mt-2">{user.role}</div>
                       </Card>
                       <Card style={cardStyle} bodyStyle={{ padding: '20px' }}>
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Resonance Hub</span>
+                        <span className="text-[9px] font-black text-text-tertiary tracking-widest" style={{ textTransform: 'none' }}>Resonance Hub</span>
                         <div className="text-xl font-bold text-white uppercase mt-2">{user.location || 'Pan-African'}</div>
                       </Card>
                       <Card style={cardStyle} bodyStyle={{ padding: '20px' }}>
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Unique Identifier</span>
+                        <span className="text-[9px] font-black text-text-tertiary tracking-widest" style={{ textTransform: 'none' }}>Unique Identifier</span>
                         <div className="text-[11px] font-mono text-white/50 mt-2 break-all">{user.id}</div>
                       </Card>
                     </div>

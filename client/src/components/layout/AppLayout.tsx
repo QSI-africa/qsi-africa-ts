@@ -39,7 +39,7 @@ interface AppLayoutProps {
 
 const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: boolean) => {
   const iconStyle: React.CSSProperties = isVertical 
-    ? { width: '18px', height: '18px', objectFit: 'contain' } 
+    ? { width: '24px', height: '24px', objectFit: 'contain' } 
     : { width: '28px', height: '28px', objectFit: 'contain' };
 
   // For horizontal/circular items (isVertical = false), we want a pure white/green stencil effect
@@ -110,60 +110,60 @@ const DefaultSidebarContent = () => {
   const ecosystemItems = [
     {
       id: 'panx-enterprise',
-      name: 'PanX Enterprise',
+      name: 'PanX Feed',
       description: 'Enterprise pilots & frameworks',
-      path: '/enterprise',
-      icon: <Briefcase size={18} />
+      path: '/',
+      icon: <Briefcase size={24} />
     },
     {
       id: 'sovereign-minds',
       name: 'Profiles',
       description: 'Verified professional network',
       path: '/network',
-      icon: <Users size={18} />
+      icon: <Users size={24} />
     },
     {
       id: 'placebo',
       name: 'Placebo',
       description: 'Strategic healing & medical systems',
       path: placeboConcept ? `/concepts/${placeboConcept.id}` : '/concepts',
-      icon: <Heart size={18} />
+      icon: <Heart size={24} />
     },
     {
       id: 'heritage-flame',
       name: 'Heritage Flame',
       description: 'Cultural & renewable energy networks',
       path: heritageConcept ? `/concepts/${heritageConcept.id}` : '/concepts',
-      icon: <Flame size={18} />
+      icon: <Flame size={24} />
     },
     {
       id: 'future-craft',
       name: 'Future Craft',
       description: 'Cooperative digital production',
       path: futureCraftConcept ? `/concepts/${futureCraftConcept.id}` : '/concepts',
-      icon: <Hammer size={18} />
+      icon: <Hammer size={24} />
     },
     {
       id: 'concepts',
       name: 'Concepts',
       description: 'Digital concepts & frameworks',
       path: '/concepts',
-      icon: <Lightbulb size={18} />
+      icon: <Lightbulb size={24} />
     },
     {
       id: 'demos',
       name: 'Smart City Demos',
       description: 'Physical demonstrators & systems',
       path: '/demos',
-      icon: <Building2 size={18} />
+      icon: <Building2 size={24} />
     },
-    {
-      id: 'others',
-      name: 'Others',
-      description: 'Other ecosystem initiatives',
-      path: '/others',
-      icon: <Layers size={18} />
-    }
+    // {
+    //   id: 'others',
+    //   name: 'Others',
+    //   description: 'Other ecosystem initiatives',
+    //   path: '/others',
+    //   icon: <Layers size={24} />
+    // }
   ];
 
 
@@ -177,8 +177,9 @@ const DefaultSidebarContent = () => {
   ];
 
   const panxTools = [
-    { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Strategic AI interface for structural building and smart city modeling.' },
-    { name: 'Vision Space', path: '/chat/vision', description: 'Translate imagination into actionable ecosystem blueprints.' }
+    { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Design, Plan, Execute.' },
+    { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
+    { name: 'PanX Mobility', path: '/mobility', description: 'Mobility built for purpose.' }
   ];
 
   const filteredTools = panxTools.filter(tool => 
@@ -327,9 +328,8 @@ const DefaultSidebarContent = () => {
 
         <div style={{ padding: "0 24px", marginBottom: "12px" }}>
           <h3 style={{ 
-            fontSize: "11px", 
+            fontSize: "14px", 
             fontWeight: "900", 
-            textTransform: "uppercase", 
             letterSpacing: "0.2em", 
             color: "white",
             opacity: 0.6
@@ -423,7 +423,7 @@ const DefaultSidebarContent = () => {
             )}
           </div>
 
-          <div className="ecosystem-actions">
+          {/* <div className="ecosystem-actions">
             <button 
               className="ecosystem-btn-explore"
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -446,7 +446,7 @@ const DefaultSidebarContent = () => {
               <Plus size={11} strokeWidth={2.5} />
               Create Venture
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

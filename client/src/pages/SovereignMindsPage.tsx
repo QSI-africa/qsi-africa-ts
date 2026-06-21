@@ -81,36 +81,37 @@ const SovereignMindsPage: React.FC = () => {
             <Users size={20} />
           </div>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, textTransform: 'none' }}>
               Sovereign Minds
             </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, letterSpacing: '0.15em', opacity: 0.8 }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, letterSpacing: '0.15em', opacity: 0.8, textTransform: 'none' }}>
               Ecosystem of Excellence
             </p>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }} className="sovereign-header-tabs no-scrollbar">
-           {[
-             { label: 'All Members', key: 'ALL' },
-             { label: 'Sovereign Minds', key: 'SOVEREIGN' },
-             { label: 'Professionals', key: 'PROFESSIONALS' }
-           ].map((tab) => (
-             <button 
-               key={tab.key}
-               onClick={() => setActiveTab(tab.key)}
-               style={{
-                 padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                 fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em',
-                 transition: 'all 0.2s',
-                 background: activeTab === tab.key ? GREEN : 'rgba(255,255,255,0.04)',
-                 color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.4)',
-                 boxShadow: activeTab === tab.key ? `0 6px 16px -4px ${GREEN}60` : 'none',
-               }}
-             >
-               {tab.label}
-             </button>
-           ))}
+            {[
+              { label: 'All Members', key: 'ALL' },
+              { label: 'Sovereign Minds', key: 'SOVEREIGN' },
+              { label: 'Professionals', key: 'PROFESSIONALS' }
+            ].map((tab) => (
+              <button 
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                  fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em',
+                  transition: 'all 0.2s',
+                  background: activeTab === tab.key ? GREEN : 'rgba(255,255,255,0.04)',
+                  color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.4)',
+                  boxShadow: activeTab === tab.key ? `0 6px 16px -4px ${GREEN}60` : 'none',
+                  textTransform: 'none'
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
         </div>
       </div>
 
@@ -143,7 +144,7 @@ const SovereignMindsPage: React.FC = () => {
             />
             <button style={{
               background: GREEN, color: 'white', border: 'none', borderRadius: '12px',
-              padding: '10px 24px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase',
+              padding: '10px 24px', fontSize: '11px', fontWeight: 800, textTransform: 'none',
               cursor: 'pointer', boxShadow: `0 4px 12px ${GREEN}40`
             }}>
               Search
@@ -198,7 +199,7 @@ const SovereignMindsPage: React.FC = () => {
                          </h3>
                          <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><MoreVertical size={18} /></button>
                       </div>
-                      <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>{engineer.specialization}</p>
+                      <p style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'none', letterSpacing: '0.1em', marginBottom: '12px' }}>{engineer.specialization}</p>
                       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {engineer.bio}
                       </p>
