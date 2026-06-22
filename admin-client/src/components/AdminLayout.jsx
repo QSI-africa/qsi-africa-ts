@@ -25,7 +25,7 @@ import {
   UserOutlined,
   DollarCircleOutlined,
   PlayCircleOutlined,
-  BookOutlined,
+  ExperimentOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -167,7 +167,7 @@ const AdminLayout = () => {
     },
     {
       key: "/lab-management",
-      icon: <BookOutlined />,
+      icon: <ExperimentOutlined />,
       label: <Link to="/lab-management">PANX Lab Management</Link>,
       roles: ["ADMIN", "SUPER_USER"],
     },

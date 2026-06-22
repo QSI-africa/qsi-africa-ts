@@ -59,8 +59,9 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
     case 'PanX':
       return <img src={panxIcon} alt="PanX" style={mergedStyle} />;
     case 'Smart Infrastructure':
-    case 'PanX Lab':
       return <img src={labIcon} alt={catName} style={mergedStyle} />;
+    case 'PanX Lab':
+      return <FlaskConical size={isVertical ? 24 : 28} />;
     case 'PanX Mobility':
       return <img src={mobilityIcon} alt="PanX Mobility" style={mergedStyle} />;
     case 'Vision Space':

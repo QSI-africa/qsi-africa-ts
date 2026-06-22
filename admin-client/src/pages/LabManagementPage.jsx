@@ -21,7 +21,7 @@ import {
   Switch
 } from "antd";
 import {
-  BookOutlined,
+  ExperimentOutlined,
   DeleteOutlined,
   PlusOutlined,
   FolderOpenOutlined,
@@ -236,7 +236,7 @@ const LabManagementPage = () => {
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
         <Col span={24}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <BookOutlined style={{ fontSize: "28px", color: "#52c41a" }} />
+            <ExperimentOutlined style={{ fontSize: "28px", color: "#52c41a" }} />
             <Title level={2} style={{ margin: 0 }}>PANX LAB Governance</Title>
           </div>
           <Paragraph type="secondary" style={{ marginTop: "8px" }}>
