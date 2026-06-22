@@ -624,7 +624,7 @@ body {
     max-width: 65px;
   }
 
-  .main-workspace {
+  .has-bottom-nav .main-workspace {
     padding-bottom: 72px; /* Space for bottom nav */
   }
 }

@@ -205,7 +205,7 @@ const DefaultSidebarContent = () => {
           marginBottom: "24px",
           padding: "0 24px"
         }}>
-          <div className="flex items-center justify-between flex-1 mr-4 gap-4">
+          <div className="flex items-center justify-between flex-1 mr-12 md:mr-4 gap-4">
             <Link to="/" className="flex items-center shrink-0">
               <img src={panxWordmark} alt="PANX" className="h-6 md:h-7 object-contain" />
             </Link>
@@ -481,7 +481,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className={`app-grid ${showDetails ? 'with-details' : ''} ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+    <div className={`app-grid ${showDetails ? 'with-details' : ''} ${isMobileMenuOpen ? 'mobile-menu-open' : ''} ${!location.pathname.startsWith('/chat') ? 'has-bottom-nav' : ''}`}>
       {/* 0. Mobile Overlay */}
       <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
 

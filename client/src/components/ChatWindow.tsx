@@ -24,11 +24,14 @@ import {
   Sparkles,
   ChevronLeft,
   LayoutGrid,
-  Menu as LucideMenu
+  Menu as LucideMenu,
+  Package,
+  Lightbulb
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
+import UnifiedHeader from "./layout/UnifiedHeader";
 
 const GREEN = '#10B981';
 
@@ -342,80 +345,49 @@ const ChatWindow: React.FC = () => {
     return () => setSidebarContent(null);
   }, [fetchedSuggestions, fetchedPackages, details, moduleName, setSidebarContent, handleSendMessage, navigate]);
 
-  const menuItems = (
-    <Menu 
-      theme="dark"
-      style={{ 
-        background: '#14201A', 
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '12px',
-        padding: '6px'
-      }}
-    >
-      <Menu.Item 
-        key="suggestions" 
-        onClick={() => {
-          setDrawerType('suggestions');
-          setIsDrawerOpen(true);
-        }}
-        style={{ color: 'rgba(255,255,255,0.85)', borderRadius: '8px' }}
-      >
-        Suggested Focus Areas
-      </Menu.Item>
-      {moduleName === 'healing' && (
-        <Menu.Item 
-          key="packages" 
-          onClick={() => {
-            setDrawerType('packages');
-            setIsDrawerOpen(true);
-          }}
-          style={{ color: 'rgba(255,255,255,0.85)', borderRadius: '8px', marginTop: '4px' }}
-        >
-          Healing Trajectories
-        </Menu.Item>
-      )}
-    </Menu>
-  );
+
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
-      <header style={{ 
-        padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)', 
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ 
-            width: '40px', height: '40px', borderRadius: '12px', 
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            {details.icon}
+      <UnifiedHeader
+        title={details.title}
+        subTitle="SYNCHRONIZED"
+        icon={details.icon}
+        extra={
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
+            <Lightbulb
+              size={20}
+              style={{ cursor: 'pointer' }}
+              className="hover:text-accent-primary transition-colors"
+              onClick={() => {
+                setDrawerType('suggestions');
+                setIsDrawerOpen(true);
+              }}
+              title="Suggested Focus Areas"
+            />
+            {moduleName === 'healing' && (
+              <Package
+                size={20}
+                style={{ cursor: 'pointer' }}
+                className="hover:text-accent-primary transition-colors"
+                onClick={() => {
+                  setDrawerType('packages');
+                  setIsDrawerOpen(true);
+                }}
+                title="Healing Trajectories"
+              />
+            )}
+            <Info
+              size={20}
+              style={{ cursor: 'pointer' }}
+              className="hover:text-white transition-colors"
+              onClick={() => setIsInfoDrawerOpen(true)}
+              title="Information"
+            />
           </div>
-          <div>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0 }}>{details.title}</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: GREEN, animation: 'pulse-sync 1.5s infinite' }} />
-              <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Synchronized
-              </span>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
-          <Info
-            size={20}
-            style={{ cursor: 'pointer' }}
-            className="hover:text-white transition-colors"
-            onClick={() => setIsInfoDrawerOpen(true)}
-          />
-          <Dropdown overlay={menuItems} trigger={['click']} placement="bottomRight">
-            <LucideMenu size={20} style={{ cursor: 'pointer' }} className="hover:text-white transition-colors" />
-          </Dropdown>
-        </div>
-      </header>
+        }
+      />
 
       {/* Messages Area */}
       <div className="p-4 md:p-8 no-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -450,61 +422,7 @@ const ChatWindow: React.FC = () => {
             </div>
           </React.Fragment>
         ))}
-        {messages.length === 1 && fetchedSuggestions.length > 0 && (
-          <div style={{ alignSelf: 'flex-start', maxWidth: '100%', width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-             <h4 style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em', marginLeft: '4px' }}>
-                Quick Modules
-             </h4>
-             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {fetchedSuggestions.map((s, i) => (
-                  <button 
-                    key={i}
-                    onClick={() => handleSendMessage(s.text)}
-                    style={{
-                      padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
-                      fontSize: '13px', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = `${GREEN}40`}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
-                  >
-                    {s.text}
-                  </button>
-                ))}
-             </div>
-          </div>
-        )}
-        {messages.length === 1 && moduleName === 'healing' && fetchedPackages.length > 0 && (
-          <div style={{ alignSelf: 'flex-start', maxWidth: '100%', width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
-             <h4 style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em', marginLeft: '4px' }}>
-                Trajectories
-             </h4>
-             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {fetchedPackages.map((p, i) => (
-                  <button 
-                    key={i}
-                    onClick={() => handleSendMessage(`Tell me more about the ${p.title} package.`)}
-                    style={{
-                      padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)',
-                      fontSize: '13px', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s',
-                      display: 'flex', alignItems: 'center', gap: '12px'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = `${GREEN}40`}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
-                  >
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${GREEN}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}>
-                      <Sparkles size={16} />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800, color: 'white', fontSize: '13px' }}>{p.title}</div>
-                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{p.duration}</div>
-                    </div>
-                  </button>
-                ))}
-             </div>
-          </div>
-        )}
+
         {loading && (
           <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '12px' }}>
              <div style={{ 
