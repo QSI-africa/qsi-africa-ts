@@ -21,7 +21,8 @@ import {
   Building2,
   Users,
   Activity,
-  FlaskConical
+  FlaskConical,
+  Download
 } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
@@ -93,6 +94,30 @@ const DefaultSidebarContent = () => {
   const { setIsMobileMenuOpen } = useSidebar();
   const [searchQuery, setSearchQuery] = useState('');
   const [concepts, setConcepts] = useState<any[]>([]);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
 
   useEffect(() => {
     api.get("/submit/concepts")
@@ -448,6 +473,26 @@ const DefaultSidebarContent = () => {
               Create Venture
             </button>
           </div> */}
+
+          {deferredPrompt && (
+            <div style={{ padding: '0 24px', marginTop: '16px' }}>
+              <button 
+                onClick={handleInstallClick}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  width: '100%', padding: '12px', borderRadius: '12px',
+                  background: 'rgba(16, 185, 129, 0.1)', color: '#10B981',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                className="hover:bg-[#10B981]/20 hover:border-[#10B981]/40"
+              >
+                <Download size={16} />
+                Install App
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
