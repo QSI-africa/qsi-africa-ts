@@ -454,15 +454,18 @@ const LabPage: React.FC = () => {
           borderRadius: '16px',
           padding: '4px',
           marginBottom: '32px',
-          maxWidth: '520px'
+          maxWidth: '520px',
+          overflowX: 'auto',
+          gap: '4px'
         }} className="lab-tabs no-scrollbar">
           <button 
             onClick={() => setActiveTab('programs')}
             style={{
-              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
               background: activeTab === 'programs' ? 'rgba(16,185,129,0.12)' : 'transparent',
               color: activeTab === 'programs' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
           >
             Academic Programs
@@ -470,10 +473,11 @@ const LabPage: React.FC = () => {
           <button 
             onClick={() => setActiveTab('lectures')}
             style={{
-              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
               background: activeTab === 'lectures' ? 'rgba(16,185,129,0.12)' : 'transparent',
               color: activeTab === 'lectures' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
           >
             Virtual Lectures
@@ -481,10 +485,11 @@ const LabPage: React.FC = () => {
           <button 
             onClick={() => setActiveTab('studio')}
             style={{
-              flex: 1, padding: '10px 0', border: 'none', borderRadius: '12px',
+              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
               background: activeTab === 'studio' ? 'rgba(16,185,129,0.12)' : 'transparent',
               color: activeTab === 'studio' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s'
+              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
           >
             Teacher Studio
