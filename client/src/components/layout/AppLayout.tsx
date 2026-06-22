@@ -629,7 +629,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           {sidebarContent || <DefaultSidebarContent />}
         </div>
         
-        {deferredPrompt && (
+        {/* {deferredPrompt && ( */}
           <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', background: 'rgba(10, 16, 24, 0.95)', flexShrink: 0 }}>
             <button 
               onClick={handleInstallClick}
@@ -647,7 +647,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               Install App
             </button>
           </div>
-        )}
+        {/* )} */}
       </aside>
 
       {/* 3. Main Workspace */}
