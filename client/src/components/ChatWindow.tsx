@@ -99,6 +99,7 @@ const ChatWindow: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Backend state
   const [fetchedSuggestions, setFetchedSuggestions] = useState<any[]>([]);
@@ -221,7 +222,9 @@ const ChatWindow: React.FC = () => {
   }, [moduleName, baseURL]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -433,7 +436,11 @@ const ChatWindow: React.FC = () => {
       </header>
 
       {/* Messages Area */}
-      <div className="p-4 md:p-8 no-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div 
+        ref={scrollContainerRef}
+        className="p-4 md:p-8 no-scrollbar" 
+        style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}
+      >
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
             <div 
