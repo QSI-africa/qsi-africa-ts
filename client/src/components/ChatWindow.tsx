@@ -361,7 +361,8 @@ const ChatWindow: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        flexShrink: 0
       }}>
         {/* 1. Back button */}
         <button
