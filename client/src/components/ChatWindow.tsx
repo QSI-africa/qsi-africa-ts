@@ -489,7 +489,7 @@ const ChatWindow: React.FC = () => {
 
       {/* Input Area */}
       <footer 
-        className="px-4 md:px-8 py-6 pb-10"
+        className="px-4 md:px-8 py-6 pb-10 mb-10"
         style={{ 
           background: 'transparent',
           position: 'relative',
