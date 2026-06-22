@@ -94,30 +94,6 @@ const DefaultSidebarContent = () => {
   const { setIsMobileMenuOpen } = useSidebar();
   const [searchQuery, setSearchQuery] = useState('');
   const [concepts, setConcepts] = useState<any[]>([]);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-        } else {
-          console.log('User dismissed the install prompt');
-        }
-        setDeferredPrompt(null);
-      });
-    }
-  };
 
   useEffect(() => {
     api.get("/submit/concepts")
@@ -474,25 +450,6 @@ const DefaultSidebarContent = () => {
             </button>
           </div> */}
 
-          {deferredPrompt && (
-            <div style={{ padding: '0 24px', marginTop: '16px' }}>
-              <button 
-                onClick={handleInstallClick}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  width: '100%', padding: '12px', borderRadius: '12px',
-                  background: 'rgba(16, 185, 129, 0.1)', color: '#10B981',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-                className="hover:bg-[#10B981]/20 hover:border-[#10B981]/40"
-              >
-                <Download size={16} />
-                Install App
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -502,9 +459,23 @@ const DefaultSidebarContent = () => {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen } = useSidebar();
+  const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen, deferredPrompt, setDeferredPrompt } = useSidebar();
   const [showDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
 
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
@@ -631,7 +602,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       )}
 
       {/* 2. Sidebar Panel (360px) */}
-      <aside className="sidebar-panel">
+      <aside className="sidebar-panel" style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="md:hidden absolute top-6 right-6 z-50">
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
@@ -654,7 +625,29 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <X size={20} strokeWidth={2.5} />
           </button>
         </div>
-        {sidebarContent || <DefaultSidebarContent />}
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          {sidebarContent || <DefaultSidebarContent />}
+        </div>
+        
+        {deferredPrompt && (
+          <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', background: 'rgba(10, 16, 24, 0.95)', flexShrink: 0 }}>
+            <button 
+              onClick={handleInstallClick}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                width: '100%', padding: '12px', borderRadius: '12px',
+                background: 'rgba(16, 185, 129, 0.1)', color: '#10B981',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              className="hover:bg-[#10B981]/20 hover:border-[#10B981]/40"
+            >
+              <Download size={16} />
+              Install App
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* 3. Main Workspace */}

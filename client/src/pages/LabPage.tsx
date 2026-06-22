@@ -397,7 +397,7 @@ const LabPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }} className="lab-container">
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px 100px 24px' }} className="lab-container">
         
         {!isAuthenticated && (
           <div style={{
@@ -796,20 +796,20 @@ const LabPage: React.FC = () => {
                   <button 
                     onClick={() => navigate('/login')}
                     style={{
-                      background: GREEN, border: 'none', color: 'black', padding: '12px 24px',
-                      borderRadius: '12px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+                      background: GREEN, border: 'none', color: 'black', padding: '10px 16px',
+                      borderRadius: '10px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px'
                     }}
                   >
-                    Log In <ArrowRight size={16} />
+                    Log In <ArrowRight size={14} />
                   </button>
                   <button 
                     onClick={() => navigate('/register')}
                     style={{
                       background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
-                      padding: '12px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer'
+                      padding: '10px 16px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '13px'
                     }}
                   >
-                    Create Account
+                    Sign Up
                   </button>
                 </div>
               </div>

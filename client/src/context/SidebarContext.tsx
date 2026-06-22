@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface SidebarContextType {
   sidebarContent: React.ReactNode | null;
@@ -7,6 +7,8 @@ interface SidebarContextType {
   setIsSidebarCollapsed: (collapsed: boolean) => void;
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
+  deferredPrompt: any;
+  setDeferredPrompt: (prompt: any) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -15,6 +17,16 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [sidebarContent, setSidebarContent] = useState<React.ReactNode | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   return (
     <SidebarContext.Provider value={{ 
@@ -23,7 +35,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isSidebarCollapsed,
       setIsSidebarCollapsed,
       isMobileMenuOpen,
-      setIsMobileMenuOpen
+      setIsMobileMenuOpen,
+      deferredPrompt,
+      setDeferredPrompt
     }}>
       {children}
     </SidebarContext.Provider>

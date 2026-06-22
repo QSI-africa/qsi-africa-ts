@@ -299,7 +299,7 @@ const EcosystemPage: React.FC = () => {
     <div style={{
       maxWidth: isDesktop ? '1200px' : '700px',
       margin: '0 auto',
-      padding: '24px 16px',
+      padding: '24px 16px 100px 16px',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
