@@ -885,6 +885,7 @@ const EcosystemPage: React.FC = () => {
               display: 'flex',
               gap: '12px',
               paddingTop: '20px',
+              paddingBottom: isDesktop ? '0' : '100px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <button 
@@ -1044,7 +1045,7 @@ const EcosystemPage: React.FC = () => {
         ) : (
           /* Mobile content for selected tab */
           activeMobileTab !== 'feed' && (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
               {activeMobileTab === 'concepts' ? (
                 <>
                   <div className="flex items-center justify-between">

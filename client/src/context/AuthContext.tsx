@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     delete api.defaults.headers.common["Authorization"];
     setToken(null);
     setUser(null);
@@ -77,8 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email, password) => {
     const response = await api.post("/auth/login", { email, password });
-    const { token, user } = response.data;
+    const { token, refreshToken, user } = response.data;
     localStorage.setItem("token", token);
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setToken(token);
     setUser(user);
@@ -92,8 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       phone,
     });
-    const { token, user } = response.data;
+    const { token, refreshToken, user } = response.data;
     localStorage.setItem("token", token);
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setToken(token);
     setUser(user);

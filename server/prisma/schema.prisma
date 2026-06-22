@@ -72,6 +72,7 @@ model User {
 
   passwordResetToken   String?
   passwordResetExpires DateTime?
+  refreshToken         String?
 
   // Mobility & Network Relations
   siteVisitRequests    SiteVisitRequest[]   @relation("UserSiteVisit")

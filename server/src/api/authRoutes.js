@@ -84,6 +84,12 @@ router.post("/login", authLimiter, async (req, res) => {
       expiresIn: "1d",
     });
 
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken }
+    });
+
     console.log(`[LOGIN] Success for user: ${user.id}`);
 
     // --- FIX: Add Credentials Header for CORS ---
@@ -92,6 +98,7 @@ router.post("/login", authLimiter, async (req, res) => {
 
     res.status(200).json({
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -344,8 +351,16 @@ router.post("/register-user", registrationLimiter, async (req, res) => {
       JWT_SECRET,
       { expiresIn: "1d" }
     );
+
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken }
+    });
+
     res.status(201).json({
       token,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -358,6 +373,48 @@ router.post("/register-user", registrationLimiter, async (req, res) => {
     if (error.code === "P2002") {
       return res.status(400).json({ error: "Email already exists." });
     }
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 7. Refresh Token
+router.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ error: "Refresh token is required." });
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: { refreshToken }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid refresh token." });
+    }
+
+    // Issue new tokens
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    
+    const newRefreshToken = crypto.randomBytes(40).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: newRefreshToken }
+    });
+
+    res.status(200).json({
+      token,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+      }
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
     res.status(500).json({ error: "Internal server error." });
   }
 });
