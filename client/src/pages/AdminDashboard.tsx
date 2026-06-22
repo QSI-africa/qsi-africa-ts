@@ -226,7 +226,7 @@ const AdminDashboard: React.FC = () => {
               label: <span className="flex items-center gap-2 py-2"><Code size={16} /> Lab Management</span>,
               children: (
                 <div className="py-8">
-                  <div className="flex justify-between items-center mb-10">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                     <h3 className="text-2xl font-bold text-white uppercase tracking-tight">R&D Categories</h3>
                     <button 
                       onClick={() => {
@@ -354,7 +354,7 @@ const AdminDashboard: React.FC = () => {
               label: <span className="flex items-center gap-2 py-2"><ShieldCheck size={16} /> Service Registry</span>,
               children: (
                 <div className="py-8">
-                  <div className="flex justify-between items-center mb-10">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                     <h3 className="text-2xl font-bold text-white uppercase tracking-tight">Core Services</h3>
                     <button 
                       onClick={() => {

@@ -16,14 +16,11 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   extra
 }) => {
   return (
-    <div style={{
+    <div className="unified-header" style={{
       padding: '24px 32px',
       background: 'rgba(10, 16, 24, 0.85)',
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 20

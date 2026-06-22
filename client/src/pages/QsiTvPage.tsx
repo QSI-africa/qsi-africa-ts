@@ -356,7 +356,7 @@ const QsiTvPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
         {/* Banner/Header */}
         <header className="p-8 lg:p-12 bg-bg-secondary relative overflow-hidden">
-          <div className="max-w-5xl mx-auto relative z-10 flex justify-between items-center ">
+          <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <button
               onClick={() => { setSelectedChannel(null); fetchChannels(); }}
               className="qsi-btn qsi-btn-secondary mb-6"
@@ -491,7 +491,7 @@ const QsiTvPage: React.FC = () => {
     <div className="flex-1 flex flex-col h-full bg-bg-primary">
       {/* Header */}
       <header className="p-8 lg:p-6 bg-bg-secondary relative overflow-hidden">
-        <div className=" mx-auto relative z-10 flex items-center justify-between flex-wrap gap-4">
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h1 className="text-md lg:text-3xl flex items-center gap-3 font-black text-white tracking-tighter  mb-4">
               <Tv size={20} />

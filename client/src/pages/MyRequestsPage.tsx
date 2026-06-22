@@ -173,7 +173,7 @@ const MyRequestsPage: React.FC = () => {
                 ),
                 children: (
                   <div className="py-6">
-                    <div className="flex justify-between items-center mb-8">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                        <h4 className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Secured Documents</h4>
                        <button className="qsi-button primary py-2 px-6 text-xs">Upload Document</button>
                     </div>

@@ -40,7 +40,7 @@ interface AppLayoutProps {
 const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: boolean) => {
   const iconStyle: React.CSSProperties = isVertical 
     ? { width: '24px', height: '24px', objectFit: 'contain' } 
-    : { width: '28px', height: '28px', objectFit: 'contain' };
+    : { width: '22px', height: '22px', objectFit: 'contain' };
 
   // For horizontal/circular items (isVertical = false), we want a pure white/green stencil effect
   const filterStyle = !isVertical
@@ -61,7 +61,7 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
     case 'Smart Infrastructure':
       return <img src={labIcon} alt={catName} style={mergedStyle} />;
     case 'PanX Lab':
-      return <FlaskConical size={isVertical ? 24 : 28} />;
+      return <FlaskConical size={isVertical ? 24 : 22} />;
     case 'PanX Mobility':
       return <img src={mobilityIcon} alt="PanX Mobility" style={mergedStyle} />;
     case 'Vision Space':
@@ -291,7 +291,7 @@ const DefaultSidebarContent = () => {
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            gap: "8px",
+            gap: "4px",
             padding: "8px 16px 24px 16px",
             overflowX: "hidden"
           }}
@@ -388,7 +388,7 @@ const DefaultSidebarContent = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredEcosystemItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname === item.path && (item.path !== '/concepts' || item.id === 'concepts');
               return (
                 <div 
                   key={item.id} 
@@ -587,7 +587,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* 2. Sidebar Panel (360px) */}
       <aside className="sidebar-panel">
-        <div className="md:hidden flex justify-end p-6 border-b border-white/5">
+        <div className="md:hidden absolute top-6 right-6 z-50">
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
             style={{
@@ -618,7 +618,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       </main>
 
       {/* 4. Mobile Bottom Bar */}
-      <nav className="mobile-nav-bar">
+      {!location.pathname.startsWith('/chat') && (
+        <nav className="mobile-nav-bar">
         <button 
           className={`mobile-nav-item ${isMobileMenuOpen ? 'active' : ''}`}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -666,6 +667,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <span className="mobile-nav-label">Profile</span>
         </button>
       </nav>
+      )}
 
       {/* 5. Details Panel (Optional) */}
       {showDetails && (
