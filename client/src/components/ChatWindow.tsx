@@ -31,7 +31,6 @@ import {
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
-import UnifiedHeader from "./layout/UnifiedHeader";
 
 const GREEN = '#10B981';
 
@@ -350,44 +349,87 @@ const ChatWindow: React.FC = () => {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
-      <UnifiedHeader
-        title={details.title}
-        subTitle="SYNCHRONIZED"
-        icon={details.icon}
-        extra={
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
-            <Lightbulb
+      <header style={{
+        padding: '24px 32px',
+        background: 'rgba(10, 16, 24, 0.85)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 20,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {/* 1. Back button */}
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.6)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '8px',
+            borderRadius: '50%',
+            transition: 'all 0.2s',
+            marginLeft: '-8px'
+          }}
+          className="hover:text-white hover:bg-white/5"
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        {/* 2. Name of Screen */}
+        <h1 style={{ 
+          fontSize: '18px', 
+          fontWeight: 900, 
+          color: 'white', 
+          letterSpacing: '-0.03em', 
+          lineHeight: 1, 
+          margin: 0,
+          textAlign: 'center'
+        }}>
+          {details.title}
+        </h1>
+
+        {/* 3. The rest of the icons */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
+          <Lightbulb
+            size={20}
+            style={{ cursor: 'pointer' }}
+            className="hover:text-accent-primary transition-colors"
+            onClick={() => {
+              setDrawerType('suggestions');
+              setIsDrawerOpen(true);
+            }}
+            title="Suggested Focus Areas"
+          />
+          {moduleName === 'healing' && (
+            <Package
               size={20}
               style={{ cursor: 'pointer' }}
               className="hover:text-accent-primary transition-colors"
               onClick={() => {
-                setDrawerType('suggestions');
+                setDrawerType('packages');
                 setIsDrawerOpen(true);
               }}
-              title="Suggested Focus Areas"
+              title="Healing Trajectories"
             />
-            {moduleName === 'healing' && (
-              <Package
-                size={20}
-                style={{ cursor: 'pointer' }}
-                className="hover:text-accent-primary transition-colors"
-                onClick={() => {
-                  setDrawerType('packages');
-                  setIsDrawerOpen(true);
-                }}
-                title="Healing Trajectories"
-              />
-            )}
-            <Info
-              size={20}
-              style={{ cursor: 'pointer' }}
-              className="hover:text-white transition-colors"
-              onClick={() => setIsInfoDrawerOpen(true)}
-              title="Information"
-            />
-          </div>
-        }
-      />
+          )}
+          <Info
+            size={20}
+            style={{ cursor: 'pointer' }}
+            className="hover:text-white transition-colors"
+            onClick={() => setIsInfoDrawerOpen(true)}
+            title="Information"
+          />
+        </div>
+      </header>
 
       {/* Messages Area */}
       <div className="p-4 md:p-8 no-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
