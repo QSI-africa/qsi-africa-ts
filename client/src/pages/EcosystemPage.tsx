@@ -3,7 +3,7 @@ import {
   CheckCircle2, Plus, Globe, 
   Heart, MessageCircle, Repeat, Send, Trash2,
   Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
-  Lightbulb, Building2, MapPin
+  Lightbulb, Building2, MapPin, Image as ImageIcon, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, message } from 'antd';
@@ -28,6 +28,7 @@ interface PostItem {
   content: string;
   createdAt: string;
   updatedAt: string;
+  imageUrl?: string | null;
   author: {
     id: string;
     name: string;
@@ -57,6 +58,8 @@ const EcosystemPage: React.FC = () => {
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [newPostText, setNewPostText] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submittingPost, setSubmittingPost] = useState(false);
 
   // New ecosystem state
@@ -198,19 +201,44 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+  };
+
   const handleCreatePost = async () => {
     if (!user) {
       message.info("Please log in or register to publish threads.");
       navigate('/login');
       return;
     }
-    if (!newPostText.trim()) return;
+    if (!newPostText.trim() && !selectedImage) return;
     setSubmittingPost(true);
     try {
-      const response = await api.post("/panx/posts", { content: newPostText });
+      let uploadedImageUrl = null;
+      if (selectedImage) {
+        const formData = new FormData();
+        formData.append('document', selectedImage);
+        formData.append('category', 'PANX_IMAGE');
+        const uploadRes = await api.post("/upload/document", formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadedImageUrl = uploadRes.data.document.url;
+      }
+      
+      const response = await api.post("/panx/posts", { content: newPostText, imageUrl: uploadedImageUrl });
       const newPost = response.data;
       setPosts(prev => [newPost, ...prev]);
       setNewPostText('');
+      removeImage();
     } catch (error) {
       console.error("Failed to create post", error);
     } finally {
@@ -548,10 +576,24 @@ const EcosystemPage: React.FC = () => {
                       lineHeight: 1.5
                     }}
                   />
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  {previewUrl && (
+                    <div style={{ position: 'relative', display: 'inline-block', marginTop: '8px', marginBottom: '8px' }}>
+                      <img src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} alt="preview" />
+                      <button onClick={removeImage} style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', padding: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} className="hover:text-accent-primary hover:bg-white/10">
+                        <ImageIcon size={18} />
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                      </label>
+                    </div>
                     <button
                       onClick={handleCreatePost}
-                      disabled={!newPostText.trim() || submittingPost}
+                      disabled={(!newPostText.trim() && !selectedImage) || submittingPost}
                       style={{
                         background: 'var(--accent-primary)',
                         color: 'black',
@@ -562,7 +604,7 @@ const EcosystemPage: React.FC = () => {
                         fontWeight: 900,
                         textTransform: 'uppercase',
                         cursor: 'pointer',
-                        opacity: newPostText.trim() && !submittingPost ? 1 : 0.5,
+                        opacity: (newPostText.trim() || selectedImage) && !submittingPost ? 1 : 0.5,
                         transition: 'all 0.2s',
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -747,6 +789,12 @@ const EcosystemPage: React.FC = () => {
                         }}>
                           {post.content}
                         </p>
+                        
+                        {post.imageUrl && (
+                          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <img src={post.imageUrl} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                          </div>
+                        )}
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                           <button 

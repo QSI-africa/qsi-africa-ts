@@ -95,7 +95,7 @@ router.use(authMiddleware);
 
 // 2. Create a new feed post (thread)
 router.post("/posts", async (req, res) => {
-  const { content } = req.body;
+  const { content, imageUrl } = req.body;
   if (!content || !content.trim()) {
     return res.status(400).json({ error: "Content is required to post." });
   }
@@ -104,6 +104,7 @@ router.post("/posts", async (req, res) => {
     const newPost = await prisma.panxPost.create({
       data: {
         content: content.trim(),
+        imageUrl: imageUrl || null,
         authorId: req.user.id
       },
       include: {

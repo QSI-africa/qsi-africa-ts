@@ -662,6 +662,7 @@ model LabRecording {
 model PanxPost {
   id        String       @id @default(cuid())
   content   String       @db.Text
+  imageUrl  String?
   authorId  String
   author    User         @relation("UserPanxPosts", fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
