@@ -45,6 +45,14 @@ interface PostItem {
   repliesCount: number;
 }
 
+const getServerUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+  const origin = new URL(baseURL).origin;
+  return `${origin}${path}`;
+};
+
 const EcosystemPage: React.FC = () => {
   const navigate = useNavigate();
   const authContext = useAuth();
@@ -792,7 +800,7 @@ const EcosystemPage: React.FC = () => {
                         
                         {post.imageUrl && (
                           <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <img src={post.imageUrl} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                            <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
                           </div>
                         )}
 
