@@ -45,6 +45,12 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (remoteStream && videoRef.current) {
+      videoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
   const isMobile = windowWidth <= 768;
   const servers = {
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
