@@ -79,6 +79,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   useEffect(() => {
     if (localStream && videoRef.current) {
       videoRef.current.srcObject = localStream;
+      videoRef.current.play().catch(e => console.warn("Video play failed", e));
     }
   }, [localStream]);
 
@@ -114,7 +115,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
         let stream: MediaStream;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
         } catch (mediaErr) {
           console.warn('Initial getUserMedia failed, attempting device-specific fallbacks...', mediaErr);
           try {
@@ -124,7 +125,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
             if (hasVideo || hasAudio) {
               stream = await navigator.mediaDevices.getUserMedia({
-                video: hasVideo,
+                video: hasVideo ? { facingMode: 'user' } : false,
                 audio: hasAudio
               });
             } else {

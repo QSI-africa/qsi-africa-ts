@@ -48,6 +48,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   useEffect(() => {
     if (remoteStream && videoRef.current) {
       videoRef.current.srcObject = remoteStream;
+      videoRef.current.play().catch(e => console.warn("Video play failed", e));
     }
   }, [remoteStream]);
 
