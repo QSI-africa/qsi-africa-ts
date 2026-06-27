@@ -420,8 +420,9 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
         {/* Media Controller dock */}
         <div style={{
-          padding: '20px 24px', background: 'linear-gradient(to top, rgba(7,12,20,1) 0%, rgba(7,12,20,0.8) 80%, rgba(7,12,20,0) 100%)',
-          display: 'flex', justifyContent: 'center', gap: '12px', zIndex: 10
+          padding: isMobile ? '16px' : '20px 24px',
+          background: 'linear-gradient(to top, rgba(7,12,20,1) 0%, rgba(7,12,20,0.8) 80%, rgba(7,12,20,0) 100%)',
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: isMobile ? '8px' : '12px', zIndex: 10
         }}>
           <ControlBtn onClick={toggleMute} active={!isMuted} danger={isMuted} title={isMuted ? 'Unmute Mic' : 'Mute Mic'}>
             {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
