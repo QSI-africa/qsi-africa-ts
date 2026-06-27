@@ -175,6 +175,11 @@ const setupVideoSignaling = (server) => {
       }
     });
 
+    socket.on("leave-broadcast", (roomId) => {
+      socket.leave(roomId);
+      console.log(`[Viewer] Left broadcast: ${roomId} from ${socket.id}`);
+    });
+
     // --- Chat Messaging ---
     socket.on("send-chat-message", (payload) => {
       const { roomId, message } = payload;

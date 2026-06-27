@@ -139,6 +139,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     return () => {
       pc.current?.close();
       clearInterval(retryInterval);
+      socketService.emit('leave-broadcast', roomId);
       socketService.off('offer');
       socketService.off('ice-candidate');
       socketService.off('broadcast-ended');

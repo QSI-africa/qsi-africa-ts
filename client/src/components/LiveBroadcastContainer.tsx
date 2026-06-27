@@ -218,7 +218,12 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     startBroadcasting();
 
     return () => {
-      // Cleanup events just in case
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      peerConnections.current.forEach(pc => pc.close());
+      socketService.emit('stop-broadcast', roomId.current);
+
       socketService.off('viewer-joined');
       socketService.off('answer');
       socketService.off('ice-candidate');
