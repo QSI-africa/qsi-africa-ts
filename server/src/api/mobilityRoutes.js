@@ -61,9 +61,7 @@ router.post("/vehicle-hire", authMiddleware, async (req, res) => {
   const { location, duration, price, details } = req.body;
   const engineerId = req.user.id;
 
-  if (req.user.role !== "ENGINEER" && req.user.role !== "ADMIN" && req.user.role !== "SUPER_USER") {
-    return res.status(403).json({ error: "Only engineers or admins can request vehicle hire." });
-  }
+  // Restriction removed: Anyone can request vehicle hire
 
   try {
     const hireRequest = await prisma.vehicleHireRequest.create({
