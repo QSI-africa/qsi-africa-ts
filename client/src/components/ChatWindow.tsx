@@ -402,7 +402,7 @@ const ChatWindow: React.FC = () => {
         </h1>
 
         {/* 3. The rest of the icons */}
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'rgba(255,255,255,0.3)' }}>
+        <div className="flex md:hidden items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
           <Lightbulb
             size={20}
             style={{ cursor: 'pointer' }}

@@ -56,6 +56,12 @@ const ConceptDetailPage: React.FC = () => {
   }, [pilot?.metrics]);
 
   const fetchPilotDetail = useCallback(async () => {
+    if (id && ["placebo", "heritage_flame", "futurecraft"].includes(id)) {
+      setPilot({ key: id });
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {

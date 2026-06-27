@@ -1,6 +1,6 @@
 // client/src/components/LiveViewerContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, X, Signal, Lock } from 'lucide-react';
+import { MessageSquare, X, Signal, Lock, Maximize, Minimize } from 'lucide-react';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +22,22 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   const videoRef = useRef<HTMLVideoElement>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await containerRef.current?.requestFullscreen().catch(console.error);
+    } else {
+      await document.exitFullscreen().catch(console.error);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -34,6 +50,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
   };
   const broadcasterId = useRef<string | null>(null);
+  const hasReceivedOffer = useRef(false);
 
   // ─── Clean close: stop peer, remove listeners ──────────────────────────────
   const handleClose = () => {
@@ -66,6 +83,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
       socketService.on('offer', async ({ offer, senderUserId }) => {
         if (pc.current) {
+          hasReceivedOffer.current = true;
           broadcasterId.current = senderUserId;
           await pc.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pc.current.createAnswer();
@@ -106,7 +124,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
     initPC();
 
     const retryInterval = setInterval(() => {
-      if (!remoteStream && pc.current && !error) {
+      if (!remoteStream && pc.current && !error && !hasReceivedOffer.current) {
         socketService.emit('request-join-broadcast', roomId);
       }
     }, 3000);
@@ -122,7 +140,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   }, [roomId, error]);
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       display: 'grid',
       gridTemplateColumns: !isMobile && showChat && !error ? '1fr 340px' : '1fr',
       height: '100%',
@@ -152,6 +170,17 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
+            <button
+              onClick={toggleFullscreen}
+              style={{
+                width: '40px', height: '40px', borderRadius: '12px', border: 'none',
+                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+                color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+            </button>
             {!error && (
               <button
                 onClick={() => setShowChat(!showChat)}

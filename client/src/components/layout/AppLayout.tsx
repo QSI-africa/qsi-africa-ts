@@ -128,21 +128,21 @@ const DefaultSidebarContent = () => {
       id: 'placebo',
       name: 'Placebo',
       description: 'Strategic healing & medical systems',
-      path: placeboConcept ? `/concepts/${placeboConcept.id}` : '/concepts',
+      path: '/concepts/placebo',
       icon: <Heart size={24} />
     },
     {
       id: 'heritage-flame',
       name: 'Heritage Flame',
       description: 'Cultural & renewable energy networks',
-      path: heritageConcept ? `/concepts/${heritageConcept.id}` : '/concepts',
+      path: '/concepts/heritage_flame',
       icon: <Flame size={24} />
     },
     {
       id: 'future-craft',
       name: 'Future Craft',
       description: 'Cooperative digital production',
-      path: futureCraftConcept ? `/concepts/${futureCraftConcept.id}` : '/concepts',
+      path: '/concepts/futurecraft',
       icon: <Hammer size={24} />
     },
     {

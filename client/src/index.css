@@ -47,11 +47,6 @@
   
   /* Layout Constants */
   --rail-width: 72px;
-  --sidebar-width: 500px;
-
-  /* Layout Constants */
-  --rail-width: 72px;
-  --sidebar-width: 500px;
 }
 
 * {
@@ -72,7 +67,7 @@ body {
 /* --- Layout Architecture (CSS Grid) --- */
 .app-grid {
   display: grid;
-  grid-template-columns: var(--rail-width) var(--sidebar-width) 1fr 0px; 
+  grid-template-columns: var(--rail-width) 1fr 2.7fr 0px; 
   grid-template-rows: 100vh;
   width: 100vw;
   height: 100vh;
@@ -81,7 +76,7 @@ body {
 }
 
 .app-grid.with-details {
-  grid-template-columns: var(--rail-width) var(--sidebar-width) 1fr 340px;
+  grid-template-columns: var(--rail-width) 1fr 2fr 340px;
 }
 
 /* Area Styling */
@@ -626,6 +621,14 @@ body {
 
   .has-bottom-nav .main-workspace {
     padding-bottom: 72px; /* Space for bottom nav */
+  }
+
+  body.hide-mobile-nav .mobile-nav-bar {
+    display: none !important;
+  }
+
+  body.hide-mobile-nav .has-bottom-nav .main-workspace {
+    padding-bottom: 0 !important;
   }
 }
 

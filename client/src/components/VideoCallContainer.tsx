@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Link2, PhoneOff, Users
+  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize
 } from 'lucide-react';
 import { App } from 'antd';
 import { socketService } from '../services/socket';
@@ -64,6 +64,22 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const isMobile = windowWidth <= 768;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await containerRef.current?.requestFullscreen().catch(console.error);
+    } else {
+      await document.exitFullscreen().catch(console.error);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -291,7 +307,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const allParticipants = remoteParticipants.length + 1;
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       display: 'grid',
       gridTemplateColumns: !isMobile && showChat ? '1fr 340px' : '1fr',
       height: '100%',
@@ -381,6 +397,9 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={20} />
+          </ControlBtn>
+          <ControlBtn onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
           </ControlBtn>
           <ControlBtn onClick={copyShareLink} title="Copy Invite Link">
             <Link2 size={20} />

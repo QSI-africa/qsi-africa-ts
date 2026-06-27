@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Radio, Eye, Lock, Globe, Link2
+  MessageSquare, Radio, Eye, Lock, Globe, Link2, Maximize, Minimize
 } from 'lucide-react';
 import { App } from 'antd';
 import { socketService } from '../services/socket';
@@ -53,6 +53,22 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const roomId = useRef(`live-${Math.random().toString(36).substring(7)}`);
   const isMobile = windowWidth <= 768;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await containerRef.current?.requestFullscreen().catch(console.error);
+    } else {
+      await document.exitFullscreen().catch(console.error);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -132,7 +148,11 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         socketService.emit('start-broadcast', roomId.current, { title, isPrivate });
 
         socketService.on('viewer-joined', async ({ viewerId }) => {
-          setViewerCount(prev => prev + 1);
+          if (peerConnections.current.has(viewerId)) {
+            peerConnections.current.get(viewerId)?.close();
+          } else {
+            setViewerCount(prev => prev + 1);
+          }
           const pc = new RTCPeerConnection(servers);
           peerConnections.current.set(viewerId, pc);
           stream.getTracks().forEach(track => pc.addTrack(track, stream));
@@ -289,7 +309,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   };
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       display: 'grid',
       gridTemplateColumns: !isMobile && showChat ? '1fr 340px' : '1fr',
       height: '100%',
@@ -410,6 +430,10 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={18} />
+          </ControlBtn>
+
+          <ControlBtn onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
+            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
           </ControlBtn>
 
           <ControlBtn onClick={copyViewerLink} title="Copy Viewer Link">

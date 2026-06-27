@@ -102,6 +102,16 @@ const QsiTvPage: React.FC = () => {
     fetchMyChannel();
   }, []);
 
+  // Hide mobile navbar during active session
+  useEffect(() => {
+    if (activeRoomId || isBroadcasting || activeViewerRoom) {
+      document.body.classList.add('hide-mobile-nav');
+    } else {
+      document.body.classList.remove('hide-mobile-nav');
+    }
+    return () => document.body.classList.remove('hide-mobile-nav');
+  }, [activeRoomId, isBroadcasting, activeViewerRoom]);
+
   const fetchChannels = async () => {
     setIsLoadingChannels(true);
     try {
