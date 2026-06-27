@@ -256,7 +256,7 @@ const QsiTvPage: React.FC = () => {
       message.success('Media file synchronized successfully.');
     } catch (err) {
       console.error('Upload failed:', err);
-      message.error('File upload failed.');
+      message.error(err?.response?.data?.error || err?.response?.data?.message || 'File upload failed.');
     } finally {
       setIsUploadingFile(false);
     }
@@ -724,8 +724,8 @@ const QsiTvPage: React.FC = () => {
                               try {
                                 await api.delete('/tv/channels/my-channel');
                                 fetchMyChannel();
-                              } catch {
-                                message.error('Failed to reset request.');
+                              } catch (err: any) {
+                                message.error(err?.response?.data?.error || err?.response?.data?.message || 'Failed to reset request.');
                               }
                             }}
                             className="qsi-btn qsi-btn-primary"

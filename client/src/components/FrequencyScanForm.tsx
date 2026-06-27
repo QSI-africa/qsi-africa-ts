@@ -86,7 +86,7 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
       onComplete();
     } catch (error) {
       console.error('Scan submission failed:', error);
-      message.error('Failed to submit scan. Please try again.');
+      message.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to submit scan. Please try again.');
     } finally {
       setLoading(false);
     }

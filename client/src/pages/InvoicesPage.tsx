@@ -38,7 +38,7 @@ const InvoicesPage: React.FC = () => {
         setInvoices(response.data);
       } catch (error) {
         console.error("Failed to fetch invoices:", error);
-        message.error("Failed to load your invoices.");
+        message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to load your invoices.");
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ const InvoicesPage: React.FC = () => {
       link.remove();
     } catch (error) {
       console.error("Download failed", error);
-      message.error("Could not download PDF.");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Could not download PDF.");
     }
   };
 

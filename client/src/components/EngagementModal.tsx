@@ -57,7 +57,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       onClose();
       form.resetFields();
     } catch (err) {
-      message.error("Synchronization failed. Please check your connection.");
+      message.error(err?.response?.data?.error || err?.response?.data?.message || "Synchronization failed. Please check your connection.");
     } finally {
       setLoading(false);
     }

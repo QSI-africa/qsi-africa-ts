@@ -97,7 +97,7 @@ const ServicesPage: React.FC = () => {
       setProducts(allProducts);
     } catch (error) {
       console.error("Failed to fetch products:", error);
-      message.error("Failed to load products.");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to load products.");
     } finally {
       setLoading(false);
     }

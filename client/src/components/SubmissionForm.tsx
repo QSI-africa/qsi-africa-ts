@@ -70,7 +70,7 @@ const SubmissionForm: React.FC = () => {
       form.resetFields();
     } catch (error) {
       console.error("Submission failed:", error);
-      message.error("Frequency synchronization failure. Please try again.");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Frequency synchronization failure. Please try again.");
     } finally {
       setLoading(false);
     }

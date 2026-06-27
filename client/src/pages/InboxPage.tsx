@@ -80,7 +80,7 @@ const InboxPage: React.FC = () => {
       setDiscoverUsers(response.data);
     } catch (error) {
       console.error("Failed to fetch discoverable users:", error);
-      message.error("Failed to fetch user list.");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to fetch user list.");
     } finally {
       setDiscoverLoading(false);
     }
@@ -104,7 +104,7 @@ const InboxPage: React.FC = () => {
       message.success("Conversation established.");
     } catch (error) {
       console.error("Failed to start conversation:", error);
-      message.error("Failed to start conversation.");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to start conversation.");
     }
   };
 

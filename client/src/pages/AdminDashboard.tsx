@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
       const data = await res.json();
       setCategories(data);
     } catch (error) {
-      message.error("Failed to fetch lab data");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to fetch lab data");
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +113,7 @@ const AdminDashboard: React.FC = () => {
         fetchLabData();
       }
     } catch (error) {
-      message.error("Failed to synchronize category");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize category");
     }
   };
 
@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
         fetchLabData();
       }
     } catch (error) {
-      message.error("Failed to synchronize package");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize package");
     }
   };
 
@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
         fetchLabData();
       }
     } catch (error) {
-      message.error("Failed to purge category");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to purge category");
     }
   };
 
@@ -164,7 +164,7 @@ const AdminDashboard: React.FC = () => {
         fetchRegistryData();
       }
     } catch (error) {
-      message.error("Failed to update service registry");
+      message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to update service registry");
     }
   };
 

@@ -123,7 +123,7 @@ const LabPage: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      message.error("Failed to load categories.");
+      message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to load categories.");
     } finally {
       setCategoriesLoading(false);
     }
@@ -143,7 +143,7 @@ const LabPage: React.FC = () => {
       console.error(err);
       // Only show error message if it is not an expected 401 Unauthorized
       if (err.response?.status !== 401) {
-        message.error("Failed to load recordings.");
+        message.error(err.response?.data?.error || err.response?.data?.message || "Failed to load recordings.");
       }
     } finally {
       setRecordingsLoading(false);
@@ -289,7 +289,7 @@ const LabPage: React.FC = () => {
       message.success("Recording deleted.");
       fetchRecordings();
     } catch (err) {
-      message.error("Failed to delete recording.");
+      message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to delete recording.");
     }
   };
 
@@ -922,8 +922,8 @@ const LabPage: React.FC = () => {
                       setChannelLoading(true);
                       await api.delete('/tv/channels/my-channel');
                       setMyChannel(null);
-                    } catch(err) {
-                      message.error("Failed to reset application.");
+                    } catch (err) {
+                      message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to reset application.");
                     } finally {
                       setChannelLoading(false);
                     }

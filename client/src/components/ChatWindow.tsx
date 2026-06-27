@@ -137,9 +137,9 @@ const ChatWindow: React.FC = () => {
       setUploadedDocumentIds(prev => [...prev, ...uploadedIds]);
       antMessage.success(`Successfully uploaded ${files.length} file(s)`);
       return uploadedIds;
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Upload] Error:", error);
-      antMessage.error("File upload failed.");
+      antMessage.error(error?.response?.data?.error || error?.response?.data?.message || "File upload failed.");
       return [];
     }
   }, [baseURL, isAuthenticated, user, antMessage]);
@@ -193,8 +193,8 @@ const ChatWindow: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      antMessage.error("Synchronization failure.");
+    } catch (error: any) {
+      antMessage.error(error?.response?.data?.error || error?.response?.data?.message || "Synchronization failure.");
       setMessages(prev => [...prev, { 
         sender: "ai", 
         text: "Error: Coherence interrupted. Please try again.",
@@ -698,8 +698,8 @@ const ChatWindow: React.FC = () => {
                   });
                   antMessage.success("Operational request transmitted to administrators.");
                   setIsModalVisible(false);
-                } catch (err) {
-                  antMessage.error("Failed to transmit request.");
+                } catch (err: any) {
+                  antMessage.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to transmit request.");
                 } finally {
                   setInquiryLoading(false);
                 }
