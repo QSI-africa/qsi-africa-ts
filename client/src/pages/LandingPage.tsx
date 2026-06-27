@@ -440,7 +440,7 @@ const LandingPage: React.FC = () => {
         style={{
           maxWidth: "700px",
           margin: "0 auto",
-          padding: "24px 16px",
+          padding: "24px 16px 100px 16px",
           display: "flex",
           flexDirection: "column",
           gap: "24px",
@@ -498,6 +498,9 @@ const LandingPage: React.FC = () => {
                   outline: "none",
                   fontFamily: "inherit",
                   lineHeight: 1.5,
+                  padding: "12px",
+                  borderRadius: "12px",
+                  background: "rgba(255,255,255,0.02)"
                 }}
               />
               {previewUrl && (

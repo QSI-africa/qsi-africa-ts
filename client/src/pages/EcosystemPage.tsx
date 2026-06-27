@@ -429,8 +429,6 @@ const EcosystemPage: React.FC = () => {
         gap: '32px',
         width: '100%',
         alignItems: 'flex-start'
-      }}>
-        
         {/* Left/Main Column: Threads Feed */}
         {(isDesktop || activeMobileTab === 'feed') && (
           <div style={{
@@ -439,7 +437,8 @@ const EcosystemPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '24px',
-            width: '100%'
+            width: '100%',
+            paddingBottom: '100px'
           }}>
             {/* Horizontal Feed Filters */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)', padding: '12px 0' }}>
@@ -581,7 +580,10 @@ const EcosystemPage: React.FC = () => {
                       fontSize: '13.5px',
                       outline: 'none',
                       fontFamily: 'inherit',
-                      lineHeight: 1.5
+                      lineHeight: 1.5,
+                      padding: "12px",
+                      borderRadius: "12px",
+                      background: "rgba(255,255,255,0.02)"
                     }}
                   />
                   {previewUrl && (
