@@ -215,15 +215,28 @@ const LabPage: React.FC = () => {
       navigate('/login');
       return;
     }
-    if (!newChannelTitle || !newChannelDesc) {
+    const title = newChannelTitle.trim();
+    const desc = newChannelDesc.trim();
+
+    if (!title || !desc) {
       message.warning("Channel title and description are required.");
+      return;
+    }
+    
+    if (title.length < 3) {
+      message.warning("Channel title must be at least 3 characters long.");
+      return;
+    }
+    
+    if (desc.length < 10) {
+      message.warning("Channel description must be at least 10 characters long.");
       return;
     }
     try {
       setIsSubmittingChannel(true);
       const res = await api.post('/tv/channels/request', {
-        title: newChannelTitle,
-        description: newChannelDesc
+        title,
+        description: desc
       });
       setMyChannel(res.data);
       message.success("Teacher profile requested! Admin approval pending.");
@@ -237,8 +250,28 @@ const LabPage: React.FC = () => {
   // Upload and publish recording
   const handlePublishRecording = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newRecTitle || !newRecCategory || !newRecFile) {
+    const title = newRecTitle.trim();
+    const desc = newRecDesc.trim();
+
+    if (!title || !desc || !newRecCategory || !newRecFile) {
       message.warning("Please fill out all fields and select a media file.");
+      return;
+    }
+
+    if (title.length < 3) {
+      message.warning("Lecture title must be at least 3 characters long.");
+      return;
+    }
+
+    if (desc.length < 10) {
+      message.warning("Lecture description must be at least 10 characters long.");
+      return;
+    }
+
+    // Backend limit is 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (newRecFile.size > MAX_FILE_SIZE) {
+      message.warning("Media file size must be less than 10MB.");
       return;
     }
 
@@ -260,8 +293,8 @@ const LabPage: React.FC = () => {
 
       // 2. Create the LabRecording record
       await api.post('/lab/recordings', {
-        title: newRecTitle,
-        description: newRecDesc,
+        title,
+        description: desc,
         mediaUrl: fileUrl,
         mimeType: newRecMime,
         categoryId: newRecCategory
