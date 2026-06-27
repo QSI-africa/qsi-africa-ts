@@ -46,7 +46,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" })); // Also limit JSON body size
+app.use(express.json({ limit: "20mb" })); // Also limit JSON body size
 
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

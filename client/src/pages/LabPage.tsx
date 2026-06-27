@@ -268,10 +268,10 @@ const LabPage: React.FC = () => {
       return;
     }
 
-    // Backend limit is 10MB
-    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    // Backend limit is 20MB
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
     if (newRecFile.size > MAX_FILE_SIZE) {
-      message.warning("Media file size must be less than 10MB.");
+      message.warning("Media file size must be less than 20MB.");
       return;
     }
 
