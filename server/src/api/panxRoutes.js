@@ -40,11 +40,21 @@ router.get("/posts", async (req, res) => {
           }
         },
         replies: {
+          where: { parentId: null },
           orderBy: { createdAt: "asc" },
           include: {
             author: {
               select: { id: true, name: true, email: true, role: true, location: true }
-            }
+            },
+            children: {
+              include: {
+                author: { select: { id: true, name: true, email: true, role: true, location: true } },
+                ...(userId ? { likes: { where: { userId }, select: { id: true } } } : {}),
+                _count: { select: { likes: true } }
+              }
+            },
+            ...(userId ? { likes: { where: { userId }, select: { id: true } } } : {}),
+            _count: { select: { likes: true } }
           }
         },
         ...(userId ? {
@@ -55,10 +65,14 @@ router.get("/posts", async (req, res) => {
           reposts: {
             where: { userId },
             select: { id: true }
+          },
+          bookmarks: {
+            where: { userId },
+            select: { id: true }
           }
         } : {}),
         _count: {
-          select: { likes: true, reposts: true, replies: true }
+          select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true }
         }
       }
     });
@@ -75,12 +89,30 @@ router.get("/posts", async (req, res) => {
       },
       hasLiked: (userId && post.likes) ? post.likes.length > 0 : false,
       hasReposted: (userId && post.reposts) ? post.reposts.length > 0 : false,
+      hasBookmarked: (userId && post.bookmarks) ? post.bookmarks.length > 0 : false,
       likesCount: post._count.likes,
       repostsCount: post._count.reposts,
       repliesCount: post._count.replies,
+      sharesCount: post._count.shares,
+      bookmarksCount: post._count.bookmarks,
       likes: undefined,
       reposts: undefined,
-      _count: undefined
+      bookmarks: undefined,
+      _count: undefined,
+      replies: post.replies.map(reply => ({
+        ...reply,
+        hasLiked: (userId && reply.likes) ? reply.likes.length > 0 : false,
+        likesCount: reply._count.likes,
+        likes: undefined,
+        _count: undefined,
+        children: reply.children ? reply.children.map(child => ({
+          ...child,
+          hasLiked: (userId && child.likes) ? child.likes.length > 0 : false,
+          likesCount: child._count.likes,
+          likes: undefined,
+          _count: undefined
+        })) : []
+      }))
     }));
 
     res.json(formattedPosts);
@@ -95,7 +127,7 @@ router.use(authMiddleware);
 
 // 2. Create a new feed post (thread)
 router.post("/posts", async (req, res) => {
-  const { content, imageUrl } = req.body;
+  const { content, imageUrl, videoUrl, mediaType } = req.body;
   if (!content || !content.trim()) {
     return res.status(400).json({ error: "Content is required to post." });
   }
@@ -105,6 +137,8 @@ router.post("/posts", async (req, res) => {
       data: {
         content: content.trim(),
         imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        mediaType: mediaType || null,
         authorId: req.user.id
       },
       include: {
@@ -122,9 +156,12 @@ router.post("/posts", async (req, res) => {
       ...newPost,
       hasLiked: false,
       hasReposted: false,
+      hasBookmarked: false,
       likesCount: 0,
       repostsCount: 0,
       repliesCount: 0,
+      sharesCount: 0,
+      bookmarksCount: 0,
       _count: undefined
     });
   } catch (error) {
@@ -136,7 +173,7 @@ router.post("/posts", async (req, res) => {
 // 3. Reply to a post
 router.post("/posts/:postId/reply", async (req, res) => {
   const { postId } = req.params;
-  const { content } = req.body;
+  const { content, parentId } = req.body;
 
   if (!content || !content.trim()) {
     return res.status(400).json({ error: "Content is required to reply." });
@@ -155,6 +192,7 @@ router.post("/posts/:postId/reply", async (req, res) => {
       data: {
         content: content.trim(),
         postId,
+        parentId: parentId || null,
         authorId: req.user.id
       },
       include: {
@@ -164,7 +202,12 @@ router.post("/posts/:postId/reply", async (req, res) => {
       }
     });
 
-    res.status(201).json(reply);
+    res.status(201).json({
+      ...reply,
+      hasLiked: false,
+      likesCount: 0,
+      children: []
+    });
   } catch (error) {
     console.error("Failed to create reply:", error);
     res.status(500).json({ error: "Failed to create reply." });
@@ -382,6 +425,285 @@ router.post("/users/:userId/follow", async (req, res) => {
   } catch (error) {
     console.error("Failed to toggle follow status:", error);
     res.status(500).json({ error: "Failed to update follow status." });
+  }
+});
+
+// 9. Toggle bookmark on a post
+router.post("/posts/:postId/bookmark", async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const post = await prisma.panxPost.findUnique({ where: { id: postId } });
+    if (!post) return res.status(404).json({ error: "Post not found." });
+
+    const existingBookmark = await prisma.panxBookmark.findUnique({
+      where: { postId_userId: { postId, userId } }
+    });
+
+    let bookmarked = false;
+    if (existingBookmark) {
+      await prisma.panxBookmark.delete({
+        where: { postId_userId: { postId, userId } }
+      });
+    } else {
+      await prisma.panxBookmark.create({
+        data: { postId, userId }
+      });
+      bookmarked = true;
+    }
+
+    const bookmarksCount = await prisma.panxBookmark.count({ where: { postId } });
+    res.json({ bookmarked, bookmarksCount });
+  } catch (error) {
+    console.error("Failed to toggle bookmark:", error);
+    res.status(500).json({ error: "Failed to handle bookmark request." });
+  }
+});
+
+// 10. Record a share on a post
+router.post("/posts/:postId/share", async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const post = await prisma.panxPost.findUnique({ where: { id: postId } });
+    if (!post) return res.status(404).json({ error: "Post not found." });
+
+    await prisma.panxShare.create({
+      data: { postId, userId }
+    });
+
+    const sharesCount = await prisma.panxShare.count({ where: { postId } });
+    res.json({ shared: true, sharesCount });
+  } catch (error) {
+    console.error("Failed to record share:", error);
+    res.status(500).json({ error: "Failed to record share." });
+  }
+});
+
+// 11. Toggle like on a reply
+router.post("/replies/:replyId/like", async (req, res) => {
+  const { replyId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const reply = await prisma.panxReply.findUnique({ where: { id: replyId } });
+    if (!reply) return res.status(404).json({ error: "Reply not found." });
+
+    const existingLike = await prisma.panxReplyLike.findUnique({
+      where: { replyId_userId: { replyId, userId } }
+    });
+
+    let liked = false;
+    if (existingLike) {
+      await prisma.panxReplyLike.delete({
+        where: { replyId_userId: { replyId, userId } }
+      });
+    } else {
+      await prisma.panxReplyLike.create({
+        data: { replyId, userId }
+      });
+      liked = true;
+    }
+
+    const likesCount = await prisma.panxReplyLike.count({ where: { replyId } });
+    res.json({ liked, likesCount });
+  } catch (error) {
+    console.error("Failed to toggle reply like:", error);
+    res.status(500).json({ error: "Failed to handle reply like." });
+  }
+});
+
+// 12. Delete a reply
+router.delete("/replies/:replyId", async (req, res) => {
+  const { replyId } = req.params;
+
+  try {
+    const reply = await prisma.panxReply.findUnique({ where: { id: replyId } });
+    if (!reply) return res.status(404).json({ error: "Reply not found." });
+
+    if (reply.authorId !== req.user.id && req.user.role !== "SUPER_USER" && req.user.role !== "ADMIN") {
+      return res.status(403).json({ error: "Unauthorized to delete this reply." });
+    }
+
+    await prisma.panxReply.delete({ where: { id: replyId } });
+    res.json({ message: "Reply deleted successfully." });
+  } catch (error) {
+    console.error("Failed to delete reply:", error);
+    res.status(500).json({ error: "Failed to delete reply." });
+  }
+});
+
+// 13. Get user's saved (bookmarked) posts
+router.get("/saved", async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const bookmarks = await prisma.panxBookmark.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: { id: true, name: true, email: true, role: true, location: true }
+            },
+            replies: {
+              where: { parentId: null },
+              orderBy: { createdAt: "asc" },
+              include: {
+                author: { select: { id: true, name: true, email: true, role: true, location: true } },
+                children: {
+                  include: {
+                    author: { select: { id: true, name: true, email: true, role: true, location: true } },
+                    likes: { where: { userId }, select: { id: true } },
+                    _count: { select: { likes: true } }
+                  }
+                },
+                likes: { where: { userId }, select: { id: true } },
+                _count: { select: { likes: true } }
+              }
+            },
+            likes: { where: { userId }, select: { id: true } },
+            reposts: { where: { userId }, select: { id: true } },
+            bookmarks: { where: { userId }, select: { id: true } },
+            _count: {
+              select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true }
+            }
+          }
+        }
+      }
+    });
+
+    const formattedPosts = bookmarks.map(b => b.post).map(post => ({
+      ...post,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        email: post.author.email,
+        role: post.author.role,
+        location: post.author.location,
+        isFollowing: false // Fetch followers conditionally if needed
+      },
+      hasLiked: post.likes.length > 0,
+      hasReposted: post.reposts.length > 0,
+      hasBookmarked: post.bookmarks.length > 0,
+      likesCount: post._count.likes,
+      repostsCount: post._count.reposts,
+      repliesCount: post._count.replies,
+      sharesCount: post._count.shares,
+      bookmarksCount: post._count.bookmarks,
+      likes: undefined,
+      reposts: undefined,
+      bookmarks: undefined,
+      _count: undefined,
+      replies: post.replies.map(reply => ({
+        ...reply,
+        hasLiked: reply.likes.length > 0,
+        likesCount: reply._count.likes,
+        likes: undefined,
+        _count: undefined,
+        children: reply.children ? reply.children.map(child => ({
+          ...child,
+          hasLiked: child.likes.length > 0,
+          likesCount: child._count.likes,
+          likes: undefined,
+          _count: undefined
+        })) : []
+      }))
+    }));
+
+    res.json(formattedPosts);
+  } catch (error) {
+    console.error("Failed to fetch saved posts:", error);
+    res.status(500).json({ error: "Failed to fetch saved posts." });
+  }
+});
+
+// 14. Get single post detail (must be after /saved to avoid route conflict)
+router.get("/posts/:postId", async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.user.id; // from authMiddleware
+
+  try {
+    const post = await prisma.panxPost.findUnique({
+      where: { id: postId },
+      include: {
+        author: {
+          select: { id: true, name: true, email: true, role: true, location: true, followers: { where: { followerId: userId }, select: { followerId: true } } }
+        },
+        replies: {
+          where: { parentId: null },
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: { select: { id: true, name: true, email: true, role: true, location: true } },
+            children: {
+              include: {
+                author: { select: { id: true, name: true, email: true, role: true, location: true } },
+                likes: { where: { userId }, select: { id: true } },
+                _count: { select: { likes: true } }
+              }
+            },
+            likes: { where: { userId }, select: { id: true } },
+            _count: { select: { likes: true } }
+          }
+        },
+        likes: { where: { userId }, select: { id: true } },
+        reposts: { where: { userId }, select: { id: true } },
+        bookmarks: { where: { userId }, select: { id: true } },
+        _count: {
+          select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true }
+        }
+      }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found." });
+    }
+
+    const formattedPost = {
+      ...post,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        email: post.author.email,
+        role: post.author.role,
+        location: post.author.location,
+        isFollowing: post.author.followers.length > 0
+      },
+      hasLiked: post.likes.length > 0,
+      hasReposted: post.reposts.length > 0,
+      hasBookmarked: post.bookmarks.length > 0,
+      likesCount: post._count.likes,
+      repostsCount: post._count.reposts,
+      repliesCount: post._count.replies,
+      sharesCount: post._count.shares,
+      bookmarksCount: post._count.bookmarks,
+      likes: undefined,
+      reposts: undefined,
+      bookmarks: undefined,
+      _count: undefined,
+      replies: post.replies.map(reply => ({
+        ...reply,
+        hasLiked: reply.likes.length > 0,
+        likesCount: reply._count.likes,
+        likes: undefined,
+        _count: undefined,
+        children: reply.children ? reply.children.map(child => ({
+          ...child,
+          hasLiked: child.likes.length > 0,
+          likesCount: child._count.likes,
+          likes: undefined,
+          _count: undefined
+        })) : []
+      }))
+    };
+
+    res.json(formattedPost);
+  } catch (error) {
+    console.error("Failed to fetch post detail:", error);
+    res.status(500).json({ error: "Failed to fetch post detail." });
   }
 });
 

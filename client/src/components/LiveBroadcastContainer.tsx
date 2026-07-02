@@ -4,9 +4,10 @@ import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
   MessageSquare, Radio, Eye, Lock, Globe, Link2, Maximize, Minimize
 } from 'lucide-react';
-import { App } from 'antd';
+import { App, Drawer } from 'antd';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
+import api from '../api';
 
 const GREEN = '#10B981';
 
@@ -83,9 +84,15 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     }
   }, [localStream]);
 
-  const servers = {
+  const [servers, setServers] = useState<RTCConfiguration>({
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
-  };
+  });
+
+  useEffect(() => {
+    api.get('/ice-config').then(res => {
+      if (res.data && res.data.iceServers) setServers(res.data);
+    }).catch(err => console.error("Failed to load ICE servers", err));
+  }, []);
 
   // ─── Clean stop: kill all tracks, close all peers ─────────────────────────
   const handleStopBroadcast = () => {
@@ -166,6 +173,12 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           pc.onicecandidate = (event) => {
             if (event.candidate) {
               socketService.emit('ice-candidate', { targetUserId: viewerId, candidate: event.candidate });
+            }
+          };
+          pc.oniceconnectionstatechange = () => {
+            if (pc.iceConnectionState === 'failed') {
+              console.warn(`ICE connection failed for ${viewerId}, attempting restart`);
+              pc.restartIce();
             }
           };
           const offer = await pc.createOffer();
@@ -471,7 +484,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
       </div>
 
-      {/* --- Chat Sidebar Panel --- */}
+      {/* --- Chat Sidebar Panel (Desktop) --- */}
       {showChat && !isMobile && (
         <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.06)',
@@ -479,18 +492,40 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         }}>
           <div style={{
             padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', gap: '8px'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <MessageSquare size={15} color={GREEN} />
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Transmission Chat
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageSquare size={15} color={GREEN} />
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Transmission Chat
+              </span>
+            </div>
+            <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+              ✕
+            </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <RoomChat roomId={roomId.current} userName="Broadcaster" />
           </div>
         </div>
       )}
+
+      {/* ── Chat Drawer (Mobile) ── */}
+      <Drawer
+        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Transmission Chat</span>}
+        placement="bottom"
+        onClose={() => setShowChat(false)}
+        open={showChat && isMobile}
+        height="80vh"
+        styles={{ 
+          header: { background: '#0a1018', borderBottom: '1px solid rgba(255,255,255,0.06)' }, 
+          body: { padding: 0, background: '#0a1018', overflow: 'hidden' }, 
+          mask: { background: 'rgba(0,0,0,0.8)' } 
+        }}
+        closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
+      >
+        <RoomChat roomId={roomId.current} userName="Broadcaster" />
+      </Drawer>
       
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

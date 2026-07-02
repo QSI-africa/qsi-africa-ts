@@ -224,4 +224,96 @@ router.patch("/site-visit/:id/status", authMiddleware, async (req, res) => {
   }
 });
 
+// 7. Create a Ride Post (Offer or Request)
+router.post("/rides", authMiddleware, async (req, res) => {
+  const { type, startLocation, endLocation, departureTime, seats, price, notes } = req.body;
+  const userId = req.user.id;
+
+  if (!type || !startLocation || !endLocation || !departureTime) {
+    return res.status(400).json({ error: "Type, startLocation, endLocation, and departureTime are required." });
+  }
+
+  try {
+    const ride = await prisma.ridePost.create({
+      data: {
+        userId,
+        type,
+        startLocation,
+        endLocation,
+        departureTime: new Date(departureTime),
+        seats: seats ? parseInt(seats, 10) : 1,
+        price: price || 0,
+        notes
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, phone: true }
+        }
+      }
+    });
+
+    res.status(201).json(ride);
+  } catch (error) {
+    console.error("Create ride error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 8. Get Ride Posts (with optional type filter)
+router.get("/rides", authMiddleware, async (req, res) => {
+  const { type } = req.query;
+
+  try {
+    const filter = type ? { type: String(type).toUpperCase() } : {};
+    
+    // Only fetch rides that are in the future
+    const rides = await prisma.ridePost.findMany({
+      where: {
+        ...filter,
+        departureTime: {
+          gte: new Date()
+        }
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, phone: true }
+        }
+      },
+      orderBy: {
+        departureTime: "asc"
+      }
+    });
+
+    res.status(200).json(rides);
+  } catch (error) {
+    console.error("Get rides error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 9. Delete a Ride Post
+router.delete("/rides/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const ride = await prisma.ridePost.findUnique({ where: { id } });
+
+    if (!ride) {
+      return res.status(404).json({ error: "Ride post not found." });
+    }
+
+    if (ride.userId !== userId && req.user.role !== "SUPER_USER") {
+      return res.status(403).json({ error: "Unauthorized to delete this ride post." });
+    }
+
+    await prisma.ridePost.delete({ where: { id } });
+
+    res.status(200).json({ message: "Ride post deleted." });
+  } catch (error) {
+    console.error("Delete ride error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 module.exports = router;

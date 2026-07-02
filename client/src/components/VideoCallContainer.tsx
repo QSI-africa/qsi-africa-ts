@@ -2,12 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize
+  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize, AlertCircle
 } from 'lucide-react';
-import { App } from 'antd';
+import { App, Drawer } from 'antd';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import RoomChat from './RoomChat';
+import api from '../api';
 
 const GREEN = '#10B981';
 
@@ -87,9 +88,15 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const servers = {
+  const [servers, setServers] = useState<RTCConfiguration>({
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
-  };
+  });
+
+  useEffect(() => {
+    api.get('/ice-config').then(res => {
+      if (res.data && res.data.iceServers) setServers(res.data);
+    }).catch(err => console.error("Failed to load ICE servers", err));
+  }, []);
 
   // ─── Clean teardown: stop all tracks + close all peers ────────────────────
   const handleLeaveCall = () => {
@@ -238,12 +245,21 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     pc.ontrack = (event) => {
       setRemoteParticipants(prev => {
         if (prev.find(p => p.socketId === targetSocketId)) return prev;
-        return [...prev, { socketId: targetSocketId, stream: event.streams[0] }];
+        return [...prev, { socketId: targetSocketId, stream: event.streams[0], iceState: pc.iceConnectionState }];
       });
     };
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socketService.emit('ice-candidate', { targetUserId: targetSocketId, candidate: event.candidate });
+      }
+    };
+    pc.oniceconnectionstatechange = () => {
+      setRemoteParticipants(prev => 
+        prev.map(p => p.socketId === targetSocketId ? { ...p, iceState: pc.iceConnectionState } : p)
+      );
+      if (pc.iceConnectionState === 'failed') {
+        console.warn(`ICE connection failed for ${targetSocketId}, attempting restart`);
+        pc.restartIce();
       }
     };
     return pc;
@@ -380,7 +396,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         </div>
 
         {/* Controls Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <ControlBtn onClick={toggleMute} danger={isMuted} title={isMuted ? 'Unmute' : 'Mute'}>
             {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </ControlBtn>
@@ -425,7 +441,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         </div>
       </div>
 
-      {/* ── Chat Sidebar ── */}
+      {/* ── Chat Sidebar (Desktop) ── */}
       {showChat && !isMobile && (
         <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.06)',
@@ -435,18 +451,40 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         }}>
           <div style={{
             padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', gap: '8px'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <MessageSquare size={15} color={GREEN} />
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Chat
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageSquare size={15} color={GREEN} />
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Chat
+              </span>
+            </div>
+            <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+              ✕
+            </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <RoomChat roomId={roomId} userName={user?.name || 'Participant'} />
           </div>
         </div>
       )}
+
+      {/* ── Chat Drawer (Mobile) ── */}
+      <Drawer
+        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Chat</span>}
+        placement="bottom"
+        onClose={() => setShowChat(false)}
+        open={showChat && isMobile}
+        height="80vh"
+        styles={{ 
+          header: { background: '#0a1018', borderBottom: '1px solid rgba(255,255,255,0.06)' }, 
+          body: { padding: 0, background: '#0a1018', overflow: 'hidden' }, 
+          mask: { background: 'rgba(0,0,0,0.8)' } 
+        }}
+        closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
+      >
+        <RoomChat roomId={roomId} userName={user?.name || 'Participant'} />
+      </Drawer>
     </div>
   );
 };

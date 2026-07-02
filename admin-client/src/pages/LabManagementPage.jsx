@@ -27,7 +27,11 @@ import {
   FolderOpenOutlined,
   EditOutlined,
   AudioOutlined,
-  VideoCameraOutlined
+  VideoCameraOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+  CheckOutlined,
+  CloseOutlined
 } from "@ant-design/icons";
 import api from "../api";
 
@@ -38,6 +42,8 @@ const LabManagementPage = () => {
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [recordings, setRecordings] = useState([]);
   const [recordingsLoading, setRecordingsLoading] = useState(false);
+  const [channels, setChannels] = useState([]);
+  const [channelsLoading, setChannelsLoading] = useState(false);
 
   // Modals for Category & Package Editing
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -51,6 +57,7 @@ const LabManagementPage = () => {
   useEffect(() => {
     fetchCategories();
     fetchRecordings();
+    fetchChannels();
   }, []);
 
   const fetchCategories = async () => {
@@ -76,6 +83,30 @@ const LabManagementPage = () => {
       message.error("Failed to load recordings.");
     } finally {
       setRecordingsLoading(false);
+    }
+  };
+
+  const fetchChannels = async () => {
+    setChannelsLoading(true);
+    try {
+      const res = await api.get("/admin/tv/channels");
+      setChannels(res.data);
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load channel requests.");
+    } finally {
+      setChannelsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (channelId, status) => {
+    try {
+      await api.put(`/admin/tv/channels/${channelId}/status`, { status });
+      message.success(`Channel successfully ${status.toLowerCase()}.`);
+      fetchChannels();
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to update channel status.");
     }
   };
 
@@ -231,6 +262,70 @@ const LabManagementPage = () => {
     }
   ];
 
+  const pendingChannels = channels.filter(c => c.status === "PENDING").length;
+
+  const approvalColumns = [
+    {
+      title: "Requested Channel",
+      key: "channel",
+      render: (_, record) => (
+        <div>
+          <Text strong style={{ fontSize: "15px" }}>{record.title}</Text>
+          <div style={{ marginTop: "4px" }}>
+            <Text type="secondary" style={{ fontSize: "12px" }}>{record.description}</Text>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Teacher",
+      key: "teacher",
+      render: (_, record) => (
+        <div>
+          <Space>
+            <UserOutlined />
+            <Text>{record.user?.name || "Agent"}</Text>
+          </Space>
+          <div style={{ fontSize: "11px", color: "#8c8c8c" }}>{record.user?.email}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Requested Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => (
+        <Space>
+          <ClockCircleOutlined />
+          <Text>{new Date(date).toLocaleDateString()}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="primary"
+            icon={<CheckOutlined />}
+            onClick={() => handleUpdateStatus(record.id, "APPROVED")}
+            style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+          >
+            Approve
+          </Button>
+          <Button
+            danger
+            icon={<CloseOutlined />}
+            onClick={() => handleUpdateStatus(record.id, "REJECTED")}
+          >
+            Reject
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
   return (
     <div style={{ padding: "24px" }}>
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
@@ -278,6 +373,19 @@ const LabManagementPage = () => {
                   rowKey="id"
                   loading={recordingsLoading}
                   locale={{ emptyText: <Empty description="No lectures uploaded yet." /> }}
+                />
+              )
+            },
+            {
+              key: "approvals",
+              label: `Teacher Approvals (${pendingChannels})`,
+              children: (
+                <Table
+                  dataSource={channels.filter(c => c.status === "PENDING")}
+                  columns={approvalColumns}
+                  rowKey="id"
+                  loading={channelsLoading}
+                  locale={{ emptyText: <Empty description="No pending teacher requests." /> }}
                 />
               )
             },

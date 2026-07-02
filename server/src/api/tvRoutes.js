@@ -50,6 +50,9 @@ router.get("/channels/my-channel", async (req, res) => {
           select: {
             subscriptions: true
           }
+        },
+        contents: {
+          orderBy: { createdAt: "desc" }
         }
       }
     });
@@ -67,6 +70,9 @@ router.get("/channels/my-channel", async (req, res) => {
             select: {
               subscriptions: true
             }
+          },
+          contents: {
+            orderBy: { createdAt: "desc" }
           }
         }
       });
@@ -79,6 +85,9 @@ router.get("/channels/my-channel", async (req, res) => {
             select: {
               subscriptions: true
             }
+          },
+          contents: {
+            orderBy: { createdAt: "desc" }
           }
         }
       });
@@ -365,6 +374,88 @@ router.post("/channels/my-channel/content", async (req, res) => {
   } catch (error) {
     console.error("Failed to publish content:", error);
     res.status(500).json({ error: "Failed to publish content." });
+  }
+});
+
+// 10.5. Publish a text content item to own channel (with optional PanX cross-posting)
+router.post("/channels/my-channel/text-content", async (req, res) => {
+  const { title, textContent, crossPostToPanx } = req.body;
+  const userId = req.user.id;
+
+  if (!title || !textContent) {
+    return res.status(400).json({ error: "Title and textContent are required." });
+  }
+
+  try {
+    const channel = await prisma.tvChannel.findUnique({
+      where: { userId }
+    });
+
+    if (!channel) {
+      return res.status(404).json({ error: "You do not have a channel." });
+    }
+
+    if (channel.status !== "APPROVED") {
+      return res.status(403).json({ error: "Cannot publish content to an unapproved channel." });
+    }
+
+    // Create the TV content
+    const content = await prisma.tvContent.create({
+      data: {
+        channelId: channel.id,
+        title,
+        textContent,
+        mimeType: "TEXT"
+      }
+    });
+
+    // Cross-post to PanX if requested
+    if (crossPostToPanx) {
+      await prisma.panxPost.create({
+        data: {
+          content: textContent,
+          authorId: userId,
+          tvContentId: content.id
+        }
+      });
+    }
+
+    res.status(201).json(content);
+  } catch (error) {
+    console.error("Failed to publish text content:", error);
+    res.status(500).json({ error: "Failed to publish text content." });
+  }
+});
+
+// 10.6. Get a single content item
+router.get("/channels/my-channel/content/:contentId", async (req, res) => {
+  const { contentId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const channel = await prisma.tvChannel.findUnique({
+      where: { userId }
+    });
+
+    if (!channel) {
+      return res.status(404).json({ error: "Channel not found." });
+    }
+
+    const content = await prisma.tvContent.findFirst({
+      where: {
+        id: contentId,
+        channelId: channel.id
+      }
+    });
+
+    if (!content) {
+      return res.status(404).json({ error: "Content not found." });
+    }
+
+    res.json(content);
+  } catch (error) {
+    console.error("Failed to fetch content item:", error);
+    res.status(500).json({ error: "Failed to fetch content item." });
   }
 });
 

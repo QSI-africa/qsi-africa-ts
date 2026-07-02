@@ -620,7 +620,7 @@ body {
   }
 
   .has-bottom-nav .main-workspace {
-    padding-bottom: 72px; /* Space for bottom nav */
+    padding-bottom: 96px; /* Space for bottom nav + safe area */
   }
 
   body.hide-mobile-nav .mobile-nav-bar {

@@ -4,6 +4,8 @@ import { MessageSquare, X, Signal, Lock, Maximize, Minimize } from 'lucide-react
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';
+import { Drawer } from 'antd';
+import api from '../api';
 
 const GREEN = '#10B981';
 
@@ -53,9 +55,15 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   }, [remoteStream]);
 
   const isMobile = windowWidth <= 768;
-  const servers = {
+  const [servers, setServers] = useState<RTCConfiguration>({
     iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
-  };
+  });
+
+  useEffect(() => {
+    api.get('/ice-config').then(res => {
+      if (res.data && res.data.iceServers) setServers(res.data);
+    }).catch(err => console.error("Failed to load ICE servers", err));
+  }, []);
   const broadcasterId = useRef<string | null>(null);
   const hasReceivedOffer = useRef(false);
 
@@ -83,6 +91,13 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       pc.current.onicecandidate = (event) => {
         if (event.candidate && broadcasterId.current) {
           socketService.emit('ice-candidate', { targetUserId: broadcasterId.current, candidate: event.candidate, roomId });
+        }
+      };
+
+      pc.current.oniceconnectionstatechange = () => {
+        if (pc.current?.iceConnectionState === 'failed') {
+          console.warn(`ICE connection failed, attempting restart`);
+          pc.current.restartIce();
         }
       };
 
@@ -267,7 +282,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
         </div>
       </div>
 
-      {/* ── Chat Sidebar ── */}
+      {/* ── Chat Sidebar (Desktop) ── */}
       {showChat && !isMobile && !error && (
         <div style={{
           borderLeft: '1px solid rgba(255,255,255,0.06)',
@@ -275,18 +290,40 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
         }}>
           <div style={{
             padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', gap: '8px'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <MessageSquare size={15} color={GREEN} />
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Live Chat
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageSquare size={15} color={GREEN} />
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Live Chat
+              </span>
+            </div>
+            <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+              ✕
+            </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} />
           </div>
         </div>
       )}
+
+      {/* ── Chat Drawer (Mobile) ── */}
+      <Drawer
+        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Live Chat</span>}
+        placement="bottom"
+        onClose={() => setShowChat(false)}
+        open={showChat && isMobile && !error}
+        height="80vh"
+        styles={{ 
+          header: { background: '#0a1018', borderBottom: '1px solid rgba(255,255,255,0.06)' }, 
+          body: { padding: 0, background: '#0a1018', overflow: 'hidden' }, 
+          mask: { background: 'rgba(0,0,0,0.8)' } 
+        }}
+        closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
+      >
+        <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} />
+      </Drawer>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

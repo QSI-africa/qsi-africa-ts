@@ -36,6 +36,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import InvoicesPage from "./pages/InvoicesPage";
 import InboxPage from "./pages/InboxPage";
 import EcosystemPage from "./pages/EcosystemPage";
+import PostDetailPage from "./pages/PostDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 
@@ -149,9 +150,10 @@ const App: React.FC = () => {
                   <Route path="/insights/:id" element={<InsightDetailPage />} />
                   <Route path="/tv" element={<QsiTvPage />} />
                   
-                  {/* === New PANX Routes === */}
+                   {/* === New PANX Routes === */}
                    <Route path="/lab" element={<LabPage />} />
                    <Route path="/ecosystem" element={<EcosystemPage />} />
+                   <Route path="/ecosystem/post/:postId" element={<PostDetailPage />} />
                    <Route path="/inbox" element={<InboxPage />} />
                    <Route path="/status" element={<PlaceholderPage name="System Status" />} />
                    <Route path="/music" element={<PlaceholderPage name="PanX Music" />} />

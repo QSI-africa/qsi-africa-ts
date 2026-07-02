@@ -55,7 +55,7 @@ const fileFilter = (req, file, cb) => {
     // Reject the file with a specific error message
     cb(
       new Error(
-        `Unsupported file type: ${file.mimetype}. Please upload a PDF, DOC, DOCX, or common image format (JPEG/PNG/WebP).`,
+        `Unsupported file type: ${file.mimetype}. Please upload a PDF, DOC, DOCX, image (JPEG/PNG/WebP), or video (MP4/WebM/MOV).`,
       ),
       false,
     );
@@ -66,7 +66,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB file size limit (increased from 10MB)
+    fileSize: 100 * 1024 * 1024, // 100MB file size limit (increased for videos)
     files: 10, // Maximum number of files allowed
   },
   fileFilter: fileFilter,

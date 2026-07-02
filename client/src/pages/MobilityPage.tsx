@@ -42,10 +42,13 @@ const MobilityPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [myVisits, setMyVisits] = useState<any[]>([]);
   const [incomingVisits, setIncomingVisits] = useState<any[]>([]);
+  const [rideOffers, setRideOffers] = useState<any[]>([]);
+  const [rideRequests, setRideRequests] = useState<any[]>([]);
 
   useEffect(() => {
     fetchProjects();
     fetchBroadcasts();
+    fetchRides();
     if (isAuthenticated) {
       fetchMyVisits();
       if (user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') {
@@ -102,6 +105,17 @@ const MobilityPage: React.FC = () => {
       setBroadcasts(response.data);
     } catch (error) {
       console.error("Fetch broadcasts error:", error);
+    }
+  };
+
+  const fetchRides = async () => {
+    try {
+      const offersRes = await api.get('/mobility/rides?type=OFFER');
+      setRideOffers(offersRes.data);
+      const reqsRes = await api.get('/mobility/rides?type=REQUEST');
+      setRideRequests(reqsRes.data);
+    } catch (error) {
+      console.error("Fetch rides error:", error);
     }
   };
 
@@ -186,6 +200,19 @@ const MobilityPage: React.FC = () => {
     }
   };
 
+  const handlePostRide = async (values: any, type: string) => {
+    setLoading(true);
+    try {
+      await api.post('/mobility/rides', { ...values, type });
+      notification.success({ message: `Ride ${type.toLowerCase()} posted successfully.` });
+      fetchRides();
+    } catch (error) {
+      notification.error({ message: `Failed to post ride ${type.toLowerCase()}.` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
@@ -195,7 +222,7 @@ const MobilityPage: React.FC = () => {
         icon={<Truck size={20} />}
         extra={
           <div style={{ display: 'flex', gap: '8px' }}>
-             {['Site Viewings', 'Marketplace'].map((label, idx) => (
+             {['Fleet Tracking', 'Ride Offers', 'Ride Requests'].map((label, idx) => (
                <button 
                  key={label}
                  onClick={() => setActiveTab((idx + 1).toString())}
@@ -286,56 +313,61 @@ const MobilityPage: React.FC = () => {
           <Row gutter={[40, 40]}>
             <Col xs={24} lg={10}>
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '32px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Deployment Brief</h3>
-                <Form layout="vertical" onFinish={handleHireVehicle}>
-                  <Form.Item name="location" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Pickup Location</span>}>
-                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Harare North" />
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Post a Ride Offer</h3>
+                <Form layout="vertical" onFinish={(values) => handlePostRide(values, 'OFFER')}>
+                  <Form.Item name="startLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Start Location</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. City Center" />
                   </Form.Item>
-                  <Form.Item name="duration" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Duration</span>}>
-                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. 4 Hours" />
+                  <Form.Item name="endLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>End Location</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Airport" />
                   </Form.Item>
-                  <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Proposed Bounty (USD)</span>}>
-                    <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
+                  <Form.Item name="departureTime" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Departure Time</span>}>
+                    <Input type="datetime-local" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} />
                   </Form.Item>
-                  <Form.Item name="details" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Mission Details</span>}>
-                    <Input.TextArea rows={4} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Describe the mission scope..." />
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <Form.Item name="seats" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Available Seats</span>} style={{ flex: 1 }}>
+                      <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="1" />
+                    </Form.Item>
+                    <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Price (USD)</span>} style={{ flex: 1 }}>
+                      <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
+                    </Form.Item>
+                  </div>
+                  <Form.Item name="notes" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Notes</span>}>
+                    <Input.TextArea rows={2} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Any additional notes..." />
                   </Form.Item>
-                  <button style={{
+                  <button type="submit" disabled={loading} style={{
                     width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
                     background: GREEN, color: 'white', cursor: 'pointer',
                     fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.15em',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                     boxShadow: `0 8px 20px -5px ${GREEN}60`
                   }}>
-                    <Rocket size={16} /> Broadcast Request
+                    <Rocket size={16} /> Submit Offer
                   </button>
                 </Form>
               </div>
             </Col>
             <Col xs={24} lg={14}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Inbound Requests</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Active Ride Offers</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {incomingVisits.length > 0 ? incomingVisits.map(visit => (
-                  <div key={visit.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px' }}>
+                {rideOffers.length > 0 ? rideOffers.map(ride => (
+                  <div key={ride.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                       <div>
-                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{visit.user.name}</h4>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'none', letterSpacing: '0.05em' }}>{visit.project?.title}</span>
+                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{ride.startLocation} ➔ {ride.endLocation}</h4>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'none', letterSpacing: '0.05em' }}>Driver: {ride.user?.name}</span>
                       </div>
-                      <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 8px', borderRadius: '6px', textTransform: 'none' }}>{visit.status}</span>
+                      <span style={{ fontSize: '16px', fontWeight: 900, color: GREEN }}>${ride.price}</span>
                     </div>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px' }}>
-                      {visit.message}
-                    </p>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: GREEN, color: 'white', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Approve</button>
-                      <button onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: 'white', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>Reject</button>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {new Date(ride.departureTime).toLocaleString()}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> {ride.seats} seats</span>
                     </div>
+                    {ride.notes && <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>{ride.notes}</p>}
                   </div>
                 )) : (
                   <div style={{ padding: '60px', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: '24px', textAlign: 'center' }}>
-                    <History size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '16px' }} />
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'none', letterSpacing: '0.1em' }}>No pending requests</p>
+                    <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No ride offers available</span>} />
                   </div>
                 )}
               </div>
@@ -344,71 +376,69 @@ const MobilityPage: React.FC = () => {
         )}
 
         {activeTab === '3' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {broadcasts.length > 0 ? broadcasts.map(req => (
-              <div 
-                key={req.id}
-                style={{
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '24px', padding: '32px', transition: 'all 0.2s'
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', md: 'row', justifyContent: 'space-between', gap: '32px' }}>
-                  <div style={{ flex: 1 }}>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                       <span style={{ fontSize: '9px', fontWeight: 900, background: 'rgba(16,185,129,0.15)', color: GREEN, padding: '4px 10px', borderRadius: '6px', textTransform: 'none', letterSpacing: '0.1em' }}>Active Mission</span>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Activity size={12} color={GREEN} />
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.05em' }}>Critical Deployment</span>
-                       </div>
-                    </div>
-                    <h3 style={{ fontSize: '28px', fontWeight: 900, color: 'white', marginBottom: '12px', letterSpacing: '-0.02em' }}>{req.location}</h3>
-                    <div style={{ display: 'flex', gap: '24px', marginBottom: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Clock size={14} color={GREEN} />
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{req.duration}</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <User size={14} color={GREEN} />
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>Eng: {req.engineer.name}</span>
-                      </div>
-                    </div>
-                    {req.details && (
-                      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, fontStyle: 'italic' }}>
-                        "{req.details}"
-                      </p>
-                    )}
+          <Row gutter={[40, 40]}>
+            <Col xs={24} lg={10}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '32px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Post a Ride Request</h3>
+                <Form layout="vertical" onFinish={(values) => handlePostRide(values, 'REQUEST')}>
+                  <Form.Item name="startLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Pickup Location</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Airport" />
+                  </Form.Item>
+                  <Form.Item name="endLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Drop-off Location</span>}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Hotel" />
+                  </Form.Item>
+                  <Form.Item name="departureTime" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Desired Departure Time</span>}>
+                    <Input type="datetime-local" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} />
+                  </Form.Item>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <Form.Item name="seats" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Needed Seats</span>} style={{ flex: 1 }}>
+                      <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="1" />
+                    </Form.Item>
+                    <Form.Item name="price" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Willing to Pay (USD)</span>} style={{ flex: 1 }}>
+                      <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
+                    </Form.Item>
                   </div>
-                  
-                  <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', gap: '24px' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em', display: 'block', marginBottom: '4px' }}>Mission Bounty</span>
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: '4px' }}>
-                        <span style={{ fontSize: '20px', fontWeight: 900, color: GREEN }}>$</span>
-                        <span style={{ fontSize: '42px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>{req.price}</span>
+                  <Form.Item name="notes" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Notes</span>}>
+                    <Input.TextArea rows={2} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Any additional notes..." />
+                  </Form.Item>
+                  <button type="submit" disabled={loading} style={{
+                    width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
+                    background: GREEN, color: 'white', cursor: 'pointer',
+                    fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.15em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    boxShadow: `0 8px 20px -5px ${GREEN}60`
+                  }}>
+                    <Rocket size={16} /> Submit Request
+                  </button>
+                </Form>
+              </div>
+            </Col>
+            <Col xs={24} lg={14}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '24px', textTransform: 'none', letterSpacing: '0.05em' }}>Active Ride Requests</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {rideRequests.length > 0 ? rideRequests.map(ride => (
+                  <div key={ride.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                      <div>
+                        <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{ride.startLocation} ➔ {ride.endLocation}</h4>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: GREEN, textTransform: 'none', letterSpacing: '0.05em' }}>Passenger: {ride.user?.name}</span>
                       </div>
+                      <span style={{ fontSize: '16px', fontWeight: 900, color: GREEN }}>${ride.price}</span>
                     </div>
-                    <button 
-                      onClick={() => handleAcceptHire(req.id)}
-                      style={{
-                        padding: '16px 32px', borderRadius: '14px', border: 'none',
-                        background: GREEN, color: 'white', cursor: 'pointer',
-                        fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em',
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        boxShadow: `0 8px 20px -5px ${GREEN}60`
-                      }}
-                    >
-                      <CheckCircle size={18} /> Accept Mission
-                    </button>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {new Date(ride.departureTime).toLocaleString()}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> {ride.seats} seats needed</span>
+                    </div>
+                    {ride.notes && <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>{ride.notes}</p>}
                   </div>
-                </div>
+                )) : (
+                  <div style={{ padding: '60px', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: '24px', textAlign: 'center' }}>
+                    <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No ride requests available</span>} />
+                  </div>
+                )}
               </div>
-            )) : (
-              <div style={{ padding: '80px 0', textAlign: 'center' }}>
-                <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No active opportunities</span>} />
-              </div>
-            )}
-          </div>
+            </Col>
+          </Row>
         )}
 
       </div>

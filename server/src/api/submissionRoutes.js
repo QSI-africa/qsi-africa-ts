@@ -787,4 +787,38 @@ router.post("/scan", async (req, res) => {
   }
 });
 
+// =========================================================================
+// 9. Escalate to Human (Contact Engineers)
+// =========================================================================
+router.post("/escalate", async (req, res) => {
+  const { module, contactInfo } = req.body;
+  try {
+    const userId = contactInfo?.userId || null;
+    
+    // Create a generic task for the escalation
+    const task = await prisma.task.create({
+      data: {
+        title: `Escalation from ${module} AI`,
+        description: `User ${contactInfo?.name || 'Unknown'} requested human assistance.\n\nModule: ${module}`,
+        status: "PENDING_ASSIGNMENT"
+      }
+    });
+
+    if (userId) {
+      createSystemConversation({
+        userId,
+        title: `Support: ${module}`,
+        type: "MODULE",
+        firstMessageText: "We received your request for human support. An engineer will review your case and be in touch shortly.",
+        metadata: { taskId: task.id }
+      }).catch(console.error);
+    }
+
+    res.status(201).json({ message: "Escalation successful" });
+  } catch (error) {
+    console.error("Escalation error:", error);
+    res.status(500).json({ error: "Failed to escalate." });
+  }
+});
+
 module.exports = router;

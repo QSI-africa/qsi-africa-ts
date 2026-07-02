@@ -3,12 +3,16 @@ import {
   FlaskConical, Cpu, Code, Layers, Sparkles, Binary, Rocket, 
   ArrowRight, Search, BookOpen, CheckCircle, Award, Hourglass,
   Video, Music, Lock, Play, Upload, X, Trash2, 
-  Tv, AlertCircle, RefreshCw
+  Tv, AlertCircle, RefreshCw, Radio
 } from 'lucide-react';
 import { message, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import { socketService } from '../services/socket';
+import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
+import LiveViewerContainer from '../components/LiveViewerContainer';
+import { Modal, Form, Input, Radio as AntdRadio } from 'antd';
 
 const GREEN = '#10B981';
 
@@ -96,6 +100,14 @@ const LabPage: React.FC = () => {
   const [playbackRecording, setPlaybackRecording] = useState<LabRecording | null>(null);
   const [subscribingChannelId, setSubscribingChannelId] = useState<string | null>(null);
 
+  // Live Lectures State
+  const [streams, setStreams] = useState<any[]>([]);
+  const [isBroadcasting, setIsBroadcasting] = useState<boolean>(false);
+  const [broadcastTitle, setBroadcastTitle] = useState<string>('');
+  const [activeViewerRoom, setActiveViewerRoom] = useState<{ id: string; title: string } | null>(null);
+  const [isLiveSetupOpen, setIsLiveSetupOpen] = useState<boolean>(false);
+  const [broadcastForm] = Form.useForm();
+
   const navigate = useNavigate();
   const authContext = useAuth();
   const isAuthenticated = authContext?.isAuthenticated ?? false;
@@ -110,6 +122,16 @@ const LabPage: React.FC = () => {
       setChannelLoading(false);
       setEnrolledPackageIds([]);
     }
+
+    socketService.connect(authContext?.token || undefined);
+    socketService.on('broadcast-list-updated', (updatedStreams: any[]) => {
+      setStreams(updatedStreams);
+    });
+    socketService.emit('get-active-broadcasts');
+
+    return () => {
+      socketService.off('broadcast-list-updated');
+    };
   }, [isAuthenticated]);
 
   // Fetch categories
@@ -376,6 +398,61 @@ const LabPage: React.FC = () => {
     });
     return { ...cat, packages: matchingPackages };
   }).filter(cat => cat.packages.length > 0);
+
+  const handleLaunchBroadcast = (values: any) => {
+    setBroadcastTitle(values.title);
+    setIsLiveSetupOpen(false);
+    setIsBroadcasting(true);
+  };
+
+  const handleStopBroadcast = () => {
+    setIsBroadcasting(false);
+    socketService.emit('get-active-broadcasts');
+  };
+
+  if (isBroadcasting || activeViewerRoom) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#000' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 28px',
+          background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
+        }}>
+          <button
+            onClick={() => { setIsBroadcasting(false); setActiveViewerRoom(null); }}
+            className="qsi-btn qsi-btn-secondary"
+            style={{ padding: '8px 16px', borderRadius: '10px' }}
+          >
+            <X size={16} /> Exit
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 8px #EF4444', animation: 'pulse 1.5s infinite' }} />
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+              {isBroadcasting ? 'Live Lecture Transmission' : `Viewing · ${activeViewerRoom?.title}`}
+            </span>
+          </div>
+          <div style={{ width: '80px' }} />
+        </div>
+        <div style={{ flex: 1, position: 'relative', background: '#000' }}>
+          {isBroadcasting && (
+            <LiveBroadcastContainer
+              onStop={handleStopBroadcast}
+              title={broadcastTitle}
+              isPrivate={false}
+            />
+          )}
+          {activeViewerRoom && (
+            <LiveViewerContainer
+              roomId={activeViewerRoom.id}
+              title={activeViewerRoom.title}
+              onClose={() => setActiveViewerRoom(null)}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
@@ -725,6 +802,45 @@ const LabPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Live Lectures Grid */}
+            {streams.length > 0 && (
+              <div style={{ marginBottom: '40px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                  <Radio size={16} color="#EF4444" />
+                  <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase' }}>Active Live Lectures</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                  {streams.map((stream, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveViewerRoom({ id: stream.roomId, title: stream.title })}
+                      style={{
+                        background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '20px', padding: '24px', cursor: 'pointer', transition: 'all 0.2s',
+                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                        minHeight: '160px', textAlign: 'left', width: '100%'
+                      }}
+                      className="recording-card"
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 6px #EF4444' }} />
+                          <span style={{ fontSize: '10px', fontWeight: 800, color: '#EF4444', textTransform: 'uppercase' }}>LIVE NOW</span>
+                        </div>
+                      </div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: '16px 0 8px 0' }}>{stream.title}</h4>
+                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Prof. {stream.broadcasterName}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <Code size={16} color={GREEN} />
+              <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase' }}>Recorded Archives</h3>
+            </div>
+
             {/* Recordings Grid */}
             {recordingsLoading ? (
               <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
@@ -973,11 +1089,30 @@ const LabPage: React.FC = () => {
               /* Approved Teacher Console */
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '32px' }} className="teacher-console-grid">
                 
-                {/* Upload Form */}
+                {/* Upload & Stream Actions */}
                 <div style={{
                   background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)',
                   borderRadius: '24px', padding: '24px'
                 }}>
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Radio size={16} color="#EF4444" /> Live Lecture
+                    </h3>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', marginBottom: '16px' }}>
+                      Start a live virtual lecture session for your students.
+                    </p>
+                    <button
+                      onClick={() => setIsLiveSetupOpen(true)}
+                      style={{
+                        width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)', color: '#EF4444',
+                        border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', fontSize: '11px', fontWeight: 900,
+                        textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                      }}
+                    >
+                      Start Virtual Lecture
+                    </button>
+                  </div>
+
                   <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Upload size={16} color={GREEN} /> Publish Lecture
                   </h3>
@@ -1281,6 +1416,36 @@ const LabPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* --- setup live stream modal --- */}
+      <Modal
+        title={null}
+        open={isLiveSetupOpen}
+        onCancel={() => setIsLiveSetupOpen(false)}
+        footer={null}
+        width={480}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow" style={{ color: '#EF4444' }}>Virtual Lecture Setup</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">Lecture Details</h3>
+          <Form form={broadcastForm} layout="vertical" onFinish={handleLaunchBroadcast} className="space-y-6">
+            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Topic</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" placeholder="e.g. Introduction to Quantum Computing" />
+            </Form.Item>
+
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button flex-1 py-4 font-bold flex items-center justify-center gap-2" style={{ background: '#EF4444', color: 'white' }} type="submit">
+                <Radio size={16} /> Start Class
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsLiveSetupOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
 
       <style>{`
         @media (max-width: 768px) {

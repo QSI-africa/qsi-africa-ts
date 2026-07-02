@@ -92,11 +92,15 @@ model User {
   panxReplies          PanxReply[]               @relation("UserPanxReplies")
   panxLikes            PanxLike[]                @relation("UserPanxLikes")
   panxReposts          PanxRepost[]              @relation("UserPanxReposts")
+  panxReplyLikes       PanxReplyLike[]           @relation("UserPanxReplyLikes")
+  panxBookmarks        PanxBookmark[]            @relation("UserPanxBookmarks")
+  panxShares           PanxShare[]               @relation("UserPanxShares")
   
   followers            UserFollows[]             @relation("following")
   following            UserFollows[]             @relation("follower")
 
   labEnrollments       LabEnrollment[]
+  ridePosts            RidePost[]                @relation("UserRidePosts")
 }
 
 model FrequencyScan {
@@ -419,6 +423,21 @@ model VehicleHireRequest {
   updatedAt        DateTime @updatedAt
 }
 
+model RidePost {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserRidePosts", fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // "OFFER" or "REQUEST"
+  startLocation String
+  endLocation   String
+  departureTime DateTime
+  seats         Int      @default(1)
+  price         Decimal  @default(0.0)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 // Update User model relation links (to be added to User model)
 // siteVisitRequests    SiteVisitRequest[]  @relation("UserSiteVisit")
 // vehicleHireRequests  VehicleHireRequest[] @relation("EngineerVehicleHire")
@@ -641,8 +660,11 @@ model TvContent {
   description String?   @db.Text
   mediaUrl    String?   // URL of uploaded media/video
   mimeType    String?
+  textContent String?   @db.Text
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  
+  panxPosts   PanxPost[] @relation("TvContentPanxPosts")
 }
 
 model LabRecording {
@@ -660,10 +682,14 @@ model LabRecording {
 }
 
 model PanxPost {
-  id        String       @id @default(cuid())
-  content   String       @db.Text
-  imageUrl  String?
-  authorId  String
+  id          String       @id @default(cuid())
+  content     String       @db.Text
+  imageUrl    String?
+  videoUrl    String?
+  mediaType   String?      // e.g. "IMAGE", "VIDEO"
+  tvContentId String?
+  tvContent   TvContent?   @relation("TvContentPanxPosts", fields: [tvContentId], references: [id], onDelete: SetNull)
+  authorId    String
   author    User         @relation("UserPanxPosts", fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -671,6 +697,8 @@ model PanxPost {
   likes     PanxLike[]
   reposts   PanxRepost[]
   replies   PanxReply[]
+  bookmarks PanxBookmark[]
+  shares    PanxShare[]
 }
 
 model PanxReply {
@@ -680,6 +708,10 @@ model PanxReply {
   post      PanxPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId  String
   author    User         @relation("UserPanxReplies", fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    PanxReply?   @relation("ReplyThread", fields: [parentId], references: [id], onDelete: Cascade)
+  children  PanxReply[]  @relation("ReplyThread")
+  likes     PanxReplyLike[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 }
@@ -713,6 +745,37 @@ model UserFollows {
   following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+}
+
+model PanxReplyLike {
+  id        String     @id @default(cuid())
+  replyId   String
+  reply     PanxReply  @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation("UserPanxReplyLikes", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([replyId, userId])
+}
+
+model PanxBookmark {
+  id        String    @id @default(cuid())
+  postId    String
+  post      PanxPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation("UserPanxBookmarks", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([postId, userId])
+}
+
+model PanxShare {
+  id        String    @id @default(cuid())
+  postId    String
+  post      PanxPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation("UserPanxShares", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
 }
 
 

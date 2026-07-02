@@ -74,12 +74,39 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "Server is running" });
 });
 
+app.get("/api/ice-config", (req, res) => {
+  res.json({
+    iceServers: [
+      { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ]
+  });
+});
+
 const server = http.createServer(app);
 
 // Initialize Socket.io signaling
 const io = setupVideoSignaling(server);
 app.set("io", io);
 
-server.listen(PORT, () => {
-  console.log(`QSI server listening on port ${PORT}`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`QSI server listening on port ${PORT}`);
+  });
+}
+
+module.exports = { app, server, io };

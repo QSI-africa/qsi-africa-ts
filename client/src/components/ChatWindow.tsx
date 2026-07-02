@@ -205,6 +205,24 @@ const ChatWindow: React.FC = () => {
     }
   }, [messages, userInput, selectedFiles, uploadedDocumentIds, handleFileUpload, baseURL, details.endpoint, contactInfo, user, antMessage]);
 
+  // --- 2b. HANDLE ESCALATION ---
+  const handleEscalate = async () => {
+    try {
+      await axios.post(`${baseURL}/submit/escalate`, {
+        module: moduleName,
+        contactInfo
+      });
+      antMessage.success("An engineer has been notified and will contact you shortly.");
+      setMessages(prev => [...prev, {
+        sender: "system",
+        text: "Your request for human support has been logged. An engineer will be in touch with you.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } catch (error) {
+      antMessage.error("Failed to notify engineers. Please try again.");
+    }
+  };
+
   // --- 3. FETCH DATA ---
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -402,36 +420,57 @@ const ChatWindow: React.FC = () => {
         </h1>
 
         {/* 3. The rest of the icons */}
-        <div className="flex md:hidden items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          <Lightbulb
-            size={20}
-            style={{ cursor: 'pointer' }}
-            className="hover:text-accent-primary transition-colors"
-            onClick={() => {
-              setDrawerType('suggestions');
-              setIsDrawerOpen(true);
+        <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <button
+            onClick={handleEscalate}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: `1px solid ${GREEN}40`,
+              color: GREEN,
+              fontSize: '11px',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
-            title="Suggested Focus Areas"
-          />
-          {moduleName === 'healing' && (
-            <Package
+          >
+            Contact Engineers
+          </button>
+          
+          <div className="flex md:hidden items-center gap-4">
+            <Lightbulb
               size={20}
               style={{ cursor: 'pointer' }}
               className="hover:text-accent-primary transition-colors"
               onClick={() => {
-                setDrawerType('packages');
+                setDrawerType('suggestions');
                 setIsDrawerOpen(true);
               }}
-              title="Healing Trajectories"
+              title="Suggested Focus Areas"
             />
-          )}
-          <Info
-            size={20}
-            style={{ cursor: 'pointer' }}
-            className="hover:text-white transition-colors"
-            onClick={() => setIsInfoDrawerOpen(true)}
-            title="Information"
-          />
+            {moduleName === 'healing' && (
+              <Package
+                size={20}
+                style={{ cursor: 'pointer' }}
+                className="hover:text-accent-primary transition-colors"
+                onClick={() => {
+                  setDrawerType('packages');
+                  setIsDrawerOpen(true);
+                }}
+                title="Healing Trajectories"
+              />
+            )}
+            <Info
+              size={20}
+              style={{ cursor: 'pointer' }}
+              className="hover:text-white transition-colors"
+              onClick={() => setIsInfoDrawerOpen(true)}
+              title="Information"
+            />
+          </div>
         </div>
       </header>
 

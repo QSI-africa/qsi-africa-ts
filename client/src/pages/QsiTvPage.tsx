@@ -60,6 +60,7 @@ const QsiTvPage: React.FC = () => {
   
   // Modals & Upload states
   const [isLiveSetupOpen, setIsLiveSetupOpen] = useState<boolean>(false);
+  const [isPeerSessionSetupOpen, setIsPeerSessionSetupOpen] = useState<boolean>(false);
   const [isPublishingContent, setIsPublishingContent] = useState<boolean>(false);
   const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false);
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string>('');
@@ -67,6 +68,10 @@ const QsiTvPage: React.FC = () => {
   const [requestForm] = Form.useForm();
   const [contentForm] = Form.useForm();
   const [broadcastForm] = Form.useForm();
+  const [peerSessionForm] = Form.useForm();
+
+  // Preview Modal
+  const [previewContent, setPreviewContent] = useState<any | null>(null);
 
   // Socket sync
   useEffect(() => {
@@ -162,9 +167,15 @@ const QsiTvPage: React.FC = () => {
     }
   };
 
-  const handleCreateRoom = () => {
+  const handleStartPeerSessionClick = () => {
+    peerSessionForm.setFieldsValue({ title: `${user?.name || 'My'} Peer Session`, isPrivate: 'true' });
+    setIsPeerSessionSetupOpen(true);
+  };
+
+  const handleCreateRoom = (values: any) => {
     const roomId = Math.random().toString(36).substring(2, 9);
     setActiveRoomId(roomId);
+    setIsPeerSessionSetupOpen(false);
   };
 
   const handleLeaveCall = () => setActiveRoomId(null);
@@ -266,12 +277,21 @@ const QsiTvPage: React.FC = () => {
   const handlePublishContent = async (values: any) => {
     setIsPublishingContent(true);
     try {
-      await api.post('/tv/channels/my-channel/content', {
-        title: values.title,
-        description: values.description,
-        mediaUrl: uploadedMediaUrl,
-        mimeType: values.mimeType
-      });
+      if (values.mimeType === 'TEXT') {
+        await api.post('/tv/channels/my-channel/text-content', {
+          title: values.title,
+          description: values.description,
+          textContent: values.textContent,
+          crossPostToPanx: values.crossPostToPanx === 'YES'
+        });
+      } else {
+        await api.post('/tv/channels/my-channel/content', {
+          title: values.title,
+          description: values.description,
+          mediaUrl: uploadedMediaUrl,
+          mimeType: values.mimeType
+        });
+      }
       message.success('Frequency content published successfully.');
       contentForm.resetFields();
       setUploadedMediaUrl('');
@@ -513,8 +533,8 @@ const QsiTvPage: React.FC = () => {
             <button onClick={handleStartBroadcastClick} className="qsi-button primary flex items-center gap-2 py-3 px-6 text-xs">
               <Radio size={14} /> Go Live
             </button>
-            <button onClick={handleCreateRoom} className="qsi-button flex items-center gap-2 py-3 px-6 text-xs">
-              <Video size={14} /> Private Session
+            <button onClick={handleStartPeerSessionClick} className="qsi-button flex items-center gap-2 py-3 px-6 text-xs">
+              <Video size={14} /> Peer Session
             </button>
           </div>
         </div>
@@ -744,43 +764,66 @@ const QsiTvPage: React.FC = () => {
                               <Plus size={16} className="text-accent-primary" /> Publish Frequency
                             </h3>
 
-                            <Form form={contentForm} layout="vertical" onFinish={handlePublishContent} className="space-y-4">
+                            <Form form={contentForm} layout="vertical" onFinish={handlePublishContent} className="space-y-4" initialValues={{ mimeType: 'TEXT', crossPostToPanx: 'YES' }}>
                               <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Title</span>} rules={[{ required: true }]}>
                                 <Input className="bg-bg-primary border-border-subtle text-white h-10" />
                               </Form.Item>
 
                               <Form.Item name="description" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Summary</span>}>
-                                <Input.TextArea className="bg-bg-primary border-border-subtle text-white" rows={3} />
+                                <Input.TextArea className="bg-bg-primary border-border-subtle text-white" rows={2} />
                               </Form.Item>
 
                               <Form.Item name="mimeType" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Type</span>} rules={[{ required: true }]}>
-                                <Select className="custom-select h-10">
+                                <Select className="custom-select h-10" onChange={() => setUploadedMediaUrl('')}>
+                                  <Select.Option value="TEXT">Text Post</Select.Option>
                                   <Select.Option value="VIDEO">Video File</Select.Option>
                                   <Select.Option value="IMAGE">Image File</Select.Option>
                                   <Select.Option value="DOCUMENT">Document / Link</Select.Option>
                                 </Select>
                               </Form.Item>
 
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                                <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Upload Media</span>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                  <input
-                                    type="file"
-                                    id="tv-studio-upload"
-                                    onChange={handleUploadMedia}
-                                    style={{ display: 'none' }}
-                                  />
-                                  <label
-                                    htmlFor="tv-studio-upload"
-                                    className="qsi-btn qsi-btn-secondary"
-                                    style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                  >
-                                    <Upload size={14} /> Browse
-                                  </label>
-                                  {isUploadingFile && <Spin size="small" />}
-                                  {uploadedMediaUrl && <span style={{ fontSize: '11px', color: GREEN }}>Uploaded!</span>}
-                                </div>
-                              </div>
+                              <Form.Item noStyle dependencies={['mimeType']}>
+                                {({ getFieldValue }) => {
+                                  const type = getFieldValue('mimeType');
+                                  if (type === 'TEXT') {
+                                    return (
+                                      <>
+                                        <Form.Item name="textContent" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Post Content</span>} rules={[{ required: true }]}>
+                                          <Input.TextArea className="bg-bg-primary border-border-subtle text-white" rows={6} placeholder="What's on your mind?" />
+                                        </Form.Item>
+                                        <Form.Item name="crossPostToPanx" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Cross-post to PanX Feed</span>}>
+                                          <Select className="custom-select h-10">
+                                            <Select.Option value="YES">Yes, Share to Ecosystem</Select.Option>
+                                            <Select.Option value="NO">No, Channel Only</Select.Option>
+                                          </Select>
+                                        </Form.Item>
+                                      </>
+                                    );
+                                  }
+                                  return (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                                      <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Upload Media</span>
+                                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                        <input
+                                          type="file"
+                                          id="tv-studio-upload"
+                                          onChange={handleUploadMedia}
+                                          style={{ display: 'none' }}
+                                        />
+                                        <label
+                                          htmlFor="tv-studio-upload"
+                                          className="qsi-btn qsi-btn-secondary"
+                                          style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                        >
+                                          <Upload size={14} /> Browse
+                                        </label>
+                                        {isUploadingFile && <Spin size="small" />}
+                                        {uploadedMediaUrl && <span style={{ fontSize: '11px', color: GREEN }}>Uploaded!</span>}
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                              </Form.Item>
 
                               <button
                                 className="qsi-button primary w-full py-3 text-xs font-bold flex items-center justify-center gap-2 mt-4"
@@ -808,20 +851,25 @@ const QsiTvPage: React.FC = () => {
                             {myChannelContents.length === 0 ? (
                               <Empty description={<span className="text-text-tertiary">No uploaded content yet. Use the sidebar to publish.</span>} />
                             ) : (
-                              <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {myChannelContents.map((post) => (
-                                  <div key={post.id} className="sidebar-item p-4 flex items-center justify-between group">
+                                  <div key={post.id} className="sidebar-item p-4 flex flex-col justify-between group cursor-pointer" onClick={() => setPreviewContent(post)}>
                                     <div>
-                                      <span className="text-[10px] font-bold text-accent-primary uppercase">{post.mimeType}</span>
-                                      <h4 className="font-bold text-white text-base mt-1">{post.title}</h4>
-                                      <p className="text-text-tertiary text-xs mt-1">{post.description}</p>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-accent-primary uppercase">{post.mimeType}</span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteContent(post.id);
+                                          }}
+                                          className="p-1.5 text-text-tertiary hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 bg-bg-primary border border-border-subtle hover:border-red-500/30 rounded-md"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                      <h4 className="font-bold text-white text-base mt-2">{post.title}</h4>
+                                      <p className="text-text-tertiary text-xs mt-1 line-clamp-2">{post.description || post.textContent}</p>
                                     </div>
-                                    <button
-                                      onClick={() => handleDeleteContent(post.id)}
-                                      className="p-2 text-text-tertiary hover:text-red-500 transition-all border border-border-subtle hover:border-red-500/30 rounded-lg"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
                                   </div>
                                 ))}
                               </div>
@@ -877,6 +925,95 @@ const QsiTvPage: React.FC = () => {
             </div>
           </Form>
         </div>
+      </Modal>
+      {/* --- setup peer session modal --- */}
+      <Modal
+        title={null}
+        open={isPeerSessionSetupOpen}
+        onCancel={() => setIsPeerSessionSetupOpen(false)}
+        footer={null}
+        width={480}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow">Peer Session Setup</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">Session Details</h3>
+          <Form form={peerSessionForm} layout="vertical" onFinish={handleCreateRoom} className="space-y-6">
+            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Session Title</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+
+            <Form.Item name="isPrivate" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Visibility</span>} rules={[{ required: true }]}>
+              <AntdRadio.Group className="custom-radio-group w-full grid grid-cols-2 gap-4">
+                <AntdRadio.Button value="false" className="bg-bg-primary border-border-subtle text-white h-12 flex items-center justify-center">
+                  <span className="flex items-center gap-2"><Globe size={14} /> Public</span>
+                </AntdRadio.Button>
+                <AntdRadio.Button value="true" className="bg-bg-primary border-border-subtle text-white h-12 flex items-center justify-center">
+                  <span className="flex items-center gap-2"><Lock size={14} /> Private</span>
+                </AntdRadio.Button>
+              </AntdRadio.Group>
+            </Form.Item>
+
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
+                <Video size={16} /> Start Session
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsPeerSessionSetupOpen(false)}>
+                Abort
+              </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+      {/* --- content preview modal --- */}
+      <Modal
+        title={null}
+        open={!!previewContent}
+        onCancel={() => setPreviewContent(null)}
+        footer={null}
+        width={800}
+        centered
+        className="dark-modal"
+      >
+        {previewContent && (
+          <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+            <span className="eyebrow" style={{ color: GREEN }}>{previewContent.mimeType}</span>
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-4">{previewContent.title}</h3>
+            {previewContent.description && (
+              <p className="text-text-secondary text-sm leading-relaxed mb-6 border-l-2 border-accent-primary pl-4">{previewContent.description}</p>
+            )}
+            
+            <div className="mt-6 bg-bg-primary border border-border-subtle p-6 rounded-xl">
+              {previewContent.mimeType === 'TEXT' ? (
+                <div className="text-white text-base leading-relaxed whitespace-pre-wrap font-mono text-sm">
+                  {previewContent.textContent}
+                </div>
+              ) : previewContent.mimeType === 'VIDEO' ? (
+                <video
+                  src={getServerUrl(previewContent.mediaUrl)}
+                  controls
+                  className="w-full rounded-xl border border-border-subtle bg-black"
+                />
+              ) : previewContent.mimeType === 'IMAGE' ? (
+                <img
+                  src={getServerUrl(previewContent.mediaUrl)}
+                  alt={previewContent.title}
+                  className="w-full rounded-xl border border-border-subtle object-cover"
+                />
+              ) : (
+                <a
+                  href={getServerUrl(previewContent.mediaUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="qsi-btn qsi-btn-primary w-full text-center py-4 rounded-xl"
+                >
+                  Download Attached Document
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
 
       <style>{`

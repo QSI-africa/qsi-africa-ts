@@ -57,25 +57,13 @@ const setupVideoSignaling = (server) => {
       const userId = socket.user.userId || socket.user.id;
 
       try {
-        // Automatically ensure broadcaster has an APPROVED channel so they can broadcast immediately
         let channel = await prisma.tvChannel.findUnique({
           where: { userId }
         });
 
-        if (!channel) {
-          channel = await prisma.tvChannel.create({
-            data: {
-              userId,
-              title: `${socket.user?.name || "User"}'s Broadcast Channel`,
-              description: "Technical livestream and media archive channel",
-              status: "APPROVED"
-            }
-          });
-        } else if (channel.status !== "APPROVED") {
-          channel = await prisma.tvChannel.update({
-            where: { userId },
-            data: { status: "APPROVED" }
-          });
+        if (!channel || channel.status !== "APPROVED") {
+          socket.emit("broadcast-error", { roomId, message: "You need an approved channel to broadcast. Please request one from My Channel Studio." });
+          return;
         }
 
         socket.join(roomId);

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, Plus, Globe, 
-  Heart, MessageCircle, Repeat, Send, Trash2,
+  Heart, MessageCircle, Repeat, Send, Trash2, Bookmark,
   Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
-  Lightbulb, Building2, MapPin, Image as ImageIcon, X
+  Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, message } from 'antd';
@@ -21,6 +21,9 @@ interface ReplyItem {
     role: string;
     location: string | null;
   };
+  hasLiked?: boolean;
+  likesCount?: number;
+  children?: ReplyItem[];
 }
 
 interface PostItem {
@@ -29,6 +32,8 @@ interface PostItem {
   createdAt: string;
   updatedAt: string;
   imageUrl?: string | null;
+  videoUrl?: string | null;
+  mediaType?: string | null;
   author: {
     id: string;
     name: string;
@@ -40,9 +45,12 @@ interface PostItem {
   replies: ReplyItem[];
   hasLiked: boolean;
   hasReposted: boolean;
+  hasBookmarked: boolean;
   likesCount: number;
   repostsCount: number;
   repliesCount: number;
+  sharesCount: number;
+  bookmarksCount: number;
 }
 
 const getServerUrl = (path: string) => {
@@ -62,7 +70,7 @@ const EcosystemPage: React.FC = () => {
 
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'for_you' | 'enterprise' | 'placebo' | 'heritage_flame' | 'future_craft' | 'sovereign_minds' | 'others' | 'following'>('for_you');
+  const [activeFilter, setActiveFilter] = useState<'for_you' | 'following' | 'saved' | 'enterprise' | 'placebo' | 'heritage_flame' | 'future_craft' | 'sovereign_minds' | 'others'>('for_you');
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [newPostText, setNewPostText] = useState('');
@@ -182,6 +190,30 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
+  const handleBookmarkToggle = async (postId: string) => {
+    if (!user) {
+      message.info("Please log in or register to bookmark threads.");
+      navigate('/login');
+      return;
+    }
+    try {
+      const response = await api.post(`/panx/posts/${postId}/bookmark`);
+      const { bookmarked, bookmarksCount } = response.data;
+      setPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            hasBookmarked: bookmarked,
+            bookmarksCount
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error("Failed to toggle bookmark", error);
+    }
+  };
+
   const handlePostReply = async (postId: string) => {
     if (!user) {
       message.info("Please log in or register to reply to threads.");
@@ -232,17 +264,30 @@ const EcosystemPage: React.FC = () => {
     setSubmittingPost(true);
     try {
       let uploadedImageUrl = null;
+      let uploadedVideoUrl = null;
+      let mediaType = null;
       if (selectedImage) {
         const formData = new FormData();
         formData.append('document', selectedImage);
-        formData.append('category', 'PANX_IMAGE');
+        formData.append('category', 'PANX_MEDIA');
         const uploadRes = await api.post("/upload/document", formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        uploadedImageUrl = uploadRes.data.document.url;
+        if (selectedImage.type.startsWith('video/')) {
+          uploadedVideoUrl = uploadRes.data.document.url;
+          mediaType = 'VIDEO';
+        } else {
+          uploadedImageUrl = uploadRes.data.document.url;
+          mediaType = 'IMAGE';
+        }
       }
       
-      const response = await api.post("/panx/posts", { content: newPostText, imageUrl: uploadedImageUrl });
+      const response = await api.post("/panx/posts", { 
+        content: newPostText, 
+        imageUrl: uploadedImageUrl,
+        videoUrl: uploadedVideoUrl,
+        mediaType
+      });
       const newPost = response.data;
       setPosts(prev => [newPost, ...prev]);
       setNewPostText('');
@@ -328,6 +373,7 @@ const EcosystemPage: React.FC = () => {
     
     if (activeFilter === 'for_you') return true;
     if (activeFilter === 'following') return post.author.isFollowing || post.author.id === user?.id;
+    if (activeFilter === 'saved') return post.hasBookmarked;
     return getAuthorCategory(post.author) === activeFilter;
   });
 
@@ -429,26 +475,27 @@ const EcosystemPage: React.FC = () => {
         gap: '32px',
         width: '100%',
         alignItems: 'flex-start'
+      }}>
         {/* Left/Main Column: Threads Feed */}
         {(isDesktop || activeMobileTab === 'feed') && (
           <div style={{
-            flex: 2,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-            width: '100%',
-            paddingBottom: '100px'
+            flex: isDesktop ? '1' : 'none',
+            display: 'flex', flexDirection: 'column',
+            width: '100%'
           }}>
             {/* Horizontal Feed Filters */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)', padding: '12px 0' }}>
               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }} className="no-scrollbar">
-                {(['for_you', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others', 'following'] as const).map(filter => {
+                {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
                   const isSelected = activeFilter === filter;
                   const getFilterIcon = (filterName: string) => {
                     switch (filterName) {
                       case 'for_you':
                         return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                      case 'following':
+                        return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                      case 'saved':
+                        return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
                       case 'enterprise':
                         return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
                       case 'placebo':
@@ -461,8 +508,6 @@ const EcosystemPage: React.FC = () => {
                         return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
                       case 'others':
                         return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'following':
-                        return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
                       default:
                         return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
                     }
@@ -588,17 +633,25 @@ const EcosystemPage: React.FC = () => {
                   />
                   {previewUrl && (
                     <div style={{ position: 'relative', display: 'inline-block', marginTop: '8px', marginBottom: '8px' }}>
-                      <img src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} alt="preview" />
+                      {selectedImage?.type.startsWith('video/') ? (
+                        <video src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} controls />
+                      ) : (
+                        <img src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} alt="preview" />
+                      )}
                       <button onClick={removeImage} style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <X size={14} />
                       </button>
                     </div>
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', padding: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} className="hover:text-accent-primary hover:bg-white/10">
                         <ImageIcon size={18} />
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                      </label>
+                      <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', padding: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} className="hover:text-accent-primary hover:bg-white/10">
+                        <VideoIcon size={18} />
+                        <input type="file" accept="video/mp4,video/webm,video/quicktime" style={{ display: 'none' }} onChange={handleImageChange} />
                       </label>
                     </div>
                     <button
@@ -806,37 +859,63 @@ const EcosystemPage: React.FC = () => {
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                          <button 
-                            onClick={() => handleLikeToggle(post.id)}
-                            className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
-                          >
-                            <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
-                          </button>
+                        {post.videoUrl && (
+                          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <video src={getServerUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
+                          </div>
+                        )}
 
-                          <button 
-                            onClick={() => setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)}
-                            className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
-                          >
-                            <MessageCircle size={15} />
-                          </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <button 
+                              onClick={() => handleLikeToggle(post.id)}
+                              className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount > 0 ? post.likesCount : ''}</span>
+                            </button>
 
-                          <button 
-                            onClick={() => handleRepostToggle(post.id)}
-                            className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
-                          >
-                            <Repeat size={15} />
-                          </button>
+                            <button 
+                              onClick={() => setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)}
+                              className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <MessageCircle size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount > 0 ? post.repliesCount : ''}</span>
+                            </button>
 
-                          <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin}/ecosystem#${post.id}`);
-                              alert('Link copied to clipboard!');
-                            }}
-                            className="std-action-btn"
-                            title="Copy link to clipboard"
+                            <button 
+                              onClick={() => handleRepostToggle(post.id)}
+                              className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Repeat size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount > 0 ? post.repostsCount : ''}</span>
+                            </button>
+                            
+                            <button 
+                              onClick={() => {
+                                api.post(`/panx/posts/${post.id}/share`).then(() => {
+                                  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
+                                });
+                                navigator.clipboard.writeText(`${window.location.origin}/ecosystem/post/${post.id}`);
+                                message.success('Link copied to clipboard!');
+                              }}
+                              className="std-action-btn"
+                              title="Copy link to clipboard"
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Send size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => handleBookmarkToggle(post.id)}
+                            className={`std-action-btn ${post.hasBookmarked ? 'active-green' : ''}`}
+                            title="Save post"
                           >
-                            <Send size={15} />
+                            <Bookmark size={15} fill={post.hasBookmarked ? 'var(--accent-primary)' : 'none'} />
                           </button>
                         </div>
 
@@ -849,35 +928,87 @@ const EcosystemPage: React.FC = () => {
                             borderRadius: '0 12px 12px 0',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '10px'
+                            gap: '16px'
                           }}>
                             {post.replies.map(rep => (
-                              <div key={rep.id} style={{ display: 'flex', gap: '8px' }}>
-                                <div 
-                                  style={{ 
-                                    width: '18px', 
-                                    height: '18px', 
-                                    borderRadius: '50%', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    fontWeight: 800,
-                                    fontSize: '6px',
-                                    background: getAvatarColor(rep.author?.name || 'User'),
-                                    color: 'black' 
-                                  }} 
-                                >
-                                  {getInitials(rep.author?.name || 'U')}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
-                                    <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
+                              <div key={rep.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <div 
+                                    style={{ 
+                                      width: '18px', 
+                                      height: '18px', 
+                                      borderRadius: '50%', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center',
+                                      fontWeight: 800,
+                                      fontSize: '6px',
+                                      background: getAvatarColor(rep.author?.name || 'User'),
+                                      color: 'black' 
+                                    }} 
+                                  >
+                                    {getInitials(rep.author?.name || 'U')}
                                   </div>
-                                  <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
+                                      <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
+                                    </div>
+                                    <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
+                                    
+                                    {/* Action Bar for Reply */}
+                                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+                                      <button 
+                                        onClick={async () => {
+                                          if (!user) return navigate('/login');
+                                          try {
+                                            const res = await api.post(`/panx/replies/${rep.id}/like`);
+                                            setPosts(prev => prev.map(p => p.id === post.id ? {
+                                              ...p,
+                                              replies: p.replies.map(r => r.id === rep.id ? { ...r, hasLiked: res.data.liked, likesCount: res.data.likesCount } : r)
+                                            } : p));
+                                          } catch (error) { console.error(error); }
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: rep.hasLiked ? '#EF4444' : 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}
+                                      >
+                                        <Heart size={11} fill={rep.hasLiked ? '#EF4444' : 'none'} />
+                                        <span>{rep.likesCount || ''}</span>
+                                      </button>
+                                      <button onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
+                                        <MessageCircle size={11} /> Reply
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
+                                {/* Show 1 nested reply if any */}
+                                {rep.children && rep.children.length > 0 && (
+                                  <div style={{ display: 'flex', gap: '8px', marginLeft: '26px' }}>
+                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '5px', background: getAvatarColor(rep.children[0].author?.name || 'User'), color: 'black' }}>
+                                      {getInitials(rep.children[0].author?.name || 'U')}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>{rep.children[0].author?.name}</span>
+                                        <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)' }}>{rep.children[0].content}</span>
+                                      </div>
+                                      {rep.children.length > 1 && (
+                                        <span onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
+                                          View {rep.children.length - 1} more replies
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {post.repliesCount > (post.replies?.length || 0) && (
+                          <div style={{ marginTop: '8px', marginLeft: '12px' }}>
+                            <span onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
+                              View all {post.repliesCount} replies
+                            </span>
                           </div>
                         )}
 
@@ -943,7 +1074,6 @@ const EcosystemPage: React.FC = () => {
               display: 'flex',
               gap: '12px',
               paddingTop: '20px',
-              paddingBottom: isDesktop ? '0' : '100px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <button 
@@ -1103,7 +1233,7 @@ const EcosystemPage: React.FC = () => {
         ) : (
           /* Mobile content for selected tab */
           activeMobileTab !== 'feed' && (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '100px' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {activeMobileTab === 'concepts' ? (
                 <>
                   <div className="flex items-center justify-between">
