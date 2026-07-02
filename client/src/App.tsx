@@ -6,8 +6,6 @@ import {
 } from "@ant-design/icons";
 import { Activity } from "lucide-react";
 
-// Page Imports
-import LandingPage from "./pages/LandingPage";
 import ChatWindow from "./components/ChatWindow";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
@@ -129,7 +127,7 @@ const App: React.FC = () => {
                   </Route>
 
                   {/* === Fully Public Routes (Visible to all) === */}
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/" element={<EcosystemPage />} />
                   <Route path="/chat/:moduleName" element={<ChatWindow />} />
                   <Route path="/healing" element={<HealingPage />} />
                   <Route path="/about-us" element={<AboutUs />} />
@@ -152,8 +150,7 @@ const App: React.FC = () => {
                   
                    {/* === New PANX Routes === */}
                    <Route path="/lab" element={<LabPage />} />
-                   <Route path="/ecosystem" element={<EcosystemPage />} />
-                   <Route path="/ecosystem/post/:postId" element={<PostDetailPage />} />
+                   <Route path="/post/:postId" element={<PostDetailPage />} />
                    <Route path="/inbox" element={<InboxPage />} />
                    <Route path="/status" element={<PlaceholderPage name="System Status" />} />
                    <Route path="/music" element={<PlaceholderPage name="PanX Music" />} />

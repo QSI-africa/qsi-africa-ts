@@ -240,7 +240,7 @@ const DefaultSidebarContent = () => {
             </button>
             <button 
               onClick={() => {
-                navigate('/ecosystem');
+                navigate('/');
                 setIsMobileMenuOpen(false);
               }}
               style={{
@@ -425,12 +425,12 @@ const DefaultSidebarContent = () => {
             )}
           </div>
 
-          {/* <div className="ecosystem-actions">
+          <div className="ecosystem-actions">
             <button 
               className="ecosystem-btn-explore"
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               onClick={() => {
-                navigate('/ecosystem');
+                navigate('/');
                 setIsMobileMenuOpen(false);
               }}
             >
@@ -448,7 +448,7 @@ const DefaultSidebarContent = () => {
               <Plus size={11} strokeWidth={2.5} />
               Create Venture
             </button>
-          </div> */}
+          </div>
 
         </div>
       </div>
@@ -666,9 +666,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <span className="mobile-nav-label">Menus</span>
         </button>
         <button 
-          className={`mobile-nav-item ${location.pathname === '/ecosystem' ? 'active' : ''}`}
+          className={`mobile-nav-item ${location.pathname === '/' ? 'active' : ''}`}
           onClick={() => {
-            navigate('/ecosystem');
+            navigate('/');
             setIsMobileMenuOpen(false);
           }}
         >
@@ -679,8 +679,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               width: '24px', 
               height: '24px', 
               objectFit: 'contain',
-              filter: location.pathname === '/ecosystem' 
-                ? 'brightness(0) invert(53%) sepia(93%) saturate(452%) hue-rotate(113deg) brightness(97%) contrast(90%) drop-shadow(0 0 4px var(--accent-primary))' 
+              filter: location.pathname === '/' 
+                ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.8)) sepia(93%) saturate(452%) hue-rotate(113deg) brightness(97%) contrast(90%) drop-shadow(0 0 4px var(--accent-primary))' 
                 : 'brightness(0) invert(0.6)',
               transition: 'all 0.3s ease'
             }} 

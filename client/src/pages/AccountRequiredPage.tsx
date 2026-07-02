@@ -24,7 +24,7 @@ const AccountRequiredPage: React.FC = () => {
     {
       title: "PanX Feed",
       desc: "See public threads, tech concepts, and community updates from our network of builders.",
-      path: "/ecosystem",
+      path: "/",
       icon: <Compass size={20} color="#3B82F6" />,
     },
     {

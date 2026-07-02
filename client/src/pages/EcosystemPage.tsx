@@ -899,7 +899,7 @@ const EcosystemPage: React.FC = () => {
                                 api.post(`/panx/posts/${post.id}/share`).then(() => {
                                   setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
                                 });
-                                navigator.clipboard.writeText(`${window.location.origin}/ecosystem/post/${post.id}`);
+                                navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
                                 message.success('Link copied to clipboard!');
                               }}
                               className="std-action-btn"
@@ -974,7 +974,7 @@ const EcosystemPage: React.FC = () => {
                                         <Heart size={11} fill={rep.hasLiked ? '#EF4444' : 'none'} />
                                         <span>{rep.likesCount || ''}</span>
                                       </button>
-                                      <button onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
+                                      <button onClick={() => navigate(`/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
                                         <MessageCircle size={11} /> Reply
                                       </button>
                                     </div>
@@ -992,7 +992,7 @@ const EcosystemPage: React.FC = () => {
                                         <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)' }}>{rep.children[0].content}</span>
                                       </div>
                                       {rep.children.length > 1 && (
-                                        <span onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
+                                        <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
                                           View {rep.children.length - 1} more replies
                                         </span>
                                       )}
@@ -1006,7 +1006,7 @@ const EcosystemPage: React.FC = () => {
 
                         {post.repliesCount > (post.replies?.length || 0) && (
                           <div style={{ marginTop: '8px', marginLeft: '12px' }}>
-                            <span onClick={() => navigate(`/ecosystem/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
+                            <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
                               View all {post.repliesCount} replies
                             </span>
                           </div>
