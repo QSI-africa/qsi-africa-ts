@@ -70,6 +70,14 @@ const QsiTvPage: React.FC = () => {
   const [broadcastForm] = Form.useForm();
   const [peerSessionForm] = Form.useForm();
 
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const isMobile = windowWidth <= 768;
+
   // Preview Modal
   const [previewContent, setPreviewContent] = useState<any | null>(null);
 
@@ -333,26 +341,31 @@ const QsiTvPage: React.FC = () => {
         {/* Session Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 28px',
+          padding: isMobile ? '12px 16px' : '16px 28px',
           background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)'
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          zIndex: 50
         }}>
           <button
             onClick={() => { setActiveRoomId(null); setIsBroadcasting(false); setActiveViewerRoom(null); }}
             className="qsi-btn qsi-btn-secondary"
-            style={{ padding: '8px 16px', borderRadius: '10px' }}
+            style={{ padding: isMobile ? '8px 12px' : '8px 16px', borderRadius: '10px' }}
           >
-            <ArrowLeft size={16} /> Exit
+            <ArrowLeft size={16} /> {!isMobile && 'Exit'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 8px #EF4444', animation: 'pulse 1.5s infinite' }} />
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-              {activeRoomId ? `Session · ${activeRoomId}` : isBroadcasting ? 'Live Transmission' : `Viewing · ${activeViewerRoom?.title}`}
+              {activeRoomId 
+                ? (isMobile ? 'Session' : `Session · ${activeRoomId}`) 
+                : isBroadcasting 
+                  ? (isMobile ? 'Live' : 'Live Transmission') 
+                  : (isMobile ? 'Viewing' : `Viewing · ${activeViewerRoom?.title}`)}
             </span>
           </div>
 
-          <div style={{ width: '80px' }} />
+          <div style={{ width: isMobile ? '32px' : '80px' }} />
         </div>
 
         {/* Video Area */}

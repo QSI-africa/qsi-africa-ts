@@ -85,12 +85,20 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   }, [localStream]);
 
   const [servers, setServers] = useState<RTCConfiguration>({
-    iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      { urls: 'stun:stun.cloudflare.com:3478' }
+    ],
   });
+  const serversRef = useRef(servers);
 
   useEffect(() => {
     api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) setServers(res.data);
+      if (res.data && res.data.iceServers) {
+        setServers(res.data);
+        serversRef.current = res.data;
+      }
     }).catch(err => console.error("Failed to load ICE servers", err));
   }, []);
 
@@ -104,16 +112,13 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     peerConnections.current.clear();
 
     socketService.emit('stop-broadcast', roomId.current);
-    socketService.off('viewer-joined');
-    socketService.off('answer');
-    socketService.off('ice-candidate');
-    socketService.off('user-disconnected');
-    socketService.off('broadcast-error');
+    // socket listeners will be cleaned up by useEffect return function
 
     onStop();
   };
 
   useEffect(() => {
+    const handlers: any = {};
     const startBroadcasting = async () => {
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -154,20 +159,21 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         setIsMuted(!hasAudioTrack || !stream.getAudioTracks()[0].enabled);
 
         // Setup error handler first
-        socketService.on('broadcast-error', ({ message: errMsg }) => {
+        handlers.onBroadcastError = ({ message: errMsg }: any) => {
           message.error(errMsg || 'Failed to start broadcast');
           handleStopBroadcast();
-        });
+        };
+        socketService.on('broadcast-error', handlers.onBroadcastError);
 
         socketService.emit('start-broadcast', roomId.current, { title, isPrivate });
 
-        socketService.on('viewer-joined', async ({ viewerId }) => {
+        handlers.onViewerJoined = async ({ viewerId }: any) => {
           if (peerConnections.current.has(viewerId)) {
             peerConnections.current.get(viewerId)?.close();
           } else {
             setViewerCount(prev => prev + 1);
           }
-          const pc = new RTCPeerConnection(servers);
+          const pc = new RTCPeerConnection(serversRef.current);
           peerConnections.current.set(viewerId, pc);
           stream.getTracks().forEach(track => pc.addTrack(track, stream));
           pc.onicecandidate = (event) => {
@@ -184,11 +190,12 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           socketService.emit('offer', { targetUserId: viewerId, offer });
-        });
+        };
+        socketService.on('viewer-joined', handlers.onViewerJoined);
 
         const pendingCandidates = new Map<string, RTCIceCandidate[]>();
 
-        socketService.on('answer', async ({ senderUserId, answer }) => {
+        handlers.onAnswer = async ({ senderUserId, answer }: any) => {
           const pc = peerConnections.current.get(senderUserId);
           if (pc) {
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
@@ -199,9 +206,10 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             }
             pendingCandidates.delete(senderUserId);
           }
-        });
+        };
+        socketService.on('answer', handlers.onAnswer);
 
-        socketService.on('ice-candidate', async ({ senderUserId, candidate }) => {
+        handlers.onIceCandidate = async ({ senderUserId, candidate }: any) => {
           const pc = peerConnections.current.get(senderUserId);
           const iceCand = new RTCIceCandidate(candidate);
           if (pc?.remoteDescription) {
@@ -211,15 +219,17 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             queue.push(iceCand);
             pendingCandidates.set(senderUserId, queue);
           }
-        });
+        };
+        socketService.on('ice-candidate', handlers.onIceCandidate);
 
-        socketService.on('user-disconnected', ({ socketId }) => {
+        handlers.onUserDisconnected = ({ socketId }: any) => {
           if (peerConnections.current.has(socketId)) {
             peerConnections.current.get(socketId)?.close();
             peerConnections.current.delete(socketId);
             setViewerCount(prev => Math.max(0, prev - 1));
           }
-        });
+        };
+        socketService.on('user-disconnected', handlers.onUserDisconnected);
 
       } catch (err: any) {
         console.error('Broadcast error:', err);
@@ -237,11 +247,11 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
       peerConnections.current.forEach(pc => pc.close());
       socketService.emit('stop-broadcast', roomId.current);
 
-      socketService.off('viewer-joined');
-      socketService.off('answer');
-      socketService.off('ice-candidate');
-      socketService.off('user-disconnected');
-      socketService.off('broadcast-error');
+      if (handlers.onViewerJoined) socketService.off('viewer-joined', handlers.onViewerJoined);
+      if (handlers.onAnswer) socketService.off('answer', handlers.onAnswer);
+      if (handlers.onIceCandidate) socketService.off('ice-candidate', handlers.onIceCandidate);
+      if (handlers.onUserDisconnected) socketService.off('user-disconnected', handlers.onUserDisconnected);
+      if (handlers.onBroadcastError) socketService.off('broadcast-error', handlers.onBroadcastError);
     };
   }, [title, isPrivate]);
 
@@ -440,7 +450,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         <div style={{
           padding: isMobile ? '16px' : '20px 24px',
           background: 'linear-gradient(to top, rgba(7,12,20,1) 0%, rgba(7,12,20,0.8) 80%, rgba(7,12,20,0) 100%)',
-          display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: isMobile ? '8px' : '12px', zIndex: 10
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: isMobile ? '8px' : '12px', zIndex: 10, flexShrink: 0
         }}>
           <ControlBtn onClick={toggleMute} active={!isMuted} danger={isMuted} title={isMuted ? 'Unmute Mic' : 'Mute Mic'}>
             {isMuted ? <MicOff size={18} /> : <Mic size={18} />}

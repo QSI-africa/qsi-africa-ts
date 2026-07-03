@@ -58,37 +58,31 @@ router.get("/channels/my-channel", async (req, res) => {
     });
 
     if (!channel) {
-      channel = await prisma.tvChannel.create({
+      await prisma.tvChannel.create({
         data: {
           userId,
           title: `${req.user.name || "My"}'s Broadcast Channel`,
           description: "Technical livestream and media archive channel",
           status: "APPROVED"
-        },
+        }
+      });
+      channel = await prisma.tvChannel.findUnique({
+        where: { userId },
         include: {
-          _count: {
-            select: {
-              subscriptions: true
-            }
-          },
-          contents: {
-            orderBy: { createdAt: "desc" }
-          }
+          _count: { select: { subscriptions: true } },
+          contents: { orderBy: { createdAt: "desc" } }
         }
       });
     } else if (channel.status !== "APPROVED") {
-      channel = await prisma.tvChannel.update({
+      await prisma.tvChannel.update({
         where: { userId },
-        data: { status: "APPROVED" },
+        data: { status: "APPROVED" }
+      });
+      channel = await prisma.tvChannel.findUnique({
+        where: { userId },
         include: {
-          _count: {
-            select: {
-              subscriptions: true
-            }
-          },
-          contents: {
-            orderBy: { createdAt: "desc" }
-          }
+          _count: { select: { subscriptions: true } },
+          contents: { orderBy: { createdAt: "desc" } }
         }
       });
     }
@@ -149,7 +143,7 @@ router.post("/channels/request", async (req, res) => {
     });
 
     if (existing) {
-      return res.status(400).json({ error: "You already have requested or created a channel." });
+      return res.status(200).json(existing);
     }
 
     const channel = await prisma.tvChannel.create({

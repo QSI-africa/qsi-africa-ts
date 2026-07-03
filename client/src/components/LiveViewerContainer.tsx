@@ -56,12 +56,20 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
   const isMobile = windowWidth <= 768;
   const [servers, setServers] = useState<RTCConfiguration>({
-    iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      { urls: 'stun:stun.cloudflare.com:3478' }
+    ],
   });
+  const serversRef = useRef(servers);
 
   useEffect(() => {
     api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) setServers(res.data);
+      if (res.data && res.data.iceServers) {
+        setServers(res.data);
+        serversRef.current = res.data;
+      }
     }).catch(err => console.error("Failed to load ICE servers", err));
   }, []);
   const broadcasterId = useRef<string | null>(null);
@@ -71,16 +79,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   const handleClose = () => {
     pc.current?.close();
     pc.current = null;
-    socketService.off('offer');
-    socketService.off('ice-candidate');
-    socketService.off('broadcast-ended');
-    socketService.off('join-error');
+    // socket listeners will be cleaned up by useEffect return function
     onClose();
   };
 
   useEffect(() => {
+    const handlers: any = {};
     const initPC = async () => {
-      pc.current = new RTCPeerConnection(servers);
+      pc.current = new RTCPeerConnection(serversRef.current);
 
       pc.current.ontrack = (event) => {
         setRemoteStream(event.streams[0]);
@@ -103,7 +109,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
       const candidateQueue: RTCIceCandidate[] = [];
 
-      socketService.on('offer', async ({ offer, senderUserId }) => {
+      handlers.onOffer = async ({ offer, senderUserId }: any) => {
         if (pc.current) {
           hasReceivedOffer.current = true;
           broadcasterId.current = senderUserId;
@@ -116,9 +122,10 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             if (cand) await pc.current.addIceCandidate(cand);
           }
         }
-      });
+      };
+      socketService.on('offer', handlers.onOffer);
 
-      socketService.on('ice-candidate', async ({ candidate }) => {
+      handlers.onIceCandidate = async ({ candidate }: any) => {
         if (pc.current) {
           const iceCand = new RTCIceCandidate(candidate);
           if (pc.current.remoteDescription) {
@@ -127,18 +134,21 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             candidateQueue.push(iceCand);
           }
         }
-      });
+      };
+      socketService.on('ice-candidate', handlers.onIceCandidate);
 
-      socketService.on('broadcast-ended', ({ roomId: endedRoomId }) => {
+      handlers.onBroadcastEnded = ({ roomId: endedRoomId }: any) => {
         if (endedRoomId === roomId) handleClose();
-      });
+      };
+      socketService.on('broadcast-ended', handlers.onBroadcastEnded);
 
-      socketService.on('join-error', ({ roomId: errRoomId, message: errMsg }) => {
+      handlers.onJoinError = ({ roomId: errRoomId, message: errMsg }: any) => {
         if (errRoomId === roomId) {
           setError(errMsg);
           setConnecting(false);
         }
-      });
+      };
+      socketService.on('join-error', handlers.onJoinError);
 
       socketService.emit('request-join-broadcast', roomId);
     };
@@ -155,10 +165,10 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       pc.current?.close();
       clearInterval(retryInterval);
       socketService.emit('leave-broadcast', roomId);
-      socketService.off('offer');
-      socketService.off('ice-candidate');
-      socketService.off('broadcast-ended');
-      socketService.off('join-error');
+      if (handlers.onOffer) socketService.off('offer', handlers.onOffer);
+      if (handlers.onIceCandidate) socketService.off('ice-candidate', handlers.onIceCandidate);
+      if (handlers.onBroadcastEnded) socketService.off('broadcast-ended', handlers.onBroadcastEnded);
+      if (handlers.onJoinError) socketService.off('join-error', handlers.onJoinError);
     };
   }, [roomId, error]);
 

@@ -89,12 +89,20 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   }, []);
 
   const [servers, setServers] = useState<RTCConfiguration>({
-    iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }],
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      { urls: 'stun:stun.cloudflare.com:3478' }
+    ],
   });
+  const serversRef = useRef(servers);
 
   useEffect(() => {
     api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) setServers(res.data);
+      if (res.data && res.data.iceServers) {
+        setServers(res.data);
+        serversRef.current = res.data;
+      }
     }).catch(err => console.error("Failed to load ICE servers", err));
   }, []);
 
@@ -111,16 +119,13 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
     // Leave socket room
     socketService.emit('leave-room', roomId);
-    socketService.off('user-connected');
-    socketService.off('offer');
-    socketService.off('answer');
-    socketService.off('ice-candidate');
-    socketService.off('user-disconnected');
+    // socket listeners will be cleaned up by useEffect return function
 
     onLeave();
   };
 
   useEffect(() => {
+    const handlers: any = {};
     const startCall = async () => {
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -162,14 +167,15 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
         const pendingCandidates = new Map<string, RTCIceCandidate[]>();
 
-        socketService.on('user-connected', async ({ socketId }) => {
+        handlers.onUserConnected = async ({ socketId }: any) => {
           const pc = createPeerConnection(socketId, stream);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           socketService.emit('offer', { targetUserId: socketId, offer });
-        });
+        };
+        socketService.on('user-connected', handlers.onUserConnected);
 
-        socketService.on('offer', async ({ offer, senderUserId }) => {
+        handlers.onOffer = async ({ offer, senderUserId }: any) => {
           const pc = createPeerConnection(senderUserId, stream);
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pc.createAnswer();
@@ -183,9 +189,10 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
             if (cand) await pc.addIceCandidate(cand);
           }
           pendingCandidates.delete(senderUserId);
-        });
+        };
+        socketService.on('offer', handlers.onOffer);
 
-        socketService.on('answer', async ({ answer, senderUserId }) => {
+        handlers.onAnswer = async ({ answer, senderUserId }: any) => {
           const pc = peerConnections.current.get(senderUserId);
           if (pc) {
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
@@ -196,9 +203,10 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
             }
             pendingCandidates.delete(senderUserId);
           }
-        });
+        };
+        socketService.on('answer', handlers.onAnswer);
 
-        socketService.on('ice-candidate', async ({ candidate, senderUserId }) => {
+        handlers.onIceCandidate = async ({ candidate, senderUserId }: any) => {
           const pc = peerConnections.current.get(senderUserId);
           const iceCand = new RTCIceCandidate(candidate);
           if (pc?.remoteDescription) {
@@ -208,15 +216,17 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
             queue.push(iceCand);
             pendingCandidates.set(senderUserId, queue);
           }
-        });
+        };
+        socketService.on('ice-candidate', handlers.onIceCandidate);
 
-        socketService.on('user-disconnected', ({ socketId }) => {
+        handlers.onUserDisconnected = ({ socketId }: any) => {
           if (peerConnections.current.has(socketId)) {
             peerConnections.current.get(socketId)?.close();
             peerConnections.current.delete(socketId);
             setRemoteParticipants(prev => prev.filter(p => p.socketId !== socketId));
           }
-        });
+        };
+        socketService.on('user-disconnected', handlers.onUserDisconnected);
 
         socketService.emit('join-room', roomId, user?.name || 'Guest-' + Math.random().toString(36).substring(7));
       } catch (err: any) {
@@ -230,16 +240,16 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     return () => {
       streamRef.current?.getTracks().forEach(track => track.stop());
       peerConnections.current.forEach(pc => pc.close());
-      socketService.off('user-connected');
-      socketService.off('offer');
-      socketService.off('answer');
-      socketService.off('ice-candidate');
-      socketService.off('user-disconnected');
+      if (handlers.onUserConnected) socketService.off('user-connected', handlers.onUserConnected);
+      if (handlers.onOffer) socketService.off('offer', handlers.onOffer);
+      if (handlers.onAnswer) socketService.off('answer', handlers.onAnswer);
+      if (handlers.onIceCandidate) socketService.off('ice-candidate', handlers.onIceCandidate);
+      if (handlers.onUserDisconnected) socketService.off('user-disconnected', handlers.onUserDisconnected);
     };
   }, [roomId]);
 
   const createPeerConnection = (targetSocketId: string, stream: MediaStream) => {
-    const pc = new RTCPeerConnection(servers);
+    const pc = new RTCPeerConnection(serversRef.current);
     peerConnections.current.set(targetSocketId, pc);
     stream.getTracks().forEach(track => pc.addTrack(track, stream));
     pc.ontrack = (event) => {
@@ -331,7 +341,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
       overflow: 'hidden'
     }}>
       {/* ── Video Area ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '12px' : '20px', gap: '16px', overflow: 'hidden' }}>
 
         {/* Session Info */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -353,7 +363,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
           display: 'grid',
           gap: '12px',
           gridTemplateColumns: remoteParticipants.length === 0 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
-          overflow: 'hidden'
+          overflowY: 'auto'
         }}>
           {/* Local Video */}
           <div style={{
@@ -396,7 +406,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         </div>
 
         {/* Controls Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', flexShrink: 0, paddingBottom: isMobile ? '16px' : '0' }}>
           <ControlBtn onClick={toggleMute} danger={isMuted} title={isMuted ? 'Unmute' : 'Mute'}>
             {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </ControlBtn>
