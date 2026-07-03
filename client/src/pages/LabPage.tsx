@@ -1040,11 +1040,27 @@ const LabPage: React.FC = () => {
                 <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>
                   Application Under Review
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
-                  Your profile <strong>"{myChannel.title}"</strong> is currently pending review by our administrator. Once approved, you can start streaming and publishing lessons.
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5, marginBottom: '24px' }}>
+                  Your profile request is currently pending review by our administrator. Once approved, you can start streaming and publishing lessons.
                 </p>
                 <div style={{ 
-                  marginTop: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', 
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '16px', padding: '20px', textAlign: 'left', marginBottom: '24px'
+                }}>
+                  <h4 style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '16px', margin: 0 }}>
+                    Submitted Details
+                  </h4>
+                  <div style={{ marginBottom: '12px' }}>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: 800 }}>Profile Name</span>
+                    <strong style={{ color: 'white', fontSize: '14px' }}>{myChannel.title}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: 800 }}>Teaching Focus</span>
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>{myChannel.description}</p>
+                  </div>
+                </div>
+                <div style={{ 
+                  display: 'inline-flex', alignItems: 'center', gap: '8px', 
                   background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
                   padding: '8px 16px', borderRadius: '12px', fontSize: '11px', color: '#F59E0B', fontWeight: 800
                 }}>

@@ -731,11 +731,22 @@ const QsiTvPage: React.FC = () => {
                         }}>
                           <AlertTriangle size={32} />
                         </div>
-                        <div>
+                        <div className="w-full">
                           <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-2">Approval Pending</h3>
-                          <p className="text-text-secondary text-sm leading-relaxed">
-                            Your creator channel request (<strong>{myChannel.title}</strong>) is currently in the registry queue awaiting administrator approval.
+                          <p className="text-text-secondary text-sm leading-relaxed mb-6">
+                            Your creator channel request is currently in the registry queue awaiting administrator approval.
                           </p>
+                          <div className="bg-bg-primary border border-border-subtle rounded-xl p-6 text-left w-full">
+                            <h4 className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-4">Submitted Details</h4>
+                            <div className="mb-4">
+                              <span className="text-[10px] text-text-tertiary uppercase block mb-1">Channel Title</span>
+                              <p className="text-white font-bold">{myChannel.title}</p>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-text-tertiary uppercase block mb-1">Description / Scope</span>
+                              <p className="text-text-secondary text-sm">{myChannel.description}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) : myChannel.status === 'REJECTED' ? (
