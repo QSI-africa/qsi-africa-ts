@@ -165,6 +165,29 @@ router.put("/channels/my-channel", async (req, res) => {
   }
 });
 
+// Delete own channel (useful if rejected and want to start over)
+router.delete("/channels/my-channel", async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const channel = await prisma.tvChannel.findUnique({
+      where: { userId }
+    });
+
+    if (!channel) {
+      return res.status(404).json({ error: "Channel not found." });
+    }
+
+    await prisma.tvChannel.delete({
+      where: { userId }
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Failed to delete channel:", error);
+    res.status(500).json({ error: "Failed to delete channel." });
+  }
+});
+
 // 6. Subscribe to an approved channel
 router.post("/channels/:channelId/subscribe", async (req, res) => {
   const { channelId } = req.params;
