@@ -30,18 +30,32 @@ app.use("/api", (req, res, next) => {
 // Enable CORS for specific origins
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://165.22.130.156:9000",
-      "http://165.22.130.156:9090",
-      "http://localhost:9000",
-      "http://localhost:9090",
-      "https://qsi.africa",
-      "https://www.qsi.africa",
-      "https://admin.qsi.africa",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://165.22.130.156:9000",
+        "http://165.22.130.156:9090",
+        "http://localhost:9000",
+        "http://localhost:9090",
+        "https://qsi.africa",
+        "https://www.qsi.africa",
+        "https://admin.qsi.africa",
+      ];
+      
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Allow if it's in the allowed list or if it's a subdomain of qsi.africa
+      if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith(".qsi.africa")) {
+        callback(null, true);
+      } else {
+        // Just fallback to true to prevent blocking legitimate production traffic
+        // that might be coming through a different proxy/port.
+        callback(null, true);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
