@@ -330,8 +330,12 @@ const QsiTvPage: React.FC = () => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-    const origin = new URL(baseURL).origin;
-    return `${origin}${path}`;
+    try { 
+      const origin = new URL(baseURL).origin; 
+      return `${origin}${path}`; 
+    } catch { 
+      return path; 
+    }
   };
 
   // ─── Active Session View (Live broadcast or peer session or viewer) ────────
@@ -492,19 +496,22 @@ const QsiTvPage: React.FC = () => {
                       {post.mediaUrl && (
                         <div className="mt-4 pt-4 border-t border-border-subtle">
                           {post.mimeType === 'VIDEO' ? (
-                            <video
-                              src={getServerUrl(post.mediaUrl)}
-                              controls
-                              className="w-full rounded-xl border border-border-subtle bg-black"
-                              style={{ maxHeight: '200px' }}
-                            />
+                            <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
+                              <video
+                                src={getServerUrl(post.mediaUrl)}
+                                className="w-full rounded-xl border border-border-subtle bg-black"
+                                style={{ maxHeight: '200px' }}
+                              />
+                            </div>
                           ) : post.mimeType === 'IMAGE' ? (
-                            <img
-                              src={getServerUrl(post.mediaUrl)}
-                              alt={post.title}
-                              className="w-full rounded-xl border border-border-subtle object-cover"
-                              style={{ maxHeight: '200px' }}
-                            />
+                            <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
+                              <img
+                                src={getServerUrl(post.mediaUrl)}
+                                alt={post.title}
+                                className="w-full rounded-xl border border-border-subtle object-cover"
+                                style={{ maxHeight: '200px' }}
+                              />
+                            </div>
                           ) : (
                             <a
                               href={getServerUrl(post.mediaUrl)}
@@ -1030,7 +1037,7 @@ const QsiTvPage: React.FC = () => {
                 <img
                   src={getServerUrl(previewContent.mediaUrl)}
                   alt={previewContent.title}
-                  className="w-full rounded-xl border border-border-subtle object-cover"
+                  className="w-full rounded-xl border border-border-subtle object-contain" style={{ maxHeight: "600px" }}
                 />
               ) : (
                 <a

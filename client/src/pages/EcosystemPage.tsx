@@ -6,7 +6,7 @@ import {
   Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, message } from 'antd';
+import { Grid, message, Modal } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -57,8 +57,12 @@ const getServerUrl = (path: string) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-  const origin = new URL(baseURL).origin;
-  return `${origin}${path}`;
+  try { 
+    const origin = new URL(baseURL).origin; 
+    return `${origin}${path}`; 
+  } catch { 
+    return path; 
+  }
 };
 
 const EcosystemPage: React.FC = () => {
@@ -77,6 +81,7 @@ const EcosystemPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submittingPost, setSubmittingPost] = useState(false);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
 
   // New ecosystem state
   const [concepts, setConcepts] = useState<any[]>([]);
@@ -854,14 +859,20 @@ const EcosystemPage: React.FC = () => {
                         </p>
                         
                         {post.imageUrl && (
-                          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <div 
+                            style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                            onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
+                          >
                             <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
                           </div>
                         )}
 
                         {post.videoUrl && (
-                          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <video src={getServerUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
+                          <div 
+                            style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                            onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
+                          >
+                            <video src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
                           </div>
                         )}
 
@@ -1320,6 +1331,25 @@ const EcosystemPage: React.FC = () => {
         )}
 
       </div>
+      <Modal
+        title={null}
+        open={!!fullscreenMedia}
+        onCancel={() => setFullscreenMedia(null)}
+        footer={null}
+        width={800}
+        centered
+        className="dark-modal"
+      >
+        {fullscreenMedia && (
+          <div className="p-4 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl flex justify-center items-center">
+            {fullscreenMedia.type === 'video' ? (
+              <video src={fullscreenMedia.url} controls autoPlay className="w-full rounded-xl object-contain" style={{ maxHeight: '80vh' }} />
+            ) : (
+              <img src={fullscreenMedia.url} alt="Fullscreen" className="w-full rounded-xl object-contain" style={{ maxHeight: '80vh' }} />
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
