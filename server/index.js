@@ -12,22 +12,16 @@ const setupVideoSignaling = require("./src/services/videoSignaling");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust Nginx reverse proxy so rate limiting uses the correct client IP instead of the proxy IP
+app.set("trust proxy", 1);
+
 // Security: Add helmet for security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow serving uploads
   contentSecurityPolicy: false, // Disable CSP for API server
 }));
 
-// Security: Apply rate limiting to all API requests
-// Security: Apply rate limiting to all API requests, but bypass for Socket.io
-app.use("/api", (req, res, next) => {
-  if (req.path.startsWith("/socket.io")) {
-    return next();
-  }
-  return apiLimiter(req, res, next);
-});
-
-// Enable CORS for specific origins
+// Enable CORS BEFORE rate limiting so that rate-limit errors (429) include CORS headers!
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -59,6 +53,16 @@ app.use(
     credentials: true,
   })
 );
+
+// Security: Apply rate limiting to all API requests, but bypass for Socket.io
+app.use("/api", (req, res, next) => {
+  if (req.path.startsWith("/socket.io")) {
+    return next();
+  }
+  return apiLimiter(req, res, next);
+});
+
+
 
 app.use(express.json({ limit: "20mb" })); // Also limit JSON body size
 
