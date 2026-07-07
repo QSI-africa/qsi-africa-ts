@@ -38,6 +38,7 @@ describe('PanX API Endpoints', () => {
           content: 'Hello World', 
           authorId: 'user123',
           author: { id: 'user123', name: 'Author', avatarUrl: null },
+          replies: [],
           _count: { likes: 0, reposts: 0, replies: 0 }
         }
       ]);

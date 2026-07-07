@@ -113,7 +113,7 @@ const QsiTvPage: React.FC = () => {
   useEffect(() => {
     fetchChannels();
     fetchMyChannel();
-  }, []);
+  }, [token]);
 
   // Hide mobile navbar during active session
   useEffect(() => {
@@ -562,6 +562,13 @@ const QsiTvPage: React.FC = () => {
           <Tabs
             defaultActiveKey="live"
             className="custom-tabs"
+            onChange={(key) => {
+              if (key === 'studio') {
+                fetchMyChannel();
+              } else if (key === 'directory') {
+                fetchChannels();
+              }
+            }}
             items={[
               // TABS 1: Active Transmissions
               {

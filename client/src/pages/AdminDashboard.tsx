@@ -17,8 +17,11 @@ import {
   Activity,
   ArrowRight,
   Globe,
-  Layers
+  Layers,
+  MonitorPlay
 } from 'lucide-react';
+
+import api from '../api';
 
 const { Option } = Select;
 
@@ -40,6 +43,9 @@ const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<any>(null);
+  
+  // TV Moderation State
+  const [tvChannels, setTvChannels] = useState<any[]>([]);
 
   const [categoryForm] = Form.useForm();
   const [packageForm] = Form.useForm();
@@ -94,11 +100,31 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchTvChannels = async () => {
+    try {
+      const res = await api.get('/admin/tv/channels');
+      setTvChannels(res.data);
+    } catch (error) {
+      console.error("Failed to fetch TV channels");
+    }
+  };
+
   useEffect(() => {
     fetchLabData();
     fetchMobilityData();
     fetchRegistryData();
+    fetchTvChannels();
   }, []);
+
+  const handleUpdateChannelStatus = async (channelId: string, status: string) => {
+    try {
+      await api.put(`/admin/tv/channels/${channelId}/status`, { status });
+      message.success(`Channel status updated to ${status}`);
+      fetchTvChannels();
+    } catch (error) {
+      message.error('Failed to update channel status');
+    }
+  };
 
   const handleSaveCategory = async (values: any) => {
     try {
@@ -459,6 +485,55 @@ const AdminDashboard: React.FC = () => {
                             dataIndex: 'engagementEnabled', 
                             key: 'engagement',
                             render: (val) => <Tag color={val ? 'cyan' : 'default'}>{val ? 'ENABLED' : 'DISABLED'}</Tag>
+                          },
+                        ]}
+                      />
+                   </div>
+                </div>
+              )
+            },
+            {
+              key: 'tv-moderation',
+              label: <span className="flex items-center gap-2 py-2"><MonitorPlay size={16} /> PANX TV Moderation</span>,
+              children: (
+                <div className="py-8 space-y-12">
+                   <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
+                      <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-bg-primary/50">
+                         <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                            <MonitorPlay size={18} className="text-accent-primary" /> Channel Requests
+                         </h4>
+                      </div>
+                      <Table 
+                        dataSource={tvChannels} 
+                        rowKey="id"
+                        className="custom-table"
+                        columns={[
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Title</span>, dataIndex: 'title', key: 'title' },
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Creator</span>, dataIndex: ['user', 'name'], key: 'user' },
+                          { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Subscribers</span>, dataIndex: ['_count', 'subscriptions'], key: 'subs', render: (val) => val || 0 },
+                          { 
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                            dataIndex: 'status', 
+                            key: 'status',
+                            render: (val) => (
+                              <Tag color={val === 'APPROVED' ? 'green' : val === 'PENDING' ? 'orange' : 'red'}>
+                                {val}
+                              </Tag>
+                            )
+                          },
+                          {
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Actions</span>,
+                            key: 'actions',
+                            render: (_, record) => (
+                              <Space>
+                                {record.status !== 'APPROVED' && (
+                                  <Button size="small" type="primary" onClick={() => handleUpdateChannelStatus(record.id, 'APPROVED')}>Approve</Button>
+                                )}
+                                {record.status !== 'REJECTED' && (
+                                  <Button size="small" danger onClick={() => handleUpdateChannelStatus(record.id, 'REJECTED')}>Reject</Button>
+                                )}
+                              </Space>
+                            ),
                           },
                         ]}
                       />
