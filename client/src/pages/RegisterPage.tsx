@@ -232,6 +232,16 @@ const RegisterPage: React.FC = () => {
                 Log In
               </Link>
             </div>
+            
+            <div style={{ textAlign: "center", marginTop: "16px" }}>
+              <Text style={{ color: 'var(--ash-grey)' }}>Want to join as a Fleet Driver?</Text>
+              <Link 
+                to="/register/fleet-driver" 
+                style={{ marginLeft: '8px', color: 'var(--terracotta-clay)', fontWeight: 700, textTransform: 'uppercase', fontSize: '12px', fontFamily: 'var(--font-accent)' }}
+              >
+                Apply Here
+              </Link>
+            </div>
           </Form>
         </div>
       </div>
