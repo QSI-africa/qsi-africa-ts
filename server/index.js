@@ -12,6 +12,16 @@ const setupVideoSignaling = require("./src/services/videoSignaling");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Auto-fix Prisma Enum limitation for FLEET_DRIVER
+(async () => {
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'FLEET_DRIVER'`);
+    console.log("Verified UserRole enum contains FLEET_DRIVER.");
+  } catch (err) {
+    // Ignore. Might fail if DB doesn't support IF NOT EXISTS or other reasons.
+  }
+})();
+
 // Trust Nginx reverse proxy so rate limiting uses the correct client IP instead of the proxy IP
 app.set("trust proxy", 1);
 
