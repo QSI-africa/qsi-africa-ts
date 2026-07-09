@@ -2,9 +2,68 @@
 const express = require("express");
 const prisma = require("../config/prisma");
 const { authMiddleware } = require("../middleware/authMiddleware");
-const { sendEmail } = require("../services/emailService");
+const { sendEmail, sendNewRideRequestEmail } = require("../services/emailService");
 
 const router = express.Router();
+
+// --- NEW: Fleet Management Client Routes ---
+
+// A. Client requests a fleet ride
+router.post("/fleet-request", authMiddleware, async (req, res) => {
+  const { pickupLocation, dropoffLocation, rideDate, rideTime, details, offerPrice } = req.body;
+  const clientId = req.user.id;
+
+  if (!pickupLocation || !dropoffLocation || !rideDate || !rideTime || !offerPrice) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  try {
+    const request = await prisma.fleetRideRequest.create({
+      data: {
+        clientId,
+        pickupLocation,
+        dropoffLocation,
+        rideDate: new Date(rideDate),
+        rideTime,
+        details,
+        offerPrice: parseFloat(offerPrice),
+        status: "PENDING"
+      },
+      include: {
+        client: { select: { name: true, email: true, phone: true } }
+      }
+    });
+
+    // Notify super admin
+    await sendNewRideRequestEmail(request.client, request);
+
+    res.status(201).json(request);
+  } catch (error) {
+    console.error("Fleet request error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// B. Client views their own requests
+router.get("/my-fleet-requests", authMiddleware, async (req, res) => {
+  try {
+    const requests = await prisma.fleetRideRequest.findMany({
+      where: { clientId: req.user.id },
+      include: {
+        assignedDriver: {
+          select: { name: true, phone: true, fleetVehicle: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error("Fetch client fleet requests error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// ---------------------------------------------
 
 // 1. User Journey: Request for site visit
 router.post("/site-visit", authMiddleware, async (req, res) => {

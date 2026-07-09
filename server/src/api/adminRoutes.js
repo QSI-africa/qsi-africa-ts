@@ -1283,4 +1283,229 @@ router.delete("/lab/recordings/:id", isSuperUserOrAdmin, async (req, res) => {
   }
 });
 
+// --- NEW: Admin Fleet Management Endpoints ---
+
+// 1. List all ride requests
+router.get("/fleet/requests", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const requests = await prisma.fleetRideRequest.findMany({
+      include: {
+        client: { select: { id: true, name: true, phone: true } },
+        assignedDriver: { select: { id: true, name: true, phone: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error("Fetch fleet requests error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 2. Single request detail
+router.get("/fleet/requests/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = await prisma.fleetRideRequest.findUnique({
+      where: { id },
+      include: {
+        client: { select: { id: true, name: true, phone: true, email: true } },
+        assignedDriver: { 
+          select: { id: true, name: true, phone: true, email: true, fleetVehicle: true }
+        },
+        processedBy: { select: { name: true } }
+      }
+    });
+    if (!request) return res.status(404).json({ error: "Request not found" });
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Fetch fleet request error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 3. Mark as PROCESSING
+router.patch("/fleet/requests/:id/process", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = await prisma.fleetRideRequest.update({
+      where: { id },
+      data: {
+        status: "PROCESSING",
+        processedById: req.user.id
+      }
+    });
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Process request error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 4. Update price
+router.patch("/fleet/requests/:id/update-price", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { newPrice, adminNotes } = req.body;
+  try {
+    const request = await prisma.fleetRideRequest.update({
+      where: { id },
+      data: {
+        finalPrice: parseFloat(newPrice),
+        adminNotes
+      },
+      include: { client: true }
+    });
+    
+    // Send email to client
+    const { sendPriceUpdateEmail } = require("../services/emailService");
+    await sendPriceUpdateEmail(request.client, request);
+
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Update price error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 5. Broadcast to fleet
+router.post("/fleet/requests/:id/broadcast", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = await prisma.fleetRideRequest.update({
+      where: { id },
+      data: { status: "BROADCASTING" }
+    });
+
+    // Find available drivers
+    const availableDrivers = await prisma.user.findMany({
+      where: { 
+        role: "FLEET_DRIVER",
+        fleetVehicle: { isAvailable: true, isApproved: true }
+      },
+      select: { email: true }
+    });
+
+    // Send emails
+    const { sendRideRequestBroadcastEmail } = require("../services/emailService");
+    for (const driver of availableDrivers) {
+      await sendRideRequestBroadcastEmail(driver.email, request);
+    }
+
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Broadcast request error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 6. Direct assign to driver
+router.post("/fleet/requests/:id/assign", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { driverId } = req.body;
+  try {
+    const request = await prisma.fleetRideRequest.update({
+      where: { id },
+      data: {
+        status: "ASSIGNED",
+        assignedDriverId: driverId,
+        assignedAt: new Date()
+      },
+      include: {
+        client: true,
+        assignedDriver: { include: { fleetVehicle: true } }
+      }
+    });
+
+    // Send emails
+    const { sendRideAssignedEmail } = require("../services/emailService");
+    await sendRideAssignedEmail(request.assignedDriver, request, true); // To driver
+    await sendRideAssignedEmail(request.client, request, false); // To client
+
+    res.status(200).json(request);
+  } catch (error) {
+    console.error("Assign request error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 7. List all fleet drivers
+router.get("/fleet/drivers", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const drivers = await prisma.user.findMany({
+      where: { role: "FLEET_DRIVER" },
+      include: { fleetVehicle: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(drivers);
+  } catch (error) {
+    console.error("Fetch fleet drivers error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 8. Single driver detail
+router.get("/fleet/drivers/:id", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const driver = await prisma.user.findUnique({
+      where: { id, role: "FLEET_DRIVER" },
+      include: { 
+        fleetVehicle: true,
+        assignedFleetRequests: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        }
+      }
+    });
+    if (!driver) return res.status(404).json({ error: "Driver not found" });
+    res.status(200).json(driver);
+  } catch (error) {
+    console.error("Fetch fleet driver error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 9. Approve/reject driver
+router.patch("/fleet/drivers/:id/approve", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { isApproved } = req.body;
+  try {
+    const vehicle = await prisma.fleetVehicle.update({
+      where: { driverId: id },
+      data: { isApproved },
+      include: { driver: true }
+    });
+
+    // Send email
+    const { sendDriverApprovalEmail } = require("../services/emailService");
+    await sendDriverApprovalEmail(vehicle.driver, isApproved);
+
+    res.status(200).json(vehicle);
+  } catch (error) {
+    console.error("Approve driver error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 10. Fleet Stats
+router.get("/fleet/stats", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const [totalRequests, pendingRequests, inProgressRequests, completedRequests, totalDrivers, availableDrivers] = await Promise.all([
+      prisma.fleetRideRequest.count(),
+      prisma.fleetRideRequest.count({ where: { status: "PENDING" } }),
+      prisma.fleetRideRequest.count({ where: { status: "IN_PROGRESS" } }),
+      prisma.fleetRideRequest.count({ where: { status: "COMPLETED" } }),
+      prisma.user.count({ where: { role: "FLEET_DRIVER" } }),
+      prisma.fleetVehicle.count({ where: { isAvailable: true, isApproved: true } })
+    ]);
+    
+    res.status(200).json({
+      totalRequests, pendingRequests, inProgressRequests, completedRequests, totalDrivers, availableDrivers
+    });
+  } catch (error) {
+    console.error("Fetch fleet stats error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 module.exports = router;

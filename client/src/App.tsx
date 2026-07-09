@@ -11,6 +11,7 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import FleetDriverRegisterPage from "./pages/FleetDriverRegisterPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Privacy from "./pages/Privacy";
 import ConceptDetailPage from "./pages/ConceptDetailPage";
@@ -105,6 +106,7 @@ const App: React.FC = () => {
                   <Route element={<PublicRoute />}>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/register/fleet-driver" element={<FleetDriverRegisterPage />} />
                   </Route>
 
                   {/* === Onboarding Route === */}

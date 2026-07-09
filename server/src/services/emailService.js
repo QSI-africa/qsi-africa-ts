@@ -215,10 +215,236 @@ QSI Engineering Team`;
     });
   }
 }
+// --- NEW: Fleet Management Emails ---
+
+async function sendEmail({ to, subject, text, html }) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"QSI Platform" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+      html: html || text.replace(/\n/g, "<br/>"),
+    });
+    console.log("Generic email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending generic email:", error);
+    return false;
+  }
+}
+
+async function sendFleetDriverRegistrationEmail(user, vehicle) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"QSI Platform" <${process.env.EMAIL_USER}>`,
+      to: "kadeyaelvis@gmail.com", // Admin email
+      subject: `New Fleet Driver Registration: ${user.name}`,
+      html: `
+        <p>A new fleet driver has registered and is awaiting approval.</p>
+        <h3>Driver Details:</h3>
+        <ul>
+          <li><strong>Name:</strong> ${user.name}</li>
+          <li><strong>Email:</strong> ${user.email}</li>
+          <li><strong>Phone:</strong> ${user.phone || 'N/A'}</li>
+        </ul>
+        <h3>Vehicle Details:</h3>
+        <ul>
+          <li><strong>Make/Model:</strong> ${vehicle.make} ${vehicle.model}</li>
+          <li><strong>Year:</strong> ${vehicle.year || 'N/A'}</li>
+          <li><strong>Color:</strong> ${vehicle.color || 'N/A'}</li>
+          <li><strong>License Plate:</strong> ${vehicle.licensePlate}</li>
+          <li><strong>Type:</strong> ${vehicle.vehicleType}</li>
+          <li><strong>Capacity:</strong> ${vehicle.capacity} seats</li>
+        </ul>
+        <p>Please log in to the admin portal to approve or reject this registration.</p>
+      `,
+    });
+    console.log("Fleet driver registration email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending fleet driver registration email:", error);
+    return false;
+  }
+}
+
+async function sendDriverApprovalEmail(user, isApproved) {
+  try {
+    const statusText = isApproved ? "approved" : "rejected";
+    const info = await transporter.sendMail({
+      from: `"QSI Platform Admin" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: `QSI Fleet Driver Registration ${isApproved ? 'Approved' : 'Rejected'}`,
+      html: `
+        <p>Hello ${user.name},</p>
+        <p>Your registration as a QSI Fleet Driver has been <strong>${statusText}</strong>.</p>
+        ${isApproved ? '<p>You can now log in to the <a href="https://admin.qsi.africa">admin portal</a> to access your fleet driver dashboard.</p>' : '<p>If you have any questions, please contact our support team.</p>'}
+        <p>Thank you,<br>QSI Platform</p>
+      `,
+    });
+    console.log("Driver approval email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending driver approval email:", error);
+    return false;
+  }
+}
+
+async function sendNewRideRequestEmail(client, request) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"QSI Platform" <${process.env.EMAIL_USER}>`,
+      to: "kadeyaelvis@gmail.com", // Admin email
+      subject: `New Ride Request from ${client.name}`,
+      html: `
+        <p>A new ride request has been submitted.</p>
+        <h3>Request Details:</h3>
+        <ul>
+          <li><strong>Client:</strong> ${client.name} (${client.email})</li>
+          <li><strong>Pickup:</strong> ${request.pickupLocation}</li>
+          <li><strong>Drop-off:</strong> ${request.dropoffLocation}</li>
+          <li><strong>Date:</strong> ${new Date(request.rideDate).toLocaleDateString()}</li>
+          <li><strong>Time:</strong> ${request.rideTime}</li>
+          <li><strong>Offer Price:</strong> $${request.offerPrice}</li>
+        </ul>
+        <p>Please log in to the admin portal to process this request.</p>
+      `,
+    });
+    console.log("New ride request email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending new ride request email:", error);
+    return false;
+  }
+}
+
+async function sendRideRequestBroadcastEmail(driverEmail, request) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"QSI Platform Admin" <${process.env.EMAIL_USER}>`,
+      to: driverEmail,
+      subject: `New Ride Request Broadcast Available`,
+      html: `
+        <p>Hello,</p>
+        <p>A new ride request is available in your area.</p>
+        <h3>Request Details:</h3>
+        <ul>
+          <li><strong>Pickup:</strong> ${request.pickupLocation}</li>
+          <li><strong>Drop-off:</strong> ${request.dropoffLocation}</li>
+          <li><strong>Date:</strong> ${new Date(request.rideDate).toLocaleDateString()}</li>
+          <li><strong>Time:</strong> ${request.rideTime}</li>
+          <li><strong>Price:</strong> $${request.finalPrice || request.offerPrice}</li>
+        </ul>
+        <p>Log in to your fleet driver dashboard to accept this request.</p>
+        <p>Thank you,<br>QSI Platform</p>
+      `,
+    });
+    console.log("Ride request broadcast email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending ride request broadcast email:", error);
+    return false;
+  }
+}
+
+async function sendRideAssignedEmail(user, request, isDriver) {
+  try {
+    const subject = isDriver ? `Ride Request Assigned to You` : `Your Ride Request has been Assigned`;
+    const html = isDriver ? `
+        <p>Hello,</p>
+        <p>You have been assigned a ride request.</p>
+        <h3>Request Details:</h3>
+        <ul>
+          <li><strong>Client:</strong> ${request.client.name} (${request.client.phone || 'No phone'})</li>
+          <li><strong>Pickup:</strong> ${request.pickupLocation}</li>
+          <li><strong>Drop-off:</strong> ${request.dropoffLocation}</li>
+          <li><strong>Date:</strong> ${new Date(request.rideDate).toLocaleDateString()}</li>
+          <li><strong>Time:</strong> ${request.rideTime}</li>
+          <li><strong>Price:</strong> $${request.finalPrice || request.offerPrice}</li>
+        </ul>
+        <p>Please check your dashboard for more details.</p>
+        <p>Thank you,<br>QSI Platform</p>
+    ` : `
+        <p>Hello ${user.name},</p>
+        <p>Your ride request has been assigned to a driver.</p>
+        <h3>Driver Details:</h3>
+        <ul>
+          <li><strong>Driver:</strong> ${request.assignedDriver.name}</li>
+          <li><strong>Vehicle:</strong> ${request.assignedDriver.fleetVehicle?.make} ${request.assignedDriver.fleetVehicle?.model} (${request.assignedDriver.fleetVehicle?.color})</li>
+          <li><strong>License Plate:</strong> ${request.assignedDriver.fleetVehicle?.licensePlate}</li>
+        </ul>
+        <p>Thank you,<br>QSI Platform</p>
+    `;
+    const info = await transporter.sendMail({
+      from: `"QSI Platform" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject,
+      html,
+    });
+    console.log("Ride assigned email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending ride assigned email:", error);
+    return false;
+  }
+}
+
+async function sendPriceUpdateEmail(client, request) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"QSI Platform Admin" <${process.env.EMAIL_USER}>`,
+      to: client.email,
+      subject: `Update on Your Ride Request Price`,
+      html: `
+        <p>Hello ${client.name},</p>
+        <p>The price for your ride request from <strong>${request.pickupLocation}</strong> to <strong>${request.dropoffLocation}</strong> has been updated by the admin.</p>
+        <p><strong>New Price:</strong> $${request.finalPrice}</p>
+        ${request.adminNotes ? `<p><strong>Admin Notes:</strong> ${request.adminNotes}</p>` : ''}
+        <p>You can check the updated details on your dashboard.</p>
+        <p>Thank you,<br>QSI Platform</p>
+      `,
+    });
+    console.log("Price update email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending price update email:", error);
+    return false;
+  }
+}
+
+async function sendRideStatusUpdateEmail(client, request, status) {
+  try {
+    const statusText = status === "IN_PROGRESS" ? "is now in progress" : (status === "COMPLETED" ? "has been completed" : `status changed to ${status}`);
+    const info = await transporter.sendMail({
+      from: `"QSI Platform" <${process.env.EMAIL_USER}>`,
+      to: client.email,
+      subject: `Ride Request Update: ${statusText}`,
+      html: `
+        <p>Hello ${client.name},</p>
+        <p>Your ride request from <strong>${request.pickupLocation}</strong> to <strong>${request.dropoffLocation}</strong> ${statusText}.</p>
+        <p>Thank you for using QSI Platform.</p>
+      `,
+    });
+    console.log("Ride status update email sent: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending ride status update email:", error);
+    return false;
+  }
+}
+
 module.exports = {
   sendInfraRequestEmail,
   sendTaskAssignmentEmail,
   sendPasswordResetEmail,
   sendHealingConversationEmail,
   sendInvoiceEmail,
+  sendEmail,
+  sendFleetDriverRegistrationEmail,
+  sendDriverApprovalEmail,
+  sendNewRideRequestEmail,
+  sendRideRequestBroadcastEmail,
+  sendRideAssignedEmail,
+  sendPriceUpdateEmail,
+  sendRideStatusUpdateEmail,
 };

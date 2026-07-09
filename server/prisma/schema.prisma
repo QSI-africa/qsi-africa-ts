@@ -19,6 +19,7 @@ enum UserRole {
   ARCHITECT
   QUANTITY_SURVEYOR
   GENERAL_USER
+  FLEET_DRIVER
 }
 
 enum InvoiceType {
@@ -101,6 +102,12 @@ model User {
 
   labEnrollments       LabEnrollment[]
   ridePosts            RidePost[]                @relation("UserRidePosts")
+  
+  // Fleet Relations
+  fleetVehicle         FleetVehicle?             @relation("DriverVehicle")
+  clientFleetRequests    FleetRideRequest[]      @relation("ClientFleetRequest")
+  processedFleetRequests FleetRideRequest[]      @relation("AdminProcessedRequest")
+  assignedFleetRequests  FleetRideRequest[]      @relation("DriverAssignedRequest")
 }
 
 model FrequencyScan {
@@ -443,6 +450,59 @@ model RidePost {
 // vehicleHireRequests  VehicleHireRequest[] @relation("EngineerVehicleHire")
 // vehicleHireAccepts   VehicleHireRequest[] @relation("UserVehicleHireAccept")
 // engineerProfile      EngineerProfile?
+
+model FleetVehicle {
+  id              String   @id @default(cuid())
+  driverId        String   @unique
+  driver          User     @relation("DriverVehicle", fields: [driverId], references: [id])
+  make            String                  // e.g. "Toyota"
+  model           String                  // e.g. "Hilux"
+  year            Int?
+  color           String?
+  licensePlate    String   @unique
+  vehicleType     String   @default("SEDAN")  // SEDAN, SUV, VAN, BUS, TRUCK
+  capacity        Int      @default(4)
+  isAvailable     Boolean  @default(true)
+  isApproved      Boolean  @default(false)     // Super admin approval flag
+  imageUrl        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FleetRideRequest {
+  id              String    @id @default(cuid())
+  
+  // Client who made the request
+  clientId        String
+  client          User      @relation("ClientFleetRequest", fields: [clientId], references: [id])
+  
+  // Request details
+  pickupLocation  String
+  dropoffLocation String
+  rideDate        DateTime
+  rideTime        String                    // e.g. "14:30"
+  details         String?   @db.Text
+  offerPrice      Decimal                   // Client's original offer
+  finalPrice      Decimal?                  // Admin-adjusted price (null = unchanged)
+  
+  // Admin processing
+  status          String    @default("PENDING")  // PENDING, PROCESSING, BROADCASTING, ASSIGNED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED
+  adminNotes      String?   @db.Text
+  processedById   String?
+  processedBy     User?     @relation("AdminProcessedRequest", fields: [processedById], references: [id])
+  
+  // Fleet assignment
+  assignedDriverId String?
+  assignedDriver   User?    @relation("DriverAssignedRequest", fields: [assignedDriverId], references: [id])
+  assignedAt       DateTime?
+  
+  // Completion
+  completedAt     DateTime?
+  driverNotes     String?   @db.Text
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
 
 // --- NEW: Infrastructure Suggestions ---
 model InfrastructureSuggestion {

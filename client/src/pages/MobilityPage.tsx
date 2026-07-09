@@ -213,6 +213,26 @@ const MobilityPage: React.FC = () => {
     }
   };
 
+  const handleFleetRequest = async (values: any) => {
+    if (!isAuthenticated) {
+      notification.warning({ message: 'Please log in to request a fleet ride.' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.post('/mobility/fleet-request', values);
+      notification.success({ 
+        message: 'Request Submitted',
+        description: 'Your fleet request has been submitted and is pending admin approval.'
+      });
+      setActiveTab('1'); // Go back to default tab
+    } catch (error) {
+      notification.error({ message: 'Failed to submit fleet request.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
@@ -222,7 +242,7 @@ const MobilityPage: React.FC = () => {
         icon={<Truck size={20} />}
         extra={
           <div style={{ display: 'flex', gap: '8px' }}>
-             {['Fleet Tracking', 'Ride Offers', 'Ride Requests'].map((label, idx) => (
+             {['Fleet Tracking', 'Ride Offers', 'Ride Requests', 'Request a Fleet'].map((label, idx) => (
                <button 
                  key={label}
                  onClick={() => setActiveTab((idx + 1).toString())}
@@ -436,6 +456,56 @@ const MobilityPage: React.FC = () => {
                     <Empty description={<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 800, fontSize: '11px', textTransform: 'none', letterSpacing: '0.2em' }}>No ride requests available</span>} />
                   </div>
                 )}
+              </div>
+            </Col>
+          </Row>
+        )}
+
+        {activeTab === '4' && (
+          <Row justify="center">
+            <Col xs={24} lg={12}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '32px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '8px', textTransform: 'none', letterSpacing: '0.05em' }}>Request a Fleet Ride</h3>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}>Book a professional fleet driver for your mobility needs.</p>
+                <Form layout="vertical" onFinish={handleFleetRequest}>
+                  <Form.Item name="pickupLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Pickup Location</span>} rules={[{ required: true }]}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Airport" />
+                  </Form.Item>
+                  <Form.Item name="dropoffLocation" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Drop-off Location</span>} rules={[{ required: true }]}>
+                    <Input style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="e.g. Hotel" />
+                  </Form.Item>
+                  
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item name="rideDate" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Date</span>} rules={[{ required: true }]}>
+                        <Input type="date" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px', colorScheme: 'dark' }} />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item name="rideTime" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Time</span>} rules={[{ required: true }]}>
+                        <Input type="time" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px', colorScheme: 'dark' }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Form.Item name="offerPrice" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Offer Price (USD)</span>} rules={[{ required: true }]}>
+                    <Input type="number" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', height: '44px' }} placeholder="0.00" prefix={<DollarSign size={14} color={GREEN} />} />
+                  </Form.Item>
+
+                  <Form.Item name="details" label={<span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: '0.1em' }}>Additional Details</span>}>
+                    <Input.TextArea rows={3} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white' }} placeholder="Any special requests or luggage info..." />
+                  </Form.Item>
+
+                  <button type="submit" disabled={loading} style={{
+                    width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
+                    background: GREEN, color: 'white', cursor: 'pointer',
+                    fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.15em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    boxShadow: `0 8px 20px -5px ${GREEN}60`
+                  }}>
+                    <Rocket size={16} /> Submit Fleet Request
+                  </button>
+                </Form>
               </div>
             </Col>
           </Row>

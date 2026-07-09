@@ -25,6 +25,8 @@ import InvoicesPage from "./pages/InvoicesPage";
 import PanxTvManagementPage from "./pages/PanxTvManagementPage";
 import LabManagementPage from "./pages/LabManagementPage";
 import ProfilePage from "./pages/ProfilePage";
+import FleetManagementPage from "./pages/FleetManagementPage";
+import FleetDriverDashboardPage from "./pages/FleetDriverDashboardPage";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -181,6 +183,8 @@ function App() {
               <Route path="/tv" element={<PanxTvManagementPage />} />
               <Route path="/lab-management" element={<LabManagementPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/fleet-management" element={<FleetManagementPage />} />
+              <Route path="/driver-dashboard" element={<FleetDriverDashboardPage />} />
             </Route>
           </Route>
 

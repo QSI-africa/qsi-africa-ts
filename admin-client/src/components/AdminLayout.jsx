@@ -26,6 +26,8 @@ import {
   DollarCircleOutlined,
   PlayCircleOutlined,
   ExperimentOutlined,
+  CarOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -170,6 +172,24 @@ const AdminLayout = () => {
       icon: <ExperimentOutlined />,
       label: <Link to="/lab-management">PANX Lab Management</Link>,
       roles: ["ADMIN", "SUPER_USER"],
+    },
+    {
+      key: "fleet-group",
+      label: "Fleet & Mobility",
+      type: "group",
+      roles: ["ADMIN", "SUPER_USER", "FLEET_DRIVER"],
+    },
+    {
+      key: "/fleet-management",
+      icon: <CarOutlined />,
+      label: <Link to="/fleet-management">Fleet Management</Link>,
+      roles: ["ADMIN", "SUPER_USER"],
+    },
+    {
+      key: "/driver-dashboard",
+      icon: <IdcardOutlined />,
+      label: <Link to="/driver-dashboard">Driver Dashboard</Link>,
+      roles: ["FLEET_DRIVER"],
     },
   ];
   // Filter menu items based on the current user's role

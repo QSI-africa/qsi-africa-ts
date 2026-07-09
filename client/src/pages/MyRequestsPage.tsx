@@ -25,6 +25,7 @@ const MyRequestsPage: React.FC = () => {
   const [siteVisits, setSiteVisits] = useState<any[]>([]);
   const [vehicleAccepts, setVehicleAccepts] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [fleetRequests, setFleetRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,12 +35,14 @@ const MyRequestsPage: React.FC = () => {
   const fetchMyData = async () => {
     setLoading(true);
     try {
-      const [visitRes, docRes] = await Promise.all([
+      const [visitRes, docRes, fleetRes] = await Promise.all([
         api.get('/mobility/my-visits'),
-        api.get('/upload/my-documents')
+        api.get('/upload/my-documents'),
+        api.get('/mobility/my-fleet-requests')
       ]);
       setSiteVisits(visitRes.data);
       setDocuments(docRes.data);
+      setFleetRequests(fleetRes.data);
     } catch (error) {
       console.error("Fetch data error:", error);
     } finally {
@@ -202,6 +205,54 @@ const MyRequestsPage: React.FC = () => {
                         </div>
                       )}
                     />
+                  </div>
+                )
+              },
+              {
+                key: '4',
+                label: (
+                  <span className="flex items-center gap-2 py-2">
+                    <Truck size={16} /> Fleet Rides
+                  </span>
+                ),
+                children: (
+                  <div className="py-6">
+                    {loading ? (
+                      <div className="flex justify-center py-12"><Spin /></div>
+                    ) : (
+                      <List
+                        dataSource={fleetRequests}
+                        locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No fleet requests found</span>} /> }}
+                        renderItem={req => (
+                          <div key={req.id} className="feed-card mb-6 group hover:border-accent-primary/20 transition-all p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h3 className="text-xl font-bold text-white uppercase tracking-tight">{req.pickupLocation} ➔ {req.dropoffLocation}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                   <Clock size={12} className="text-text-tertiary" />
+                                   <span className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary">
+                                     {new Date(req.rideDate).toLocaleDateString()} at {req.rideTime}
+                                   </span>
+                                </div>
+                              </div>
+                              <div className={`flex items-center gap-2 px-4 py-1.5 rounded-md bg-bg-primary border border-border-subtle text-[10px] font-black uppercase tracking-[0.15em] ${statusMap[req.status]?.color || 'text-orange-500'}`}>
+                                {req.status}
+                              </div>
+                            </div>
+                            <Divider className="border-border-subtle my-6 opacity-30" />
+                            <div className="flex items-center justify-between">
+                               <p className="text-xs text-text-secondary">
+                                 <span className="text-accent-primary font-black uppercase tracking-widest text-[9px] mr-3">Assigned Driver:</span> 
+                                 <span className="font-bold text-text-primary uppercase">{req.assignedDriver?.name || 'Pending Assignment'}</span>
+                               </p>
+                               <span className="text-xl font-black text-white">
+                                  <span className="text-accent-primary text-sm font-normal mr-1">$</span>{req.finalPrice || req.offerPrice}
+                               </span>
+                            </div>
+                          </div>
+                        )}
+                      />
+                    )}
                   </div>
                 )
               }

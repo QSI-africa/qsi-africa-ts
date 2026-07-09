@@ -76,17 +76,24 @@ app.use("/api/admin/tasks", require("./src/api/tasksRoutes"));
 app.use("/api/admin/users", require("./src/api/usersRoutes"));
 app.use("/api/admin", require("./src/api/adminRoutes"));
 app.use("/api/onboarding", require("./src/api/onboardingRoutes"));
-app.use("/api/invoicing", require("./src/api/invoicingRoutes"));
+// app.use("/api/learning", require("./src/api/learningRoutes"));
+// app.use("/api/consultation", require("./src/api/consultRoutes"));
+// app.use("/api/healing", require("./src/api/healingRoutes"));
+app.use("/api/panx", require("./src/api/panxRoutes"));
 app.use("/api/mobility", require("./src/api/mobilityRoutes"));
-app.use("/api/network", require("./src/api/networkRoutes"));
+app.use("/api/fleet", require("./src/api/fleetRoutes")); // Added fleet routes
+// app.use("/api/support", require("./src/api/supportRoutes"));
+// app.use("/api/tasks", require("./src/api/taskRoutes"));
 app.use("/api/upload", require("./src/api/uploadRoutes"));
 app.use("/api/logic", require("./src/api/logicRoutes"));
 app.use("/api/lab", require("./src/api/labRoutes"));
 app.use("/api/notifications", require("./src/api/notificationRoutes"));
 app.use("/api/messaging", require("./src/api/messagingRoutes"));
+app.use("/api/invoicing", require("./src/api/invoicingRoutes"));
+app.use("/api/network", require("./src/api/networkRoutes"));
 app.use("/api/config", require("./src/api/configRoutes"));
 app.use("/api/tv", require("./src/api/tvRoutes"));
-app.use("/api/panx", require("./src/api/panxRoutes"));
+// app.use("/api/panx", require("./src/api/panxRoutes")); // Already imported above
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "Server is running" });

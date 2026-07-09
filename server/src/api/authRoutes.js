@@ -12,6 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "YOUR_FALLBACK_SECRET_KEY";
 // --- IMPORT MIDDLEWARE ---
 const { authMiddleware } = require("../middleware/authMiddleware");
 const { authLimiter, registrationLimiter, passwordResetLimiter } = require("../middleware/rateLimiter");
+const { sendFleetDriverRegistrationEmail } = require("../services/emailService");
+// -------------------------
 // -------------------------
 
 // 1. User Registration (Admin/SuperUser Only)
@@ -377,7 +379,86 @@ router.post("/register-user", registrationLimiter, async (req, res) => {
   }
 });
 
-// 7. Refresh Token
+// 7. Fleet Driver Registration (Public)
+router.post("/register-fleet-driver", registrationLimiter, async (req, res) => {
+  const { 
+    name, email, password, phone,
+    make, model, year, color, licensePlate, vehicleType, capacity 
+  } = req.body;
+
+  if (!email || !name || !password || !make || !model || !licensePlate || !vehicleType) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    // Create user and vehicle in a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          role: "FLEET_DRIVER",
+          phone: phone || null,
+        },
+      });
+
+      const vehicle = await prisma.fleetVehicle.create({
+        data: {
+          driverId: user.id,
+          make,
+          model,
+          year: year ? parseInt(year, 10) : null,
+          color: color || null,
+          licensePlate,
+          vehicleType,
+          capacity: capacity ? parseInt(capacity, 10) : 4,
+          isApproved: false, // Requires admin approval
+        }
+      });
+
+      return { user, vehicle };
+    });
+
+    // Notify admin
+    await sendFleetDriverRegistrationEmail(result.user, result.vehicle);
+
+    // Issue tokens so they can potentially login, though we should restrict what they can do until approved.
+    const token = jwt.sign(
+      { userId: result.user.id, role: result.user.role, name: result.user.name },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    const refreshToken = crypto.randomBytes(40).toString('hex');
+    await prisma.user.update({
+      where: { id: result.user.id },
+      data: { refreshToken }
+    });
+
+    res.status(201).json({
+      message: "Registration successful. Pending admin approval.",
+      token,
+      refreshToken,
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: result.user.role,
+      },
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(400).json({ error: "Email or license plate already exists." });
+    }
+    console.error("Fleet driver registration error:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 8. Refresh Token
 router.post("/refresh", async (req, res) => {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(401).json({ error: "Refresh token is required." });
