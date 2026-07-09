@@ -422,8 +422,8 @@ router.post("/register-fleet-driver", registrationLimiter, async (req, res) => {
       return { user, vehicle };
     });
 
-    // Notify admin
-    await sendFleetDriverRegistrationEmail(result.user, result.vehicle);
+    // Notify admin (run asynchronously to avoid blocking the response on email timeout)
+    sendFleetDriverRegistrationEmail(result.user, result.vehicle).catch(err => console.error("Email error:", err));
 
     // Issue tokens so they can potentially login, though we should restrict what they can do until approved.
     const token = jwt.sign(
