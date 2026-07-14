@@ -62,13 +62,9 @@ const VenturesPage = () => {
       }
 
       if (editingVenture) {
-        await api.put(`/ventures/${editingVenture.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.put(`/ventures/${editingVenture.id}`, formData);
       } else {
-        await api.post('/ventures', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.post('/ventures', formData);
       }
       message.success("Venture saved successfully");
       setIsVentureModalOpen(false);
