@@ -296,7 +296,7 @@ const VentureProfilePage: React.FC = () => {
           open={engagementModalOpen}
           onCancel={() => setEngagementModalOpen(false)}
           footer={null}
-          width={600}
+          width={500}
           destroyOnClose
           centered
           closeIcon={null}
@@ -309,7 +309,7 @@ const VentureProfilePage: React.FC = () => {
           }}>
             <div className="absolute top-[-100px] right-[-100px] w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-            <div style={{ padding: '40px' }} className="relative z-10">
+            <div style={{ padding: '24px' }} className="relative z-10">
               <button
                 onClick={() => setEngagementModalOpen(false)}
                 className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
@@ -317,17 +317,17 @@ const VentureProfilePage: React.FC = () => {
                 <X size={18} />
               </button>
 
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                 <span style={{ fontSize: '10px', fontWeight: 900, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.4em' }}>
                   {selectedEngagementType}
                 </span>
-                <h3 style={{ color: 'white', fontSize: '28px', fontWeight: 900, margin: '8px 0 0 0', letterSpacing: '-0.02em' }}>
+                <h3 style={{ color: 'white', fontSize: '24px', fontWeight: 900, margin: '4px 0 0 0', letterSpacing: '-0.02em' }}>
                   Connect with {venture.name}
                 </h3>
               </div>
 
-              <Form form={form} layout="vertical" onFinish={handleEngage} className="space-y-4">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <Form form={form} layout="vertical" onFinish={handleEngage} className="space-y-3">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <Form.Item
                     name="contactName"
                     label={<span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Your Name</span>}
@@ -362,7 +362,7 @@ const VentureProfilePage: React.FC = () => {
                   />
                 </Form.Item>
 
-                <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
+                <div style={{ display: 'flex', gap: '12px', paddingTop: '4px' }}>
                   <button
                     type="submit"
                     disabled={submitting}
