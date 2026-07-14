@@ -109,8 +109,12 @@ const QsiTvPage: React.FC = () => {
 
   // Initial Fetch for Directory and My Channel
   useEffect(() => {
-    fetchChannels();
-    fetchMyChannel();
+    const controller = new AbortController();
+    fetchChannels(controller.signal);
+    fetchMyChannel(controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, [token]);
 
   // Hide mobile navbar during active session
@@ -123,38 +127,41 @@ const QsiTvPage: React.FC = () => {
     return () => document.body.classList.remove('hide-mobile-nav');
   }, [activeRoomId, isBroadcasting, activeViewerRoom]);
 
-  const fetchChannels = async () => {
+  const fetchChannels = async (signal?: AbortSignal) => {
     setIsLoadingChannels(true);
     try {
-      const res = await api.get('/tv/channels');
+      const res = await api.get('/tv/channels', { signal });
       setChannels(res.data);
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.message?.includes('canceled')) return;
       console.error('Failed to load channels:', err);
     } finally {
       setIsLoadingChannels(false);
     }
   };
 
-  const fetchMyChannel = async () => {
+  const fetchMyChannel = async (signal?: AbortSignal) => {
     setIsLoadingMyChannel(true);
     try {
-      const res = await api.get('/tv/channels/my-channel');
+      const res = await api.get('/tv/channels/my-channel', { signal });
       setMyChannel(res.data);
       if (res.data && res.data.status === 'APPROVED') {
-        fetchMyChannelContents(res.data.id);
+        fetchMyChannelContents(res.data.id, signal);
       }
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.message?.includes('canceled')) return;
       console.error('Failed to load user channel:', err);
     } finally {
       setIsLoadingMyChannel(false);
     }
   };
 
-  const fetchMyChannelContents = async (channelId: string) => {
+  const fetchMyChannelContents = async (channelId: string, signal?: AbortSignal) => {
     try {
-      const res = await api.get(`/tv/channels/${channelId}/content`);
+      const res = await api.get(`/tv/channels/${channelId}/content`, { signal });
       setMyChannelContents(res.data);
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.message?.includes('canceled')) return;
       console.error('Failed to load my channel contents:', err);
     }
   };
@@ -499,6 +506,7 @@ const QsiTvPage: React.FC = () => {
                                 src={getServerUrl(post.mediaUrl)}
                                 className="w-full rounded-xl border border-border-subtle bg-black"
                                 style={{ maxHeight: '200px' }}
+                                preload="metadata"
                               />
                             </div>
                           ) : post.mimeType === 'IMAGE' ? (
@@ -508,6 +516,7 @@ const QsiTvPage: React.FC = () => {
                                 alt={post.title}
                                 className="w-full rounded-xl border border-border-subtle object-cover"
                                 style={{ maxHeight: '200px' }}
+                                loading="lazy"
                               />
                             </div>
                           ) : (

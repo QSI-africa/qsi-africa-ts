@@ -124,6 +124,7 @@ const VentureProfilePage: React.FC = () => {
             src={getMediaUrl(venture.bannerUrl)}
             alt={venture.name}
             style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }}
+            loading="lazy"
           />
         ) : (
           <div style={{
@@ -168,6 +169,7 @@ const VentureProfilePage: React.FC = () => {
                 width: '72px', height: '72px', borderRadius: '20px', objectFit: 'cover',
                 border: '3px solid var(--bg-primary)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
               }}
+              loading="lazy"
             />
           ) : (
             <div style={{
@@ -268,12 +270,12 @@ const VentureProfilePage: React.FC = () => {
 
               {post.imageUrl && (
                 <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <img src={getMediaUrl(post.imageUrl)} alt="Post attachment" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+                  <img src={getMediaUrl(post.imageUrl)} alt="Post attachment" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} loading="lazy" />
                 </div>
               )}
               {post.videoUrl && (
                 <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <video src={getMediaUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+                  <video src={getMediaUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} preload="metadata" />
                 </div>
               )}
             </div>

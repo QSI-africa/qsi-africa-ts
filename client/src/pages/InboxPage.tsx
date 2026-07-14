@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Input, 
   Empty, 
@@ -68,17 +68,20 @@ const InboxPage: React.FC = () => {
 
   // Fetch discoverable users when modal is opened
   useEffect(() => {
+    const controller = new AbortController();
     if (isDiscoverModalOpen) {
-      fetchDiscoverUsers();
+      fetchDiscoverUsers(controller.signal);
     }
+    return () => controller.abort();
   }, [isDiscoverModalOpen]);
 
-  const fetchDiscoverUsers = async () => {
+  const fetchDiscoverUsers = async (signal?: AbortSignal) => {
     setDiscoverLoading(true);
     try {
-      const response = await api.get('/messaging/users');
+      const response = await api.get('/messaging/users', { signal });
       setDiscoverUsers(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Failed to fetch discoverable users:", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to fetch user list.");
     } finally {
@@ -108,28 +111,33 @@ const InboxPage: React.FC = () => {
     }
   };
 
-  const filteredDiscoverUsers = discoverUsers.filter(u => 
-    u.name.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
-    u.role.toLowerCase().includes(discoverSearchQuery.toLowerCase())
-  );
+  const filteredDiscoverUsers = useMemo(() => {
+    return discoverUsers.filter(u => 
+      u.name.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
+      u.role.toLowerCase().includes(discoverSearchQuery.toLowerCase())
+    );
+  }, [discoverUsers, discoverSearchQuery]);
 
   // 1. Fetch Conversations
   useEffect(() => {
+    const controller = new AbortController();
     if (user?.id) {
-      fetchConversations();
+      fetchConversations(controller.signal);
     }
+    return () => controller.abort();
   }, [user?.id]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const response = await api.get(`/messaging/conversations?userId=${user.id}`);
+      const response = await api.get(`/messaging/conversations?userId=${user.id}`, { signal });
       setConversations(response.data);
       if (response.data.length > 0 && !selectedId) {
         setSelectedId(response.data[0].id);
       }
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Failed to fetch conversations:", error);
     } finally {
       setLoading(false);
@@ -138,8 +146,9 @@ const InboxPage: React.FC = () => {
 
   // 2. Fetch Messages for Selected Conversation & setup socket room
   useEffect(() => {
+    const controller = new AbortController();
     if (selectedId) {
-      fetchMessages(selectedId);
+      fetchMessages(selectedId, controller.signal);
       
       // Join conversation room
       socketService.emit("join-room", selectedId);
@@ -164,16 +173,19 @@ const InboxPage: React.FC = () => {
 
       return () => {
         socketService.off("new_message", handleNewMessage);
+        controller.abort();
       };
     }
+    return () => controller.abort();
   }, [selectedId]);
 
-  const fetchMessages = async (id: string) => {
+  const fetchMessages = async (id: string, signal?: AbortSignal) => {
     setMessagesLoading(true);
     try {
-      const response = await api.get(`/messaging/conversations/${id}/messages`);
+      const response = await api.get(`/messaging/conversations/${id}/messages`, { signal });
       setMessages(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Failed to fetch messages:", error);
     } finally {
       setMessagesLoading(false);

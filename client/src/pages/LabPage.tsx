@@ -1386,6 +1386,7 @@ const LabPage: React.FC = () => {
                         controls 
                         autoPlay 
                         style={{ width: '100%', display: 'block', maxHeight: '360px' }}
+                        preload="metadata"
                       />
                     </div>
                   ) : (

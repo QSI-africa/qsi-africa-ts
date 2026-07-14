@@ -30,13 +30,14 @@ const MobilityPage: React.FC = () => {
   const [rideRequests, setRideRequests] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchProjects();
-    fetchBroadcasts();
-    fetchRides();
+    const controller = new AbortController();
+    fetchProjects(controller.signal);
+    fetchBroadcasts(controller.signal);
+    fetchRides(controller.signal);
     if (isAuthenticated) {
-      fetchMyVisits();
+      fetchMyVisits(controller.signal);
       if (user?.role === 'ENGINEER' || user?.role === 'ADMIN' || user?.role === 'SUPER_USER') {
-        fetchIncomingVisits();
+        fetchIncomingVisits(controller.signal);
       }
     }
 
@@ -71,34 +72,38 @@ const MobilityPage: React.FC = () => {
       socketService.off('new-vehicle-hire');
       socketService.off('vehicle-hire-accepted');
       socketService.off('site-visit-status');
+      controller.abort();
     };
   }, [isAuthenticated, user?.id, user?.role]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/network/projects');
+      const response = await api.get('/network/projects', { signal });
       setProjects(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch projects error:", error);
     }
   };
 
-  const fetchBroadcasts = async () => {
+  const fetchBroadcasts = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/mobility/broadcasts');
+      const response = await api.get('/mobility/broadcasts', { signal });
       setBroadcasts(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch broadcasts error:", error);
     }
   };
 
-  const fetchRides = async () => {
+  const fetchRides = async (signal?: AbortSignal) => {
     try {
-      const offersRes = await api.get('/mobility/rides?type=OFFER');
+      const offersRes = await api.get('/mobility/rides?type=OFFER', { signal });
       setRideOffers(offersRes.data);
-      const reqsRes = await api.get('/mobility/rides?type=REQUEST');
+      const reqsRes = await api.get('/mobility/rides?type=REQUEST', { signal });
       setRideRequests(reqsRes.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch rides error:", error);
     }
   };
@@ -128,20 +133,22 @@ const MobilityPage: React.FC = () => {
     }
   };
 
-  const fetchMyVisits = async () => {
+  const fetchMyVisits = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/mobility/my-visits');
+      const response = await api.get('/mobility/my-visits', { signal });
       setMyVisits(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch my visits error:", error);
     }
   };
 
-  const fetchIncomingVisits = async () => {
+  const fetchIncomingVisits = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get('/mobility/my-project-visits');
+      const response = await api.get('/mobility/my-project-visits', { signal });
       setIncomingVisits(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch incoming visits error:", error);
     }
   };

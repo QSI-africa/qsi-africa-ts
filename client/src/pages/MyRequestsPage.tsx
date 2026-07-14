@@ -28,21 +28,24 @@ const MyRequestsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMyData();
+    const controller = new AbortController();
+    fetchMyData(controller.signal);
+    return () => controller.abort();
   }, []);
 
-  const fetchMyData = async () => {
+  const fetchMyData = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const [visitRes, docRes, fleetRes] = await Promise.all([
-        api.get('/mobility/my-visits'),
-        api.get('/upload/my-documents'),
-        api.get('/mobility/my-fleet-requests')
+        api.get('/mobility/my-visits', { signal }),
+        api.get('/upload/my-documents', { signal }),
+        api.get('/mobility/my-fleet-requests', { signal })
       ]);
       setSiteVisits(visitRes.data);
       setDocuments(docRes.data);
       setFleetRequests(fleetRes.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error("Fetch data error:", error);
     } finally {
       setLoading(false);
