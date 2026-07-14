@@ -35,9 +35,13 @@ const InsightDetailPage: React.FC = () => {
   const getServerUrl = (path: string) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    const apiBase = api.defaults.baseURL || '';
-    const rootUrl = apiBase.endsWith('/api') ? apiBase.slice(0, -4) : apiBase;
-    return `${rootUrl}${path}`;
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.qsi.africa/api';
+    try {
+      const origin = new URL(baseURL).origin;
+      return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+    } catch {
+      return path;
+    }
   };
 
   const formatDate = (dateString: string) => {

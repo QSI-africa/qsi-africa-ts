@@ -337,7 +337,7 @@ const QsiTvPage: React.FC = () => {
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
     try { 
       const origin = new URL(baseURL).origin; 
-      return `${origin}${path}`; 
+      return `${origin}${path.startsWith('/') ? '' : '/'}${path}`; 
     } catch { 
       return path; 
     }

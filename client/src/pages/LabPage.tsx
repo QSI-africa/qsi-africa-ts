@@ -62,8 +62,12 @@ const LabPage: React.FC = () => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-    const origin = new URL(baseURL).origin;
-    return `${origin}${path}`;
+    try {
+      const origin = new URL(baseURL).origin;
+      return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+    } catch {
+      return path;
+    }
   };
 
   const [activeTab, setActiveTab] = useState<'programs' | 'lectures' | 'studio'>('programs');

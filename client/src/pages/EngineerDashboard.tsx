@@ -128,9 +128,14 @@ const EngineerDashboard: React.FC = () => {
 
   const getServerUrl = (path: string) => {
     if (!path) return '';
+    if (path.startsWith('http')) return path;
     const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-    const origin = new URL(baseURL).origin;
-    return path.startsWith('http') ? path : `${origin}${path}`;
+    try {
+      const origin = new URL(baseURL).origin;
+      return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+    } catch {
+      return path;
+    }
   };
 
   return (

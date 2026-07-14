@@ -45,11 +45,13 @@ const VentureProfilePage: React.FC = () => {
 
   const getMediaUrl = (url?: string) => {
     if (!url) return undefined;
-    if (url.startsWith('/uploads/')) {
-       const rootUrl = baseURL.replace(/\/api$/, '');
-       return `${rootUrl}${url}`;
+    if (url.startsWith('http')) return url;
+    try {
+      const origin = new URL(baseURL).origin;
+      return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    } catch {
+      return url;
     }
-    return url;
   };
 
   useEffect(() => {
