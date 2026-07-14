@@ -22,7 +22,10 @@ import {
   Tv,
   Download,
   Lightbulb,
-  Search
+  Search,
+  Home,
+  MessageCircle
+
 } from 'lucide-react';
 import axios from 'axios';
 import { useSidebar } from '../../context/SidebarContext';
