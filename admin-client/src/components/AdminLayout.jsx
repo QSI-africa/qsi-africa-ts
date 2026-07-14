@@ -28,6 +28,7 @@ import {
   ExperimentOutlined,
   CarOutlined,
   IdcardOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -141,6 +142,12 @@ const AdminLayout = () => {
       key: "admin-group",
       label: "Administration",
       type: "group",
+      roles: ["ADMIN", "SUPER_USER"],
+    },
+    {
+      key: "/ventures",
+      icon: <GlobalOutlined />,
+      label: <Link to="/ventures">Ventures Management</Link>,
       roles: ["ADMIN", "SUPER_USER"],
     },
     {

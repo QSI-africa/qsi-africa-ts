@@ -27,6 +27,7 @@ import LabManagementPage from "./pages/LabManagementPage";
 import ProfilePage from "./pages/ProfilePage";
 import FleetManagementPage from "./pages/FleetManagementPage";
 import FleetDriverDashboardPage from "./pages/FleetDriverDashboardPage";
+import VenturesPage from "./pages/VenturesPage";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -185,6 +186,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/fleet-management" element={<FleetManagementPage />} />
               <Route path="/driver-dashboard" element={<FleetDriverDashboardPage />} />
+              <Route path="/ventures" element={<VenturesPage />} />
             </Route>
           </Route>
 
