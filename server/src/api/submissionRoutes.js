@@ -795,12 +795,22 @@ router.post("/escalate", async (req, res) => {
   try {
     const userId = contactInfo?.userId || null;
     
+    // Create a generic submission for the escalation
+    const submission = await prisma.infrastructureSubmission.create({
+      data: {
+        userId: userId,
+        contactInfo: `${contactInfo?.name || 'Unknown'} <${contactInfo?.email || 'Unknown'}>`,
+        conversationHistory: [] // empty for generic escalation
+      }
+    });
+
     // Create a generic task for the escalation
     const task = await prisma.task.create({
       data: {
         title: `Escalation from ${module} AI`,
         description: `User ${contactInfo?.name || 'Unknown'} requested human assistance.\n\nModule: ${module}`,
-        status: "PENDING_ASSIGNMENT"
+        status: "PENDING_ASSIGNMENT",
+        submissionId: submission.id
       }
     });
 

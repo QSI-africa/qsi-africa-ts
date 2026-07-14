@@ -34,6 +34,7 @@ interface PostItem {
   imageUrl?: string | null;
   videoUrl?: string | null;
   mediaType?: string | null;
+  mediaFiles?: { url: string; type: string }[] | null;
   author: {
     id: string;
     name: string;
@@ -78,8 +79,8 @@ const EcosystemPage: React.FC = () => {
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [newPostText, setNewPostText] = useState('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<{ url: string, type: string }[]>([]);
   const [submittingPost, setSubmittingPost] = useState(false);
   const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
 
@@ -246,17 +247,22 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...files]);
+      const newPreviews = files.map(file => ({
+        url: URL.createObjectURL(file),
+        type: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+      }));
+      setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
+    e.target.value = '';
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setPreviewUrl(null);
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCreatePost = async () => {
@@ -265,38 +271,36 @@ const EcosystemPage: React.FC = () => {
       navigate('/login');
       return;
     }
-    if (!newPostText.trim() && !selectedImage) return;
+    if (!newPostText.trim() && selectedFiles.length === 0) return;
     setSubmittingPost(true);
     try {
-      let uploadedImageUrl = null;
-      let uploadedVideoUrl = null;
-      let mediaType = null;
-      if (selectedImage) {
+      const uploadedMedia = [];
+      for (const file of selectedFiles) {
         const formData = new FormData();
-        formData.append('document', selectedImage);
+        formData.append('document', file);
         formData.append('category', 'PANX_MEDIA');
         const uploadRes = await api.post("/upload/document", formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        if (selectedImage.type.startsWith('video/')) {
-          uploadedVideoUrl = uploadRes.data.document.url;
-          mediaType = 'VIDEO';
-        } else {
-          uploadedImageUrl = uploadRes.data.document.url;
-          mediaType = 'IMAGE';
-        }
+        uploadedMedia.push({
+          url: uploadRes.data.document.url,
+          type: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+        });
       }
       
       const response = await api.post("/panx/posts", { 
         content: newPostText, 
-        imageUrl: uploadedImageUrl,
-        videoUrl: uploadedVideoUrl,
-        mediaType
+        mediaFiles: uploadedMedia.length > 0 ? uploadedMedia : null,
+        // For backwards compatibility on old clients if needed, pass the first item to single fields:
+        imageUrl: uploadedMedia.find(m => m.type === 'IMAGE')?.url || null,
+        videoUrl: uploadedMedia.find(m => m.type === 'VIDEO')?.url || null,
+        mediaType: uploadedMedia[0]?.type || null,
       });
       const newPost = response.data;
       setPosts(prev => [newPost, ...prev]);
       setNewPostText('');
-      removeImage();
+      setSelectedFiles([]);
+      setPreviewUrls([]);
     } catch (error) {
       console.error("Failed to create post", error);
     } finally {
@@ -636,32 +640,36 @@ const EcosystemPage: React.FC = () => {
                       background: "rgba(255,255,255,0.02)"
                     }}
                   />
-                  {previewUrl && (
-                    <div style={{ position: 'relative', display: 'inline-block', marginTop: '8px', marginBottom: '8px' }}>
-                      {selectedImage?.type.startsWith('video/') ? (
-                        <video src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} controls />
-                      ) : (
-                        <img src={previewUrl} style={{ maxHeight: '150px', borderRadius: '12px' }} alt="preview" />
-                      )}
-                      <button onClick={removeImage} style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <X size={14} />
-                      </button>
+                  {previewUrls.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px', marginBottom: '8px' }}>
+                      {previewUrls.map((preview, index) => (
+                        <div key={index} style={{ position: 'relative', display: 'inline-block' }}>
+                          {preview.type === 'VIDEO' ? (
+                            <video src={preview.url} style={{ maxHeight: '150px', borderRadius: '12px' }} controls />
+                          ) : (
+                            <img src={preview.url} style={{ maxHeight: '150px', borderRadius: '12px' }} alt="preview" />
+                          )}
+                          <button onClick={() => removeFile(index)} style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', padding: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} className="hover:text-accent-primary hover:bg-white/10">
                         <ImageIcon size={18} />
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
+                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFileChange} />
                       </label>
                       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.6)', transition: 'color 0.2s', padding: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} className="hover:text-accent-primary hover:bg-white/10">
                         <VideoIcon size={18} />
-                        <input type="file" accept="video/mp4,video/webm,video/quicktime" style={{ display: 'none' }} onChange={handleImageChange} />
+                        <input type="file" accept="video/mp4,video/webm,video/quicktime" multiple style={{ display: 'none' }} onChange={handleFileChange} />
                       </label>
                     </div>
                     <button
                       onClick={handleCreatePost}
-                      disabled={(!newPostText.trim() && !selectedImage) || submittingPost}
+                      disabled={(!newPostText.trim() && selectedFiles.length === 0) || submittingPost}
                       style={{
                         background: 'var(--accent-primary)',
                         color: 'black',
@@ -672,7 +680,7 @@ const EcosystemPage: React.FC = () => {
                         fontWeight: 900,
                         textTransform: 'uppercase',
                         cursor: 'pointer',
-                        opacity: (newPostText.trim() || selectedImage) && !submittingPost ? 1 : 0.5,
+                        opacity: (newPostText.trim() || selectedFiles.length > 0) && !submittingPost ? 1 : 0.5,
                         transition: 'all 0.2s',
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -858,22 +866,42 @@ const EcosystemPage: React.FC = () => {
                           {post.content}
                         </p>
                         
-                        {post.imageUrl && (
-                          <div 
-                            style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                            onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
-                          >
-                            <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                        {post.mediaFiles && post.mediaFiles.length > 0 ? (
+                          <div style={{ display: 'grid', gridTemplateColumns: post.mediaFiles.length > 1 ? '1fr 1fr' : '1fr', gap: '8px', margin: '0 0 16px 0' }}>
+                            {post.mediaFiles.map((media, idx) => (
+                              <div 
+                                key={idx}
+                                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(media.url), type: media.type.toLowerCase() as 'image'|'video' }); }}
+                              >
+                                {media.type === 'VIDEO' ? (
+                                  <video src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                                ) : (
+                                  <img src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        ) : (
+                          <>
+                            {post.imageUrl && (
+                              <div 
+                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
+                              >
+                                <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                              </div>
+                            )}
 
-                        {post.videoUrl && (
-                          <div 
-                            style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                            onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
-                          >
-                            <video src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
-                          </div>
+                            {post.videoUrl && (
+                              <div 
+                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
+                              >
+                                <video src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
+                              </div>
+                            )}
+                          </>
                         )}
 
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>

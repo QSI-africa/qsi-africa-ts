@@ -31,6 +31,7 @@ interface PostItem {
   imageUrl?: string | null;
   videoUrl?: string | null;
   mediaType?: string | null;
+  mediaFiles?: { url: string; type: string }[] | null;
   author: {
     id: string;
     name: string;
@@ -206,15 +207,34 @@ const PostDetailPage: React.FC = () => {
           {post.content}
         </p>
 
-        {post.imageUrl && (
-          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover', display: 'block' }} />
+        {post.mediaFiles && post.mediaFiles.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: post.mediaFiles.length > 1 ? '1fr 1fr' : '1fr', gap: '8px', margin: '0 0 16px 0' }}>
+            {post.mediaFiles.map((media, idx) => (
+              <div 
+                key={idx}
+                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                {media.type === 'VIDEO' ? (
+                  <video src={getServerUrl(media.url)} controls style={{ width: '100%', maxHeight: '500px', display: 'block' }} />
+                ) : (
+                  <img src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover', display: 'block' }} />
+                )}
+              </div>
+            ))}
           </div>
-        )}
-        {post.videoUrl && (
-          <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <video src={getServerUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '500px', display: 'block' }} />
-          </div>
+        ) : (
+          <>
+            {post.imageUrl && (
+              <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover', display: 'block' }} />
+              </div>
+            )}
+            {post.videoUrl && (
+              <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <video src={getServerUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '500px', display: 'block' }} />
+              </div>
+            )}
+          </>
         )}
 
         {/* Engagement Stats */}

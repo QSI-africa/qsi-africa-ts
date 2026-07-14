@@ -26,7 +26,8 @@ import {
   LayoutGrid,
   Menu as LucideMenu,
   Package,
-  Lightbulb
+  Lightbulb,
+  Headphones
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -368,7 +369,7 @@ const ChatWindow: React.FC = () => {
 
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+    <div style={{ position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
       <header style={{
         padding: '24px 32px',
@@ -421,25 +422,6 @@ const ChatWindow: React.FC = () => {
 
         {/* 3. The rest of the icons */}
         <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          <button
-            onClick={handleEscalate}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.1)',
-              border: `1px solid ${GREEN}40`,
-              color: GREEN,
-              fontSize: '11px',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Contact Engineers
-          </button>
-          
           <div className="flex md:hidden items-center gap-4">
             <Lightbulb
               size={20}
@@ -658,6 +640,34 @@ const ChatWindow: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Escalate Button */}
+      <button
+        onClick={handleEscalate}
+        title="Contact Engineers"
+        style={{
+          position: 'absolute',
+          bottom: '120px',
+          right: '24px',
+          zIndex: 50,
+          width: '56px',
+          height: '56px',
+          borderRadius: '28px',
+          background: GREEN,
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: `0 8px 24px -8px ${GREEN}60`,
+          border: 'none',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <Headphones size={24} />
+      </button>
 
       <Modal
         open={isModalVisible}

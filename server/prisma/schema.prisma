@@ -747,6 +747,7 @@ model PanxPost {
   imageUrl    String?
   videoUrl    String?
   mediaType   String?      // e.g. "IMAGE", "VIDEO"
+  mediaFiles  Json?        // e.g. [{ url: "...", type: "IMAGE" }]
   tvContentId String?
   tvContent   TvContent?   @relation("TvContentPanxPosts", fields: [tvContentId], references: [id], onDelete: SetNull)
   authorId    String

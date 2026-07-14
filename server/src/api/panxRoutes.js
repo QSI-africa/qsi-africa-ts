@@ -127,8 +127,8 @@ router.use(authMiddleware);
 
 // 2. Create a new feed post (thread)
 router.post("/posts", async (req, res) => {
-  const { content, imageUrl, videoUrl, mediaType } = req.body;
-  if ((!content || !content.trim()) && !imageUrl && !videoUrl) {
+  const { content, imageUrl, videoUrl, mediaType, mediaFiles } = req.body;
+  if ((!content || !content.trim()) && !imageUrl && !videoUrl && (!mediaFiles || mediaFiles.length === 0)) {
     return res.status(400).json({ error: "Content or media is required to post." });
   }
 
@@ -139,6 +139,7 @@ router.post("/posts", async (req, res) => {
         imageUrl: imageUrl || null,
         videoUrl: videoUrl || null,
         mediaType: mediaType || null,
+        mediaFiles: mediaFiles && mediaFiles.length > 0 ? mediaFiles : null,
         authorId: req.user.id
       },
       include: {
