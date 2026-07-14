@@ -23,7 +23,7 @@ import {
   LayoutGrid,
   Package,
   Lightbulb,
-  Headphones
+  LifeBuoy
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -506,11 +506,12 @@ const ChatWindow: React.FC = () => {
 
       {/* Input Area */}
       <footer 
-        className="px-4 md:px-8 py-6 pb-10 mb-10"
+        className="px-4 md:px-8 py-4"
         style={{ 
           background: 'transparent',
           position: 'relative',
-          zIndex: 10
+          zIndex: 10,
+          marginBottom: '5%'
         }}
       >
         <div style={{ 
@@ -640,13 +641,13 @@ const ChatWindow: React.FC = () => {
       {/* Floating Escalate Button */}
       <button
         onClick={handleEscalate}
-        title="Contact Engineers"
+        title="Support"
         style={{
           position: 'absolute',
-          bottom: '120px',
+          bottom: 'max(15%, 120px)',
           right: '24px',
           zIndex: 50,
-          width: '56px',
+          padding: '0 20px',
           height: '56px',
           borderRadius: '28px',
           background: GREEN,
@@ -654,15 +655,21 @@ const ChatWindow: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: '8px',
           cursor: 'pointer',
           boxShadow: `0 8px 24px -8px ${GREEN}60`,
           border: 'none',
-          transition: 'transform 0.2s'
+          transition: 'transform 0.2s',
+          fontWeight: 800,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          fontSize: '12px'
         }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <Headphones size={24} />
+        <LifeBuoy size={20} />
+        Support
       </button>
 
       <Modal
