@@ -180,7 +180,7 @@ const VenturesPage = () => {
             rowKey="id"
             pagination={{ pageSize: 10 }}
             columns={[
-              { title: 'Name', dataIndex: 'name', key: 'name' },
+              { title: 'Name', dataIndex: 'name', key: 'name', render: (text) => <span style={{ textTransform: 'capitalize' }}>{text}</span> },
               { title: 'Slug', dataIndex: 'slug', key: 'slug' },
               {
                 title: 'Status',

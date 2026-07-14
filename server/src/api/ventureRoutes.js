@@ -144,7 +144,11 @@ router.post("/:id/engage", authMiddleware, async (req, res) => {
 
 // POST /api/ventures — Create a new venture
 router.post("/", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), async (req, res) => {
-  const { name, shortDescription, fullDescription, isActive } = req.body;
+  let { name, shortDescription, fullDescription, isActive } = req.body;
+  
+  if (name) {
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+  }
   let { bannerUrl, logoUrl } = req.body; // In case they are passed as strings
 
   if (req.files?.logo?.[0]) logoUrl = `/uploads/${req.files.logo[0].filename}`;
@@ -184,8 +188,12 @@ router.post("/", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', m
 // PUT /api/ventures/:id — Update venture details
 router.put("/:id", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
-  const { name, shortDescription, fullDescription, isActive } = req.body;
+  let { name, shortDescription, fullDescription, isActive } = req.body;
   let { bannerUrl, logoUrl } = req.body;
+
+  if (name) {
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+  }
 
   if (req.files?.logo?.[0]) logoUrl = `/uploads/${req.files.logo[0].filename}`;
   if (req.files?.banner?.[0]) bannerUrl = `/uploads/${req.files.banner[0].filename}`;
