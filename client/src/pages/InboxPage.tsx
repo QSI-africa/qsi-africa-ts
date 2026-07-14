@@ -112,10 +112,11 @@ const InboxPage: React.FC = () => {
   };
 
   const filteredDiscoverUsers = useMemo(() => {
+    if (!Array.isArray(discoverUsers)) return [];
     return discoverUsers.filter(u => 
-      u.name.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(discoverSearchQuery.toLowerCase()) ||
-      u.role.toLowerCase().includes(discoverSearchQuery.toLowerCase())
+      (u?.name || '').toLowerCase().includes((discoverSearchQuery || '').toLowerCase()) ||
+      (u?.email || '').toLowerCase().includes((discoverSearchQuery || '').toLowerCase()) ||
+      (u?.role || '').toLowerCase().includes((discoverSearchQuery || '').toLowerCase())
     );
   }, [discoverUsers, discoverSearchQuery]);
 
@@ -268,7 +269,7 @@ const InboxPage: React.FC = () => {
           {loading ? (
              <div style={{ padding: '40px 0', textAlign: 'center' }}><Spin size="small" /></div>
           ) : conversations.length > 0 ? (
-            conversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase())).map(conv => (
+            (Array.isArray(conversations) ? conversations : []).filter(c => (c?.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())).map(conv => (
               <div 
                 key={conv.id} 
                 onClick={() => setSelectedId(conv.id)}
@@ -353,7 +354,7 @@ const InboxPage: React.FC = () => {
           <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {messagesLoading ? (
                <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin /></div>
-            ) : messages.length > 0 ? (
+            ) : messages && Array.isArray(messages) && messages.length > 0 ? (
               messages.map((msg, idx) => (
                 <div 
                   key={idx} 
