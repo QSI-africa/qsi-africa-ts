@@ -6,7 +6,6 @@ import {
   Select,
   Spin,
   App as AntApp,
-  Alert,
   Typography
 } from "antd";
 import { 
@@ -15,8 +14,7 @@ import {
   Layers, 
   Heart, 
   Activity,
-  CheckCircle2,
-  AlertTriangle
+  CheckCircle2
 } from "lucide-react";
 
 const { Option } = Select;
@@ -68,7 +66,7 @@ const SubmissionForm: React.FC = () => {
       message.success("Operational brief synchronized successfully.");
       setApiResponse(response.data);
       form.resetFields();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission failed:", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Frequency synchronization failure. Please try again.");
     } finally {

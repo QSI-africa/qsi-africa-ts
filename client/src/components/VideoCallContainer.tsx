@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize, AlertCircle
+  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize
 } from 'lucide-react';
 import { App, Drawer } from 'antd';
 import { socketService } from '../services/socket';
@@ -312,7 +312,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
       } else {
         stopScreenShare();
       }
-    } catch (err) { console.error('Screen share error:', err); }
+    } catch (err: any) { console.error('Screen share error:', err); }
   };
 
   const stopScreenShare = () => {

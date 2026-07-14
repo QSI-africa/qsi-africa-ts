@@ -6,7 +6,6 @@ import {
   MdDataUsage,
   MdCookie,
   MdChildCare,
-  MdContactSupport,
 } from "react-icons/md";
 import { theme, Typography, Collapse } from "antd";
 import { 
@@ -25,7 +24,7 @@ const Privacy: React.FC = () => {
   const { token } = useToken();
   const [activeSection, setActiveSection] = useState<any>(null);
 
-  const styles = {
+  const styles: Record<string, React.CSSProperties> = {
     container: {
       minHeight: "100vh",
       width: "100%",
@@ -162,10 +161,7 @@ const Privacy: React.FC = () => {
     emailLink: {
       color: token.colorPrimary,
       fontWeight: 600,
-      textDecoration: "none",
-      '&:hover': {
-        textDecoration: 'underline',
-      }
+      transition: "all 0.3s ease",
     }
   };
 

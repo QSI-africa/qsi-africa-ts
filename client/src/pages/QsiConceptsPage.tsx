@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Row, Col, Typography, Spin, App as AntApp, Grid } from "antd";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Spin, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Lightbulb,
   Zap,
-  Layers,
   Activity
 } from "lucide-react";
 import UnifiedHeader from '../components/layout/UnifiedHeader';
@@ -33,7 +32,7 @@ const QsiConceptsPage: React.FC = () => {
       } else {
         setError("Received invalid data format.");
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Could not load digital concepts.");
     } finally {
       setLoading(false);

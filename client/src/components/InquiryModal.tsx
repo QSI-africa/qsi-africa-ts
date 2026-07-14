@@ -1,6 +1,6 @@
 // src/components/InquiryModal.jsx
 import React from "react";
-import { Modal, Form, Input, Button, Typography, App as AntApp } from "antd";
+import { Modal, Form, Input, Button, Typography } from "antd";
 import { qsiTheme } from "./theme/theme"; // Adjust path
 
 const { Title, Paragraph } = Typography;
@@ -15,7 +15,7 @@ const InquiryModal = ({ open, onCancel, onFinish, packageName }) => {
       const values = await form.validateFields();
       onFinish(values); // values will be { description: "..." }
       form.resetFields();
-    } catch (error) {
+    } catch (error: any) {
       console.log("Validation failed:", error);
     }
   };

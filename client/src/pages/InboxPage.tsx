@@ -78,7 +78,7 @@ const InboxPage: React.FC = () => {
     try {
       const response = await api.get('/messaging/users');
       setDiscoverUsers(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch discoverable users:", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to fetch user list.");
     } finally {
@@ -102,7 +102,7 @@ const InboxPage: React.FC = () => {
       setSelectedId(newConv.id);
       setIsDiscoverModalOpen(false);
       message.success("Conversation established.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start conversation:", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to start conversation.");
     }
@@ -129,7 +129,7 @@ const InboxPage: React.FC = () => {
       if (response.data.length > 0 && !selectedId) {
         setSelectedId(response.data[0].id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch conversations:", error);
     } finally {
       setLoading(false);
@@ -173,7 +173,7 @@ const InboxPage: React.FC = () => {
     try {
       const response = await api.get(`/messaging/conversations/${id}/messages`);
       setMessages(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch messages:", error);
     } finally {
       setMessagesLoading(false);
@@ -206,7 +206,7 @@ const InboxPage: React.FC = () => {
           ? { ...conv, lastMessage: textToSend, timestamp: 'Just now' } 
           : conv
       ));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to send message:", error);
       setInputValue(textToSend);
     }

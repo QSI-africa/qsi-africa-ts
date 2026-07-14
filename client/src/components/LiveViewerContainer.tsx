@@ -1,6 +1,6 @@
 // client/src/components/LiveViewerContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, X, Signal, Lock, Maximize, Minimize } from 'lucide-react';
+import { MessageSquare, X, Lock, Maximize, Minimize } from 'lucide-react';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';

@@ -55,7 +55,7 @@ async function fetchPilotUrls() {
       changefreq: "monthly",
       priority: 0.7,
     }));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching pilot projects:", error.message);
     return [];
   }
@@ -85,7 +85,7 @@ async function generateSitemap() {
 
     fs.writeFileSync(outputFilePath, xml);
     console.log(`✅ Sitemap successfully generated at ${outputFilePath}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error generating sitemap:", error);
   }
 }

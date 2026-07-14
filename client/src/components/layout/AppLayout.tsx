@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home,
-  Bell,
-  Settings,
   User,
   Search,
   Plus,
   MessageCircle,
-  MoreVertical,
   ChevronRight,
   Menu,
   X,
-  Briefcase,
   Heart,
   Flame,
   Hammer,
-  Layers,
   Globe,
   Lightbulb,
   Building2,
   Users,
-  Activity,
   FlaskConical,
   Download
 } from 'lucide-react';
@@ -111,13 +105,6 @@ const DefaultSidebarContent = () => {
 
   const ecosystemItems = [
     {
-      id: 'panx-enterprise',
-      name: 'PanX Feed',
-      description: 'Enterprise pilots & frameworks',
-      path: '/',
-      icon: <Briefcase size={24} />
-    },
-    {
       id: 'sovereign-minds',
       name: 'Profiles',
       description: 'Verified professional network',
@@ -175,13 +162,11 @@ const DefaultSidebarContent = () => {
     { name: 'PanX Lab', shortName: 'PanX Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
     { name: 'PanX Mobility', shortName: 'PanX Mobility', path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
     { name: 'PanX TV', shortName: 'PanX TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
-    { name: 'PanX Music', shortName: 'PanX Music', path: '/music', description: 'Premium audio streaming and music production.' },
   ];
 
   const panxTools = [
     { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Design, Plan, Execute.' },
-    { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
-    { name: 'PanX Mobility', path: '/mobility', description: 'Mobility built for purpose.' }
+    { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' }
   ];
 
   const filteredTools = panxTools.filter(tool => 
@@ -389,7 +374,7 @@ const DefaultSidebarContent = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredEcosystemItems.map((item) => {
-              const isActive = location.pathname === item.path && (item.path !== '/concepts' || item.id === 'concepts');
+              const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
               return (
                 <div 
                   key={item.id} 
@@ -401,7 +386,7 @@ const DefaultSidebarContent = () => {
                   }}
                 >
                   <div className="panx-tool-icon-wrapper">
-                    {item.icon}
+                    {item.id === 'panx-enterprise' ? renderCategoryIcon('PanX', true, isActive) : item.icon}
                   </div>
                   
                   <div className="channel-info">

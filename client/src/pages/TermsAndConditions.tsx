@@ -5,7 +5,6 @@ import {
   MdDescription,
   MdBusiness,
   MdGavel,
-  MdContactSupport,
   MdUpdate,
 } from "react-icons/md";
 import { theme, Typography, Collapse } from "antd";
@@ -25,7 +24,7 @@ const TermsAndConditions: React.FC = () => {
   const { token } = useToken();
   const [activeSection, setActiveSection] = useState<any>(null);
 
-  const styles = {
+  const styles: Record<string, React.CSSProperties> = {
     container: {
       minHeight: "100vh",
       width: "100%",

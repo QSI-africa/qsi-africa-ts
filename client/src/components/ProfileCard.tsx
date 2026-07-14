@@ -1,11 +1,9 @@
 import React from 'react';
-import { Typography, Tag, Avatar, Space } from 'antd';
+import { Typography } from 'antd';
 import { 
   ShieldCheck, 
   ArrowRight, 
-  User,
-  Zap,
-  Activity
+  User
 } from 'lucide-react';
 
 const { Title, Text, Paragraph } = Typography;

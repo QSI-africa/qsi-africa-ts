@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Tabs, Typography, Table, Button, Space, 
+  Tabs, Table, Button, Space, 
   Tag, Modal, Form, Input, InputNumber, Select, 
   message, Popconfirm, Card, Row, Col, Spin 
 } from 'antd';
@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Zap,
   Activity,
-  ArrowRight,
   Globe,
   Layers,
   MonitorPlay
@@ -57,7 +56,7 @@ const AdminDashboard: React.FC = () => {
       const res = await fetch('/api/lab/categories');
       const data = await res.json();
       setCategories(data);
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to fetch lab data");
     } finally {
       setIsLoading(false);
@@ -73,7 +72,7 @@ const AdminDashboard: React.FC = () => {
       const hRes = await fetch('/api/admin/mobility/vehicle-hires');
       const hData = await hRes.json();
       setVehicleHires(hData);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch mobility data");
     }
   };
@@ -95,7 +94,7 @@ const AdminDashboard: React.FC = () => {
       const stRes = await fetch('/api/config/stats');
       const stData = await stRes.json();
       setStats(stData);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch registry data");
     }
   };
@@ -104,7 +103,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const res = await api.get('/admin/tv/channels');
       setTvChannels(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch TV channels");
     }
   };
@@ -121,7 +120,7 @@ const AdminDashboard: React.FC = () => {
       await api.put(`/admin/tv/channels/${channelId}/status`, { status });
       message.success(`Channel status updated to ${status}`);
       fetchTvChannels();
-    } catch (error) {
+    } catch (error: any) {
       message.error('Failed to update channel status');
     }
   };
@@ -138,7 +137,7 @@ const AdminDashboard: React.FC = () => {
         setIsCategoryModalOpen(false);
         fetchLabData();
       }
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize category");
     }
   };
@@ -155,7 +154,7 @@ const AdminDashboard: React.FC = () => {
         setIsPackageModalOpen(false);
         fetchLabData();
       }
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize package");
     }
   };
@@ -167,7 +166,7 @@ const AdminDashboard: React.FC = () => {
         message.success("Category purged");
         fetchLabData();
       }
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to purge category");
     }
   };
@@ -189,7 +188,7 @@ const AdminDashboard: React.FC = () => {
         setIsServiceModalOpen(false);
         fetchRegistryData();
       }
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to update service registry");
     }
   };

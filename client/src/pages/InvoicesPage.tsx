@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography,
   Spin,
   Empty,
   App as AntApp,
@@ -36,7 +35,7 @@ const InvoicesPage: React.FC = () => {
       try {
         const response = await api.get("/invoicing/my-invoices");
         setInvoices(response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch invoices:", error);
         message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to load your invoices.");
       } finally {
@@ -60,7 +59,7 @@ const InvoicesPage: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Download failed", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Could not download PDF.");
     }

@@ -52,7 +52,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           )}
         </div>
       </div>
-      {extra && <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>{extra}</div>}
+      {extra && <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0, overflowX: 'auto', flex: 1, justifyContent: 'flex-end' }} className="no-scrollbar">{extra}</div>}
     </div>
   );
 };

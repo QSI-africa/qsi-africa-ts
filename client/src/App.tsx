@@ -1,9 +1,8 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useEffect  } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout, ConfigProvider, App as AntApp } from "antd";
-import { 
-  BulbOutlined 
-} from "@ant-design/icons";
+
+
 import { Activity } from "lucide-react";
 
 import ChatWindow from "./components/ChatWindow";
@@ -29,8 +28,6 @@ import EngineerDashboard from "./pages/EngineerDashboard";
 import HealingPage from "./pages/HealingPage";
 import LabPage from "./pages/LabPage";
 import MyRequestsPage from "./pages/MyRequestsPage";
-import GlobalNavbar from "./components/GlobalNavbar";
-import BottomNavigationBar from "./components/BottomNavigationBar";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import InvoicesPage from "./pages/InvoicesPage";
 import InboxPage from "./pages/InboxPage";

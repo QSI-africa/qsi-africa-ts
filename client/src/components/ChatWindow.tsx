@@ -10,21 +10,17 @@ import {
   Spin,
   Input,
   Modal,
-  Drawer,
-  Dropdown,
-  Menu
+  Drawer
 } from "antd";
 import {
   Send,
   Info,
-  MoreVertical,
   Paperclip,
   Bot,
   Brain,
   Sparkles,
   ChevronLeft,
   LayoutGrid,
-  Menu as LucideMenu,
   Package,
   Lightbulb,
   Headphones
@@ -219,7 +215,7 @@ const ChatWindow: React.FC = () => {
         text: "Your request for human support has been logged. An engineer will be in touch with you.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
-    } catch (error) {
+    } catch (error: any) {
       antMessage.error("Failed to notify engineers. Please try again.");
     }
   };

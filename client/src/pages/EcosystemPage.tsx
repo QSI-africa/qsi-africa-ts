@@ -3,10 +3,10 @@ import {
   CheckCircle2, Plus, Globe, 
   Heart, MessageCircle, Repeat, Send, Trash2, Bookmark,
   Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
-  Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X
+  Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X, Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, message, Modal } from 'antd';
+import { Grid, message, Modal, Drawer } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -89,12 +89,13 @@ const EcosystemPage: React.FC = () => {
   const [demos, setDemos] = useState<any[]>([]);
   const [loadingEcosystem, setLoadingEcosystem] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'feed' | 'concepts' | 'demos'>('feed');
+  const [isMobileNavDrawerOpen, setIsMobileNavDrawerOpen] = useState(false);
 
   const fetchPosts = async () => {
     try {
       const response = await api.get('/panx/posts');
       setPosts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch posts:', error);
     } finally {
       setLoading(false);
@@ -109,7 +110,7 @@ const EcosystemPage: React.FC = () => {
       ]);
       setConcepts(conceptsRes.data);
       setDemos(demosRes.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch ecosystem data:', error);
     } finally {
       setLoadingEcosystem(false);
@@ -143,7 +144,7 @@ const EcosystemPage: React.FC = () => {
         }
         return post;
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to follow/unfollow user", error);
     }
   };
@@ -167,7 +168,7 @@ const EcosystemPage: React.FC = () => {
         }
         return post;
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle like", error);
     }
   };
@@ -191,7 +192,7 @@ const EcosystemPage: React.FC = () => {
         }
         return post;
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle repost", error);
     }
   };
@@ -215,7 +216,7 @@ const EcosystemPage: React.FC = () => {
         }
         return post;
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle bookmark", error);
     }
   };
@@ -242,7 +243,7 @@ const EcosystemPage: React.FC = () => {
       }));
       setReplyText('');
       setActiveReplyPostId(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to post reply", error);
     }
   };
@@ -301,7 +302,7 @@ const EcosystemPage: React.FC = () => {
       setNewPostText('');
       setSelectedFiles([]);
       setPreviewUrls([]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create post", error);
     } finally {
       setSubmittingPost(false);
@@ -313,7 +314,7 @@ const EcosystemPage: React.FC = () => {
     try {
       await api.delete(`/panx/posts/${postId}`);
       setPosts(prev => prev.filter(post => post.id !== postId));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete post", error);
     }
   };
@@ -397,86 +398,6 @@ const EcosystemPage: React.FC = () => {
       gap: '24px',
       width: '100%'
     }}>
-      {!user && (
-        <div style={{
-          background: 'linear-gradient(90deg, rgba(16,185,129,0.05) 0%, rgba(59,130,246,0.02) 100%)',
-          border: '1px solid rgba(16,185,129,0.12)',
-          borderRadius: '16px',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-          flexWrap: 'wrap',
-          backdropFilter: 'blur(8px)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)' }}>
-              <Compass size={18} />
-            </div>
-            <div>
-              <h4 style={{ color: 'white', fontSize: '13.5px', fontWeight: 800, margin: 0 }}>Browsing Ecosystem in Guest Mode</h4>
-              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', margin: '2px 0 0 0' }}>
-                Sign in to participate in building threads, following members, publishing concepts, or showcasing smart city demos.
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              onClick={() => navigate('/login')}
-              style={{
-                background: 'var(--accent-primary)', border: 'none', color: 'black', padding: '8px 16px',
-                borderRadius: '10px', fontWeight: 800, fontSize: '11px', cursor: 'pointer'
-              }}
-            >
-              Log In
-            </button>
-            <button 
-              onClick={() => navigate('/register')}
-              style={{
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
-                padding: '8px 16px', borderRadius: '10px', fontWeight: 800, fontSize: '11px', cursor: 'pointer'
-              }}
-            >
-              Register
-            </button>
-          </div>
-        </div>
-      )}
-      {/* Mobile Top Tabs */}
-      {!isDesktop && (
-        <div style={{
-          display: 'flex',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          paddingBottom: '8px',
-          gap: '16px',
-          overflowX: 'auto'
-        }} className="no-scrollbar">
-          {(['feed', 'concepts', 'demos'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveMobileTab(tab)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: activeMobileTab === tab ? '2.5px solid var(--accent-primary)' : '2.5px solid transparent',
-                color: activeMobileTab === tab ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.6)',
-                padding: '8px 12px',
-                fontSize: '11px',
-                fontWeight: 900,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {tab === 'feed' ? 'Social Feed' : tab === 'concepts' ? 'Digital Concepts' : 'City Demos'}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main Layout Grid/Flex Container */}
       <div style={{
         display: 'flex',
@@ -493,8 +414,8 @@ const EcosystemPage: React.FC = () => {
             width: '100%'
           }}>
             {/* Horizontal Feed Filters */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)', padding: '12px 0' }}>
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }} className="no-scrollbar">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)', padding: '12px 0' }}>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="no-scrollbar">
                 {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
                   const isSelected = activeFilter === filter;
                   const getFilterIcon = (filterName: string) => {
@@ -558,6 +479,27 @@ const EcosystemPage: React.FC = () => {
                   );
                 })}
               </div>
+              
+              {!isDesktop && (
+                <button
+                  onClick={() => setIsMobileNavDrawerOpen(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  <Menu size={18} />
+                </button>
+              )}
             </div>
 
             {/* Composer Area */}
@@ -904,8 +846,8 @@ const EcosystemPage: React.FC = () => {
                           </>
                         )}
 
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <button 
                               onClick={() => handleLikeToggle(post.id)}
                               className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
@@ -949,13 +891,6 @@ const EcosystemPage: React.FC = () => {
                               <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
                             </button>
                           </div>
-                          <button
-                            onClick={() => handleBookmarkToggle(post.id)}
-                            className={`std-action-btn ${post.hasBookmarked ? 'active-green' : ''}`}
-                            title="Save post"
-                          >
-                            <Bookmark size={15} fill={post.hasBookmarked ? 'var(--accent-primary)' : 'none'} />
-                          </button>
                         </div>
 
                         {post.replies && post.replies.length > 0 && (
@@ -1006,7 +941,7 @@ const EcosystemPage: React.FC = () => {
                                               ...p,
                                               replies: p.replies.map(r => r.id === rep.id ? { ...r, hasLiked: res.data.liked, likesCount: res.data.likesCount } : r)
                                             } : p));
-                                          } catch (error) { console.error(error); }
+                                          } catch (error: any) { console.error(error); }
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: rep.hasLiked ? '#EF4444' : 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}
                                       >
@@ -1360,24 +1295,70 @@ const EcosystemPage: React.FC = () => {
 
       </div>
       <Modal
-        title={null}
-        open={!!fullscreenMedia}
-        onCancel={() => setFullscreenMedia(null)}
+        visible={!!fullscreenMedia}
         footer={null}
-        width={800}
-        centered
-        className="dark-modal"
+        onCancel={() => setFullscreenMedia(null)}
+        width="90vw"
+        style={{ top: 20 }}
+        bodyStyle={{ padding: 0, background: 'transparent' }}
+        closeIcon={<span style={{ color: 'white', fontSize: '24px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '4px' }}>✕</span>}
       >
-        {fullscreenMedia && (
-          <div className="p-4 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl flex justify-center items-center">
-            {fullscreenMedia.type === 'video' ? (
-              <video src={fullscreenMedia.url} controls autoPlay className="w-full rounded-xl object-contain" style={{ maxHeight: '80vh' }} />
-            ) : (
-              <img src={fullscreenMedia.url} alt="Fullscreen" className="w-full rounded-xl object-contain" style={{ maxHeight: '80vh' }} />
-            )}
-          </div>
+        {fullscreenMedia && fullscreenMedia.type === 'image' && (
+          <img src={fullscreenMedia.url} alt="Fullscreen content" style={{ width: '100%', maxHeight: '85vh', objectFit: 'contain', display: 'block' }} />
+        )}
+        {fullscreenMedia && fullscreenMedia.type === 'video' && (
+          <video src={fullscreenMedia.url} controls autoPlay style={{ width: '100%', maxHeight: '85vh', display: 'block' }} />
         )}
       </Modal>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Explore Ecosystem</span>}
+        placement="right"
+        onClose={() => setIsMobileNavDrawerOpen(false)}
+        open={isMobileNavDrawerOpen}
+        width={300}
+        styles={{
+          header: { borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(10, 16, 24, 0.95)' },
+          body: { background: 'rgba(10, 16, 24, 0.95)', padding: '24px' }
+        }}
+        closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '18px' }}>✕</span>}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {(['feed', 'concepts', 'demos'] as const).map(tab => {
+            const isSelected = activeMobileTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveMobileTab(tab);
+                  setIsMobileNavDrawerOpen(false);
+                }}
+                style={{
+                  background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  color: isSelected ? 'var(--accent-primary)' : 'white',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                {tab === 'feed' ? 'Social Feed' : tab === 'concepts' ? 'Digital Concepts' : 'City Demos'}
+                <span style={{ opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}>→</span>
+              </button>
+            );
+          })}
+        </div>
+      </Drawer>
     </div>
   );
 };

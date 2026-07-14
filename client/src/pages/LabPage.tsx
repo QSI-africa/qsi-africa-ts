@@ -12,7 +12,7 @@ import api from '../api';
 import { socketService } from '../services/socket';
 import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
-import { Modal, Form, Input, Radio as AntdRadio } from 'antd';
+import { Modal, Form, Input } from 'antd';
 
 const GREEN = '#10B981';
 
@@ -143,7 +143,7 @@ const LabPage: React.FC = () => {
       if (res.data.length > 0 && !newRecCategory) {
         setNewRecCategory(res.data[0].id);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to load categories.");
     } finally {
@@ -178,7 +178,7 @@ const LabPage: React.FC = () => {
       setChannelLoading(true);
       const res = await api.get('/tv/channels/my-channel');
       setMyChannel(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       setChannelLoading(false);
@@ -190,7 +190,7 @@ const LabPage: React.FC = () => {
     try {
       const res = await api.get('/lab/enrollments');
       setEnrolledPackageIds(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load enrollments:", err);
     }
   };
@@ -343,7 +343,7 @@ const LabPage: React.FC = () => {
       await api.delete(`/lab/recordings/${recordingId}`);
       message.success("Recording deleted.");
       fetchRecordings();
-    } catch (err) {
+    } catch (err: any) {
       message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to delete recording.");
     }
   };
@@ -1087,7 +1087,7 @@ const LabPage: React.FC = () => {
                       setChannelLoading(true);
                       await api.delete('/tv/channels/my-channel');
                       setMyChannel(null);
-                    } catch (err) {
+                    } catch (err: any) {
                       message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to reset application.");
                     } finally {
                       setChannelLoading(false);

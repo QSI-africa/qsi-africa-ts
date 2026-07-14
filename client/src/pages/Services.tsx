@@ -1,24 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Typography, Space, App as AntApp, Spin, Row, Col } from "antd";
+import { Typography, App as AntApp, Spin, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
-  Search, 
-  Filter, 
-  ArrowRight, 
-  Layout, 
   Activity, 
-  Zap, 
-  ShieldCheck, 
-  Globe,
+  Zap,
   LayoutGrid,
   Sparkles,
   Brain,
   ChevronRight,
   Shield,
   Layers,
-  Cpu,
-  Bot
+  Cpu
 } from 'lucide-react';
 
 import UnifiedHeader from '../components/layout/UnifiedHeader';
@@ -95,7 +88,7 @@ const ServicesPage: React.FC = () => {
       }
 
       setProducts(allProducts);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch products:", error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to load products.");
     } finally {

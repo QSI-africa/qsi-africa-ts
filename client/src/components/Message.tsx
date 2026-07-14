@@ -1,6 +1,6 @@
 // src/components/Message.jsx
 import React from "react";
-import { Button, App as AntApp, Tooltip, Typography, theme } from "antd";
+import { Button, App as AntApp, Tooltip, theme } from "antd";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CopyOutlined } from "@ant-design/icons";

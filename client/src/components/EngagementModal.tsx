@@ -5,11 +5,7 @@ import {
   TrendingUp, 
   Users, 
   Lightbulb, 
-  X,
-  Zap,
-  Activity,
-  ShieldCheck,
-  Briefcase
+  X
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -56,7 +52,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       message.success("Collaboration request synchronized!");
       onClose();
       form.resetFields();
-    } catch (err) {
+    } catch (err: any) {
       message.error(err?.response?.data?.error || err?.response?.data?.message || "Synchronization failed. Please check your connection.");
     } finally {
       setLoading(false);

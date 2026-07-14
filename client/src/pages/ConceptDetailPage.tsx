@@ -1,15 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ConfigProvider,
   Spin,
-  Typography,
   Grid,
-  Modal,
-  Form,
   Input,
-  Radio,
-  message,
 } from "antd";
 const GREEN = '#10B981';
 
@@ -18,17 +12,9 @@ import {
   ArrowLeft,
   Calendar,
   Layers,
-  Zap,
   Globe,
-  Activity,
-  Handshake,
-  TrendingUp,
-  Users,
-  Lightbulb,
-  ShieldCheck, 
-  BarChart3, 
+  Activity, 
   Link,
-  X,
   Heart,
   Flame,
   Hammer

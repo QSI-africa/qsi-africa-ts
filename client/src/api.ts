@@ -75,7 +75,7 @@ api.interceptors.response.use(
             isRefreshing = false;
             
             return api(originalRequest);
-          } catch (err) {
+          } catch (err: any) {
             processQueue(err, null);
             isRefreshing = false;
             onUnauthorizedCallback();

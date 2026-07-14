@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ConfigProvider,
   Spin,
-  Typography,
   Grid,
-  Modal,
-  Form,
-  Input,
-  message,
-  Radio,
 } from "antd";
 
 
@@ -20,21 +13,10 @@ const GREEN = '#10B981';
 
 import {
   ArrowLeft,
-  Users,
-  Lightbulb,
   MapPin,
-  TrendingUp,
-  Handshake,
-  ArrowRight,
-  Building2, 
-  Wifi, 
-  Droplets, 
-  Wind,
-  ShieldCheck,
+  Building2,
   Zap,
-  Activity,
-  Terminal,
-  X
+  Terminal
 } from "lucide-react";
 import { FaTwitter, FaLinkedin } from "react-icons/fa6";
 import axios from "axios";

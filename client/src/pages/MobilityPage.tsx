@@ -1,25 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, Row, Col, Form, Input, 
-  Tag, Tabs, Badge, Modal, notification, 
-  Empty, Spin
+import { Row, Col, Form, Input, Modal, notification
 } from 'antd';
 import { 
   Truck, 
-  MapPin, 
-  Send, 
-  ShieldCheck, 
-  History, 
-  Rocket, 
-  CheckCircle, 
-  User,
-  Zap,
-  Activity,
-  ArrowRight,
-  MoreVertical,
-  ChevronRight,
-  Globe,
-  Clock,
+  Rocket,
   DollarSign,
   Package
 } from 'lucide-react';
@@ -94,7 +78,7 @@ const MobilityPage: React.FC = () => {
     try {
       const response = await api.get('/network/projects');
       setProjects(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch projects error:", error);
     }
   };
@@ -103,7 +87,7 @@ const MobilityPage: React.FC = () => {
     try {
       const response = await api.get('/mobility/broadcasts');
       setBroadcasts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch broadcasts error:", error);
     }
   };
@@ -114,7 +98,7 @@ const MobilityPage: React.FC = () => {
       setRideOffers(offersRes.data);
       const reqsRes = await api.get('/mobility/rides?type=REQUEST');
       setRideRequests(reqsRes.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch rides error:", error);
     }
   };
@@ -137,7 +121,7 @@ const MobilityPage: React.FC = () => {
         description: `Your request to visit ${selectedProject.title} has been synchronized.` 
       });
       setRequestModalVisible(false);
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Synchronization Failed' });
     } finally {
       setLoading(false);
@@ -148,7 +132,7 @@ const MobilityPage: React.FC = () => {
     try {
       const response = await api.get('/mobility/my-visits');
       setMyVisits(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch my visits error:", error);
     }
   };
@@ -157,7 +141,7 @@ const MobilityPage: React.FC = () => {
     try {
       const response = await api.get('/mobility/my-project-visits');
       setIncomingVisits(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch incoming visits error:", error);
     }
   };
@@ -167,7 +151,7 @@ const MobilityPage: React.FC = () => {
       await api.patch(`/mobility/site-visit/${id}/status`, { status });
       notification.success({ message: 'Status Updated', description: `Visit has been ${status.toLowerCase()}.` });
       fetchIncomingVisits();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Update Failed' });
     }
   };
@@ -180,7 +164,7 @@ const MobilityPage: React.FC = () => {
         message: 'Broadcast Active',
         description: 'Your logistics request is now live in the ecosystem.',
       });
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Broadcast Failed' });
     } finally {
       setLoading(false);
@@ -195,7 +179,7 @@ const MobilityPage: React.FC = () => {
         description: 'You have accepted this logistics mission.',
       });
       fetchBroadcasts();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Error accepting request' });
     }
   };
@@ -206,7 +190,7 @@ const MobilityPage: React.FC = () => {
       await api.post('/mobility/rides', { ...values, type });
       notification.success({ message: `Ride ${type.toLowerCase()} posted successfully.` });
       fetchRides();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: `Failed to post ride ${type.toLowerCase()}.` });
     } finally {
       setLoading(false);
@@ -226,7 +210,7 @@ const MobilityPage: React.FC = () => {
         description: 'Your fleet request has been submitted and is pending admin approval.'
       });
       setActiveTab('1'); // Go back to default tab
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Failed to submit fleet request.' });
     } finally {
       setLoading(false);

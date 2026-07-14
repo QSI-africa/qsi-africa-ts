@@ -6,7 +6,6 @@ import {
   Send,
   Globe,
   Zap,
-  MoreVertical,
   Activity
 } from "lucide-react";
 import { Typography, Row, Col, Form, Input, notification } from 'antd';
@@ -29,7 +28,7 @@ const ContactUs: React.FC = () => {
         placement: 'bottomRight'
       });
       form.resetFields();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Synchronization Failure' });
     } finally {
       setLoading(false);

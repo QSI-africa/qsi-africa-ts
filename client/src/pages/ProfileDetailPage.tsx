@@ -35,7 +35,7 @@ const ProfileDetailPage: React.FC = () => {
     try {
       const response = await api.get(`/network/profile/${id}`);
       setProfile(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch profile error:", error);
     } finally {
       setLoading(false);

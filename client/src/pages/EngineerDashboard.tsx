@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Row, Col, Button, Form, Input, 
-  Select, Tabs, notification, Avatar, Upload, 
-  Space, Divider, Tag, List, Badge, Modal, Spin 
+  Typography, Row, Col, Form, Input, 
+  Select, Tabs, notification, Upload, Divider, Tag, List, Badge, Modal 
 } from 'antd';
 import { 
   User, 
   Layers, 
   Plus, 
   Upload as UploadIcon, 
-  ShieldCheck, 
-  Edit3,
+  ShieldCheck,
   FileText, 
   Eye, 
   CheckCircle2,
   Calendar, 
   Mail, 
   Phone,
-  ArrowRight,
-  MoreVertical,
-  Activity,
   Zap
 } from 'lucide-react';
 import api from '../api';
@@ -54,7 +49,7 @@ const EngineerDashboard: React.FC = () => {
           skills: myProfile.skills || []
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch profile error:", error);
     }
   };
@@ -63,7 +58,7 @@ const EngineerDashboard: React.FC = () => {
     try {
       const response = await api.get('/network/projects');
       setProjects(response.data.filter((p: any) => p.engineerProfile.userId === user.id));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch projects error:", error);
     }
   };
@@ -72,7 +67,7 @@ const EngineerDashboard: React.FC = () => {
     try {
       const response = await api.get('/mobility/my-project-visits');
       setSiteVisits(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch visits error:", error);
     }
   };
@@ -83,7 +78,7 @@ const EngineerDashboard: React.FC = () => {
       await api.post('/network/profile', values);
       notification.success({ message: 'Operational Profile Updated' });
       fetchProfile();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Synchronization Failure' });
     } finally {
       setLoading(false);
@@ -98,7 +93,7 @@ const EngineerDashboard: React.FC = () => {
       setIsProjectModalVisible(false);
       projectForm.resetFields();
       fetchProjects();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Registry Failure' });
     } finally {
       setLoading(false);
@@ -126,7 +121,7 @@ const EngineerDashboard: React.FC = () => {
       await api.patch(`/mobility/site-visit/${id}/status`, { status });
       notification.success({ message: `Visit ${status.toLowerCase()}` });
       fetchSiteVisits();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Update Failure' });
     }
   };

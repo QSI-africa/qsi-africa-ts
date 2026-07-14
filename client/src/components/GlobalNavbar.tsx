@@ -6,8 +6,7 @@ import NotificationCenter from './NotificationCenter';
 import { 
   UserOutlined, LogoutOutlined, DashboardOutlined,
   HeartOutlined, MenuOutlined, DownOutlined, SettingOutlined,
-  ExperimentOutlined, MessageOutlined, CustomerServiceOutlined,
-  PlaySquareOutlined, DesktopOutlined, BulbOutlined, CarOutlined
+  ExperimentOutlined, MessageOutlined, DesktopOutlined, BulbOutlined, CarOutlined
 } from '@ant-design/icons';
 
 const { Header } = Layout;

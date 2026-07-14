@@ -55,16 +55,10 @@ const BottomNavigationBar: React.FC = () => {
             }}
           >
             <div style={{ 
-              fontSize: '22px',
+              fontSize: '24px',
               transform: isActive ? 'translateY(-2px)' : 'none',
               transition: 'transform 0.3s ease'
             }}>{item.icon}</div>
-            <span style={{ 
-              fontSize: '11px', 
-              fontWeight: isActive ? 700 : 500,
-            }}>
-              {item.label}
-            </span>
             {isActive && (
               <div style={{
                 position: 'absolute',

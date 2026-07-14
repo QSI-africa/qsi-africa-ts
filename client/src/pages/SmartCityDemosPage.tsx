@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Row, Col, Typography, Spin, App as AntApp, Grid } from "antd";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Spin, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Building2,
   Activity,
-  MapPin,
-  Map
+  MapPin
 } from "lucide-react";
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 
@@ -33,7 +32,7 @@ const SmartCityDemosPage: React.FC = () => {
       } else {
         setError("Received invalid data format.");
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Could not load city demonstrators.");
     } finally {
       setLoading(false);
@@ -54,9 +53,9 @@ const SmartCityDemosPage: React.FC = () => {
           <div style={{ 
             display: 'flex', 
             gap: '8px',
-            width: screens.md ? 'auto' : '100%',
-            overflowX: screens.md ? 'visible' : 'auto',
-            paddingBottom: screens.md ? '0' : '4px',
+            maxWidth: '100%',
+            overflowX: 'auto',
+            paddingBottom: '4px',
           }} className="no-scrollbar">
             {['all', 'infrastructure', 'energy', 'mobility'].map((cat) => (
               <button 

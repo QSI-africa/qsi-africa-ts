@@ -2,20 +2,16 @@ import React, { useState  } from 'react';
 import {
   Form,
   Input,
-  Button,
   Typography,
   App as AntApp,
   Steps,
-  Grid,
-  Spin
+  Grid
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
 import { 
   Zap, 
-  User, 
-  Globe, 
   Activity, 
   ArrowRight, 
   ArrowLeft,
@@ -49,7 +45,7 @@ const OnboardingPage: React.FC = () => {
         await form.validateFields(["lifeVision", "challenges"]);
       }
       setCurrent(current + 1);
-    } catch (err) {
+    } catch (err: any) {
       console.log("Validation failed:", err);
     }
   };

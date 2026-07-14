@@ -49,7 +49,7 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
       const fieldsToValidate = steps[currentStep].fields;
       await form.validateFields(fieldsToValidate);
       setCurrentStep(currentStep + 1);
-    } catch (error) {
+    } catch (error: any) {
       // access error
     }
   };
@@ -84,7 +84,7 @@ const FrequencyScanForm: React.FC<FrequencyScanFormProps> = ({ onComplete }) => 
       message.success('Frequency Scan completed successfully!');
       await refetchUser(); // Refresh user to see the new scan
       onComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Scan submission failed:', error);
       message.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to submit scan. Please try again.');
     } finally {

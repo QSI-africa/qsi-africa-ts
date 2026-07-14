@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { socketService } from '../services/socket';
-import { Send, User, MessageSquare, ShieldCheck, Clock } from 'lucide-react';
+import { Send, MessageSquare, Clock } from 'lucide-react';
 
 const GREEN = '#10B981';
 

@@ -1,6 +1,6 @@
 // admin-client/src/components/HealingPackagesSidebar.jsx
 import React from "react";
-import { Typography, theme, Space } from "antd";
+import { Typography, theme } from "antd";
 import { ShoppingOutlined } from "@ant-design/icons";
 
 const { Paragraph, Text } = Typography;

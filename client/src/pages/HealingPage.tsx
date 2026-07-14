@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, Row, Col, Modal, Form, Input, 
-  notification, Select, Spin, Empty
+import { Row, Col, Modal, Form, Input, 
+  notification, Select, Spin
 } from 'antd';
 import { 
   Heart, 
-  ShieldCheck, 
-  Zap, 
-  Star,
-  CheckCircle2,
-  Info,
+  Zap,
   MessageCircle,
   Activity,
   ArrowRight,
-  User,
   Coffee,
   Sparkles,
-  Waves,
   Brain,
   Shield
 } from 'lucide-react';
@@ -46,7 +39,7 @@ const HealingPage: React.FC = () => {
     try {
       const response = await api.get('/admin/healing-packages');
       setPackages(response.data.filter((p: any) => p.isActive));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch packages error:", error);
     } finally {
       setLoading(false);
@@ -57,7 +50,7 @@ const HealingPage: React.FC = () => {
     try {
       const response = await api.get('/submit/healing-suggestions');
       setSuggestions(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch suggestions error:", error);
     }
   };
@@ -81,7 +74,7 @@ const HealingPage: React.FC = () => {
       });
       setIsInquiryModalVisible(false);
       form.resetFields();
-    } catch (error) {
+    } catch (error: any) {
       notification.error({ message: 'Submission Failed' });
     } finally {
       setLoading(false);

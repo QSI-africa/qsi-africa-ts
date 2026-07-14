@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, Tabs, 
-  Tag, List, Empty, 
+  Typography, Tabs, List, Empty, 
   Spin, Divider 
 } from 'antd';
 import { 
@@ -43,7 +42,7 @@ const MyRequestsPage: React.FC = () => {
       setSiteVisits(visitRes.data);
       setDocuments(docRes.data);
       setFleetRequests(fleetRes.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fetch data error:", error);
     } finally {
       setLoading(false);

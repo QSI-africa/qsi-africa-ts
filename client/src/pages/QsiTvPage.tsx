@@ -5,7 +5,6 @@ import {
   Play,
   ArrowLeft,
   User,
-  Zap,
   Radio,
   Users,
   Signal,
@@ -14,7 +13,6 @@ import {
   Globe,
   Upload,
   Shield,
-  Eye,
   Trash2,
   CheckCircle2,
   X,
@@ -130,7 +128,7 @@ const QsiTvPage: React.FC = () => {
     try {
       const res = await api.get('/tv/channels');
       setChannels(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load channels:', err);
     } finally {
       setIsLoadingChannels(false);
@@ -145,7 +143,7 @@ const QsiTvPage: React.FC = () => {
       if (res.data && res.data.status === 'APPROVED') {
         fetchMyChannelContents(res.data.id);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load user channel:', err);
     } finally {
       setIsLoadingMyChannel(false);
@@ -156,7 +154,7 @@ const QsiTvPage: React.FC = () => {
     try {
       const res = await api.get(`/tv/channels/${channelId}/content`);
       setMyChannelContents(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load my channel contents:', err);
     }
   };
@@ -250,7 +248,7 @@ const QsiTvPage: React.FC = () => {
       } else {
         setChannelContents([]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load channel contents:', err);
     } finally {
       setIsLoadingContents(false);
@@ -273,7 +271,7 @@ const QsiTvPage: React.FC = () => {
       });
       setUploadedMediaUrl(res.data.document.url);
       message.success('Media file synchronized successfully.');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload failed:', err);
       message.error(err?.response?.data?.error || err?.response?.data?.message || 'File upload failed.');
     } finally {

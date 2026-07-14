@@ -74,7 +74,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const response = await api.get(`/panx/posts/${postId}`);
       setPost(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch post detail:', error);
       message.error("Failed to load thread");
       navigate('/ecosystem');
@@ -92,7 +92,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/like`);
       setPost(prev => prev ? { ...prev, hasLiked: response.data.liked, likesCount: response.data.likesCount } : prev);
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const handleRepostToggle = async () => {
@@ -100,7 +100,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/repost`);
       setPost(prev => prev ? { ...prev, hasReposted: response.data.reposted, repostsCount: response.data.repostsCount } : prev);
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const handleBookmarkToggle = async () => {
@@ -108,7 +108,7 @@ const PostDetailPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/bookmark`);
       setPost(prev => prev ? { ...prev, hasBookmarked: response.data.bookmarked, bookmarksCount: response.data.bookmarksCount } : prev);
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const handlePostReply = async (parentId?: string) => {
@@ -119,7 +119,7 @@ const PostDetailPage: React.FC = () => {
       setReplyText('');
       setActiveReplyId(null);
       fetchPost(); // Refresh thread to get new hierarchy
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const handleReplyLike = async (replyId: string) => {
@@ -127,7 +127,7 @@ const PostDetailPage: React.FC = () => {
     try {
       await api.post(`/panx/replies/${replyId}/like`);
       fetchPost(); // Quick refresh
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const handleDeleteReply = async (replyId: string) => {
@@ -135,7 +135,7 @@ const PostDetailPage: React.FC = () => {
     try {
       await api.delete(`/panx/replies/${replyId}`);
       fetchPost();
-    } catch (error) { console.error(error); }
+    } catch (error: any) { console.error(error); }
   };
 
   const formatTimestamp = (dateString: string) => {

@@ -72,21 +72,20 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Header Profile Summary */}
-      <header className="p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+      <header className="p-6 md:p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-end">
-            <div className="relative">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-end">
+            <div className="relative shrink-0">
               <div 
+                className="flex items-center justify-center rounded-[24px] md:rounded-[32px] w-[80px] h-[80px] md:w-[100px] md:h-[100px]"
                 style={{
-                  width: '100px', height: '100px', borderRadius: '32px',
                   background: `linear-gradient(135deg, ${GREEN}30 0%, ${GREEN}05 100%)`,
                   border: `1.5px solid ${GREEN}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: GREEN,
                   boxShadow: `0 15px 35px -5px ${GREEN}30`
                 }}
               >
-                <User size={48} strokeWidth={1.5} />
+                <User className="w-10 h-10 md:w-12 md:h-12" strokeWidth={1.5} />
               </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success-green rounded-full flex items-center justify-center text-black border-2 border-bg-secondary shadow-lg">
                 <CheckCircle2 size={12} strokeWidth={3} />
@@ -94,25 +93,25 @@ const ProfilePage: React.FC = () => {
             </div>
             
             <div className="flex-1 text-center md:text-left">
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start items-center mb-3">
-                <Tag color="cyan" style={{ border: 'none', borderRadius: '4px', textTransform: 'none', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+              <div className="flex flex-wrap gap-2 md:gap-3 justify-center md:justify-start items-center mb-2 md:mb-3">
+                <Tag color="cyan" style={{ border: 'none', borderRadius: '4px', textTransform: 'none', fontWeight: 'bold', letterSpacing: '0.05em', margin: 0 }}>
                   {user.role}
                 </Tag>
                 <span className="text-[10px] font-bold text-text-tertiary tracking-widest" style={{ textTransform: 'none' }}>Active Node</span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight leading-none mb-4">
+              <h1 className="text-2xl md:text-3xl lg:text-5xl font-black text-white uppercase tracking-tight leading-none mb-3 md:mb-4">
                 {user.name}
               </h1>
-              <div className="flex items-center gap-2 justify-center md:justify-start text-text-secondary">
+              <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start text-text-secondary">
                 <Mail size={14} />
-                <span className="text-sm font-semibold">{user.email}</span>
+                <span className="text-xs md:text-sm font-semibold">{user.email}</span>
               </div>
             </div>
 
-            <div>
+            <div className="mt-4 md:mt-0">
               <button 
                 onClick={handleLogoutClick}
-                className="qsi-button flex items-center gap-2 py-3 px-6 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors"
+                className="qsi-button flex items-center justify-center gap-2 py-2 px-4 md:py-3 md:px-6 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors w-full md:w-auto"
                 style={{ borderColor: 'rgba(255,255,255,0.08)', textTransform: 'none' }}
               >
                 <LogOut size={16} /> Disconnect

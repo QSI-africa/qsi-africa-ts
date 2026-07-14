@@ -309,7 +309,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
       } else {
         await stopScreenShare();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Screen sharing error:', err);
     }
   };
@@ -335,7 +335,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         });
         setIsScreenSharing(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to restore camera track:', err);
     }
   };

@@ -6,7 +6,6 @@ import {
   Typography,
   App as AntApp,
   Alert,
-  Space,
 } from "antd";
 import { MailOutlined, LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation, Link } from "react-router-dom";
