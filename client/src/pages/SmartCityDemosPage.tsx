@@ -71,7 +71,7 @@ const SmartCityDemosPage: React.FC = () => {
         }
       />
 
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px 120px 24px' }}>
 
           {loading ? (
             <div className="py-32 text-center"><Spin size="large" /></div>

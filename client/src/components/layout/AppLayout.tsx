@@ -588,7 +588,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* 2. Sidebar Panel (360px) */}
       <aside className="sidebar-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div className="md:hidden absolute top-6 right-6 z-50">
+        <div className="md:hidden" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50, width: 'max-content' }}>
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
             style={{
@@ -600,10 +600,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               borderRadius: '12px',
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'rgba(255, 255, 255, 0.4)',
+              color: 'rgba(255, 255, 255, 0.6)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              backdropFilter: 'blur(8px)'
             }}
             className="hover:scale-105 active:scale-95"
           >

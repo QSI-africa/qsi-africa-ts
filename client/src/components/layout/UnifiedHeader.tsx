@@ -16,16 +16,17 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   extra
 }) => {
   return (
-    <div className="unified-header" style={{
-      padding: '24px 32px',
+    <div className="unified-header flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 md:px-8 md:py-6" style={{
       background: 'rgba(10, 16, 24, 0.85)',
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
       position: 'sticky',
       top: 0,
-      zIndex: 20
+      zIndex: 20,
+      width: '100%',
+      maxWidth: '100vw'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
         {icon && (
           <div style={{
             width: '40px',
@@ -52,7 +53,11 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           )}
         </div>
       </div>
-      {extra && <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0, overflowX: 'auto', flex: 1, justifyContent: 'flex-end' }} className="no-scrollbar">{extra}</div>}
+      {extra && (
+        <div className="w-full overflow-x-auto no-scrollbar md:w-auto md:flex-1 flex justify-start md:justify-end min-w-0" style={{ paddingBottom: '4px' }}>
+          {extra}
+        </div>
+      )}
     </div>
   );
 };
