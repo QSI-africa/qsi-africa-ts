@@ -121,7 +121,7 @@ const LogicAssistant: React.FC = () => {
           {
             key: 'infra',
             title: 'Smart Infrastructure',
-            desc: 'Strategic AI interface for modeling and building.',
+            desc: 'Design, Plan, Execute.',
             path: '/chat/infrastructure',
             icon: <LayoutGrid size={16} />,
             color: 'var(--accent-primary)',
@@ -129,7 +129,7 @@ const LogicAssistant: React.FC = () => {
           {
             key: 'vision',
             title: 'Vision Space',
-            desc: 'Translate raw imagination into actionable blueprints.',
+            desc: 'Turn Ideas Into Reality.',
             path: '/chat/vision',
             icon: <Brain size={16} />,
             color: 'var(--success-green)',
@@ -137,7 +137,7 @@ const LogicAssistant: React.FC = () => {
           {
             key: 'healing',
             title: 'Healing & Wisdom',
-            desc: 'Personalized alignment trajectory scans.',
+            desc: 'Strategic healing & medical systems.',
             path: '/chat/healing',
             icon: <Sparkles size={16} />,
             color: '#f43f5e', // Warm premium pink/rose color
