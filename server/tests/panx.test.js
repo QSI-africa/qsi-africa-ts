@@ -6,6 +6,7 @@ jest.mock('../src/config/prisma', () => ({
   panxPost: {
     findMany: jest.fn(),
     create: jest.fn(),
+    count: jest.fn(),
   },
   panxLike: {
     findUnique: jest.fn(),
@@ -42,12 +43,13 @@ describe('PanX API Endpoints', () => {
           _count: { likes: 0, reposts: 0, replies: 0 }
         }
       ]);
+      prisma.panxPost.count.mockResolvedValue(1);
 
       const res = await request(app).get('/api/panx/posts');
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveLength(1);
-      expect(res.body[0]).toHaveProperty('content', 'Hello World');
+      expect(res.body.posts).toHaveLength(1);
+      expect(res.body.posts[0]).toHaveProperty('content', 'Hello World');
     });
   });
 
