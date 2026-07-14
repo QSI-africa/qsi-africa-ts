@@ -46,7 +46,7 @@ const VenturesPage = () => {
 
   const fetchVentures = async () => {
     try {
-      const res = await api.get('/ventures');
+      const res = await api.get('/ventures/admin/all');
       setVenturesList(res.data);
     } catch (error) {
       console.error("Failed to fetch ventures", error);

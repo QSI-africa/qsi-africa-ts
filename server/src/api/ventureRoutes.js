@@ -40,6 +40,7 @@ router.get("/", async (req, res) => {
         shortDescription: true,
         logoUrl: true,
         bannerUrl: true,
+        isActive: true,
       },
     });
     res.json(ventures);
@@ -141,6 +142,28 @@ router.post("/:id/engage", authMiddleware, async (req, res) => {
 // =========================================================================
 // ADMIN ENDPOINTS
 // =========================================================================
+
+// GET /api/ventures/admin/all — List ALL ventures including hidden ones
+router.get("/admin/all", authMiddleware, isAdminOrSuper, async (req, res) => {
+  try {
+    const ventures = await prisma.venture.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        shortDescription: true,
+        logoUrl: true,
+        bannerUrl: true,
+        isActive: true,
+      },
+    });
+    res.json(ventures);
+  } catch (error) {
+    console.error("Failed to fetch all ventures for admin:", error);
+    res.status(500).json({ error: "Failed to fetch ventures." });
+  }
+});
 
 // POST /api/ventures — Create a new venture
 router.post("/", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), async (req, res) => {
