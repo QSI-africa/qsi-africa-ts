@@ -43,6 +43,15 @@ const VentureProfilePage: React.FC = () => {
 
   const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
 
+  const getMediaUrl = (url?: string) => {
+    if (!url) return undefined;
+    if (url.startsWith('/uploads/')) {
+       const rootUrl = baseURL.replace(/\/api$/, '');
+       return `${rootUrl}${url}`;
+    }
+    return url;
+  };
+
   useEffect(() => {
     const fetchVenture = async () => {
       try {
@@ -112,7 +121,7 @@ const VentureProfilePage: React.FC = () => {
       <div style={{ position: 'relative', width: '100%', minHeight: '280px', overflow: 'hidden' }}>
         {venture.bannerUrl ? (
           <img
-            src={venture.bannerUrl}
+            src={getMediaUrl(venture.bannerUrl)}
             alt={venture.name}
             style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }}
           />
@@ -153,7 +162,7 @@ const VentureProfilePage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', marginBottom: '16px' }}>
           {venture.logoUrl ? (
             <img
-              src={venture.logoUrl}
+              src={getMediaUrl(venture.logoUrl)}
               alt={venture.name}
               style={{
                 width: '72px', height: '72px', borderRadius: '20px', objectFit: 'cover',
@@ -259,13 +268,12 @@ const VentureProfilePage: React.FC = () => {
 
               {post.imageUrl && (
                 <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <img src={post.imageUrl} alt="Post media" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', display: 'block' }} />
+                  <img src={getMediaUrl(post.imageUrl)} alt="Post attachment" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
                 </div>
               )}
-
               {post.videoUrl && (
                 <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <video src={post.videoUrl} controls style={{ width: '100%', maxHeight: '300px', display: 'block' }} />
+                  <video src={getMediaUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
                 </div>
               )}
             </div>

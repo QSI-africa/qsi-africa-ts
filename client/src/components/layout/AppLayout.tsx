@@ -380,7 +380,7 @@ const DefaultSidebarContent = () => {
 
         {/* Ecosystem Section */}
         <div className="ecosystem-container">
-          <h3 className="ecosystem-heading">Panx African Engineers</h3>
+          <h3 className="ecosystem-heading">Pan African Engineers</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredVentures.map((venture) => {

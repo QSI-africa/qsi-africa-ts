@@ -367,7 +367,7 @@ const VenturesPage = () => {
               </div>
             )}
           </Form.Item>
-          <Form.Item name="isActive" label="Status" valuePropName="checked" initialValue={true}>
+          <Form.Item name="isActive" label="Status" initialValue={true}>
             <Select>
               <Option value={true}>ACTIVE</Option>
               <Option value={false}>HIDDEN</Option>
