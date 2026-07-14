@@ -155,150 +155,164 @@ const VenturesPage = () => {
   };
 
   return (
-    <div>
-      <Card
-        title={<Title level={4}>Ventures Management</Title>}
-        extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditingVenture(null);
-              ventureForm.resetFields();
-              setLogoFileList([]);
-              setBannerFileList([]);
-              setIsVentureModalOpen(true);
-            }}
-          >
-            Create Venture
-          </Button>
-        }
-      >
-        <Table
-          dataSource={venturesList}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          columns={[
-            { title: 'Name', dataIndex: 'name', key: 'name' },
-            { title: 'Slug', dataIndex: 'slug', key: 'slug' },
-            {
-              title: 'Status',
-              dataIndex: 'isActive',
-              key: 'isActive',
-              render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
-            },
-            {
-              title: 'Actions',
-              key: 'actions',
-              render: (_, record) => (
-                <Space>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={() => {
-                      setEditingVenture(record);
-                      ventureForm.setFieldsValue(record);
-                      setLogoFileList([]);
-                      setBannerFileList([]);
-                      setIsVentureModalOpen(true);
-                    }}
-                  />
-                  <Button
-                    type="primary"
-                    ghost
-                    icon={<SettingOutlined />}
-                    onClick={async () => {
-                      try {
-                        const res = await api.get(`/ventures/${record.slug}`);
-                        setSelectedVenture(res.data);
-                        fetchVentureEngagements(record.id);
-                      } catch (error) {
-                        message.error("Failed to load venture details");
-                      }
-                    }}
-                  >
-                    Manage
-                  </Button>
-                  <Popconfirm
-                    title="Delete this venture?"
-                    onConfirm={() => handleDeleteVenture(record.id)}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button type="text" danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                </Space>
-              ),
-            },
-          ]}
-        />
-
-        {selectedVenture && (
-          <div style={{ marginTop: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <Title level={4}>Managing: {selectedVenture.name}</Title>
-              <Button onClick={() => setSelectedVenture(null)}>Close Management</Button>
+    <div style={{ padding: '24px' }}>
+      {!selectedVenture ? (
+        <Card
+          title={<Title level={4} style={{ margin: 0 }}>Ventures Management</Title>}
+          extra={
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setEditingVenture(null);
+                ventureForm.resetFields();
+                setLogoFileList([]);
+                setBannerFileList([]);
+                setIsVentureModalOpen(true);
+              }}
+            >
+              Create Venture
+            </Button>
+          }
+        >
+          <Table
+            dataSource={venturesList}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            columns={[
+              { title: 'Name', dataIndex: 'name', key: 'name' },
+              { title: 'Slug', dataIndex: 'slug', key: 'slug' },
+              {
+                title: 'Status',
+                dataIndex: 'isActive',
+                key: 'isActive',
+                render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+              },
+              {
+                title: 'Actions',
+                key: 'actions',
+                render: (_, record) => (
+                  <Space>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={() => {
+                        setEditingVenture(record);
+                        ventureForm.setFieldsValue(record);
+                        setLogoFileList([]);
+                        setBannerFileList([]);
+                        setIsVentureModalOpen(true);
+                      }}
+                    />
+                    <Button
+                      type="primary"
+                      ghost
+                      icon={<SettingOutlined />}
+                      onClick={async () => {
+                        try {
+                          const res = await api.get(`/ventures/${record.slug}`);
+                          setSelectedVenture(res.data);
+                          fetchVentureEngagements(record.id);
+                        } catch (error) {
+                          message.error("Failed to load venture details");
+                        }
+                      }}
+                    >
+                      Manage
+                    </Button>
+                    <Popconfirm
+                      title="Delete this venture?"
+                      onConfirm={() => handleDeleteVenture(record.id)}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button type="text" danger icon={<DeleteOutlined />} />
+                    </Popconfirm>
+                  </Space>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      ) : (
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <Title level={4} style={{ margin: 0 }}>Managing: {selectedVenture.name}</Title>
+                <Text type="secondary">{selectedVenture.shortDescription}</Text>
+              </div>
+              <Button onClick={() => setSelectedVenture(null)}>Back to Ventures</Button>
             </div>
+          </Card>
 
-            <Card style={{ marginBottom: '16px' }} title="Engagement Types" extra={<Button type="link" onClick={() => { engTypeForm.resetFields(); setIsEngTypModalOpen(true); }}>+ Add Type</Button>}>
-              <Space wrap>
-                {selectedVenture.engagementTypes?.map((et) => (
-                  <Tag key={et.id} color="cyan">{et.label} {et.icon && `(${et.icon})`}</Tag>
-                ))}
-                {(!selectedVenture.engagementTypes || selectedVenture.engagementTypes.length === 0) && (
-                  <Text type="secondary">No engagement types configured</Text>
-                )}
-              </Space>
-            </Card>
-
-            <Card style={{ marginBottom: '16px' }} title={`Posts (${selectedVenture.posts?.length || 0})`} extra={<Button type="link" onClick={() => { venturePostForm.resetFields(); setPostImageFileList([]); setPostVideoFileList([]); setIsVenturePostModalOpen(true); }}>+ New Post</Button>}>
-              {selectedVenture.posts?.map((p) => (
-                <div key={p.id} style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '12px' }}>
-                  <p>{p.content}</p>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>{new Date(p.createdAt).toLocaleDateString()}</Text>
-                </div>
+          <Card title="Engagement Types" extra={<Button type="link" onClick={() => { engTypeForm.resetFields(); setIsEngTypModalOpen(true); }}>+ Add Type</Button>}>
+            <Space wrap>
+              {selectedVenture.engagementTypes?.map((et) => (
+                <Tag key={et.id} color="cyan" style={{ padding: '4px 8px', fontSize: '14px' }}>
+                  <Space>
+                    {et.icon && iconMap[et.icon]}
+                    {et.label}
+                  </Space>
+                </Tag>
               ))}
-              {(!selectedVenture.posts || selectedVenture.posts.length === 0) && (
-                  <Text type="secondary">No posts published yet</Text>
+              {(!selectedVenture.engagementTypes || selectedVenture.engagementTypes.length === 0) && (
+                <Text type="secondary">No engagement types configured</Text>
               )}
-            </Card>
+            </Space>
+          </Card>
 
-            <Card title={`Engagements Inbox (${ventureEngagements.length})`}>
-              <Table
-                dataSource={ventureEngagements}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
-                columns={[
-                  { title: 'Type', dataIndex: 'engagementType', key: 'type' },
-                  { title: 'Name', dataIndex: 'contactName', key: 'name' },
-                  { title: 'Email', dataIndex: 'contactEmail', key: 'email' },
-                  { title: 'Message', dataIndex: 'message', key: 'message', render: (m) => m ? (m.length > 50 ? m.substring(0, 50) + '...' : m) : '-' },
-                  {
-                    title: 'Status',
-                    dataIndex: 'status',
-                    key: 'status',
-                    render: (s) => <Tag color={s === 'PENDING' ? 'orange' : s === 'REVIEWED' ? 'green' : 'default'}>{s}</Tag>
-                  },
-                  {
-                    title: 'Actions',
-                    key: 'actions',
-                    render: (_, record) => (
-                      <Space>
-                        {record.status !== 'REVIEWED' && (
-                          <Button size="small" type="primary" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'REVIEWED')}>Review</Button>
-                        )}
-                        {record.status !== 'ARCHIVED' && (
-                          <Button size="small" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'ARCHIVED')}>Archive</Button>
-                        )}
-                      </Space>
-                    ),
-                  },
-                ]}
-              />
-            </Card>
-          </div>
-        )}
-      </Card>
+          <Card title={`Posts (${selectedVenture.posts?.length || 0})`} extra={<Button type="link" onClick={() => { venturePostForm.resetFields(); setPostImageFileList([]); setPostVideoFileList([]); setIsVenturePostModalOpen(true); }}>+ New Post</Button>}>
+            {selectedVenture.posts?.map((p) => (
+              <div key={p.id} style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '16px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '16px' }}>{p.content}</p>
+                <Space>
+                  {p.imageUrl && <Tag color="blue">Image Attached</Tag>}
+                  {p.videoUrl && <Tag color="purple">Video Attached</Tag>}
+                  <Text type="secondary" style={{ fontSize: '12px' }}>{new Date(p.createdAt).toLocaleDateString()}</Text>
+                </Space>
+              </div>
+            ))}
+            {(!selectedVenture.posts || selectedVenture.posts.length === 0) && (
+                <Text type="secondary">No posts published yet</Text>
+            )}
+          </Card>
+
+          <Card title={`Engagements Inbox (${ventureEngagements.length})`}>
+            <Table
+              dataSource={ventureEngagements}
+              rowKey="id"
+              pagination={{ pageSize: 10 }}
+              columns={[
+                { title: 'Type', dataIndex: 'engagementType', key: 'type' },
+                { title: 'Name', dataIndex: 'contactName', key: 'name' },
+                { title: 'Email', dataIndex: 'contactEmail', key: 'email' },
+                { title: 'Message', dataIndex: 'message', key: 'message', render: (m) => m ? (m.length > 50 ? m.substring(0, 50) + '...' : m) : '-' },
+                {
+                  title: 'Status',
+                  dataIndex: 'status',
+                  key: 'status',
+                  render: (s) => <Tag color={s === 'PENDING' ? 'orange' : s === 'REVIEWED' ? 'green' : 'default'}>{s}</Tag>
+                },
+                {
+                  title: 'Actions',
+                  key: 'actions',
+                  render: (_, record) => (
+                    <Space>
+                      {record.status !== 'REVIEWED' && (
+                        <Button size="small" type="primary" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'REVIEWED')}>Review</Button>
+                      )}
+                      {record.status !== 'ARCHIVED' && (
+                        <Button size="small" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'ARCHIVED')}>Archive</Button>
+                      )}
+                    </Space>
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        </Space>
+      )}
 
       <Modal
         title={editingVenture ? "Update Venture" : "Create Venture"}
