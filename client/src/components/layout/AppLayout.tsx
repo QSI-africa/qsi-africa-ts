@@ -93,6 +93,8 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
       return <Lightbulb size={isVertical ? 24 : 22} />;
     case 'Smart City Demos':
       return <Building2 size={isVertical ? 24 : 22} />;
+    case 'Admin Dashboard':
+      return <Shield size={isVertical ? 24 : 22} />;
     default:
       return null;
   }
@@ -102,6 +104,7 @@ const DefaultSidebarContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setIsMobileMenuOpen } = useSidebar();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [concepts, setConcepts] = useState<any[]>([]);
 
@@ -157,7 +160,8 @@ const DefaultSidebarContent = () => {
     { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
     { name: 'Profiles', path: '/network', description: 'Verified professional network.' },
     { name: 'PanX Concepts', path: '/concepts', description: 'Digital concepts & frameworks.' },
-    { name: 'Smart City Demos', path: '/demos', description: 'Physical demonstrators & systems.' }
+    { name: 'Smart City Demos', path: '/demos', description: 'Physical demonstrators & systems.' },
+    ...(user?.role === 'ADMIN' ? [{ name: 'Admin Dashboard', path: '/admin', description: 'Manage Ecosystem & Ventures.' }] : []),
   ];
 
   const [ventures, setVentures] = useState<any[]>([]);
