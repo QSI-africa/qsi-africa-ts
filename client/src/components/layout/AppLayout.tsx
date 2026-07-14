@@ -24,9 +24,10 @@ import {
   Lightbulb,
   Search,
   Home,
-  MessageCircle
-
+  MessageCircle,
+  Shield
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { useSidebar } from '../../context/SidebarContext';
 import api from '../../api';
@@ -434,6 +435,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen, deferredPrompt, setDeferredPrompt } = useSidebar();
   const [showDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const { user } = useAuth();
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
@@ -451,11 +453,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
-    // { icon: <Bell size={22} />, path: '/notifications', id: 'updates', label: 'Updates' },
     { icon: <MessageCircle size={22} />, path: '/inbox', id: 'chats', label: 'Chats' },
     { icon: <Users size={22} />, path: '/network', id: 'sovereign-minds-shortcut', label: 'Sovereign Minds' },
-    // { icon: <Activity size={22} />, path: '/status', id: 'status', label: 'Status' },
-    // { icon: <Settings size={22} />, path: '/settings', id: 'settings', label: 'Settings' },
+    ...(user?.role === 'ADMIN' ? [{ icon: <Shield size={22} />, path: '/admin', id: 'admin', label: 'Admin Dashboard' }] : []),
   ];
 
   const bottomNavItems = [
