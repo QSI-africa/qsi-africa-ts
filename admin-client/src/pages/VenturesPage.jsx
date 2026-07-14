@@ -40,6 +40,11 @@ const VenturesPage = () => {
   const [postImageFileList, setPostImageFileList] = useState([]);
   const [postVideoFileList, setPostVideoFileList] = useState([]);
 
+  // Loading states
+  const [isSavingVenture, setIsSavingVenture] = useState(false);
+  const [isAddingEngType, setIsAddingEngType] = useState(false);
+  const [isPublishingPost, setIsPublishingPost] = useState(false);
+
   useEffect(() => {
     fetchVentures();
   }, []);
@@ -55,6 +60,7 @@ const VenturesPage = () => {
   };
 
   const handleSaveVenture = async (values) => {
+    setIsSavingVenture(true);
     try {
       const formData = new FormData();
       formData.append('name', values.name);
@@ -84,6 +90,8 @@ const VenturesPage = () => {
       fetchVentures();
     } catch (error) {
       message.error(error?.response?.data?.error || "Failed to save venture");
+    } finally {
+      setIsSavingVenture(false);
     }
   };
 
@@ -99,6 +107,7 @@ const VenturesPage = () => {
 
   const handleAddEngType = async (values) => {
     if (!selectedVenture) return;
+    setIsAddingEngType(true);
     try {
       await api.post(`/ventures/${selectedVenture.id}/engagement-types`, values);
       message.success("Engagement type added");
@@ -108,11 +117,14 @@ const VenturesPage = () => {
       setSelectedVenture(res.data);
     } catch (error) {
       message.error("Failed to add engagement type");
+    } finally {
+      setIsAddingEngType(false);
     }
   };
 
   const handleAddVenturePost = async (values) => {
     if (!selectedVenture) return;
+    setIsPublishingPost(true);
     try {
       const formData = new FormData();
       formData.append('content', values.content);
@@ -132,6 +144,8 @@ const VenturesPage = () => {
       setSelectedVenture(res.data);
     } catch (error) {
       message.error("Failed to publish post");
+    } finally {
+      setIsPublishingPost(false);
     }
   };
 
@@ -375,7 +389,7 @@ const VenturesPage = () => {
           </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsVentureModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit">Save Venture</Button>
+            <Button type="primary" htmlType="submit" loading={isSavingVenture}>{editingVenture ? 'Update' : 'Create'}</Button>
           </Space>
         </Form>
       </Modal>
@@ -403,7 +417,7 @@ const VenturesPage = () => {
           </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsEngTypModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit">Add Type</Button>
+            <Button type="primary" htmlType="submit" loading={isAddingEngType}>Add Type</Button>
           </Space>
         </Form>
       </Modal>
@@ -443,7 +457,7 @@ const VenturesPage = () => {
           </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsVenturePostModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit">Publish Post</Button>
+            <Button type="primary" htmlType="submit" loading={isPublishingPost}>Publish Post</Button>
           </Space>
         </Form>
       </Modal>
