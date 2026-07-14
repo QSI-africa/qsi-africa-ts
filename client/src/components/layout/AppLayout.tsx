@@ -166,6 +166,18 @@ const DefaultSidebarContent = () => {
 
   const [ventures, setVentures] = useState<any[]>([]);
 
+  const getServerUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    try {
+      const origin = new URL(baseURL).origin;
+      return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+    } catch {
+      return path;
+    }
+  };
+
   useEffect(() => {
     const fetchVentures = async () => {
       try {
@@ -399,7 +411,7 @@ const DefaultSidebarContent = () => {
                 >
                   <div className="panx-tool-icon-wrapper" style={{ overflow: 'hidden' }}>
                     {venture.logoUrl ? (
-                      <img src={venture.logoUrl} alt={venture.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={getServerUrl(venture.logoUrl)} alt={venture.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: 900, fontSize: '12px' }}>
                         {initial}
