@@ -2,6 +2,7 @@
 const express = require("express");
 const prisma = require("../config/prisma");
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { uploadFields } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
@@ -142,8 +143,12 @@ router.post("/:id/engage", authMiddleware, async (req, res) => {
 // =========================================================================
 
 // POST /api/ventures — Create a new venture
-router.post("/", authMiddleware, isAdminOrSuper, async (req, res) => {
-  const { name, shortDescription, fullDescription, bannerUrl, logoUrl, isActive } = req.body;
+router.post("/", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), async (req, res) => {
+  const { name, shortDescription, fullDescription, isActive } = req.body;
+  let { bannerUrl, logoUrl } = req.body; // In case they are passed as strings
+
+  if (req.files?.logo?.[0]) logoUrl = `/uploads/${req.files.logo[0].filename}`;
+  if (req.files?.banner?.[0]) bannerUrl = `/uploads/${req.files.banner[0].filename}`;
 
   if (!name || !shortDescription) {
     return res.status(400).json({ error: "Name and short description are required." });
@@ -163,9 +168,9 @@ router.post("/", authMiddleware, isAdminOrSuper, async (req, res) => {
         slug,
         shortDescription,
         fullDescription,
-        bannerUrl,
-        logoUrl,
-        isActive: isActive !== undefined ? isActive : true,
+        bannerUrl: bannerUrl || null,
+        logoUrl: logoUrl || null,
+        isActive: isActive !== undefined ? String(isActive) === 'true' : true,
       },
     });
 
@@ -177,9 +182,13 @@ router.post("/", authMiddleware, isAdminOrSuper, async (req, res) => {
 });
 
 // PUT /api/ventures/:id — Update venture details
-router.put("/:id", authMiddleware, isAdminOrSuper, async (req, res) => {
+router.put("/:id", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
-  const { name, shortDescription, fullDescription, bannerUrl, logoUrl, isActive } = req.body;
+  const { name, shortDescription, fullDescription, isActive } = req.body;
+  let { bannerUrl, logoUrl } = req.body;
+
+  if (req.files?.logo?.[0]) logoUrl = `/uploads/${req.files.logo[0].filename}`;
+  if (req.files?.banner?.[0]) bannerUrl = `/uploads/${req.files.banner[0].filename}`;
 
   try {
     const dataToUpdate = {};
@@ -188,7 +197,7 @@ router.put("/:id", authMiddleware, isAdminOrSuper, async (req, res) => {
     if (fullDescription !== undefined) dataToUpdate.fullDescription = fullDescription;
     if (bannerUrl !== undefined) dataToUpdate.bannerUrl = bannerUrl;
     if (logoUrl !== undefined) dataToUpdate.logoUrl = logoUrl;
-    if (isActive !== undefined) dataToUpdate.isActive = isActive;
+    if (isActive !== undefined) dataToUpdate.isActive = String(isActive) === 'true';
 
     // If name changed, update slug too
     if (name) {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, Button, Space, Tag, Modal, Form, 
-  Input, Select, message, Popconfirm, Card, Typography 
+  Input, Select, message, Popconfirm, Card, Typography, Upload
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined, UploadOutlined } from '@ant-design/icons';
 import api from '../api';
 
 const { Title, Text } = Typography;
@@ -24,6 +24,9 @@ const VenturesPage = () => {
   const [engTypeForm] = Form.useForm();
   const [venturePostForm] = Form.useForm();
 
+  const [logoFileList, setLogoFileList] = useState([]);
+  const [bannerFileList, setBannerFileList] = useState([]);
+
   useEffect(() => {
     fetchVentures();
   }, []);
@@ -40,10 +43,32 @@ const VenturesPage = () => {
 
   const handleSaveVenture = async (values) => {
     try {
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('shortDescription', values.shortDescription);
+      if (values.fullDescription) formData.append('fullDescription', values.fullDescription);
+      formData.append('isActive', values.isActive);
+
+      if (logoFileList.length > 0) {
+        formData.append('logo', logoFileList[0].originFileObj);
+      } else if (editingVenture?.logoUrl) {
+        formData.append('logoUrl', editingVenture.logoUrl);
+      }
+
+      if (bannerFileList.length > 0) {
+        formData.append('banner', bannerFileList[0].originFileObj);
+      } else if (editingVenture?.bannerUrl) {
+        formData.append('bannerUrl', editingVenture.bannerUrl);
+      }
+
       if (editingVenture) {
-        await api.put(`/ventures/${editingVenture.id}`, values);
+        await api.put(`/ventures/${editingVenture.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        await api.post('/ventures', values);
+        await api.post('/ventures', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
       message.success("Venture saved successfully");
       setIsVentureModalOpen(false);
@@ -121,6 +146,8 @@ const VenturesPage = () => {
             onClick={() => {
               setEditingVenture(null);
               ventureForm.resetFields();
+              setLogoFileList([]);
+              setBannerFileList([]);
               setIsVentureModalOpen(true);
             }}
           >
@@ -152,6 +179,8 @@ const VenturesPage = () => {
                     onClick={() => {
                       setEditingVenture(record);
                       ventureForm.setFieldsValue(record);
+                      setLogoFileList([]);
+                      setBannerFileList([]);
                       setIsVentureModalOpen(true);
                     }}
                   />
@@ -269,11 +298,41 @@ const VenturesPage = () => {
           <Form.Item name="fullDescription" label="Full Description">
             <TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="logoUrl" label="Logo URL">
-            <Input />
+          <Form.Item label="Logo Image">
+            <Upload 
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={logoFileList}
+              onChange={(info) => setLogoFileList(info.fileList.slice(-1))}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>Select Logo</Button>
+            </Upload>
+            {editingVenture?.logoUrl && logoFileList.length === 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary">Current Logo:</Text>
+                <br />
+                <img src={editingVenture.logoUrl} alt="Logo" style={{ maxHeight: 60, marginTop: 4, borderRadius: 4 }} />
+              </div>
+            )}
           </Form.Item>
-          <Form.Item name="bannerUrl" label="Banner URL">
-            <Input />
+          <Form.Item label="Banner Image">
+            <Upload 
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={bannerFileList}
+              onChange={(info) => setBannerFileList(info.fileList.slice(-1))}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>Select Banner</Button>
+            </Upload>
+            {editingVenture?.bannerUrl && bannerFileList.length === 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary">Current Banner:</Text>
+                <br />
+                <img src={editingVenture.bannerUrl} alt="Banner" style={{ maxHeight: 80, marginTop: 4, borderRadius: 4 }} />
+              </div>
+            )}
           </Form.Item>
           <Form.Item name="isActive" label="Status" valuePropName="checked" initialValue={true}>
             <Select>
