@@ -81,8 +81,9 @@ router.get("/posts", async (req, res) => {
         _count: {
           select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true }
         }
-      }),
-      prisma.panxPost.count()
+      }
+    }),
+    prisma.panxPost.count()
     ]);
 
     const formattedPosts = posts.map(post => ({
