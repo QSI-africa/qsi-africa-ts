@@ -4,7 +4,18 @@ import {
   Input, Select, message, Popconfirm, Card, Typography, Upload
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined, UploadOutlined } from '@ant-design/icons';
+import { Handshake, TrendingUp, Users, Lightbulb, Rocket, Eye, Send } from 'lucide-react';
 import api from '../api';
+
+const iconMap = {
+  Handshake: <Handshake size={16} />,
+  TrendingUp: <TrendingUp size={16} />,
+  Users: <Users size={16} />,
+  Lightbulb: <Lightbulb size={16} />,
+  Rocket: <Rocket size={16} />,
+  Eye: <Eye size={16} />,
+  Send: <Send size={16} />,
+};
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -26,6 +37,8 @@ const VenturesPage = () => {
 
   const [logoFileList, setLogoFileList] = useState([]);
   const [bannerFileList, setBannerFileList] = useState([]);
+  const [postImageFileList, setPostImageFileList] = useState([]);
+  const [postVideoFileList, setPostVideoFileList] = useState([]);
 
   useEffect(() => {
     fetchVentures();
@@ -101,7 +114,17 @@ const VenturesPage = () => {
   const handleAddVenturePost = async (values) => {
     if (!selectedVenture) return;
     try {
-      await api.post(`/ventures/${selectedVenture.id}/posts`, values);
+      const formData = new FormData();
+      formData.append('content', values.content);
+
+      if (postImageFileList.length > 0) {
+        formData.append('image', postImageFileList[0].originFileObj);
+      }
+      if (postVideoFileList.length > 0) {
+        formData.append('video', postVideoFileList[0].originFileObj);
+      }
+
+      await api.post(`/ventures/${selectedVenture.id}/posts`, formData);
       message.success("Post published");
       setIsVenturePostModalOpen(false);
       
@@ -228,7 +251,7 @@ const VenturesPage = () => {
               </Space>
             </Card>
 
-            <Card style={{ marginBottom: '16px' }} title={`Posts (${selectedVenture.posts?.length || 0})`} extra={<Button type="link" onClick={() => { venturePostForm.resetFields(); setIsVenturePostModalOpen(true); }}>+ New Post</Button>}>
+            <Card style={{ marginBottom: '16px' }} title={`Posts (${selectedVenture.posts?.length || 0})`} extra={<Button type="link" onClick={() => { venturePostForm.resetFields(); setPostImageFileList([]); setPostVideoFileList([]); setIsVenturePostModalOpen(true); }}>+ New Post</Button>}>
               {selectedVenture.posts?.map((p) => (
                 <div key={p.id} style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '12px' }}>
                   <p>{p.content}</p>
@@ -353,8 +376,16 @@ const VenturesPage = () => {
           <Form.Item name="label" label="Label (e.g. Invest, Apply)" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="icon" label="Icon Name (e.g. Handshake, Lightbulb)">
-            <Input />
+          <Form.Item name="icon" label="Icon Name (e.g. Handshake, Lightbulb)" rules={[{ required: true }]}>
+            <Select placeholder="Select an Icon">
+              {Object.entries(iconMap).map(([key, Icon]) => (
+                <Option key={key} value={key}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {Icon} {key}
+                  </div>
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsEngTypModalOpen(false)}>Cancel</Button>
@@ -374,11 +405,27 @@ const VenturesPage = () => {
           <Form.Item name="content" label="Post Content" rules={[{ required: true }]}>
             <TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="imageUrl" label="Image URL">
-            <Input />
+          <Form.Item label="Image Upload">
+            <Upload 
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={postImageFileList}
+              onChange={(info) => setPostImageFileList(info.fileList.slice(-1))}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>Select Image</Button>
+            </Upload>
           </Form.Item>
-          <Form.Item name="videoUrl" label="Video URL">
-            <Input />
+          <Form.Item label="Video Upload">
+            <Upload 
+              beforeUpload={() => false}
+              maxCount={1}
+              fileList={postVideoFileList}
+              onChange={(info) => setPostVideoFileList(info.fileList.slice(-1))}
+              accept="video/*"
+            >
+              <Button icon={<UploadOutlined />}>Select Video</Button>
+            </Upload>
           </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsVenturePostModalOpen(false)}>Cancel</Button>

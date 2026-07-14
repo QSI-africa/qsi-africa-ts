@@ -238,9 +238,13 @@ router.delete("/:id", authMiddleware, isAdminOrSuper, async (req, res) => {
 // =========================================================================
 
 // POST /api/ventures/:id/posts — Post content for a venture
-router.post("/:id/posts", authMiddleware, isAdminOrSuper, async (req, res) => {
+router.post("/:id/posts", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
-  const { content, imageUrl, videoUrl } = req.body;
+  const { content } = req.body;
+  let { imageUrl, videoUrl } = req.body;
+
+  if (req.files?.image?.[0]) imageUrl = `/uploads/${req.files.image[0].filename}`;
+  if (req.files?.video?.[0]) videoUrl = `/uploads/${req.files.video[0].filename}`;
 
   if (!content) {
     return res.status(400).json({ error: "Content is required." });
