@@ -86,6 +86,12 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
           <circle cx="60" cy="60" r="10" fill={isActive ? "var(--accent-primary)" : "white"}/>
         </svg>
       );
+    case 'Profiles':
+      return <Users size={isVertical ? 24 : 22} />;
+    case 'PanX Concepts':
+      return <Lightbulb size={isVertical ? 24 : 22} />;
+    case 'Smart City Demos':
+      return <Building2 size={isVertical ? 24 : 22} />;
     default:
       return null;
   }
