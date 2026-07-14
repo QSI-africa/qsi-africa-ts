@@ -118,6 +118,7 @@ const App: React.FC = () => {
                     <Route path="/dashboard" element={<MyRequestsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/settings" element={<ProfilePage />} />
+                    <Route path="/chat/:moduleName" element={<ChatWindow />} />
                   </Route>
 
                   {/* === Admin Routes === */}
@@ -127,7 +128,6 @@ const App: React.FC = () => {
 
                   {/* === Fully Public Routes (Visible to all) === */}
                   <Route path="/" element={<EcosystemPage />} />
-                  <Route path="/chat/:moduleName" element={<ChatWindow />} />
                   <Route path="/healing" element={<HealingPage />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />

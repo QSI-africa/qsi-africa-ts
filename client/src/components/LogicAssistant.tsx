@@ -3,6 +3,7 @@ import { Tooltip } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutGrid, Brain, Sparkles, X } from 'lucide-react';
 import qsiLogo from '../assets/images/qsi_light_logo.png';
+import { useAuth } from '../context/AuthContext';
 
 const LogicAssistant: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const LogicAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -28,9 +30,9 @@ const LogicAssistant: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Hide on inbox and authentication/onboarding pages to prevent overlap
+  // Hide on inbox and authentication/onboarding pages to prevent overlap, and when not logged in
   const hiddenRoutes = ['/inbox', '/login', '/register', '/onboarding'];
-  if (hiddenRoutes.includes(location.pathname) || location.pathname.startsWith('/chat')) return null;
+  if (!user || hiddenRoutes.includes(location.pathname) || location.pathname.startsWith('/chat')) return null;
 
   return (
     <div 
