@@ -66,6 +66,474 @@ const getServerUrl = (path: string) => {
   }
 };
 
+
+const formatTimestamp = (dateString: string) => {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins}m`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d`;
+};
+const getInitials = (name: string) => {
+  if (!name) return "";
+  const parts = name.split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+const getAvatarColor = (name: string) => {
+  const colors = [
+    "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#6366F1", "#8B5CF6", "#EC4899"
+  ];
+  let sum = 0;
+  for (let i = 0; i < name.length; i++) {
+    sum += name.charCodeAt(i);
+  }
+  return colors[sum % colors.length];
+};
+const getAuthorCategory = (author: any) => {
+  if (!author) return 'others';
+  
+  const org = (author.organization || '').toLowerCase();
+  const name = (author.name || '').toLowerCase();
+  const role = (author.role || '').toLowerCase();
+
+  if (org.includes('placebo') || name.includes('placebo') || role.includes('medical') || role.includes('doctor') || role.includes('healer') || role.includes('wellness') || role.includes('health')) {
+    return 'placebo';
+  }
+  if (org.includes('heritage') || name.includes('heritage') || org.includes('flame') || name.includes('flame') || role.includes('energy') || role.includes('solar')) {
+    return 'heritage_flame';
+  }
+  if (org.includes('craft') || name.includes('craft') || org.includes('futurecraft') || name.includes('futurecraft') || role.includes('production') || role.includes('designer') || role.includes('architect') || role.includes('craft')) {
+    return 'future_craft';
+  }
+  if (org.includes('enterprise') || name.includes('enterprise') || org.includes('capital') || name.includes('capital') || role.includes('admin') || author.role === 'SUPER_USER' || author.role === 'ADMIN') {
+    return 'enterprise';
+  }
+  if (author.role === 'ENGINEER' || author.role === 'ARCHITECT' || author.role === 'QUANTITY_SURVEYOR' || role.includes('engineer') || role.includes('architect') || role.includes('surveyor') || org.includes('sovereign') || role.includes('sovereign')) {
+    return 'sovereign_minds';
+  }
+  
+  return 'others';
+};
+
+
+const PanXPostItem = React.memo(({ 
+  post, 
+  user, 
+  navigate, 
+  handleFollowToggle, 
+  handleDeletePost, 
+  handleLikeToggle, 
+  setActiveReplyPostId, 
+  activeReplyPostId, 
+  handleRepostToggle, 
+  setPosts, 
+  replyText, 
+  setReplyText, 
+  handlePostReply, 
+  setFullscreenMedia,
+  api,
+  message
+}: any) => {
+                
+                  const author = post.author;
+                  if (!author) return null;
+                  const isFollowing = author.isFollowing;
+                  const isOwnPost = author.id === user?.id;
+                  
+                  return (
+                    <div 
+                      key={post.id}
+                      style={{
+                        display: 'flex',
+                        gap: '14px',
+                        padding: '20px',
+                        borderRadius: '24px',
+                        background: 'rgba(255, 255, 255, 0.015)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        position: 'relative'
+                      }}
+                    >
+                      {/* Left Column: Avatar & Thread line */}
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        flexShrink: 0
+                      }}>
+                        <div style={{
+                          width: '42px',
+                          height: '42px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          background: getAvatarColor(author.name),
+                          color: 'black',
+                          fontWeight: 800,
+                          fontSize: '13px',
+                          cursor: 'pointer'
+                        }}>
+                          {getInitials(author.name)}
+                        </div>
+
+                        <div style={{
+                          width: '2px',
+                          flexGrow: 1,
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          margin: '8px 0',
+                          borderRadius: '1px'
+                        }} />
+
+                        <div style={{
+                          display: 'flex',
+                          position: 'relative',
+                          width: '28px',
+                          height: '20px',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {post.replies?.slice(0, 3).map((rep, idx) => (
+                            <div 
+                              key={rep.id}
+                              style={{
+                                width: '14px',
+                                height: '14px',
+                                borderRadius: '50%',
+                                border: '1.5px solid #060b08',
+                                position: 'absolute',
+                                left: idx * 8,
+                                zIndex: 3 - idx,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 800,
+                                fontSize: '5px',
+                                background: getAvatarColor(rep.author?.name || 'User'),
+                                color: 'black'
+                              }}
+                            >
+                              {getInitials(rep.author?.name || 'U')}
+                            </div>
+                          ))}
+                          {(!post.replies || post.replies.length === 0) && (
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Column: Content & Interactivity */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span 
+                              style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
+                              className="hover:underline"
+                            >
+                              {author.name}
+                            </span>
+                            {(author.role === "SUPER_USER" || author.role === "ADMIN" || author.role === "ENGINEER") && (
+                              <CheckCircle2 size={13} fill="var(--accent-primary)" stroke="black" strokeWidth={2.5} />
+                            )}
+                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.25)', margin: '0 4px' }}>•</span>
+                            <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                              {formatTimestamp(post.createdAt)}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {!isOwnPost && (
+                              <button 
+                                onClick={(e) => handleFollowToggle(author.id, e)}
+                                style={{
+                                  background: isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)',
+                                  border: isFollowing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(16, 185, 129, 0.2)',
+                                  color: isFollowing ? 'rgba(255, 255, 255, 0.4)' : 'var(--accent-primary)',
+                                  borderRadius: '12px',
+                                  padding: '4px 10px',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.transform = 'scale(1.05)';
+                                  if (!isFollowing) {
+                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.18)';
+                                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                                  }
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  e.currentTarget.style.background = isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)';
+                                  e.currentTarget.style.borderColor = isFollowing ? '1.5px solid rgba(255, 255, 255, 0.1)' : 'rgba(16, 185, 129, 0.2)';
+                                }}
+                              >
+                                {isFollowing ? <UserCheck size={11} /> : <UserPlus size={11} />}
+                                {isFollowing ? 'Following' : 'Follow'}
+                              </button>
+                            )}
+                            {isOwnPost && (
+                              <button 
+                                onClick={() => handleDeletePost(post.id)}
+                                className="std-delete-btn"
+                                title="Delete Post"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <p style={{
+                          fontSize: '13.5px',
+                          lineHeight: '1.5',
+                          color: 'rgba(255, 255, 255, 0.85)',
+                          margin: '0 0 12px 0',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {post.content}
+                        </p>
+                        
+                        {post.mediaFiles && post.mediaFiles.length > 0 ? (
+                          <div style={{ display: 'grid', gridTemplateColumns: post.mediaFiles.length > 1 ? '1fr 1fr' : '1fr', gap: '8px', margin: '0 0 16px 0' }}>
+                            {post.mediaFiles.map((media, idx) => (
+                              <div 
+                                key={idx}
+                                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(media.url), type: media.type.toLowerCase() as 'image'|'video' }); }}
+                              >
+                                {media.type === 'VIDEO' ? (
+                                  <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                                ) : (
+                                  <img loading="lazy" src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <>
+                            {post.imageUrl && (
+                              <div 
+                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
+                              >
+                                <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                              </div>
+                            )}
+
+                            {post.videoUrl && (
+                              <div 
+                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
+                              >
+                                <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button 
+                              onClick={() => handleLikeToggle(post.id)}
+                              className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount > 0 ? post.likesCount : ''}</span>
+                            </button>
+
+                            <button 
+                              onClick={() => setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)}
+                              className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <MessageCircle size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount > 0 ? post.repliesCount : ''}</span>
+                            </button>
+
+                            <button 
+                              onClick={() => handleRepostToggle(post.id)}
+                              className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Repeat size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount > 0 ? post.repostsCount : ''}</span>
+                            </button>
+                            
+                            <button 
+                              onClick={() => {
+                                api.post(`/panx/posts/${post.id}/share`).then(() => {
+                                  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
+                                });
+                                navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+                                message.success('Link copied to clipboard!');
+                              }}
+                              className="std-action-btn"
+                              title="Copy link to clipboard"
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Send size={15} />
+                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {post.replies && post.replies.length > 0 && (
+                          <div style={{
+                            marginTop: '12px',
+                            padding: '12px 16px',
+                            background: 'rgba(255, 255, 255, 0.01)',
+                            borderLeft: '2px solid rgba(16, 185, 129, 0.2)',
+                            borderRadius: '0 12px 12px 0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px'
+                          }}>
+                            {post.replies.map(rep => (
+                              <div key={rep.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <div 
+                                    style={{ 
+                                      width: '18px', 
+                                      height: '18px', 
+                                      borderRadius: '50%', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center',
+                                      fontWeight: 800,
+                                      fontSize: '6px',
+                                      background: getAvatarColor(rep.author?.name || 'User'),
+                                      color: 'black' 
+                                    }} 
+                                  >
+                                    {getInitials(rep.author?.name || 'U')}
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
+                                      <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
+                                    </div>
+                                    <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
+                                    
+                                    {/* Action Bar for Reply */}
+                                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+                                      <button 
+                                        onClick={async () => {
+                                          if (!user) return navigate('/login');
+                                          try {
+                                            const res = await api.post(`/panx/replies/${rep.id}/like`);
+                                            setPosts(prev => prev.map(p => p.id === post.id ? {
+                                              ...p,
+                                              replies: p.replies.map(r => r.id === rep.id ? { ...r, hasLiked: res.data.liked, likesCount: res.data.likesCount } : r)
+                                            } : p));
+                                          } catch (error: any) { console.error(error); }
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: rep.hasLiked ? '#EF4444' : 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}
+                                      >
+                                        <Heart size={11} fill={rep.hasLiked ? '#EF4444' : 'none'} />
+                                        <span>{rep.likesCount || ''}</span>
+                                      </button>
+                                      <button onClick={() => navigate(`/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
+                                        <MessageCircle size={11} /> Reply
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                {/* Show 1 nested reply if any */}
+                                {rep.children && rep.children.length > 0 && (
+                                  <div style={{ display: 'flex', gap: '8px', marginLeft: '26px' }}>
+                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '5px', background: getAvatarColor(rep.children[0].author?.name || 'User'), color: 'black' }}>
+                                      {getInitials(rep.children[0].author?.name || 'U')}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>{rep.children[0].author?.name}</span>
+                                        <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)' }}>{rep.children[0].content}</span>
+                                      </div>
+                                      {rep.children.length > 1 && (
+                                        <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
+                                          View {rep.children.length - 1} more replies
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {post.repliesCount > (post.replies?.length || 0) && (
+                          <div style={{ marginTop: '8px', marginLeft: '12px' }}>
+                            <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
+                              View all {post.repliesCount} replies
+                            </span>
+                          </div>
+                        )}
+
+                        {activeReplyPostId === post.id && (
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                            <input 
+                              type="text" 
+                              placeholder="Write a reply..."
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              style={{
+                                flex: 1,
+                                background: 'rgba(255, 255, 255, 0.02)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: '12px',
+                                padding: '8px 12px',
+                                color: 'white',
+                                fontSize: '12px',
+                                outline: 'none'
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handlePostReply(post.id);
+                              }}
+                            />
+                            <button 
+                              onClick={() => handlePostReply(post.id)}
+                              style={{
+                                background: 'var(--accent-primary)',
+                                color: 'black',
+                                border: 'none',
+                                borderRadius: '12px',
+                                padding: '0 16px',
+                                fontSize: '11px',
+                                fontWeight: 900,
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              <Send size={11} />
+                              Reply
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                
+});
+
+
 const EcosystemPage: React.FC = () => {
   const navigate = useNavigate();
   const authContext = useAuth();
@@ -75,6 +543,9 @@ const EcosystemPage: React.FC = () => {
 
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'for_you' | 'following' | 'saved' | 'enterprise' | 'placebo' | 'heritage_flame' | 'future_craft' | 'sovereign_minds' | 'others'>('for_you');
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -91,14 +562,29 @@ const EcosystemPage: React.FC = () => {
   const [activeMobileTab, setActiveMobileTab] = useState<'feed' | 'concepts' | 'demos'>('feed');
   const [isMobileNavDrawerOpen, setIsMobileNavDrawerOpen] = useState(false);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (pageNum = 1, signal?: AbortSignal) => {
+    if (pageNum > 1) setLoadingMore(true);
     try {
-      const response = await api.get('/panx/posts');
-      setPosts(response.data);
+      const response = await api.get(`/panx/posts?page=${pageNum}&limit=20`, { signal });
+      if (pageNum === 1) {
+        setPosts(response.data.posts);
+      } else {
+        setPosts(prev => {
+          const newPosts = response.data.posts.filter((p: any) => !prev.find(existing => existing.id === p.id));
+          return [...prev, ...newPosts];
+        });
+      }
+      setHasMore(response.data.hasMore);
+      setPage(pageNum);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) {
+        console.log('fetchPosts aborted');
+        return;
+      }
       console.error('Failed to fetch posts:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -118,8 +604,12 @@ const EcosystemPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPosts();
+    const controller = new AbortController();
+    fetchPosts(1, controller.signal);
     fetchEcosystemData();
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   const handleFollowToggle = async (authorId: string, e: React.MouseEvent) => {
@@ -319,64 +809,9 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
-  const formatTimestamp = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'now';
-    if (diffMins < 60) return `${diffMins}m`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d`;
-  };
 
-  const getInitials = (name: string) => {
-    if (!name) return "";
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
 
-  const getAvatarColor = (name: string) => {
-    const colors = [
-      "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#6366F1", "#8B5CF6", "#EC4899"
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) {
-      sum += name.charCodeAt(i);
-    }
-    return colors[sum % colors.length];
-  };
 
-  const getAuthorCategory = (author: any) => {
-    if (!author) return 'others';
-    
-    const org = (author.organization || '').toLowerCase();
-    const name = (author.name || '').toLowerCase();
-    const role = (author.role || '').toLowerCase();
-
-    if (org.includes('placebo') || name.includes('placebo') || role.includes('medical') || role.includes('doctor') || role.includes('healer') || role.includes('wellness') || role.includes('health')) {
-      return 'placebo';
-    }
-    if (org.includes('heritage') || name.includes('heritage') || org.includes('flame') || name.includes('flame') || role.includes('energy') || role.includes('solar')) {
-      return 'heritage_flame';
-    }
-    if (org.includes('craft') || name.includes('craft') || org.includes('futurecraft') || name.includes('futurecraft') || role.includes('production') || role.includes('designer') || role.includes('architect') || role.includes('craft')) {
-      return 'future_craft';
-    }
-    if (org.includes('enterprise') || name.includes('enterprise') || org.includes('capital') || name.includes('capital') || role.includes('admin') || author.role === 'SUPER_USER' || author.role === 'ADMIN') {
-      return 'enterprise';
-    }
-    if (author.role === 'ENGINEER' || author.role === 'ARCHITECT' || author.role === 'QUANTITY_SURVEYOR' || role.includes('engineer') || role.includes('architect') || role.includes('surveyor') || org.includes('sovereign') || role.includes('sovereign')) {
-      return 'sovereign_minds';
-    }
-    
-    return 'others';
-  };
 
   const filteredPosts = posts.filter(post => {
     if (!post.author) return false;
@@ -643,401 +1078,62 @@ const EcosystemPage: React.FC = () => {
                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
                 </div>
               ) : (
-                filteredPosts.map(post => {
-                  const author = post.author;
-                  if (!author) return null;
-                  const isFollowing = author.isFollowing;
-                  const isOwnPost = author.id === user?.id;
-                  
-                  return (
-                    <div 
-                      key={post.id}
-                      style={{
-                        display: 'flex',
-                        gap: '14px',
-                        padding: '20px',
-                        borderRadius: '24px',
-                        background: 'rgba(255, 255, 255, 0.015)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        position: 'relative'
-                      }}
-                    >
-                      {/* Left Column: Avatar & Thread line */}
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        flexShrink: 0
-                      }}>
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                          background: getAvatarColor(author.name),
-                          color: 'black',
-                          fontWeight: 800,
-                          fontSize: '13px',
-                          cursor: 'pointer'
-                        }}>
-                          {getInitials(author.name)}
-                        </div>
-
-                        <div style={{
-                          width: '2px',
-                          flexGrow: 1,
-                          background: 'rgba(255, 255, 255, 0.06)',
-                          margin: '8px 0',
-                          borderRadius: '1px'
-                        }} />
-
-                        <div style={{
-                          display: 'flex',
-                          position: 'relative',
-                          width: '28px',
-                          height: '20px',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          {post.replies?.slice(0, 3).map((rep, idx) => (
-                            <div 
-                              key={rep.id}
-                              style={{
-                                width: '14px',
-                                height: '14px',
-                                borderRadius: '50%',
-                                border: '1.5px solid #060b08',
-                                position: 'absolute',
-                                left: idx * 8,
-                                zIndex: 3 - idx,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 800,
-                                fontSize: '5px',
-                                background: getAvatarColor(rep.author?.name || 'User'),
-                                color: 'black'
-                              }}
-                            >
-                              {getInitials(rep.author?.name || 'U')}
-                            </div>
-                          ))}
-                          {(!post.replies || post.replies.length === 0) && (
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Column: Content & Interactivity */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span 
-                              style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
-                              className="hover:underline"
-                            >
-                              {author.name}
-                            </span>
-                            {(author.role === "SUPER_USER" || author.role === "ADMIN" || author.role === "ENGINEER") && (
-                              <CheckCircle2 size={13} fill="var(--accent-primary)" stroke="black" strokeWidth={2.5} />
-                            )}
-                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.25)', margin: '0 4px' }}>•</span>
-                            <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
-                              {formatTimestamp(post.createdAt)}
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {!isOwnPost && (
-                              <button 
-                                onClick={(e) => handleFollowToggle(author.id, e)}
-                                style={{
-                                  background: isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)',
-                                  border: isFollowing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(16, 185, 129, 0.2)',
-                                  color: isFollowing ? 'rgba(255, 255, 255, 0.4)' : 'var(--accent-primary)',
-                                  borderRadius: '12px',
-                                  padding: '4px 10px',
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                  if (!isFollowing) {
-                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.18)';
-                                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                                  }
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.transform = 'scale(1)';
-                                  e.currentTarget.style.background = isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)';
-                                  e.currentTarget.style.borderColor = isFollowing ? '1.5px solid rgba(255, 255, 255, 0.1)' : 'rgba(16, 185, 129, 0.2)';
-                                }}
-                              >
-                                {isFollowing ? <UserCheck size={11} /> : <UserPlus size={11} />}
-                                {isFollowing ? 'Following' : 'Follow'}
-                              </button>
-                            )}
-                            {isOwnPost && (
-                              <button 
-                                onClick={() => handleDeletePost(post.id)}
-                                className="std-delete-btn"
-                                title="Delete Post"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        <p style={{
-                          fontSize: '13.5px',
-                          lineHeight: '1.5',
-                          color: 'rgba(255, 255, 255, 0.85)',
-                          margin: '0 0 12px 0',
-                          whiteSpace: 'pre-wrap'
-                        }}>
-                          {post.content}
-                        </p>
-                        
-                        {post.mediaFiles && post.mediaFiles.length > 0 ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: post.mediaFiles.length > 1 ? '1fr 1fr' : '1fr', gap: '8px', margin: '0 0 16px 0' }}>
-                            {post.mediaFiles.map((media, idx) => (
-                              <div 
-                                key={idx}
-                                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(media.url), type: media.type.toLowerCase() as 'image'|'video' }); }}
-                              >
-                                {media.type === 'VIDEO' ? (
-                                  <video src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                                ) : (
-                                  <img src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <>
-                            {post.imageUrl && (
-                              <div 
-                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
-                              >
-                                <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                              </div>
-                            )}
-
-                            {post.videoUrl && (
-                              <div 
-                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
-                              >
-                                <video src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button 
-                              onClick={() => handleLikeToggle(post.id)}
-                              className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount > 0 ? post.likesCount : ''}</span>
-                            </button>
-
-                            <button 
-                              onClick={() => setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)}
-                              className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <MessageCircle size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount > 0 ? post.repliesCount : ''}</span>
-                            </button>
-
-                            <button 
-                              onClick={() => handleRepostToggle(post.id)}
-                              className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Repeat size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount > 0 ? post.repostsCount : ''}</span>
-                            </button>
-                            
-                            <button 
-                              onClick={() => {
-                                api.post(`/panx/posts/${post.id}/share`).then(() => {
-                                  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
-                                });
-                                navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-                                message.success('Link copied to clipboard!');
-                              }}
-                              className="std-action-btn"
-                              title="Copy link to clipboard"
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Send size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        {post.replies && post.replies.length > 0 && (
-                          <div style={{
-                            marginTop: '12px',
-                            padding: '12px 16px',
-                            background: 'rgba(255, 255, 255, 0.01)',
-                            borderLeft: '2px solid rgba(16, 185, 129, 0.2)',
-                            borderRadius: '0 12px 12px 0',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '16px'
-                          }}>
-                            {post.replies.map(rep => (
-                              <div key={rep.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <div 
-                                    style={{ 
-                                      width: '18px', 
-                                      height: '18px', 
-                                      borderRadius: '50%', 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center',
-                                      fontWeight: 800,
-                                      fontSize: '6px',
-                                      background: getAvatarColor(rep.author?.name || 'User'),
-                                      color: 'black' 
-                                    }} 
-                                  >
-                                    {getInitials(rep.author?.name || 'U')}
-                                  </div>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
-                                      <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
-                                    </div>
-                                    <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
-                                    
-                                    {/* Action Bar for Reply */}
-                                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-                                      <button 
-                                        onClick={async () => {
-                                          if (!user) return navigate('/login');
-                                          try {
-                                            const res = await api.post(`/panx/replies/${rep.id}/like`);
-                                            setPosts(prev => prev.map(p => p.id === post.id ? {
-                                              ...p,
-                                              replies: p.replies.map(r => r.id === rep.id ? { ...r, hasLiked: res.data.liked, likesCount: res.data.likesCount } : r)
-                                            } : p));
-                                          } catch (error: any) { console.error(error); }
-                                        }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: rep.hasLiked ? '#EF4444' : 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}
-                                      >
-                                        <Heart size={11} fill={rep.hasLiked ? '#EF4444' : 'none'} />
-                                        <span>{rep.likesCount || ''}</span>
-                                      </button>
-                                      <button onClick={() => navigate(`/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
-                                        <MessageCircle size={11} /> Reply
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* Show 1 nested reply if any */}
-                                {rep.children && rep.children.length > 0 && (
-                                  <div style={{ display: 'flex', gap: '8px', marginLeft: '26px' }}>
-                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '5px', background: getAvatarColor(rep.children[0].author?.name || 'User'), color: 'black' }}>
-                                      {getInitials(rep.children[0].author?.name || 'U')}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>{rep.children[0].author?.name}</span>
-                                        <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)' }}>{rep.children[0].content}</span>
-                                      </div>
-                                      {rep.children.length > 1 && (
-                                        <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
-                                          View {rep.children.length - 1} more replies
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {post.repliesCount > (post.replies?.length || 0) && (
-                          <div style={{ marginTop: '8px', marginLeft: '12px' }}>
-                            <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
-                              View all {post.repliesCount} replies
-                            </span>
-                          </div>
-                        )}
-
-                        {activeReplyPostId === post.id && (
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                            <input 
-                              type="text" 
-                              placeholder="Write a reply..."
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              style={{
-                                flex: 1,
-                                background: 'rgba(255, 255, 255, 0.02)',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                borderRadius: '12px',
-                                padding: '8px 12px',
-                                color: 'white',
-                                fontSize: '12px',
-                                outline: 'none'
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handlePostReply(post.id);
-                              }}
-                            />
-                            <button 
-                              onClick={() => handlePostReply(post.id)}
-                              style={{
-                                background: 'var(--accent-primary)',
-                                color: 'black',
-                                border: 'none',
-                                borderRadius: '12px',
-                                padding: '0 16px',
-                                fontSize: '11px',
-                                fontWeight: 900,
-                                textTransform: 'uppercase',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                            >
-                              <Send size={11} />
-                              Reply
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
+                filteredPosts.map(post => (
+                  <PanXPostItem 
+                    key={post.id}
+                    post={post}
+                    user={user}
+                    navigate={navigate}
+                    handleFollowToggle={handleFollowToggle}
+                    handleDeletePost={handleDeletePost}
+                    handleLikeToggle={handleLikeToggle}
+                    setActiveReplyPostId={setActiveReplyPostId}
+                    activeReplyPostId={activeReplyPostId}
+                    handleRepostToggle={handleRepostToggle}
+                    setPosts={setPosts}
+                    replyText={replyText}
+                    setReplyText={setReplyText}
+                    handlePostReply={handlePostReply}
+                    setFullscreenMedia={setFullscreenMedia}
+                    api={api}
+                    message={message}
+                  />
+                ))
               )}
 
               {!loading && filteredPosts.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 0', opacity: 0.4 }}>
                   <Globe size={40} style={{ margin: '0 auto 16px auto' }} />
                   <p className="text-sm font-bold uppercase tracking-wider">No posts found</p>
+                </div>
+              )}
+
+              {hasMore && !loading && filteredPosts.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
+                  <button
+                    onClick={() => fetchPosts(page + 1)}
+                    disabled={loadingMore}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      padding: '10px 24px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      cursor: loadingMore ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loadingMore) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loadingMore) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                  >
+                    {loadingMore ? 'Loading...' : 'Load More'}
+                  </button>
                 </div>
               )}
             </div>

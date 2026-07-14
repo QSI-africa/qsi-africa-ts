@@ -21,8 +21,15 @@ router.get("/posts", async (req, res) => {
       }
     }
 
-    const posts = await prisma.panxPost.findMany({
-      orderBy: { createdAt: "desc" },
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [posts, totalPosts] = await Promise.all([
+      prisma.panxPost.findMany({
+        take: limit,
+        skip: skip,
+        orderBy: { createdAt: "desc" },
       include: {
         author: {
           select: { 
@@ -74,8 +81,9 @@ router.get("/posts", async (req, res) => {
         _count: {
           select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true }
         }
-      }
-    });
+      }),
+      prisma.panxPost.count()
+    ]);
 
     const formattedPosts = posts.map(post => ({
       ...post,
@@ -115,7 +123,11 @@ router.get("/posts", async (req, res) => {
       }))
     }));
 
-    res.json(formattedPosts);
+    res.json({
+      posts: formattedPosts,
+      hasMore: skip + formattedPosts.length < totalPosts,
+      total: totalPosts
+    });
   } catch (error) {
     console.error("Failed to fetch feed posts:", error);
     res.status(500).json({ error: "Failed to fetch feed posts." });

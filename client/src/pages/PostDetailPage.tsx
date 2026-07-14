@@ -70,11 +70,12 @@ const PostDetailPage: React.FC = () => {
   const [replyText, setReplyText] = useState('');
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null); // To reply to a reply
 
-  const fetchPost = async () => {
+  const fetchPost = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get(`/panx/posts/${postId}`);
+      const response = await api.get(`/panx/posts/${postId}`, { signal });
       setPost(response.data);
     } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message?.includes('canceled')) return;
       console.error('Failed to fetch post detail:', error);
       message.error("Failed to load thread");
       navigate('/ecosystem');
@@ -84,7 +85,9 @@ const PostDetailPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (postId) fetchPost();
+    const controller = new AbortController();
+    if (postId) fetchPost(controller.signal);
+    return () => controller.abort();
   }, [postId]);
 
   const handleLikeToggle = async () => {
