@@ -578,8 +578,7 @@ const EcosystemPage: React.FC = () => {
                       fontFamily: 'inherit',
                       lineHeight: 1.5,
                       padding: "12px",
-                      borderRadius: "12px",
-                      background: "rgba(255,255,255,0.02)"
+                      borderRadius: "12px"
                     }}
                   />
                   {previewUrls.length > 0 && (
@@ -737,7 +736,7 @@ const EcosystemPage: React.FC = () => {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span 
-                              style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'uppercase', cursor: 'pointer' }}
+                              style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
                               className="hover:underline"
                             >
                               {author.name}

@@ -34,6 +34,7 @@ import InboxPage from "./pages/InboxPage";
 import EcosystemPage from "./pages/EcosystemPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import VentureProfilePage from "./pages/VentureProfilePage";
 import AdminRoute from "./components/AdminRoute";
 
 // Theme & Auth Imports
@@ -146,6 +147,7 @@ const App: React.FC = () => {
                   <Route path="/profiles/:id" element={<ProfileDetailPage />} />
                   <Route path="/insights/:id" element={<InsightDetailPage />} />
                   <Route path="/tv" element={<QsiTvPage />} />
+                  <Route path="/ventures/:slug" element={<VentureProfilePage />} />
                   
                    {/* === New PANX Routes === */}
                    <Route path="/lab" element={<LabPage />} />

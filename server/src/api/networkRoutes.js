@@ -8,7 +8,7 @@ const router = express.Router();
 // 1. Get all engineers (Filtered)
 router.get("/engineers", async (req, res) => {
   const { specialization, isVerified } = req.query;
-  
+
   try {
     const engineers = await prisma.engineerProfile.findMany({
       where: {
@@ -38,7 +38,7 @@ router.get("/projects", async (req, res) => {
         status: status || undefined
       },
       include: {
-        images: true, // Include the gallery
+        images: true,
         engineerProfile: {
           include: {
             user: { select: { name: true } }
@@ -61,22 +61,10 @@ router.post("/profile", authMiddleware, async (req, res) => {
   try {
     const profile = await prisma.engineerProfile.upsert({
       where: { userId },
-      update: {
-        bio,
-        specialization,
-        skills,
-        avatarUrl
-      },
-      create: {
-        userId,
-        bio,
-        specialization,
-        skills,
-        avatarUrl
-      }
+      update: { bio, specialization, skills, avatarUrl },
+      create: { userId, bio, specialization, skills, avatarUrl }
     });
 
-    // Also upgrade user role to ENGINEER if it was GENERAL_USER
     if (req.user.role === "GENERAL_USER") {
        await prisma.user.update({
          where: { id: userId },
@@ -96,10 +84,7 @@ router.post("/projects", authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const profile = await prisma.engineerProfile.findUnique({
-      where: { userId }
-    });
-
+    const profile = await prisma.engineerProfile.findUnique({ where: { userId } });
     if (!profile) {
       return res.status(400).json({ error: "Please create an engineer profile first." });
     }
@@ -144,21 +129,13 @@ router.post("/insights", authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const profile = await prisma.engineerProfile.findUnique({
-      where: { userId }
-    });
-
+    const profile = await prisma.engineerProfile.findUnique({ where: { userId } });
     if (!profile || !profile.isVerified) {
       return res.status(403).json({ error: "Only verified Sovereign Minds can post insights." });
     }
 
     const insight = await prisma.sovereignInsight.create({
-      data: {
-        profileId: profile.id,
-        title,
-        content,
-        category
-      }
+      data: { profileId: profile.id, title, content, category }
     });
 
     res.status(201).json(insight);

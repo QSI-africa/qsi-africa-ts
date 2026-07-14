@@ -103,6 +103,7 @@ app.use("/api/invoicing", require("./src/api/invoicingRoutes"));
 app.use("/api/network", require("./src/api/networkRoutes"));
 app.use("/api/config", require("./src/api/configRoutes"));
 app.use("/api/tv", require("./src/api/tvRoutes"));
+app.use("/api/ventures", require("./src/api/ventureRoutes"));
 // app.use("/api/panx", require("./src/api/panxRoutes")); // Already imported above
 
 app.get("/api/health", (req, res) => {

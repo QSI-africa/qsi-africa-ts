@@ -839,5 +839,60 @@ model PanxShare {
   createdAt DateTime  @default(now())
 }
 
+// =========================================================================
+// VENTURES — Admin-managed ecosystem accounts
+// =========================================================================
 
+model Venture {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  shortDescription String
+  fullDescription  String?  @db.Text
+  bannerUrl        String?
+  logoUrl          String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
+  engagementTypes  VentureEngagementType[]
+  engagements      VentureEngagement[]
+  posts            VenturePost[]
+}
+
+model VentureEngagementType {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  label     String
+  icon      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model VentureEngagement {
+  id               String   @id @default(cuid())
+  ventureId        String
+  venture          Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  engagementType   String
+  contactName      String
+  contactEmail     String
+  contactPhone     String?
+  message          String?  @db.Text
+  status           String   @default("PENDING")
+  userId           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model VenturePost {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  imageUrl  String?
+  videoUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

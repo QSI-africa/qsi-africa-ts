@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Home,
-  User,
-  Search,
-  Plus,
-  MessageCircle,
-  ChevronRight,
-  Menu,
-  X,
-  Heart,
-  Flame,
-  Hammer,
-  Globe,
-  Lightbulb,
-  Building2,
-  Users,
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { 
+  Building2, 
+  MapPin, 
+  Plus, 
+  Settings, 
+  LayoutGrid, 
+  MessageSquare,
   FlaskConical,
-  Download
+  Activity,
+  Heart,
+  Globe,
+  Flame,
+  Users,
+  Hammer,
+  Menu,
+  ChevronRight,
+  MoreVertical,
+  X,
+  User,
+  Tv,
+  Download,
+  Lightbulb,
+  Search
 } from 'lucide-react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import axios from 'axios';
 import { useSidebar } from '../../context/SidebarContext';
 import api from '../../api';
 import panxWordmark from '../../assets/images/panx_wordmark.png';
@@ -105,13 +111,6 @@ const DefaultSidebarContent = () => {
 
   const ecosystemItems = [
     {
-      id: 'sovereign-minds',
-      name: 'Profiles',
-      description: 'Verified professional network',
-      path: '/network',
-      icon: <Users size={24} />
-    },
-    {
       id: 'placebo',
       name: 'Placebo',
       description: 'Strategic healing & medical systems',
@@ -131,28 +130,7 @@ const DefaultSidebarContent = () => {
       description: 'Cooperative digital production',
       path: '/concepts/futurecraft',
       icon: <Hammer size={24} />
-    },
-    {
-      id: 'concepts',
-      name: 'Concepts',
-      description: 'Digital concepts & frameworks',
-      path: '/concepts',
-      icon: <Lightbulb size={24} />
-    },
-    {
-      id: 'demos',
-      name: 'Smart City Demos',
-      description: 'Physical demonstrators & systems',
-      path: '/demos',
-      icon: <Building2 size={24} />
-    },
-    // {
-    //   id: 'others',
-    //   name: 'Others',
-    //   description: 'Other ecosystem initiatives',
-    //   path: '/others',
-    //   icon: <Layers size={24} />
-    // }
+    }
   ];
 
 
@@ -166,17 +144,35 @@ const DefaultSidebarContent = () => {
 
   const panxTools = [
     { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Design, Plan, Execute.' },
-    { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' }
+    { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
+    { name: 'Profiles', path: '/network', description: 'Verified professional network.' },
+    { name: 'PanX Concepts', path: '/concepts', description: 'Digital concepts & frameworks.' },
+    { name: 'Smart City Demos', path: '/demos', description: 'Physical demonstrators & systems.' }
   ];
+
+  const [ventures, setVentures] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchVentures = async () => {
+      try {
+        const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+        const res = await axios.get(`${baseURL}/ventures`);
+        setVentures(res.data);
+      } catch (err) {
+        console.error("Failed to load ventures", err);
+      }
+    };
+    fetchVentures();
+  }, []);
 
   const filteredTools = panxTools.filter(tool => 
     tool.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     tool.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredEcosystemItems = ecosystemItems.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredVentures = ventures.filter(v => 
+    v.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    v.shortDescription?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -370,31 +366,39 @@ const DefaultSidebarContent = () => {
 
         {/* Ecosystem Section */}
         <div className="ecosystem-container">
-          <h3 className="ecosystem-heading">PanX Ecosystem</h3>
+          <h3 className="ecosystem-heading">Panx African Engineers</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {filteredEcosystemItems.map((item) => {
-              const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+            {filteredVentures.map((venture) => {
+              const isActive = location.pathname === `/ventures/${venture.slug}`;
+              const initial = venture.name?.charAt(0)?.toUpperCase() || 'V';
+              
               return (
                 <div 
-                  key={item.id} 
+                  key={venture.id} 
                   className={`channel-card ${isActive ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                   onClick={() => {
-                    navigate(item.path);
+                    navigate(`/ventures/${venture.slug}`);
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  <div className="panx-tool-icon-wrapper">
-                    {item.id === 'panx-enterprise' ? renderCategoryIcon('PanX', true, isActive) : item.icon}
+                  <div className="panx-tool-icon-wrapper" style={{ overflow: 'hidden' }}>
+                    {venture.logoUrl ? (
+                      <img src={venture.logoUrl} alt={venture.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: 900, fontSize: '12px' }}>
+                        {initial}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="channel-info">
                     <div className="channel-name-row">
-                      <span className="channel-name">{item.name}</span>
+                      <span className="channel-name" style={{ textTransform: 'capitalize' }}>{venture.name}</span>
                     </div>
                     <div className="channel-followers">
-                      {item.description}
+                      {venture.shortDescription}
                     </div>
                   </div>
                   
@@ -403,38 +407,12 @@ const DefaultSidebarContent = () => {
               );
             })}
 
-            {filteredEcosystemItems.length === 0 && (
+            {filteredVentures.length === 0 && (
               <div className="py-6 text-center opacity-40 text-[9px] uppercase font-black tracking-widest">
-                No Items Match Search
+                No Ventures
               </div>
             )}
           </div>
-
-          <div className="ecosystem-actions">
-            <button 
-              className="ecosystem-btn-explore"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              onClick={() => {
-                navigate('/');
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <Globe size={11} />
-              Explore Feed
-            </button>
-            <button 
-              className="ecosystem-btn-create"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              onClick={() => {
-                navigate('/chat/infrastructure');
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <Plus size={11} strokeWidth={2.5} />
-              Create Venture
-            </button>
-          </div>
-
         </div>
       </div>
     </div>

@@ -17,7 +17,8 @@ import {
   Activity,
   Globe,
   Layers,
-  MonitorPlay
+  MonitorPlay,
+  Rocket
 } from 'lucide-react';
 
 import api from '../api';
@@ -46,9 +47,21 @@ const AdminDashboard: React.FC = () => {
   // TV Moderation State
   const [tvChannels, setTvChannels] = useState<any[]>([]);
 
+  // Ventures State
+  const [venturesList, setVenturesList] = useState<any[]>([]);
+  const [isVentureModalOpen, setIsVentureModalOpen] = useState(false);
+  const [editingVenture, setEditingVenture] = useState<any>(null);
+  const [selectedVenture, setSelectedVenture] = useState<any>(null);
+  const [ventureEngagements, setVentureEngagements] = useState<any[]>([]);
+  const [isEngTypModalOpen, setIsEngTypModalOpen] = useState(false);
+  const [isVenturePostModalOpen, setIsVenturePostModalOpen] = useState(false);
+
   const [categoryForm] = Form.useForm();
   const [packageForm] = Form.useForm();
   const [serviceForm] = Form.useForm();
+  const [ventureForm] = Form.useForm();
+  const [engTypeForm] = Form.useForm();
+  const [venturePostForm] = Form.useForm();
 
   const fetchLabData = async () => {
     setIsLoading(true);
@@ -113,7 +126,88 @@ const AdminDashboard: React.FC = () => {
     fetchMobilityData();
     fetchRegistryData();
     fetchTvChannels();
+    fetchVentures();
   }, []);
+
+  const fetchVentures = async () => {
+    try {
+      const res = await api.get('/ventures');
+      setVenturesList(res.data);
+    } catch (error: any) {
+      console.error("Failed to fetch ventures");
+    }
+  };
+
+  const handleSaveVenture = async (values: any) => {
+    try {
+      if (editingVenture) {
+        await api.put(`/ventures/${editingVenture.id}`, values);
+      } else {
+        await api.post('/ventures', values);
+      }
+      message.success("Venture saved successfully");
+      setIsVentureModalOpen(false);
+      fetchVentures();
+    } catch (error: any) {
+      message.error(error?.response?.data?.error || "Failed to save venture");
+    }
+  };
+
+  const handleDeleteVenture = async (id: string) => {
+    try {
+      await api.delete(`/ventures/${id}`);
+      message.success("Venture deleted");
+      fetchVentures();
+    } catch (error: any) {
+      message.error("Failed to delete venture");
+    }
+  };
+
+  const handleAddEngType = async (values: any) => {
+    if (!selectedVenture) return;
+    try {
+      await api.post(`/ventures/${selectedVenture.id}/engagement-types`, values);
+      message.success("Engagement type added");
+      setIsEngTypModalOpen(false);
+      // Refresh the selected venture
+      const res = await api.get(`/ventures/${selectedVenture.slug}`);
+      setSelectedVenture(res.data);
+    } catch (error: any) {
+      message.error("Failed to add engagement type");
+    }
+  };
+
+  const handleAddVenturePost = async (values: any) => {
+    if (!selectedVenture) return;
+    try {
+      await api.post(`/ventures/${selectedVenture.id}/posts`, values);
+      message.success("Post published");
+      setIsVenturePostModalOpen(false);
+      const res = await api.get(`/ventures/${selectedVenture.slug}`);
+      setSelectedVenture(res.data);
+    } catch (error: any) {
+      message.error("Failed to publish post");
+    }
+  };
+
+  const fetchVentureEngagements = async (ventureId: string) => {
+    try {
+      const res = await api.get(`/ventures/${ventureId}/engagements`);
+      setVentureEngagements(res.data);
+    } catch (error: any) {
+      console.error("Failed to fetch engagements");
+    }
+  };
+
+  const handleUpdateEngagementStatus = async (ventureId: string, engId: string, status: string) => {
+    try {
+      await api.patch(`/ventures/${ventureId}/engagements/${engId}`, { status });
+      message.success(`Status updated to ${status}`);
+      fetchVentureEngagements(ventureId);
+    } catch (error: any) {
+      message.error("Failed to update status");
+    }
+  };
 
   const handleUpdateChannelStatus = async (channelId: string, status: string) => {
     try {
@@ -592,7 +686,143 @@ const AdminDashboard: React.FC = () => {
                    </div>
                 </div>
               )
-            }
+            },
+            {
+              key: 'ventures',
+              label: <span className="flex items-center gap-2 py-2"><Rocket size={16} /> Ventures</span>,
+              children: (
+                <div className="py-8">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tight">PanX Ventures</h3>
+                    <button 
+                      onClick={() => {
+                        setEditingVenture(null);
+                        ventureForm.resetFields();
+                        setIsVentureModalOpen(true);
+                      }}
+                      className="qsi-button primary py-3 px-8 flex items-center gap-2 text-xs"
+                    >
+                      <Plus size={16} /> Create Venture
+                    </button>
+                  </div>
+
+                  <Table 
+                    dataSource={venturesList} 
+                    rowKey="id"
+                    className="custom-table"
+                    columns={[
+                      { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Name</span>, dataIndex: 'name', key: 'name' },
+                      { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Slug</span>, dataIndex: 'slug', key: 'slug' },
+                      { 
+                        title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                        dataIndex: 'isActive', 
+                        key: 'isActive',
+                        render: (val: boolean) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+                      },
+                      {
+                        title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Actions</span>,
+                        key: 'actions',
+                        render: (_: any, record: any) => (
+                          <Space>
+                            <button className="text-text-tertiary hover:text-accent-primary" onClick={async () => {
+                              setEditingVenture(record);
+                              ventureForm.setFieldsValue(record);
+                              setIsVentureModalOpen(true);
+                            }}><Edit3 size={16} /></button>
+                            <button className="text-accent-primary hover:text-white text-xs font-bold" onClick={async () => {
+                              const res = await api.get(`/ventures/${record.slug}`);
+                              setSelectedVenture(res.data);
+                              fetchVentureEngagements(record.id);
+                            }}>Manage</button>
+                            <Popconfirm title="Delete this venture?" onConfirm={() => handleDeleteVenture(record.id)} okText="Delete" cancelText="Cancel">
+                              <button className="text-text-tertiary hover:text-red-500"><Trash2 size={16} /></button>
+                            </Popconfirm>
+                          </Space>
+                        ),
+                      },
+                    ]}
+                  />
+
+                  {/* Selected Venture Detail */}
+                  {selectedVenture && (
+                    <div className="mt-12 space-y-8">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xl font-bold text-white">Managing: {selectedVenture.name}</h4>
+                        <button className="text-text-tertiary hover:text-white text-xs" onClick={() => setSelectedVenture(null)}>Close</button>
+                      </div>
+
+                      {/* Engagement Types */}
+                      <div className="feed-card bg-bg-secondary border-border-subtle p-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h5 className="text-sm font-bold text-white uppercase tracking-wider">Engagement Types</h5>
+                          <button className="text-accent-primary text-xs font-bold" onClick={() => { engTypeForm.resetFields(); setIsEngTypModalOpen(true); }}>+ Add Type</button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedVenture.engagementTypes?.map((et: any) => (
+                            <Tag key={et.id} color="cyan">{et.label} {et.icon && `(${et.icon})`}</Tag>
+                          ))}
+                          {(!selectedVenture.engagementTypes || selectedVenture.engagementTypes.length === 0) && (
+                            <span className="text-text-tertiary text-xs">No engagement types configured</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Post Content */}
+                      <div className="feed-card bg-bg-secondary border-border-subtle p-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h5 className="text-sm font-bold text-white uppercase tracking-wider">Posts ({selectedVenture.posts?.length || 0})</h5>
+                          <button className="text-accent-primary text-xs font-bold" onClick={() => { venturePostForm.resetFields(); setIsVenturePostModalOpen(true); }}>+ New Post</button>
+                        </div>
+                        {selectedVenture.posts?.slice(0, 5).map((p: any) => (
+                          <div key={p.id} className="border-b border-border-subtle py-3 last:border-0">
+                            <p className="text-white/80 text-sm mb-1">{p.content.substring(0, 120)}{p.content.length > 120 ? '...' : ''}</p>
+                            <span className="text-text-tertiary text-[10px]">{new Date(p.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Engagements Inbox */}
+                      <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
+                        <div className="p-6 border-b border-border-subtle">
+                          <h5 className="text-sm font-bold text-white uppercase tracking-wider">Engagements Inbox ({ventureEngagements.length})</h5>
+                        </div>
+                        <Table 
+                          dataSource={ventureEngagements} 
+                          rowKey="id"
+                          className="custom-table"
+                          pagination={{ pageSize: 10 }}
+                          columns={[
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Type</span>, dataIndex: 'engagementType', key: 'type' },
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Name</span>, dataIndex: 'contactName', key: 'name' },
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Email</span>, dataIndex: 'contactEmail', key: 'email' },
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Message</span>, dataIndex: 'message', key: 'message', render: (m: string) => m ? m.substring(0, 60) + '...' : '-' },
+                            { 
+                              title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                              dataIndex: 'status', key: 'status',
+                              render: (s: string) => <Tag color={s === 'PENDING' ? 'orange' : s === 'REVIEWED' ? 'green' : 'default'}>{s}</Tag>
+                            },
+                            {
+                              title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Actions</span>,
+                              key: 'actions',
+                              render: (_: any, record: any) => (
+                                <Space>
+                                  {record.status !== 'REVIEWED' && (
+                                    <Button size="small" type="primary" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'REVIEWED')}>Review</Button>
+                                  )}
+                                  {record.status !== 'ARCHIVED' && (
+                                    <Button size="small" onClick={() => handleUpdateEngagementStatus(selectedVenture.id, record.id, 'ARCHIVED')}>Archive</Button>
+                                  )}
+                                </Space>
+                              ),
+                            },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            },
           ]}
         />
       </div>
@@ -759,6 +989,110 @@ const AdminDashboard: React.FC = () => {
               <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsServiceModalOpen(false)}>
                 Abort
               </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Venture Modal */}
+      <Modal
+        title={null}
+        open={isVentureModalOpen}
+        onCancel={() => setIsVentureModalOpen(false)}
+        footer={null}
+        width={700}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow">Venture Management</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">
+            {editingVenture ? "Update Venture" : "Create Venture"}
+          </h3>
+          <Form form={ventureForm} layout="vertical" onFinish={handleSaveVenture} className="space-y-4">
+            <Form.Item name="name" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Name</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="shortDescription" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Short Description</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="fullDescription" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Full Description</span>}>
+              <Input.TextArea className="bg-bg-primary border-border-subtle text-white p-4" rows={4} />
+            </Form.Item>
+            <Form.Item name="logoUrl" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Logo URL</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="bannerUrl" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Banner URL</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="isActive" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Status</span>} valuePropName="checked" initialValue={true}>
+              <Select className="custom-select h-12">
+                <Option value={true}>ACTIVE</Option>
+                <Option value={false}>HIDDEN</Option>
+              </Select>
+            </Form.Item>
+            <div className="flex gap-4 pt-6">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
+                <ShieldCheck size={18} /> Save Venture
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsVentureModalOpen(false)} type="button">
+                Cancel
+              </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Engagement Type Modal */}
+      <Modal
+        title={null}
+        open={isEngTypModalOpen}
+        onCancel={() => setIsEngTypModalOpen(false)}
+        footer={null}
+        width={500}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <h3 className="text-xl font-bold text-white uppercase mb-6">Add Engagement Type</h3>
+          <Form form={engTypeForm} layout="vertical" onFinish={handleAddEngType}>
+            <Form.Item name="label" label={<span className="text-xs text-text-tertiary uppercase">Label (e.g. Invest, Apply)</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="icon" label={<span className="text-xs text-text-tertiary uppercase">Icon Name (e.g. Handshake, Lightbulb)</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-3 font-bold" type="submit">Add Type</button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Venture Post Modal */}
+      <Modal
+        title={null}
+        open={isVenturePostModalOpen}
+        onCancel={() => setIsVenturePostModalOpen(false)}
+        footer={null}
+        width={600}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <h3 className="text-xl font-bold text-white uppercase mb-6">New Venture Post</h3>
+          <Form form={venturePostForm} layout="vertical" onFinish={handleAddVenturePost}>
+            <Form.Item name="content" label={<span className="text-xs text-text-tertiary uppercase">Post Content</span>} rules={[{ required: true }]}>
+              <Input.TextArea className="bg-bg-primary border-border-subtle text-white p-4" rows={6} />
+            </Form.Item>
+            <Form.Item name="imageUrl" label={<span className="text-xs text-text-tertiary uppercase">Image URL</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <Form.Item name="videoUrl" label={<span className="text-xs text-text-tertiary uppercase">Video URL</span>}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            </Form.Item>
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-3 font-bold" type="submit">Publish Post</button>
             </div>
           </Form>
         </div>
