@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Heart, MessageCircle, Repeat, Send, Trash2, Bookmark
+  ArrowLeft, Heart, MessageCircle, Repeat, Send, Trash2
 } from 'lucide-react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -73,6 +73,7 @@ const PostDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null); // To reply to a reply
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: { url: string, type: 'image' | 'video' }[], initialIndex: number } | null>(null);
 
   const fetchPost = async (signal?: AbortSignal) => {
     try {
@@ -110,13 +111,7 @@ const PostDetailPage: React.FC = () => {
     } catch (error: any) { console.error(error); }
   };
 
-  const handleBookmarkToggle = async () => {
-    if (!user) return navigate('/login');
-    try {
-      const response = await api.post(`/panx/posts/${postId}/bookmark`);
-      setPost(prev => prev ? { ...prev, hasBookmarked: response.data.bookmarked, bookmarksCount: response.data.bookmarksCount } : prev);
-    } catch (error: any) { console.error(error); }
-  };
+
 
   const handlePostReply = async (parentId?: string) => {
     if (!user) return navigate('/login');
@@ -183,7 +178,7 @@ const PostDetailPage: React.FC = () => {
   if (!post) return null;
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 16px 100px 16px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
         <button 
@@ -219,7 +214,14 @@ const PostDetailPage: React.FC = () => {
             {post.mediaFiles.map((media, idx) => (
               <div 
                 key={idx}
-                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setFullscreenMedia({ 
+                    media: post.mediaFiles!.map((m: any) => ({ url: getServerUrl(m.url), type: m.type.toLowerCase() as 'image'|'video' })), 
+                    initialIndex: idx 
+                  }); 
+                }}
               >
                 {media.type === 'VIDEO' ? (
                   <video src={getServerUrl(media.url)} controls style={{ width: '100%', maxHeight: '500px', display: 'block' }} />
@@ -232,12 +234,18 @@ const PostDetailPage: React.FC = () => {
         ) : (
           <>
             {post.imageUrl && (
-              <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div 
+                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.imageUrl!), type: 'image' }], initialIndex: 0 }); }}
+              >
                 <img src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover', display: 'block' }} />
               </div>
             )}
             {post.videoUrl && (
-              <div style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div 
+                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.videoUrl!), type: 'video' }], initialIndex: 0 }); }}
+              >
                 <video src={getServerUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '500px', display: 'block' }} />
               </div>
             )}
@@ -248,11 +256,10 @@ const PostDetailPage: React.FC = () => {
         <div style={{ display: 'flex', gap: '16px', padding: '16px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px' }}>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}><b style={{ color: 'white' }}>{post.repostsCount}</b> Reposts</span>
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}><b style={{ color: 'white' }}>{post.likesCount}</b> Likes</span>
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}><b style={{ color: 'white' }}>{post.bookmarksCount}</b> Bookmarks</span>
         </div>
 
         {/* Action Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <button onClick={handleLikeToggle} className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`} style={{ display: 'flex', gap: '6px' }}>
               <Heart size={20} fill={post.hasLiked ? '#EF4444' : 'none'} />
@@ -273,9 +280,6 @@ const PostDetailPage: React.FC = () => {
               <Send size={20} />
             </button>
           </div>
-          <button onClick={handleBookmarkToggle} className={`std-action-btn ${post.hasBookmarked ? 'active-green' : ''}`}>
-            <Bookmark size={20} fill={post.hasBookmarked ? 'var(--accent-primary)' : 'none'} />
-          </button>
         </div>
 
         {/* Reply to main post */}
@@ -397,6 +401,60 @@ const PostDetailPage: React.FC = () => {
           </div>
         ))}
       </div>
+      <Modal
+        visible={!!fullscreenMedia}
+        footer={null}
+        onCancel={() => setFullscreenMedia(null)}
+        width="100vw"
+        style={{ top: 0, padding: 0, margin: 0, maxWidth: '100vw' }}
+        bodyStyle={{ padding: 0, background: 'black', height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+        closeIcon={<span style={{ color: 'white', fontSize: '20px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: '16px', top: '16px', zIndex: 100 }}>✕</span>}
+      >
+        {fullscreenMedia && (
+          <div 
+            style={{ 
+              display: 'flex', 
+              width: '100vw', 
+              height: '100vh', 
+              overflowX: 'auto', 
+              overflowY: 'hidden', 
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth'
+            }}
+            ref={el => {
+              if (el && fullscreenMedia.initialIndex > 0 && !el.dataset.scrolled) {
+                setTimeout(() => {
+                  el.scrollLeft = fullscreenMedia.initialIndex * window.innerWidth;
+                  el.dataset.scrolled = "true";
+                }, 0);
+              }
+            }}
+            className="no-scrollbar"
+          >
+            {fullscreenMedia.media.map((m, i) => (
+              <div 
+                key={i} 
+                style={{ 
+                  flex: '0 0 100vw', 
+                  width: '100vw', 
+                  height: '100vh', 
+                  scrollSnapAlign: 'start', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: 'black'
+                }}
+              >
+                {m.type === 'image' ? (
+                  <img src={m.url} alt={`Media ${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <video src={m.url} controls autoPlay={i === fullscreenMedia.initialIndex} style={{ width: '100%', height: '100%', display: 'block' }} />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -151,6 +151,7 @@ const PanXPostItem = React.memo(({
                   return (
                     <div 
                       key={post.id}
+                      onClick={() => navigate(`/post/${post.id}`)}
                       style={{
                         display: 'flex',
                         gap: '14px',
@@ -158,7 +159,8 @@ const PanXPostItem = React.memo(({
                         borderRadius: '24px',
                         background: 'rgba(255, 255, 255, 0.015)',
                         border: '1px solid rgba(255, 255, 255, 0.05)',
-                        position: 'relative'
+                        position: 'relative',
+                        cursor: 'pointer'
                       }}
                     >
                       {/* Left Column: Avatar & Thread line */}
@@ -237,6 +239,7 @@ const PanXPostItem = React.memo(({
                             <span 
                               style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
                               className="hover:underline"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${author.id}`); }}
                             >
                               {author.name}
                             </span>
@@ -252,7 +255,7 @@ const PanXPostItem = React.memo(({
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             {!isOwnPost && (
                               <button 
-                                onClick={(e) => handleFollowToggle(author.id, e)}
+                                onClick={(e) => { e.stopPropagation(); handleFollowToggle(author.id, e); }}
                                 style={{
                                   background: isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)',
                                   border: isFollowing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(16, 185, 129, 0.2)',
@@ -286,7 +289,7 @@ const PanXPostItem = React.memo(({
                             )}
                             {isOwnPost && (
                               <button 
-                                onClick={() => handleDeletePost(post.id)}
+                                onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
                                 className="std-delete-btn"
                                 title="Delete Post"
                               >
@@ -312,7 +315,13 @@ const PanXPostItem = React.memo(({
                               <div 
                                 key={idx}
                                 style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(media.url), type: media.type.toLowerCase() as 'image'|'video' }); }}
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setFullscreenMedia({ 
+                                    media: post.mediaFiles.map((m: any) => ({ url: getServerUrl(m.url), type: m.type.toLowerCase() as 'image'|'video' })), 
+                                    initialIndex: idx 
+                                  }); 
+                                }}
                               >
                                 {media.type === 'VIDEO' ? (
                                   <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
@@ -327,7 +336,7 @@ const PanXPostItem = React.memo(({
                             {post.imageUrl && (
                               <div 
                                 style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.imageUrl!), type: 'image' }); }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.imageUrl!), type: 'image' }], initialIndex: 0 }); }}
                               >
                                 <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
                               </div>
@@ -336,7 +345,7 @@ const PanXPostItem = React.memo(({
                             {post.videoUrl && (
                               <div 
                                 style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ url: getServerUrl(post.videoUrl!), type: 'video' }); }}
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.videoUrl!), type: 'video' }], initialIndex: 0 }); }}
                               >
                                 <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
                               </div>
@@ -347,7 +356,7 @@ const PanXPostItem = React.memo(({
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <button 
-                              onClick={() => handleLikeToggle(post.id)}
+                              onClick={(e) => { e.stopPropagation(); handleLikeToggle(post.id); }}
                               className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
                               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                             >
@@ -356,7 +365,7 @@ const PanXPostItem = React.memo(({
                             </button>
 
                             <button 
-                              onClick={() => setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)}
+                              onClick={(e) => { e.stopPropagation(); setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id); }}
                               className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
                               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                             >
@@ -365,7 +374,7 @@ const PanXPostItem = React.memo(({
                             </button>
 
                             <button 
-                              onClick={() => handleRepostToggle(post.id)}
+                              onClick={(e) => { e.stopPropagation(); handleRepostToggle(post.id); }}
                               className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
                               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                             >
@@ -374,7 +383,8 @@ const PanXPostItem = React.memo(({
                             </button>
                             
                             <button 
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 api.post(`/panx/posts/${post.id}/share`).then(() => {
                                   setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
                                 });
@@ -553,7 +563,7 @@ const EcosystemPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<{ url: string, type: string }[]>([]);
   const [submittingPost, setSubmittingPost] = useState(false);
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string, type: 'image' | 'video' } | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: { url: string, type: 'image' | 'video' }[], initialIndex: number } | null>(null);
 
   // New ecosystem state
   const [concepts, setConcepts] = useState<any[]>([]);
@@ -1393,16 +1403,54 @@ const EcosystemPage: React.FC = () => {
         visible={!!fullscreenMedia}
         footer={null}
         onCancel={() => setFullscreenMedia(null)}
-        width="90vw"
-        style={{ top: 20 }}
-        bodyStyle={{ padding: 0, background: 'transparent' }}
-        closeIcon={<span style={{ color: 'white', fontSize: '24px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '4px' }}>✕</span>}
+        width="100vw"
+        style={{ top: 0, padding: 0, margin: 0, maxWidth: '100vw' }}
+        bodyStyle={{ padding: 0, background: 'black', height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+        closeIcon={<span style={{ color: 'white', fontSize: '20px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: '16px', top: '16px', zIndex: 100 }}>✕</span>}
       >
-        {fullscreenMedia && fullscreenMedia.type === 'image' && (
-          <img src={fullscreenMedia.url} alt="Fullscreen content" style={{ width: '100%', maxHeight: '85vh', objectFit: 'contain', display: 'block' }} />
-        )}
-        {fullscreenMedia && fullscreenMedia.type === 'video' && (
-          <video src={fullscreenMedia.url} controls autoPlay style={{ width: '100%', maxHeight: '85vh', display: 'block' }} />
+        {fullscreenMedia && (
+          <div 
+            style={{ 
+              display: 'flex', 
+              width: '100vw', 
+              height: '100vh', 
+              overflowX: 'auto', 
+              overflowY: 'hidden', 
+              scrollSnapType: 'x mandatory',
+              scrollBehavior: 'smooth'
+            }}
+            ref={el => {
+              if (el && fullscreenMedia.initialIndex > 0 && !el.dataset.scrolled) {
+                setTimeout(() => {
+                  el.scrollLeft = fullscreenMedia.initialIndex * window.innerWidth;
+                  el.dataset.scrolled = "true";
+                }, 0);
+              }
+            }}
+            className="no-scrollbar"
+          >
+            {fullscreenMedia.media.map((m, i) => (
+              <div 
+                key={i} 
+                style={{ 
+                  flex: '0 0 100vw', 
+                  width: '100vw', 
+                  height: '100vh', 
+                  scrollSnapAlign: 'start', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: 'black'
+                }}
+              >
+                {m.type === 'image' ? (
+                  <img src={m.url} alt={`Media ${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <video src={m.url} controls autoPlay={i === fullscreenMedia.initialIndex} style={{ width: '100%', height: '100%', display: 'block' }} />
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </Modal>
 
