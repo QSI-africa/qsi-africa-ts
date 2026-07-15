@@ -48,7 +48,6 @@ const SmartCityDemosPage: React.FC = () => {
       <UnifiedHeader
         title="Smart City"
         subTitle="Physical Demonstrators & Systems"
-        icon={<Building2 size={20} />}
         extra={
           <div style={{ 
             display: 'flex', 

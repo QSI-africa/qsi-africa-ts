@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -72,6 +73,7 @@ const MyRequestsPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary">
+      <UnifiedHeader title="My Requests" />
       {/* Header */}
       <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-5xl mx-auto relative z-10">

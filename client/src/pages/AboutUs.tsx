@@ -40,7 +40,6 @@ const AboutUs: React.FC = () => {
       <UnifiedHeader
         title="About Us"
         subTitle="Vision & Philosophy"
-        icon={<Globe size={20} />}
       />
 
       {/* Core Areas */}

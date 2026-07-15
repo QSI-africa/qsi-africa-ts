@@ -24,6 +24,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import DetailMetadataGrid from '../components/DetailMetadataGrid';
 import EngagementModal from '../components/EngagementModal';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const { useBreakpoint } = Grid;
 
@@ -79,24 +80,21 @@ const SmartCityDemoDetail: React.FC = () => {
   return (
     <>
       <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <button onClick={() => navigate('/')} className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 16px', borderRadius: '10px' }}>
-          <ArrowLeft size={16} /> Exit
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: 'pulse 1.5s infinite' }} />
-          <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-            Demonstrator Analysis
-          </span>
-        </div>
-        <div style={{ width: '80px' }} />
-      </div>
+      <UnifiedHeader
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: 'pulse 1.5s infinite' }} />
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+              Demonstrator Analysis
+            </span>
+          </div>
+        }
+        extra={
+          <button onClick={() => navigate('/')} className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 16px', borderRadius: '10px' }}>
+            <ArrowLeft size={16} /> Exit
+          </button>
+        }
+      />
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
         {/* Cinematic Hero */}

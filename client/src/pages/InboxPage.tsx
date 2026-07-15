@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import api from '../api';
 import { socketService } from '../services/socket';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -320,35 +321,23 @@ const InboxPage: React.FC = () => {
       {activeConversation ? (
         <>
           {/* Chat Header */}
-          <header style={{ 
-            padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)', 
-            background: 'rgba(16, 26, 21, 0.85)', backdropFilter: 'blur(20px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            position: 'sticky', top: 0, zIndex: 20
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ 
-                width: '40px', height: '40px', borderRadius: '12px', 
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-              }}>
-                {activeConversation.type === 'module' ? <Bot size={20} /> : <User size={20} />}
+          <UnifiedHeader
+            title={activeConversation.title}
+            subTitle={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)' }} />
+                <span style={{ fontSize: '10px', fontWeight: 800, color: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)', textTransform: 'none', letterSpacing: '0.05em' }}>
+                  {activeConversation.status.charAt(0).toUpperCase() + activeConversation.status.slice(1)}
+                </span>
               </div>
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: 0 }}>{activeConversation.title}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)' }} />
-                  <span style={{ fontSize: '10px', fontWeight: 800, color: activeConversation.status === 'online' ? GREEN : 'rgba(255,255,255,0.2)', textTransform: 'none', letterSpacing: '0.05em' }}>
-                    {activeConversation.status.charAt(0).toUpperCase() + activeConversation.status.slice(1)}
-                  </span>
-                </div>
+            }
+            extra={
+              <div style={{ display: 'flex', gap: '16px', color: 'rgba(255,255,255,0.3)' }}>
+                <Info size={20} style={{ cursor: 'pointer' }} />
+                <MoreVertical size={20} style={{ cursor: 'pointer' }} />
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '16px', color: 'rgba(255,255,255,0.3)' }}>
-              <Info size={20} style={{ cursor: 'pointer' }} />
-              <MoreVertical size={20} style={{ cursor: 'pointer' }} />
-            </div>
-          </header>
+            }
+          />
 
           {/* Messages Area */}
           <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

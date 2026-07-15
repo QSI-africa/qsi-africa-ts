@@ -18,6 +18,7 @@ import {
   Zap
 } from 'lucide-react';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
@@ -140,6 +141,7 @@ const EngineerDashboard: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
+      <UnifiedHeader title="Engineer Dashboard" />
       {/* Header */}
       <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-8 relative z-10">

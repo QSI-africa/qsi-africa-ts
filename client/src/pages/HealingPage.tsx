@@ -87,7 +87,6 @@ const HealingPage: React.FC = () => {
       <UnifiedHeader
         title="Healing"
         subTitle="Wisdom & Restoration"
-        icon={<Heart size={20} />}
       />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>

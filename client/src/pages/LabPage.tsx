@@ -13,6 +13,7 @@ import { socketService } from '../services/socket';
 import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
 import { Modal, Form, Input } from 'antd';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -461,45 +462,33 @@ const LabPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }} className="lab-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
-              PanX Lab
-            </h1>
-          </div>
-        </div>
-
-        {/* Dashboard Stats */}
-        <div style={{ display: 'flex', gap: '20px' }} className="lab-metrics">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <BookOpen size={16} color={GREEN} />
-            <div>
-              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Missions Active</div>
-              <div style={{ fontSize: '14px', fontWeight: 900, color: 'white' }}>{enrolledPackageIds.length} Modules</div>
+      <UnifiedHeader
+        title="PanX Lab"
+        extra={
+          <div style={{ display: 'flex', gap: '20px' }} className="lab-metrics">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookOpen size={16} color={GREEN} />
+              <div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Missions Active</div>
+                <div style={{ fontSize: '14px', fontWeight: 900, color: 'white' }}>{enrolledPackageIds.length} Modules</div>
+              </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={16} color="#3B82F6" />
-            <div>
-              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Channel Status</div>
-              <div style={{ 
-                fontSize: '11px', 
-                fontWeight: 900, 
-                color: myChannel?.status === 'APPROVED' ? GREEN : myChannel?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB' 
-              }}>
-                {myChannel ? myChannel.status : 'STUDENT'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Award size={16} color="#3B82F6" />
+              <div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Channel Status</div>
+                <div style={{ 
+                  fontSize: '11px', 
+                  fontWeight: 900, 
+                  color: myChannel?.status === 'APPROVED' ? GREEN : myChannel?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB' 
+                }}>
+                  {myChannel ? myChannel.status : 'STUDENT'}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px 100px 24px' }} className="lab-container">
         

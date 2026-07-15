@@ -6,6 +6,7 @@ import {
 import { message, Modal } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 interface ReplyItem {
   id: string;
@@ -180,15 +181,21 @@ const PostDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 16px 100px 16px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <button 
-          onClick={() => navigate('/ecosystem')}
-          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-          className="hover:bg-white/10"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <h2 style={{ fontSize: '16px', fontWeight: 900, margin: 0 }}>Thread</h2>
+      <div style={{ marginBottom: '24px', marginLeft: '-16px', marginRight: '-16px' }}>
+        <UnifiedHeader
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                onClick={() => navigate('/ecosystem')}
+                style={{ background: 'transparent', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '8px', borderRadius: '50%' }}
+                className="hover:bg-white/10"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              Thread
+            </div>
+          }
+        />
       </div>
 
       {/* Main Post */}

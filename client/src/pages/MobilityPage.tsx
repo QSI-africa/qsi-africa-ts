@@ -230,7 +230,6 @@ const MobilityPage: React.FC = () => {
       <UnifiedHeader
         title="Mobility"
         subTitle="Logistics & Infrastructure"
-        icon={<Truck size={20} />}
         extra={null}
       />
 

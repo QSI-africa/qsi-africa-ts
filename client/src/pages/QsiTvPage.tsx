@@ -27,6 +27,7 @@ import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -547,15 +548,9 @@ const QsiTvPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary">
       {/* Header */}
-      <header className="p-8 lg:p-6 bg-bg-secondary relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-md lg:text-3xl flex items-center gap-3 font-black text-white tracking-tighter  mb-4">
-              <Tv size={20} />
-              PanX <span className="text-accent-primary">TV</span>
-            </h1>
-          
-          </div>
+      <UnifiedHeader
+        title={<>PanX <span className="text-accent-primary">TV</span></>}
+        extra={
           <div className="flex gap-3">
             <button onClick={handleStartBroadcastClick} className="qsi-button primary flex items-center gap-2 py-3 px-6 text-xs">
               <Radio size={14} /> Go Live
@@ -564,11 +559,8 @@ const QsiTvPage: React.FC = () => {
               <Video size={14} /> Peer Session
             </button>
           </div>
-        </div>
-        <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-[0.02] pointer-events-none">
-          <Tv size={450} />
-        </div>
-      </header>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-8">

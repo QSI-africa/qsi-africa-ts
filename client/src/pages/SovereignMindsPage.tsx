@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -30,7 +31,7 @@ const SovereignMindsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/network/engineers');
+      const response = await api.get('/network/all-members');
       setEngineers(response.data);
     } catch (err: any) {
       console.error("Fetch data error:", err);
@@ -49,7 +50,7 @@ const SovereignMindsPage: React.FC = () => {
     if (activeTab === 'SOVEREIGN') {
       result = result.filter(eng => eng.isVerified);
     } else if (activeTab === 'PROFESSIONALS') {
-      result = result.filter(eng => !eng.isVerified);
+      result = result.filter(eng => eng.user && eng.user.role !== 'GENERAL_USER');
     }
 
     return result;
@@ -58,54 +59,43 @@ const SovereignMindsPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <div style={{
-        padding: '24px 32px',
-        background: 'rgba(10,16,24,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 20
-      }} className="sovereign-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, textTransform: 'none' }}>
-              Profiles
-            </h1>
+      <UnifiedHeader
+        title="Profiles"
+        extra={
+          <div style={{ display: 'flex', gap: '8px' }} className="sovereign-header-tabs no-scrollbar">
+              {[
+                { label: 'All Members', key: 'ALL' },
+                { label: 'Sovereign Minds', key: 'SOVEREIGN' },
+                { label: 'Professionals', key: 'PROFESSIONALS' }
+              ].map((tab) => (
+                <button 
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`pill ${activeTab === tab.key ? 'active' : ''}`}
+                  style={{
+                    textTransform: 'uppercase',
+                    fontWeight: 800,
+                    fontSize: '11px',
+                    letterSpacing: '0.05em',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: activeTab === tab.key ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                    background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                    color: activeTab === tab.key ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.2s',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
           </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }} className="sovereign-header-tabs no-scrollbar">
-            {[
-              { label: 'All Members', key: 'ALL' },
-              { label: 'Sovereign Minds', key: 'SOVEREIGN' },
-              { label: 'Professionals', key: 'PROFESSIONALS' }
-            ].map((tab) => (
-              <button 
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`pill ${activeTab === tab.key ? 'active' : ''}`}
-                style={{
-                  textTransform: 'uppercase',
-                  fontWeight: 800,
-                  fontSize: '11px',
-                  letterSpacing: '0.05em',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  border: activeTab === tab.key ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                  background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                  color: activeTab === tab.key ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  transition: 'all 0.2s',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-        </div>
-      </div>
+        }
+      />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }} className="sovereign-container">
         

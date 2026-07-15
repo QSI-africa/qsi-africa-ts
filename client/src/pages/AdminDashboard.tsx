@@ -23,6 +23,9 @@ import {
 
 import api from '../api';
 
+import UnifiedHeader from '../components/layout/UnifiedHeader';
+const { Title, Text } = Typography;
+
 const { Option } = Select;
 
 const AdminDashboard: React.FC = () => {
@@ -223,6 +226,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
+      <UnifiedHeader title="Admin Dashboard" />
       {/* Header */}
       <header className="p-8 lg:p-12 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-6xl mx-auto relative z-10">

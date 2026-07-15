@@ -15,6 +15,7 @@ import {
   TeamOutlined
 } from "@ant-design/icons";
 import { FaShieldAlt } from "react-icons/fa";
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const { useToken } = theme;
 const { Title, Paragraph, Text } = Typography;
@@ -237,6 +238,7 @@ const Privacy: React.FC = () => {
 
   return (
     <div style={styles.container}>
+      <UnifiedHeader title="Privacy Policy" />
       {/* Animated Background */}
       <div style={styles.animatedBg}>
         <div style={styles.bgElement1}></div>

@@ -3,8 +3,8 @@ import React from 'react';
 const GREEN = '#10B981';
 
 interface UnifiedHeaderProps {
-  title: string;
-  subTitle?: string;
+  title: React.ReactNode;
+  subTitle?: React.ReactNode;
   icon?: React.ReactNode;
   extra?: React.ReactNode;
 }
@@ -31,6 +31,11 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
             {title}
           </h1>
+          {subTitle && (
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+              {subTitle}
+            </div>
+          )}
         </div>
       </div>
       {extra && (

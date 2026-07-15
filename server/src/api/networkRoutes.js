@@ -28,6 +28,41 @@ router.get("/engineers", async (req, res) => {
   }
 });
 
+// NEW ROUTE: Get all members for the Sovereign Minds page
+router.get("/all-members", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        engineerProfile: true
+      }
+    });
+
+    const members = users.map(user => {
+      if (user.engineerProfile) {
+        return {
+          ...user.engineerProfile,
+          user: { name: user.name, email: user.email, role: user.role }
+        };
+      } else {
+        return {
+          id: user.id, // Fallback ID so we have a key in React
+          userId: user.id,
+          bio: "",
+          specialization: "General User",
+          skills: [],
+          isVerified: false,
+          user: { name: user.name, email: user.email, role: user.role },
+          projects: []
+        };
+      }
+    });
+
+    res.status(200).json(members);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 // 2. Get all project showcases
 router.get("/projects", async (req, res) => {
   const { status } = req.query;

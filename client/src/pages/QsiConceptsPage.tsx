@@ -48,7 +48,6 @@ const QsiConceptsPage: React.FC = () => {
       <UnifiedHeader
         title="Concepts"
         subTitle="Digital Concepts & Frameworks"
-        icon={<Lightbulb size={20} />}
         extra={
           <div style={{ 
             display: 'flex', 

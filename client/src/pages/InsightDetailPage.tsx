@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Spin, Typography } from 'antd';
 import { ArrowLeft, Zap, Calendar, User } from 'lucide-react';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const { Title, Paragraph } = Typography;
 const GREEN = '#10B981';
@@ -81,14 +82,17 @@ const InsightDetailPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
       {/* Top Bar / Navigation */}
-      <div className="max-w-4xl mx-auto w-full p-8 lg:p-8 pb-0">
-        <button 
-          onClick={() => profile?.id ? navigate(`/profiles/${profile.id}`) : navigate('/network')}
-          className="qsi-button flex items-center gap-2 mb-12 py-2 px-4"
-        >
-          <ArrowLeft size={18} /> Back to Profile
-        </button>
-      </div>
+      <UnifiedHeader
+        title="Insight Details"
+        extra={
+          <button 
+            onClick={() => profile?.id ? navigate(`/profiles/${profile.id}`) : navigate('/network')}
+            className="qsi-button flex items-center gap-2 py-2 px-4"
+          >
+            <ArrowLeft size={18} /> Back to Profile
+          </button>
+        }
+      />
 
       {/* Main Content */}
       <article className="max-w-4xl mx-auto w-full p-8 lg:p-12 pt-0 flex-1">

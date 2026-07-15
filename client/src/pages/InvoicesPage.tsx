@@ -105,7 +105,6 @@ const InvoicesPage: React.FC = () => {
       <UnifiedHeader
         title="Finance"
         subTitle="Quoted & Invoiced"
-        icon={<Receipt size={20} />}
       />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>

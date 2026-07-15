@@ -462,7 +462,6 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
     const client = await prisma.user.findUnique({
       where: {
         id: id,
-        role: "GENERAL_USER", // Ensure we only fetch users with the GENERAL_USER role
       },
       select: {
         id: true,

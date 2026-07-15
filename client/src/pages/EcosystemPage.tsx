@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Grid, message, Modal, Drawer } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 interface ReplyItem {
   id: string;
@@ -847,16 +848,91 @@ const EcosystemPage: React.FC = () => {
   });
 
   return (
-    <div style={{
-      maxWidth: isDesktop ? '1200px' : '700px',
-      margin: '0 auto',
-      padding: '24px 16px 100px 16px',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '24px',
-      width: '100%'
-    }}>
+    <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
+      <UnifiedHeader 
+        title="PanX Feed" 
+        extra={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="sovereign-header-tabs no-scrollbar">
+              {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
+                const isSelected = activeFilter === filter;
+                const getFilterIcon = (filterName: string) => {
+                  switch (filterName) {
+                    case 'for_you': return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'following': return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'saved': return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'enterprise': return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'placebo': return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'heritage_flame': return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'future_craft': return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'sovereign_minds': return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    case 'others': return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                    default: return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                  }
+                };
+                return (
+                  <button 
+                    key={filter}
+                    onClick={() => setActiveFilter(filter)}
+                    className={`pill ${isSelected ? 'active' : ''}`}
+                    style={{
+                      textTransform: 'uppercase',
+                      fontWeight: 800,
+                      fontSize: '11px',
+                      letterSpacing: '0.05em',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                      background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                      color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      transition: 'all 0.2s',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    onMouseEnter={e => {
+                      const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                      if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
+                    }}
+                    onMouseLeave={e => {
+                      const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                      if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
+                    }}
+                  >
+                    {getFilterIcon(filter)}
+                    {filter.replace('_', ' ')}
+                  </button>
+                );
+              })}
+            </div>
+            {!isDesktop && (
+              <button
+                onClick={() => setIsMobileNavDrawerOpen(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '36px', height: '36px', borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'white', cursor: 'pointer', flexShrink: 0
+                }}
+              >
+                <Menu size={18} />
+              </button>
+            )}
+          </div>
+        }
+      />
+      <div style={{
+        maxWidth: isDesktop ? '1200px' : '700px',
+        margin: '0 auto',
+        padding: '24px 16px 100px 16px',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        width: '100%'
+      }}>
       {/* Main Layout Grid/Flex Container */}
       <div style={{
         display: 'flex',
@@ -872,94 +948,7 @@ const EcosystemPage: React.FC = () => {
             display: 'flex', flexDirection: 'column',
             width: '100%'
           }}>
-            {/* Horizontal Feed Filters */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10, 16, 24, 0.95)', backdropFilter: 'blur(16px)', padding: '12px 0' }}>
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="no-scrollbar">
-                {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
-                  const isSelected = activeFilter === filter;
-                  const getFilterIcon = (filterName: string) => {
-                    switch (filterName) {
-                      case 'for_you':
-                        return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'following':
-                        return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'saved':
-                        return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'enterprise':
-                        return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'placebo':
-                        return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'heritage_flame':
-                        return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'future_craft':
-                        return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'sovereign_minds':
-                        return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      case 'others':
-                        return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                      default:
-                        return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    }
-                  };
-                  return (
-                    <button 
-                      key={filter}
-                      onClick={() => setActiveFilter(filter)}
-                      className={`pill ${isSelected ? 'active' : ''}`}
-                      style={{
-                        textTransform: 'uppercase',
-                        fontWeight: 800,
-                        fontSize: '11px',
-                        letterSpacing: '0.05em',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                        background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                        color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        transition: 'all 0.2s',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                      onMouseEnter={e => {
-                        const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                        if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
-                      }}
-                      onMouseLeave={e => {
-                        const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                        if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
-                      }}
-                    >
-                      {getFilterIcon(filter)}
-                      {filter.replace('_', ' ')}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {!isDesktop && (
-                <button
-                  onClick={() => setIsMobileNavDrawerOpen(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '12px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                >
-                  <Menu size={18} />
-                </button>
-              )}
-            </div>
+            {/* Filters moved to UnifiedHeader */}
 
             {/* Composer Area */}
             {!user ? (
@@ -1516,6 +1505,7 @@ const EcosystemPage: React.FC = () => {
           })}
         </div>
       </Drawer>
+    </div>
     </div>
   );
 };

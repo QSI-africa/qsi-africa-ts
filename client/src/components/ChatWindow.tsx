@@ -28,6 +28,7 @@ import {
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
+import UnifiedHeader from './layout/UnifiedHeader';
 
 const GREEN = '#10B981';
 
@@ -367,90 +368,67 @@ const ChatWindow: React.FC = () => {
   return (
     <div style={{ position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
-      <header style={{
-        padding: '24px 32px',
-        background: 'rgba(10, 16, 24, 0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 20,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        boxSizing: 'border-box',
-        flexShrink: 0
-      }}>
-        {/* 1. Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255, 255, 255, 0.6)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '8px',
-            borderRadius: '50%',
-            transition: 'all 0.2s',
-            marginLeft: '-8px'
-          }}
-          className="hover:text-white hover:bg-white/5"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
-        {/* 2. Name of Screen */}
-        <h1 style={{ 
-          fontSize: '18px', 
-          fontWeight: 900, 
-          color: 'white', 
-          letterSpacing: '-0.03em', 
-          lineHeight: 1, 
-          margin: 0,
-          textAlign: 'center'
-        }}>
-          {details.title}
-        </h1>
-
-        {/* 3. The rest of the icons */}
-        <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          <div className="flex md:hidden items-center gap-4">
-            <Lightbulb
-              size={20}
-              style={{ cursor: 'pointer' }}
-              className="hover:text-accent-primary transition-colors"
-              onClick={() => {
-                setDrawerType('suggestions');
-                setIsDrawerOpen(true);
+      {/* Header */}
+      <UnifiedHeader
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '-8px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.6)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                borderRadius: '50%',
+                transition: 'all 0.2s'
               }}
-              title="Suggested Focus Areas"
-            />
-            {moduleName === 'healing' && (
-              <Package
+              className="hover:text-white hover:bg-white/5"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            {details.title}
+          </div>
+        }
+        extra={
+          <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <div className="flex md:hidden items-center gap-4">
+              <Lightbulb
                 size={20}
                 style={{ cursor: 'pointer' }}
                 className="hover:text-accent-primary transition-colors"
                 onClick={() => {
-                  setDrawerType('packages');
+                  setDrawerType('suggestions');
                   setIsDrawerOpen(true);
                 }}
-                title="Healing Trajectories"
+                title="Suggested Focus Areas"
               />
-            )}
-            <Info
-              size={20}
-              style={{ cursor: 'pointer' }}
-              className="hover:text-white transition-colors"
-              onClick={() => setIsInfoDrawerOpen(true)}
-              title="Information"
-            />
+              {moduleName === 'healing' && (
+                <Package
+                  size={20}
+                  style={{ cursor: 'pointer' }}
+                  className="hover:text-accent-primary transition-colors"
+                  onClick={() => {
+                    setDrawerType('packages');
+                    setIsDrawerOpen(true);
+                  }}
+                  title="Healing Trajectories"
+                />
+              )}
+              <Info
+                size={20}
+                style={{ cursor: 'pointer' }}
+                className="hover:text-white transition-colors"
+                onClick={() => setIsInfoDrawerOpen(true)}
+                title="Information"
+              />
+            </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* Messages Area */}
       <div 

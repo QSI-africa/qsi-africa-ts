@@ -4,6 +4,7 @@ import { User, Lock, Mail, MapPin, Building, Phone, LogOut, CheckCircle2 } from 
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import UnifiedHeader from '../components/layout/UnifiedHeader';
 
 const { Paragraph } = Typography;
 const GREEN = '#10B981';
@@ -71,8 +72,9 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-      {/* Header Profile Summary */}
-      <header className="p-6 md:p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+      <UnifiedHeader title="Profile" />
+      {/* Profile Summary */}
+      <section className="p-6 md:p-12 lg:p-20 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-end">
             <div className="relative shrink-0">
@@ -122,7 +124,7 @@ const ProfilePage: React.FC = () => {
         
         {/* Background glow orb */}
         <div style={{ position: 'absolute', top: '50%', right: '10%', width: '300px', height: '300px', background: `${GREEN}05`, borderRadius: '50%', filter: 'blur(80px)' }} />
-      </header>
+      </section>
 
       {/* Main Form Dashboard */}
       <section className="max-w-4xl mx-auto w-full p-8 lg:p-12 flex-1">

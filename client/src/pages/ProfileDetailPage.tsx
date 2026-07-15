@@ -105,7 +105,6 @@ const ProfileDetailPage: React.FC = () => {
       <UnifiedHeader
         title="Profile Detail"
         subTitle="Sovereign Mind Profile"
-        icon={<User size={20} />}
         extra={
           <button
             onClick={() => navigate("/network")}

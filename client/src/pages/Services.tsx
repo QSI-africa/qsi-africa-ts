@@ -134,7 +134,6 @@ const ServicesPage: React.FC = () => {
       <UnifiedHeader
         title="Services"
         subTitle="Operational Modules"
-        icon={<Layers size={20} />}
         extra={
           <div style={{ display: 'flex', gap: '8px' }}>
             {['all', 'infrastructure', 'healing', 'vision', 'concepts', 'demos'].map((cat) => (
