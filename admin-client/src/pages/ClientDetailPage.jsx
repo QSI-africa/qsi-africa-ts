@@ -58,6 +58,19 @@ const ClientDetailPage = () => {
     }
   }, [id, message]);
 
+  const handleVerifyUser = async () => {
+    try {
+      setLoading(true);
+      await api.post(`/admin/clients/${id}/verify`);
+      message.success("User verified successfully. They are now a Sovereign Mind.");
+      fetchClient();
+    } catch (error) {
+      console.error("Failed to verify user:", error);
+      message.error(error.response?.data?.error || "Failed to verify user.");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchClient();
   }, [fetchClient]);
@@ -320,11 +333,19 @@ const ClientDetailPage = () => {
         direction="vertical"
         style={{ width: "100%", marginBottom: token.marginLG }}
       >
-        <Link to="/clients">
-          <Button icon={<ArrowLeftOutlined />} type="text">
-            Back to All Clients
-          </Button>
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/clients">
+            <Button icon={<ArrowLeftOutlined />} type="text">
+              Back to All Clients
+            </Button>
+          </Link>
+          
+          {!client.engineerProfile?.isVerified && (
+            <Button type="primary" onClick={handleVerifyUser}>
+              Verify User
+            </Button>
+          )}
+        </div>
 
         <Card>
           <Space size="large" wrap>
@@ -336,7 +357,12 @@ const ClientDetailPage = () => {
                 <Title level={3} style={{ margin: 0 }}>
                   {client.name}
                 </Title>
-                <Text type="secondary">{client.email}</Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Text type="secondary">{client.email}</Text>
+                  {client.engineerProfile?.isVerified && (
+                    <Tag color="green">Sovereign Mind (Verified)</Tag>
+                  )}
+                </div>
                 {client.phone && (
                   <div>
                     <Text type="secondary">{client.phone}</Text>

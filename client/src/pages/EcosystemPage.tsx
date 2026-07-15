@@ -239,7 +239,7 @@ const PanXPostItem = React.memo(({
                             <span 
                               style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
                               className="hover:underline"
-                              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${author.id}`); }}
+                              onClick={(e) => { e.stopPropagation(); navigate(`/profiles/${author.id}`); }}
                             >
                               {author.name}
                             </span>
@@ -310,11 +310,25 @@ const PanXPostItem = React.memo(({
                         </p>
                         
                         {post.mediaFiles && post.mediaFiles.length > 0 ? (
-                          <div style={{ display: 'grid', gridTemplateColumns: post.mediaFiles.length > 1 ? '1fr 1fr' : '1fr', gap: '8px', margin: '0 0 16px 0' }}>
+                          <div className="no-scrollbar" style={{ 
+                            display: 'flex', 
+                            overflowX: 'auto', 
+                            scrollSnapType: 'x mandatory', 
+                            gap: '8px', 
+                            margin: '0 0 16px 0',
+                            paddingBottom: '4px'
+                          }}>
                             {post.mediaFiles.map((media, idx) => (
                               <div 
                                 key={idx}
-                                style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                style={{ 
+                                  flex: post.mediaFiles.length > 1 ? '0 0 85%' : '0 0 100%',
+                                  scrollSnapAlign: 'center',
+                                  borderRadius: '16px', 
+                                  overflow: 'hidden', 
+                                  border: '1px solid rgba(255,255,255,0.1)', 
+                                  cursor: 'pointer' 
+                                }}
                                 onClick={(e) => { 
                                   e.stopPropagation(); 
                                   setFullscreenMedia({ 

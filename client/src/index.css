@@ -1028,7 +1028,7 @@ a:visited {
 /* PanX Tools Visual Separation & Card Styling */
 .panx-tools-container {
   border-radius: 20px;
-  margin: 0 16px 20px 16px;
+  margin: 0 12px 16px 12px;
 }
 
 .panx-tool-card {
@@ -1038,8 +1038,8 @@ a:visited {
   gap: 14px;
   width: 100%;
   border-radius: 14px;
-  min-height: 72px;
-  padding: 12px !important;
+  min-height: 60px;
+  padding: 10px !important;
   text-decoration: none;
   color: inherit;
   background: rgba(255, 255, 255, 0.02);
@@ -1047,7 +1047,7 @@ a:visited {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   cursor: pointer;
 }
 
@@ -1138,10 +1138,10 @@ a:visited {
 
 /* Ecosystem Section WhatsApp Channels Style */
 .ecosystem-container {
-  padding: 0 16px 24px 16px;
+  padding: 0 12px 16px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: 12px;
-  padding-top: 20px;
+  margin-top: 8px;
+  padding-top: 16px;
 }
 
 .ecosystem-heading {
@@ -1162,7 +1162,7 @@ a:visited {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.01);
   border: 1px solid rgba(255, 255, 255, 0.03);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   transition: all 0.2s ease;
 }
 

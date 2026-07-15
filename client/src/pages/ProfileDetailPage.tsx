@@ -16,6 +16,7 @@ import {
   ExternalLink,
   MessageCircle,
   User,
+  Heart,
 } from "lucide-react";
 import api from "../api";
 import UnifiedHeader from "../components/layout/UnifiedHeader";
@@ -24,6 +25,7 @@ const ProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,10 +37,22 @@ const ProfileDetailPage: React.FC = () => {
     try {
       const response = await api.get(`/network/profile/${id}`);
       setProfile(response.data);
+      if (response.data.userId) {
+        fetchUserPosts(response.data.userId);
+      }
     } catch (error: any) {
       console.error("Fetch profile error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserPosts = async (userId: string) => {
+    try {
+      const response = await api.get(`/panx/posts/user/${userId}`);
+      setUserPosts(response.data.posts || []);
+    } catch (error) {
+      console.error("Fetch posts error:", error);
     }
   };
 
@@ -300,6 +314,89 @@ const ProfileDetailPage: React.FC = () => {
                 />
                 <p className="text-text-tertiary font-bold  tracking-widest" style={{ textTransform: 'none' }}>
                   No sovereign insights logged yet
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Row 4.5: Platform Activity (PanX Feed) */}
+        <div>
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <span className="eyebrow">Platform Activity</span>
+              <h2 className="text-3xl font-black text-white tracking-tight">
+                PanX Feed
+              </h2>
+            </div>
+            <Activity
+              size={32}
+              className="text-accent-primary opacity-10"
+            />
+          </div>
+
+          <div className="space-y-6">
+            {userPosts && userPosts.length > 0 ? (
+              userPosts.map((post: any) => (
+                <div
+                  key={post.id}
+                  onClick={() => navigate(`/post/${post.id}`)}
+                  className="feed-card bg-bg-secondary border-border-subtle p-6 hover:border-accent-primary/40 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start gap-4">
+                    <Avatar
+                      size={42}
+                      src={getServerUrl(post.author?.avatarUrl)}
+                      icon={<User />}
+                      className="border border-border-subtle shrink-0 bg-bg-secondary"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white hover:underline text-sm truncate">
+                            {post.author?.name}
+                          </span>
+                          {(post.author?.role === "SUPER_USER" || post.author?.role === "ADMIN" || post.author?.role === "ENGINEER") && (
+                            <ShieldCheck size={14} className="text-accent-primary" />
+                          )}
+                          <span className="text-xs text-text-tertiary hidden sm:inline">
+                            • {formatDate(post.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {post.content}
+                      </p>
+                      
+                      {post.imageUrl && (
+                        <div className="mt-4 rounded-xl overflow-hidden border border-border-subtle relative max-h-[300px]">
+                          <img src={getServerUrl(post.imageUrl)} alt="Post" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-6 mt-4 text-text-tertiary">
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <MessageCircle size={14} /> <span>{post.repliesCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Layers size={14} /> <span>{post.repostsCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Heart size={14} /> <span>{post.likesCount || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center w-full">
+                <Globe
+                  size={48}
+                  className="mx-auto text-text-tertiary opacity-20 mb-4"
+                />
+                <p className="text-text-tertiary font-bold tracking-widest" style={{ textTransform: 'none' }}>
+                  No platform activity logged yet
                 </p>
               </div>
             )}

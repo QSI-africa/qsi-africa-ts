@@ -66,20 +66,10 @@ const SovereignMindsPage: React.FC = () => {
         position: 'sticky', top: 0, zIndex: 20
       }} className="sovereign-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <Users size={20} />
-          </div>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, textTransform: 'none' }}>
-              Sovereign Minds
+              Profiles
             </h1>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: GREEN, letterSpacing: '0.15em', opacity: 0.8, textTransform: 'none' }}>
-              Ecosystem of Excellence
-            </p>
           </div>
         </div>
 
@@ -92,14 +82,23 @@ const SovereignMindsPage: React.FC = () => {
               <button 
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
+                className={`pill ${activeTab === tab.key ? 'active' : ''}`}
                 style={{
-                  padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                  fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  letterSpacing: '0.05em',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: activeTab === tab.key ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                  background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: activeTab === tab.key ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
                   transition: 'all 0.2s',
-                  background: activeTab === tab.key ? GREEN : 'rgba(255,255,255,0.04)',
-                  color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.4)',
-                  boxShadow: activeTab === tab.key ? `0 6px 16px -4px ${GREEN}60` : 'none',
-                  textTransform: 'none'
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 {tab.label}

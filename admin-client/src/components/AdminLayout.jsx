@@ -83,6 +83,12 @@ const AdminLayout = () => {
       label: <Link to="/">Task Dashboard</Link>,
     },
     {
+      key: "/messages",
+      icon: <MessageOutlined />,
+      label: <Link to="/messages">Inbox / Messages</Link>,
+      roles: ["ADMIN", "SUPER_USER", "ENGINEER"],
+    },
+    {
       key: "/healing-inquiries",
       icon: <HeartOutlined />,
       label: <Link to="/healing-inquiries">Healing Inquiries</Link>,

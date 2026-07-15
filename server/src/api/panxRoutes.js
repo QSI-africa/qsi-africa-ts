@@ -135,6 +135,111 @@ router.get("/posts", async (req, res) => {
   }
 });
 
+// 1.5 Get posts by a specific user (Public, optional auth context)
+router.get("/posts/user/:userId", async (req, res) => {
+  const { userId: targetUserId } = req.params;
+  try {
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = decoded.userId;
+      } catch (err) {
+        // Ignore invalid token, act as guest
+      }
+    }
+
+    const posts = await prisma.panxPost.findMany({
+      where: { authorId: targetUserId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: {
+          select: { 
+            id: true, 
+            name: true, 
+            email: true, 
+            role: true, 
+            location: true,
+            ...(userId ? {
+              followers: {
+                where: { followerId: userId },
+                select: { followerId: true }
+              }
+            } : {})
+          }
+        },
+        replies: {
+          where: { parentId: null },
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: { select: { id: true, name: true, email: true, role: true, location: true } },
+            children: {
+              include: {
+                author: { select: { id: true, name: true, email: true, role: true, location: true } },
+                ...(userId ? { likes: { where: { userId }, select: { id: true } } } : {}),
+                _count: { select: { likes: true } }
+              }
+            },
+            ...(userId ? { likes: { where: { userId }, select: { id: true } } } : {}),
+            _count: { select: { likes: true } }
+          }
+        },
+        ...(userId ? {
+          likes: { where: { userId }, select: { id: true } },
+          reposts: { where: { userId }, select: { id: true } },
+          bookmarks: { where: { userId }, select: { id: true } }
+        } : {}),
+        _count: { select: { likes: true, reposts: true, replies: true, shares: true, bookmarks: true } }
+      }
+    });
+
+    const formattedPosts = posts.map(post => ({
+      ...post,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        email: post.author.email,
+        role: post.author.role,
+        location: post.author.location,
+        isFollowing: (userId && post.author.followers) ? post.author.followers.length > 0 : false
+      },
+      hasLiked: (userId && post.likes) ? post.likes.length > 0 : false,
+      hasReposted: (userId && post.reposts) ? post.reposts.length > 0 : false,
+      hasBookmarked: (userId && post.bookmarks) ? post.bookmarks.length > 0 : false,
+      likesCount: post._count.likes,
+      repostsCount: post._count.reposts,
+      repliesCount: post._count.replies,
+      sharesCount: post._count.shares,
+      bookmarksCount: post._count.bookmarks,
+      likes: undefined,
+      reposts: undefined,
+      bookmarks: undefined,
+      _count: undefined,
+      replies: post.replies.map(reply => ({
+        ...reply,
+        hasLiked: (userId && reply.likes) ? reply.likes.length > 0 : false,
+        likesCount: reply._count.likes,
+        likes: undefined,
+        _count: undefined,
+        children: reply.children ? reply.children.map(child => ({
+          ...child,
+          hasLiked: (userId && child.likes) ? child.likes.length > 0 : false,
+          likesCount: child._count.likes,
+          likes: undefined,
+          _count: undefined
+        })) : []
+      }))
+    }));
+
+    res.json({ posts: formattedPosts });
+  } catch (error) {
+    console.error("Failed to fetch user posts:", error);
+    res.status(500).json({ error: "Failed to fetch user posts." });
+  }
+});
+
 // Apply authentication to all subsequent feed mutations/interactions
 router.use(authMiddleware);
 

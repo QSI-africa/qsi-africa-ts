@@ -469,20 +469,10 @@ const LabPage: React.FC = () => {
         position: 'sticky', top: 0, zIndex: 20
       }} className="lab-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: `${GREEN}18`, border: `1px solid ${GREEN}30`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN
-          }}>
-            <FlaskConical size={20} />
-          </div>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
               PanX Lab
             </h1>
-            <p style={{ fontSize: '9px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8, margin: '2px 0 0 0' }}>
-              Virtual Academy & Skill Ecosystem
-            </p>
           </div>
         </div>
 
@@ -574,36 +564,39 @@ const LabPage: React.FC = () => {
         }} className="lab-tabs no-scrollbar">
           <button 
             onClick={() => setActiveTab('programs')}
+            className={`pill ${activeTab === 'programs' ? 'active' : ''}`}
             style={{
-              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
-              background: activeTab === 'programs' ? 'rgba(16,185,129,0.12)' : 'transparent',
-              color: activeTab === 'programs' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
-              whiteSpace: 'nowrap'
+              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+              border: activeTab === 'programs' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+              background: activeTab === 'programs' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+              color: activeTab === 'programs' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
             }}
           >
             Academic Programs
           </button>
           <button 
             onClick={() => setActiveTab('lectures')}
+            className={`pill ${activeTab === 'lectures' ? 'active' : ''}`}
             style={{
-              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
-              background: activeTab === 'lectures' ? 'rgba(16,185,129,0.12)' : 'transparent',
-              color: activeTab === 'lectures' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
-              whiteSpace: 'nowrap'
+              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+              border: activeTab === 'lectures' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+              background: activeTab === 'lectures' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+              color: activeTab === 'lectures' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
             }}
           >
             Virtual Lectures
           </button>
           <button 
             onClick={() => setActiveTab('studio')}
+            className={`pill ${activeTab === 'studio' ? 'active' : ''}`}
             style={{
-              flex: '1 0 auto', padding: '10px 16px', border: 'none', borderRadius: '12px',
-              background: activeTab === 'studio' ? 'rgba(16,185,129,0.12)' : 'transparent',
-              color: activeTab === 'studio' ? GREEN : 'rgba(255,255,255,0.5)',
-              fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', transition: 'all 0.2s',
-              whiteSpace: 'nowrap'
+              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+              border: activeTab === 'studio' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+              background: activeTab === 'studio' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+              color: activeTab === 'studio' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
             }}
           >
             Teacher Studio
@@ -624,22 +617,26 @@ const LabPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
                   onClick={() => setOnlyEnrolledMissions(false)}
+                  className={`pill ${!onlyEnrolledMissions ? 'active' : ''}`}
                   style={{
-                    background: !onlyEnrolledMissions ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
-                    border: !onlyEnrolledMissions ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.08)',
-                    color: !onlyEnrolledMissions ? GREEN : 'rgba(255,255,255,0.6)',
-                    padding: '8px 16px', borderRadius: '16px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s'
+                    textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                    border: !onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                    background: !onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                    color: !onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                   }}
                 >
                   All Programs
                 </button>
                 <button 
                   onClick={() => setOnlyEnrolledMissions(true)}
+                  className={`pill ${onlyEnrolledMissions ? 'active' : ''}`}
                   style={{
-                    background: onlyEnrolledMissions ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
-                    border: onlyEnrolledMissions ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.08)',
-                    color: onlyEnrolledMissions ? GREEN : 'rgba(255,255,255,0.6)',
-                    padding: '8px 16px', borderRadius: '16px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s'
+                    textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                    border: onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                    background: onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                    color: onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                   }}
                 >
                   Active Missions ({enrolledPackageIds.length})
@@ -793,11 +790,13 @@ const LabPage: React.FC = () => {
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryFilter(cat.id)}
+                    className={`pill ${selectedCategoryId === cat.id ? 'active' : ''}`}
                     style={{
-                      background: selectedCategoryId === cat.id ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.02)',
-                      border: selectedCategoryId === cat.id ? `1px solid ${GREEN}` : '1px solid rgba(255,255,255,0.06)',
-                      color: selectedCategoryId === cat.id ? GREEN : 'rgba(255,255,255,0.5)',
-                      padding: '6px 14px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer'
+                      textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                      border: selectedCategoryId === cat.id ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                      background: selectedCategoryId === cat.id ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                      color: selectedCategoryId === cat.id ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                      cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                     }}
                   >
                     {cat.title}

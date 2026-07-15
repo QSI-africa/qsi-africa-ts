@@ -158,9 +158,6 @@ const DefaultSidebarContent = () => {
   const panxTools = [
     { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Design, Plan, Execute.' },
     { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
-    { name: 'Profiles', path: '/network', description: 'Verified professional network.' },
-    { name: 'PanX Concepts', path: '/concepts', description: 'Digital concepts & frameworks.' },
-    { name: 'Smart City Demos', path: '/demos', description: 'Physical demonstrators & systems.' },
     ...(user?.role === 'ADMIN' ? [{ name: 'Admin Dashboard', path: '/admin', description: 'Manage Ecosystem & Ventures.' }] : []),
   ];
 
@@ -203,24 +200,20 @@ const DefaultSidebarContent = () => {
 
   return (
     <div className="no-scrollbar" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%", overflowY: "auto", overflowX: "hidden", background: "transparent" }}>
-      <header className="sidebar-header" style={{ padding: "24px 0", flexShrink: 0 }}>
+      <header className="sidebar-header" style={{ padding: "16px 0", flexShrink: 0 }}>
         <div style={{
           display: "flex",
           flexDirection: "row",
           width: "100%",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "24px",
-          padding: "0 24px"
+          marginBottom: "16px",
+          padding: "0 16px"
         }}>
           <div className="flex items-center justify-between flex-1 mr-12 md:mr-4 gap-4">
             <Link to="/" className="flex items-center shrink-0">
               <img src={panxWordmark} alt="PANX" className="h-6 md:h-7 object-contain" />
             </Link>
-            <div className="flex items-center gap-1.5 opacity-80 shrink-0">
-              <span className="text-[12px] md:text-[14px] font-semibold text-white/50 tracking-wider">Powered by</span>
-              <img src={qsiLogo} alt="QSI" className="h-4 w-4 md:h-5 md:w-5 object-contain" />
-            </div>
           </div>
           {/* <div className="hidden md:flex" style={{ gap: "10px" }}>
             <button 
@@ -269,7 +262,7 @@ const DefaultSidebarContent = () => {
           </div> */}
         </div>
         
-        <div style={{ padding: "0 24px", marginBottom: "32px" }}>
+        <div style={{ padding: "0 16px", marginBottom: "16px" }}>
           <div style={{ 
             display: "flex", alignItems: "center", gap: "12px", 
             background: "rgba(255, 255, 255, 0.03)", 
@@ -300,7 +293,7 @@ const DefaultSidebarContent = () => {
             alignItems: "flex-start",
             justifyContent: "space-between",
             gap: "4px",
-            padding: "8px 16px 24px 16px",
+            padding: "8px 12px 16px 12px",
             overflowX: "hidden"
           }}
         >
@@ -335,7 +328,7 @@ const DefaultSidebarContent = () => {
           })}
         </div>
 
-        <div style={{ padding: "0 24px", marginBottom: "12px" }}>
+        <div style={{ padding: "0 16px", marginBottom: "8px" }}>
           <h3 style={{ 
             fontSize: "14px", 
             fontWeight: "900", 
@@ -369,7 +362,7 @@ const DefaultSidebarContent = () => {
                     <h4 className="panx-tool-label truncate">
                       {tool.name}
                     </h4>
-                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse shadow-[0_0_8px_var(--accent-primary)]"></div>}
+                    {isActive && <div className="w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_8px_var(--accent-primary)]"></div>}
                   </div>
                   <p className="panx-tool-description line-clamp-2">
                     {tool.description}
@@ -395,6 +388,30 @@ const DefaultSidebarContent = () => {
           <h3 className="ecosystem-heading">Pan African Engineers</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div 
+              className={`channel-card ${location.pathname === '/concepts' ? 'active' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                navigate('/concepts');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <div className="panx-tool-icon-wrapper" style={{ overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                  <Lightbulb size={24} />
+                </div>
+              </div>
+              <div className="channel-info">
+                <div className="channel-name-row">
+                  <span className="channel-name" style={{ textTransform: 'capitalize' }}>PanX Concepts</span>
+                </div>
+                <div className="channel-followers">
+                  Digital concepts & frameworks.
+                </div>
+              </div>
+              <ChevronRight size={14} className="opacity-40" />
+            </div>
+
             {filteredVentures.map((venture) => {
               const isActive = location.pathname === `/ventures/${venture.slug}`;
               const initial = venture.name?.charAt(0)?.toUpperCase() || 'V';
@@ -438,6 +455,16 @@ const DefaultSidebarContent = () => {
                 No Ventures
               </div>
             )}
+
+            <button 
+              className="md:hidden w-full mt-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-black tracking-widest uppercase text-white/70 hover:text-white transition-colors"
+              onClick={() => {
+                navigate('/network');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              View More
+            </button>
           </div>
         </div>
       </div>
@@ -470,7 +497,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navItems = [
     { icon: <Home size={22} />, path: '/', id: 'home', label: 'Home' },
     { icon: <MessageCircle size={22} />, path: '/inbox', id: 'chats', label: 'Chats' },
-    { icon: <Users size={22} />, path: '/network', id: 'sovereign-minds-shortcut', label: 'Sovereign Minds' },
+    { icon: <Users size={22} />, path: '/network', id: 'sovereign-minds-shortcut', label: 'Profiles' },
     ...(user?.role === 'ADMIN' ? [{ icon: <Shield size={22} />, path: '/admin', id: 'admin', label: 'Admin Dashboard' }] : []),
   ];
 

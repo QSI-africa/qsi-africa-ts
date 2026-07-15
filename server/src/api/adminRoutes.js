@@ -482,6 +482,7 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
           // Also include their vision submissions
           orderBy: { createdAt: "desc" },
         },
+        engineerProfile: true, // Also include engineer profile to check verification status
         // Add any other related data you want to show on the profile
       },
     });
@@ -500,6 +501,41 @@ router.get("/clients/:id", isSuperUserOrAdmin, async (req, res) => {
   } catch (error) {
     console.error(`Failed to fetch client ${id}:`, error);
     res.status(500).json({ error: "Failed to fetch client details." });
+  }
+});
+
+// POST /api/admin/clients/:id/verify
+router.post("/clients/:id/verify", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { engineerProfile: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Client not found." });
+    }
+
+    // Find or create EngineerProfile and set isVerified = true
+    const profile = await prisma.engineerProfile.upsert({
+      where: { userId: id },
+      update: { isVerified: true },
+      create: { userId: id, isVerified: true }
+    });
+
+    // Upgrade role to ENGINEER if they are a GENERAL_USER
+    if (user.role === "GENERAL_USER") {
+      await prisma.user.update({
+        where: { id },
+        data: { role: "ENGINEER" }
+      });
+    }
+
+    res.json({ message: "User verified successfully.", profile });
+  } catch (error) {
+    console.error(`Failed to verify client ${id}:`, error);
+    res.status(500).json({ error: "Failed to verify client." });
   }
 });
 
