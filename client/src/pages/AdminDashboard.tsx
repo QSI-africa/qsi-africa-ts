@@ -33,6 +33,7 @@ const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [editingPackage, setEditingPackage] = useState<any>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
@@ -130,6 +131,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSaveCategory = async (values: any) => {
+    setIsSubmitting(true);
     try {
       const res = await fetch('/api/lab/categories', {
         method: 'POST',
@@ -143,10 +145,13 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize category");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSavePackage = async (values: any) => {
+    setIsSubmitting(true);
     try {
       const res = await fetch('/api/lab/packages', {
         method: 'POST',
@@ -160,6 +165,8 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to synchronize package");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -176,6 +183,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSaveService = async (values: any) => {
+    setIsSubmitting(true);
     try {
       const url = editingService 
         ? `/api/admin/service-modules/${editingService.id}` 
@@ -194,6 +202,8 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error: any) {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to update service registry");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -633,8 +643,8 @@ const AdminDashboard: React.FC = () => {
               <InputNumber min={0} className="bg-bg-primary border-border-subtle text-white h-12 w-full" />
             </Form.Item>
             <div className="flex gap-4 pt-4">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                <ShieldCheck size={18} /> Synchronize
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={isSubmitting}>
+                <ShieldCheck size={18} /> {isSubmitting ? 'Synchronizing...' : 'Synchronize'}
               </button>
               <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsCategoryModalOpen(false)}>
                 Abort
@@ -679,8 +689,8 @@ const AdminDashboard: React.FC = () => {
               </Select>
             </Form.Item>
             <div className="flex gap-4 pt-4">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                <ShieldCheck size={18} /> Synchronize
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={isSubmitting}>
+                <ShieldCheck size={18} /> {isSubmitting ? 'Synchronizing...' : 'Synchronize'}
               </button>
               <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsPackageModalOpen(false)}>
                 Abort
@@ -758,8 +768,8 @@ const AdminDashboard: React.FC = () => {
             </Row>
 
             <div className="flex gap-4 pt-6">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                <ShieldCheck size={18} /> Synchronize Service
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={isSubmitting}>
+                <ShieldCheck size={18} /> {isSubmitting ? 'Synchronizing Service...' : 'Synchronize Service'}
               </button>
               <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsServiceModalOpen(false)}>
                 Abort

@@ -129,6 +129,7 @@ const SuggestionModal = ({
   onSubmit,
 }) => {
   const [form] = Form.useForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!initialData;
   const { token } = useToken();
 
@@ -143,10 +144,15 @@ const SuggestionModal = ({
   }, [open, initialData, form]);
 
   const handleSubmit = async (values) => {
-    const success = await onSubmit(values, initialData?.id);
-    if (success) {
-      form.resetFields();
-      onClose();
+    setIsSubmitting(true);
+    try {
+      const success = await onSubmit(values, initialData?.id);
+      if (success) {
+        form.resetFields();
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -205,6 +211,7 @@ const SuggestionModal = ({
           <Button
             type="primary"
             htmlType="submit"
+            loading={isSubmitting}
             style={{ fontWeight: 600, width: "100%" }}
           >
             {isEditing ? "Save Changes" : "Add Suggestion"}

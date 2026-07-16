@@ -384,8 +384,8 @@ const EngineerDashboard: React.FC = () => {
                 <Input.TextArea rows={4} className="bg-bg-primary border-border-subtle text-white" placeholder="Describe the operational impact..." />
               </Form.Item>
               <div className="flex gap-4 pt-4">
-                <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                  <Plus size={18} /> Register
+                <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={loading}>
+                  <Plus size={18} /> {loading ? 'Registering...' : 'Register'}
                 </button>
                 <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsProjectModalVisible(false)}>
                   Cancel

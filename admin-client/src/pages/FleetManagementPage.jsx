@@ -18,6 +18,7 @@ const FleetManagementPage = () => {
   const [requests, setRequests] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [form] = Form.useForm();
@@ -74,6 +75,7 @@ const FleetManagementPage = () => {
   };
 
   const onAssignSubmit = async (values) => {
+    setIsSubmitting(true);
     try {
       // 1. Update Price & Notes
       await api.patch(`/admin/fleet/requests/${selectedRequest.id}/update-price`, {
@@ -93,6 +95,8 @@ const FleetManagementPage = () => {
       fetchData();
     } catch (error) {
       notification.error({ message: 'Error assigning driver/updating price' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -244,7 +248,7 @@ const FleetManagementPage = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>Update & Notify</Button>
+            <Button type="primary" htmlType="submit" loading={isSubmitting} block>Update & Notify</Button>
           </Form.Item>
         </Form>
       </Modal>

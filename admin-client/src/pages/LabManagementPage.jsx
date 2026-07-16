@@ -50,6 +50,7 @@ const LabManagementPage = () => {
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingPackage, setEditingPackage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [catForm] = Form.useForm();
   const [pkgForm] = Form.useForm();
@@ -136,6 +137,7 @@ const LabManagementPage = () => {
 
   // Upsert Category Submit
   const handleCategorySubmit = async (values) => {
+    setIsSubmitting(true);
     try {
       await api.post("/lab/categories", {
         id: editingCategory ? editingCategory.id : undefined,
@@ -146,15 +148,18 @@ const LabManagementPage = () => {
       setIsCategoryModalOpen(false);
       catForm.resetFields();
       setEditingCategory(null);
-      fetchCategories();
+      fetchData();
     } catch (err) {
       console.error(err);
-      message.error("Failed to save category.");
+      message.error(err.response?.data?.error || "Error saving category.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Upsert Package Submit
   const handlePackageSubmit = async (values) => {
+    setIsSubmitting(true);
     try {
       await api.post("/lab/packages", {
         id: editingPackage ? editingPackage.id : undefined,
@@ -166,10 +171,12 @@ const LabManagementPage = () => {
       setIsPackageModalOpen(false);
       pkgForm.resetFields();
       setEditingPackage(null);
-      fetchCategories();
+      fetchData();
     } catch (err) {
       console.error(err);
-      message.error("Failed to save package.");
+      message.error(err.response?.data?.error || "Error saving package.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -514,10 +521,10 @@ const LabManagementPage = () => {
             <Input type="number" placeholder="e.g. 1" />
           </Form.Item>
           <Form.Item>
-            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
               <Button onClick={() => setIsCategoryModalOpen(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit">Save</Button>
-            </Space>
+              <Button type="primary" htmlType="submit" loading={isSubmitting}>Save</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>
@@ -558,10 +565,10 @@ const LabManagementPage = () => {
             <Switch defaultChecked />
           </Form.Item>
           <Form.Item>
-            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" }}>
               <Button onClick={() => setIsPackageModalOpen(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit">Save</Button>
-            </Space>
+              <Button type="primary" htmlType="submit" loading={isSubmitting}>Save</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

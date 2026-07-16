@@ -61,6 +61,7 @@ const QsiTvPage: React.FC = () => {
   const [isLiveSetupOpen, setIsLiveSetupOpen] = useState<boolean>(false);
   const [isPeerSessionSetupOpen, setIsPeerSessionSetupOpen] = useState<boolean>(false);
   const [isPublishingContent, setIsPublishingContent] = useState<boolean>(false);
+  const [isRequestingChannel, setIsRequestingChannel] = useState<boolean>(false);
   const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false);
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string>('');
   
@@ -168,6 +169,7 @@ const QsiTvPage: React.FC = () => {
   };
 
   const handleChannelRequestSubmit = async (values: any) => {
+    setIsRequestingChannel(true);
     try {
       await api.post('/tv/channels/request', {
         title: values.title,
@@ -178,6 +180,8 @@ const QsiTvPage: React.FC = () => {
       fetchMyChannel();
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to submit request.');
+    } finally {
+      setIsRequestingChannel(false);
     }
   };
 
@@ -730,8 +734,8 @@ const QsiTvPage: React.FC = () => {
                             <Input.TextArea className="bg-bg-primary border-border-subtle text-white" rows={4} placeholder="Summarize the core concepts and materials you will share..." />
                           </Form.Item>
 
-                          <button className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                            Submit Request
+                          <button className="qsi-button primary w-full py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={isRequestingChannel}>
+                            {isRequestingChannel ? 'Submitting...' : 'Submit Request'}
                           </button>
                         </Form>
                       </div>

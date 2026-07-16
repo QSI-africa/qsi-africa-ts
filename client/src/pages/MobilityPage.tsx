@@ -330,9 +330,10 @@ const MobilityPage: React.FC = () => {
             <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
               <button 
                 type="submit"
+                disabled={loading}
                 style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: GREEN, color: 'white', fontSize: '12px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.1em', cursor: 'pointer' }}
               >
-                Send Request
+                {loading ? 'Submitting...' : 'Send Request'}
               </button>
               <button 
                 onClick={() => setRequestModalVisible(false)}
