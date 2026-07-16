@@ -267,7 +267,7 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
     });
 
     // NOTE: sendPasswordResetEmail is not imported. Commenting out to prevent runtime crash.
-    // await sendPasswordResetEmail(user, resetToken);
+    // sendPasswordResetEmail(user, resetToken).catch(console.error);
     console.log(
       `(Mock Email) Password reset token for ${email}: ${resetToken}`
     );

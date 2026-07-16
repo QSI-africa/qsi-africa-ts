@@ -172,7 +172,7 @@ router.post("/requests/:id/accept", async (req, res) => {
     // We should send email to client about assignment here, but let's just let the admin do it or 
     // the system can do it automatically. We'll import sendRideAssignedEmail if needed.
     const { sendRideAssignedEmail } = require("../services/emailService");
-    await sendRideAssignedEmail(updatedRequest.client, updatedRequest, false);
+    sendRideAssignedEmail(updatedRequest.client, updatedRequest, false).catch(console.error);
     
     res.status(200).json(updatedRequest);
   } catch (error) {
@@ -218,7 +218,7 @@ router.patch("/requests/:id/status", async (req, res) => {
 
     // Send email to client
     const { sendRideStatusUpdateEmail } = require("../services/emailService");
-    await sendRideStatusUpdateEmail(request.client, updatedRequest, status);
+    sendRideStatusUpdateEmail(request.client, updatedRequest, status).catch(console.error);
     
     res.status(200).json(updatedRequest);
   } catch (error) {

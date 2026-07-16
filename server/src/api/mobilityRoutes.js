@@ -34,8 +34,8 @@ router.post("/fleet-request", authMiddleware, async (req, res) => {
       }
     });
 
-    // Notify super admin
-    await sendNewRideRequestEmail(request.client, request);
+    // Notify super admin without blocking the request
+    sendNewRideRequestEmail(request.client, request).catch(console.error);
 
     res.status(201).json(request);
   } catch (error) {
@@ -102,11 +102,12 @@ router.post("/site-visit", authMiddleware, async (req, res) => {
     const projectTitle = visitRequest.project.title;
     const requesterName = visitRequest.user.name;
 
-    await sendEmail({
+    // Send email to the engineer responsible without blocking the request
+    sendEmail({
       to: engineerEmail,
       subject: `New Site Visit Request: ${projectTitle}`,
       text: `Hello ${engineerName},\n\n${requesterName} has requested a site visit for the project "${projectTitle}".\n\nMessage: ${message || "No message"}\n\nPlease log in to the platform to respond.\n\nBest regards,\nQSI Mobility Team`,
-    });
+    }).catch(console.error);
 
     res.status(201).json(visitRequest);
   } catch (error) {

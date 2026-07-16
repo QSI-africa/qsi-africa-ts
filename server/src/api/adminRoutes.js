@@ -1393,7 +1393,7 @@ router.patch("/fleet/requests/:id/update-price", isSuperUserOrAdmin, async (req,
     
     // Send email to client
     const { sendPriceUpdateEmail } = require("../services/emailService");
-    await sendPriceUpdateEmail(request.client, request);
+    sendPriceUpdateEmail(request.client, request).catch(console.error);
 
     res.status(200).json(request);
   } catch (error) {
@@ -1423,7 +1423,7 @@ router.post("/fleet/requests/:id/broadcast", isSuperUserOrAdmin, async (req, res
     // Send emails
     const { sendRideRequestBroadcastEmail } = require("../services/emailService");
     for (const driver of availableDrivers) {
-      await sendRideRequestBroadcastEmail(driver.email, request);
+      sendRideRequestBroadcastEmail(driver.email, request).catch(console.error);
     }
 
     res.status(200).json(request);
@@ -1453,8 +1453,8 @@ router.post("/fleet/requests/:id/assign", isSuperUserOrAdmin, async (req, res) =
 
     // Send emails
     const { sendRideAssignedEmail } = require("../services/emailService");
-    await sendRideAssignedEmail(request.assignedDriver, request, true); // To driver
-    await sendRideAssignedEmail(request.client, request, false); // To client
+    sendRideAssignedEmail(request.assignedDriver, request, true).catch(console.error); // To driver
+    sendRideAssignedEmail(request.client, request, false).catch(console.error); // To client
 
     res.status(200).json(request);
   } catch (error) {
@@ -1513,7 +1513,7 @@ router.patch("/fleet/drivers/:id/approve", isSuperUserOrAdmin, async (req, res) 
 
     // Send email
     const { sendDriverApprovalEmail } = require("../services/emailService");
-    await sendDriverApprovalEmail(vehicle.driver, isApproved);
+    sendDriverApprovalEmail(vehicle.driver, isApproved).catch(console.error);
 
     res.status(200).json(vehicle);
   } catch (error) {
