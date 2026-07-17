@@ -63,8 +63,18 @@ router.get("/:idOrSlug", async (req, res) => {
           where: { isActive: true },
           orderBy: { order: "asc" },
         },
-        posts: {
+        panxPosts: {
           orderBy: { createdAt: "desc" },
+          include: {
+            author: { select: { id: true, name: true, role: true, isFollowing: true } },
+            likes: true,
+            reposts: true,
+            bookmarks: true,
+            replies: {
+              include: { author: { select: { id: true, name: true } } },
+              orderBy: { createdAt: 'desc' }
+            }
+          }
         },
         _count: {
           select: { engagements: true },
@@ -80,8 +90,18 @@ router.get("/:idOrSlug", async (req, res) => {
             where: { isActive: true },
             orderBy: { order: "asc" },
           },
-          posts: {
+          panxPosts: {
             orderBy: { createdAt: "desc" },
+            include: {
+              author: { select: { id: true, name: true, role: true, isFollowing: true } },
+              likes: true,
+              reposts: true,
+              bookmarks: true,
+              replies: {
+                include: { author: { select: { id: true, name: true } } },
+                orderBy: { createdAt: 'desc' }
+              }
+            }
           },
           _count: {
             select: { engagements: true },
@@ -94,7 +114,13 @@ router.get("/:idOrSlug", async (req, res) => {
       return res.status(404).json({ error: "Venture not found." });
     }
 
-    res.json(venture);
+    const responseVenture = {
+      ...venture,
+      posts: venture.panxPosts || [],
+    };
+    delete responseVenture.panxPosts;
+
+    res.json(responseVenture);
   } catch (error) {
     console.error("Failed to fetch venture:", error);
     res.status(500).json({ error: "Failed to fetch venture." });
@@ -282,8 +308,8 @@ router.post("/:id/posts", authMiddleware, isAdminOrSuper, uploadFields([{ name: 
   }
 
   try {
-    const post = await prisma.venturePost.create({
-      data: { ventureId: id, content, imageUrl, videoUrl },
+    const post = await prisma.panxPost.create({
+      data: { ventureId: id, authorId: req.user.id, content, imageUrl, videoUrl },
     });
     res.status(201).json(post);
   } catch (error) {
@@ -296,7 +322,7 @@ router.post("/:id/posts", authMiddleware, isAdminOrSuper, uploadFields([{ name: 
 router.delete("/:id/posts/:postId", authMiddleware, isAdminOrSuper, async (req, res) => {
   const { postId } = req.params;
   try {
-    await prisma.venturePost.delete({ where: { id: postId } });
+    await prisma.panxPost.delete({ where: { id: postId } });
     res.status(204).send();
   } catch (error) {
     if (error.code === "P2025") return res.status(404).json({ error: "Post not found." });

@@ -16,7 +16,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   extra
 }) => {
   return (
-    <div className="unified-header flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 md:px-8 md:py-6" style={{
+    <div className="unified-header flex flex-row md:flex-row md:items-center justify-between gap-4 px-6 py-4 md:px-8 md:py-6" style={{
       background: 'rgba(10, 16, 24, 0.85)',
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
@@ -26,9 +26,9 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       width: '100%',
       maxWidth: '100vw'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, textAlign: 'left' }}>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0 }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1, margin: 0, textAlign: 'left' }}>
             {title}
           </h1>
           {subTitle && (

@@ -34,12 +34,12 @@ const GREEN = '#10B981';
 
 const moduleDetails = {
   infrastructure: {
-    title: "Infrastructure AI",
+    title: "F.R.A.N.C.I.S",
     status: "online",
-    icon: <LayoutGrid size={24} />,
+    icon: <Bot size={24} />,
     endpoint: "/infrastructure",
-    slogan: "Building coherence...",
-    description: "The Infrastructure AI is your intelligent project intake specialist for Hyper Civil Engineers. It guides you through describing your infrastructure project — from new builds and road repairs to drainage systems — and automatically compiles a comprehensive quote request.",
+    slogan: "SENSOL",
+    description: "F.R.A.N.C.I.S is your intelligent project intake specialist for Hyper Civil Engineers. It guides you through describing your infrastructure project — from new builds and road repairs to drainage systems — and automatically compiles a comprehensive quote request.",
     purpose: "Submit infrastructure project requests and receive professional quotations.",
     capabilities: [
       "Gather project type, location, and scope details through natural conversation",
@@ -66,12 +66,12 @@ const moduleDetails = {
     tips: "Share openly about what you are experiencing. The more context you provide, the more tailored and insightful the recommendations will be.",
   },
   vision: {
-    title: "Vision Translator",
+    title: "Vision Space",
     status: "active",
     icon: <Brain size={24} />,
     endpoint: "/vision",
     slogan: "Translate imagination...",
-    description: "The Vision Translator is a collaborative AI architect that transforms your raw ideas and ambitions into a structured, professional Vision Document. It guides you section by section — from context and focus areas to institutional engagement and strategic invitations.",
+    description: "Vision Space is a collaborative AI architect that transforms your raw ideas and ambitions into a structured, professional Vision Document. It guides you section by section — from context and focus areas to institutional engagement and strategic invitations.",
     purpose: "Co-create a comprehensive, investment-ready vision document for your project or initiative.",
     capabilities: [
       "Structured, section-by-section document creation (A–G)",
@@ -271,7 +271,7 @@ const ChatWindow: React.FC = () => {
                letterSpacing: '0.1em', cursor: 'pointer', marginBottom: '24px'
              }}
            >
-              <ChevronLeft size={14} /> Back to Hub
+              <ChevronLeft size={14} /> Back
            </button>
            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
               <div style={{ 
@@ -418,13 +418,6 @@ const ChatWindow: React.FC = () => {
                   title="Healing Trajectories"
                 />
               )}
-              <Info
-                size={20}
-                style={{ cursor: 'pointer' }}
-                className="hover:text-white transition-colors"
-                onClick={() => setIsInfoDrawerOpen(true)}
-                title="Information"
-              />
             </div>
           </div>
         }
@@ -849,117 +842,6 @@ const ChatWindow: React.FC = () => {
         )}
       </Drawer>
 
-      <Drawer
-        open={isInfoDrawerOpen}
-        onClose={() => setIsInfoDrawerOpen(false)}
-        placement="right"
-        width={Math.min(window.innerWidth, 420)}
-        styles={{
-          body: { background: 'rgba(10, 18, 14, 0.98)', padding: 0 },
-          header: { display: 'none' },
-          wrapper: { boxShadow: '-8px 0 48px rgba(0,0,0,0.6)' },
-        }}
-      >
-        <div style={{ height: '100%', overflowY: 'auto', padding: '28px 24px' }} className="no-scrollbar">
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '14px',
-                background: `${GREEN}18`, border: `1px solid ${GREEN}35`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0
-              }}>
-                {details.icon}
-              </div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {details.title}
-                </h3>
-                <span style={{ fontSize: '10px', fontWeight: 800, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  Page Overview
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsInfoDrawerOpen(false)}
-              style={{
-                width: '36px', height: '36px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: 'rgba(255,255,255,0.5)', flexShrink: 0
-              }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '28px' }} />
-
-          {/* Purpose */}
-          <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '10px', fontWeight: 900, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 10px' }}>
-              Purpose
-            </p>
-            <div style={{
-              padding: '16px 18px', borderRadius: '14px',
-              background: `${GREEN}0D`, border: `1px solid ${GREEN}25`
-            }}>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0, lineHeight: 1.6 }}>
-                {(details as any).purpose}
-              </p>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 10px' }}>
-              About This Module
-            </p>
-            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.7 }}>
-              {(details as any).description}
-            </p>
-          </div>
-
-          {/* Capabilities */}
-          <div style={{ marginBottom: '28px' }}>
-            <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 12px' }}>
-              What You Can Do
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {((details as any).capabilities || []).map((cap: string, i: number) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: '12px',
-                  padding: '12px 14px', borderRadius: '12px',
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
-                }}>
-                  <div style={{
-                    width: '20px', height: '20px', borderRadius: '6px', background: `${GREEN}20`,
-                    border: `1px solid ${GREEN}30`, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', flexShrink: 0, marginTop: '1px'
-                  }}>
-                    <span style={{ fontSize: '11px', color: GREEN, fontWeight: 900 }}>✓</span>
-                  </div>
-                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{cap}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Tips */}
-          {(details as any).tips && (
-            <div style={{
-              padding: '16px 18px', borderRadius: '14px',
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)'
-            }}>
-              <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 8px' }}>
-                💡 Pro Tip
-              </p>
-              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.6 }}>
-                {(details as any).tips}
-              </p>
-            </div>
-          )}
-        </div>
       </Drawer>
 
       <style>{`

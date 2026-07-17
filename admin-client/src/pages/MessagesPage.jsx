@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Row, Col, Input, List, Typography, Spin, Empty, Tag, notification } from 'antd';
-import { SearchOutlined, SendOutlined, UserOutlined, MessageOutlined } from '@ant-design/icons';
+import { Row, Col, Input, List, Typography, Spin, Empty, Tag, notification, Modal, Select, Button } from 'antd';
+import { SearchOutlined, SendOutlined, UserOutlined, MessageOutlined, PlusOutlined } from '@ant-design/icons';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +15,11 @@ const MessagesPage = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
+
+  const [newChatModalOpen, setNewChatModalOpen] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+  const [selectedNewUser, setSelectedNewUser] = useState(null);
+  const [creatingChat, setCreatingChat] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -89,6 +94,39 @@ const MessagesPage = () => {
     }
   };
 
+  const handleOpenNewChat = async () => {
+    setNewChatModalOpen(true);
+    if (usersList.length === 0) {
+      try {
+        const response = await api.get('/messaging/users');
+        setUsersList(response.data);
+      } catch (error) {
+        notification.error({ message: 'Failed to fetch users' });
+      }
+    }
+  };
+
+  const handleCreateChat = async () => {
+    if (!selectedNewUser) return;
+    setCreatingChat(true);
+    try {
+      const response = await api.post('/messaging/conversations/direct', { targetUserId: selectedNewUser });
+      setConversations(prev => {
+        if (!prev.some(c => c.id === response.data.id)) {
+          return [response.data, ...prev];
+        }
+        return prev;
+      });
+      setSelectedId(response.data.id);
+      setNewChatModalOpen(false);
+      setSelectedNewUser(null);
+    } catch (error) {
+      notification.error({ message: 'Failed to start conversation' });
+    } finally {
+      setCreatingChat(false);
+    }
+  };
+
   const activeConversation = conversations.find(c => c.id === selectedId);
   const filteredConversations = conversations.filter(c => (c.title || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -97,7 +135,15 @@ const MessagesPage = () => {
       {/* Sidebar */}
       <div style={{ width: '320px', borderRight: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)' }}>
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <Title level={4} style={{ color: 'white', margin: '0 0 16px 0' }}>Inbox</Title>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <Title level={4} style={{ color: 'white', margin: 0 }}>Inbox</Title>
+            <Button 
+              type="text" 
+              icon={<PlusOutlined />} 
+              onClick={handleOpenNewChat}
+              style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}
+            />
+          </div>
           <Input 
             prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.3)' }} />} 
             placeholder="Search conversations..." 
@@ -154,28 +200,36 @@ const MessagesPage = () => {
               {messagesLoading ? (
                  <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin /></div>
               ) : messages.length > 0 ? (
-                messages.map((msg, idx) => (
-                  <div 
-                    key={idx} 
-                    style={{ 
-                      alignSelf: msg.senderType === 'USER' ? 'flex-end' : 'flex-start',
-                      maxWidth: '70%'
-                    }}
-                  >
-                    <div style={{ 
-                      padding: '14px 18px', borderRadius: '20px', 
-                      background: msg.senderType === 'USER' ? '#10B981' : 'rgba(255,255,255,0.05)',
-                      color: msg.senderType === 'USER' ? 'white' : 'rgba(255,255,255,0.9)',
-                      borderBottomRightRadius: msg.senderType === 'USER' ? '4px' : '20px',
-                      borderBottomLeftRadius: msg.senderType === 'USER' ? '20px' : '4px',
-                    }}>
-                      {msg.text}
+                messages.map((msg, idx) => {
+                  const isMine = msg.senderId === user.id;
+                  return (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        alignSelf: isMine ? 'flex-end' : 'flex-start',
+                        maxWidth: '70%'
+                      }}
+                    >
+                      {!isMine && (
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px', paddingLeft: '4px' }}>
+                          {msg.sender?.name || 'User'}
+                        </div>
+                      )}
+                      <div style={{ 
+                        padding: '14px 18px', borderRadius: '20px', 
+                        background: isMine ? '#10B981' : 'rgba(255,255,255,0.05)',
+                        color: isMine ? 'white' : 'rgba(255,255,255,0.9)',
+                        borderBottomRightRadius: isMine ? '4px' : '20px',
+                        borderBottomLeftRadius: isMine ? '20px' : '4px',
+                      }}>
+                        {msg.text}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', textAlign: isMine ? 'right' : 'left' }}>
+                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', textAlign: msg.senderType === 'USER' ? 'right' : 'left' }}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <Empty description={<span style={{ color: 'rgba(255,255,255,0.3)' }}>No messages yet</span>} />
               )}
@@ -221,6 +275,36 @@ const MessagesPage = () => {
           </div>
         )}
       </div>
+
+      <Modal
+        title="Start New Conversation"
+        open={newChatModalOpen}
+        onCancel={() => setNewChatModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setNewChatModalOpen(false)}>Cancel</Button>,
+          <Button key="start" type="primary" onClick={handleCreateChat} loading={creatingChat} disabled={!selectedNewUser}>
+            Start Chat
+          </Button>
+        ]}
+      >
+        <div style={{ padding: '20px 0' }}>
+          <Typography.Text style={{ display: 'block', marginBottom: '8px' }}>Select User:</Typography.Text>
+          <Select
+            showSearch
+            placeholder="Search by name or email"
+            style={{ width: '100%' }}
+            value={selectedNewUser}
+            onChange={setSelectedNewUser}
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={usersList.map(u => ({
+              value: u.id,
+              label: `${u.name} (${u.email}) - ${u.role}`
+            }))}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

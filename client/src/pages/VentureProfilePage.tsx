@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import PanXPostItem from '../components/panx/PanXPostItem';
 
 const { TextArea } = Input;
 
@@ -39,9 +40,22 @@ const VentureProfilePage: React.FC = () => {
   const [selectedEngagementType, setSelectedEngagementType] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [postModalOpen, setPostModalOpen] = useState(false);
+
+  const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: any[], initialIndex: number } | null>(null);
+  
+  const { user } = useAuth();
+
   const [form] = Form.useForm();
 
   const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
+  const api = axios.create({
+    baseURL,
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  });
 
   const getMediaUrl = (url?: string) => {
     if (!url) return undefined;
@@ -96,6 +110,64 @@ const VentureProfilePage: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleLikeToggle = async (postId: string) => {
+    if (!user) return navigate('/login');
+    try {
+      const res = await api.post(`/panx/posts/${postId}/like`);
+      setVenture((prev: any) => ({
+        ...prev,
+        posts: prev.posts.map((p: any) => p.id === postId ? { ...p, hasLiked: res.data.liked, likesCount: res.data.likesCount } : p)
+      }));
+    } catch (error) { console.error(error); }
+  };
+
+  const handleRepostToggle = async (postId: string) => {
+    if (!user) return navigate('/login');
+    try {
+      const res = await api.post(`/panx/posts/${postId}/repost`);
+      setVenture((prev: any) => ({
+        ...prev,
+        posts: prev.posts.map((p: any) => p.id === postId ? { ...p, hasReposted: res.data.reposted, repostsCount: res.data.repostsCount } : p)
+      }));
+    } catch (error) { console.error(error); }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await api.delete(`/panx/posts/${postId}`);
+      setVenture((prev: any) => ({
+        ...prev,
+        posts: prev.posts.filter((p: any) => p.id !== postId)
+      }));
+      message.success("Post deleted");
+    } catch (error) { console.error(error); }
+  };
+
+  const handlePostReply = async (postId: string) => {
+    if (!user) return navigate('/login');
+    if (!replyText.trim()) return;
+    try {
+      const res = await api.post(`/panx/posts/${postId}/reply`, { content: replyText });
+      setVenture((prev: any) => ({
+        ...prev,
+        posts: prev.posts.map((p: any) => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              repliesCount: p.repliesCount + 1,
+              replies: [...(p.replies || []), res.data]
+            };
+          }
+          return p;
+        })
+      }));
+      setReplyText('');
+      setActiveReplyPostId(null);
+      message.success("Reply added!");
+    } catch (error) { console.error(error); }
   };
 
   if (loading) {
@@ -235,53 +307,48 @@ const VentureProfilePage: React.FC = () => {
 
       {/* Content Feed */}
       <div style={{ padding: '0 24px', paddingBottom: '120px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.2em', display: 'block', marginBottom: '16px' }}>
-          Updates
-        </span>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.2em', display: 'block', marginBottom: '16px' }}>
+            Updates
+          </span>
 
-        {venture.posts?.length === 0 && (
-          <div style={{
-            padding: '40px', textAlign: 'center', borderRadius: '20px',
-            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'
-          }}>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: 700 }}>No updates yet</span>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {venture.posts?.map((post: any) => (
-            <div
-              key={post.id}
-              style={{
-                padding: '20px', borderRadius: '20px',
-                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                transition: 'all 0.3s'
-              }}
-              className="hover:border-white/10 hover:bg-white/[0.03]"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <Calendar size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
-                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-                  {new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-                {post.content}
-              </p>
-
-              {post.imageUrl && (
-                <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <img src={getMediaUrl(post.imageUrl)} alt="Post attachment" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} loading="lazy" />
-                </div>
-              )}
-              {post.videoUrl && (
-                <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden' }}>
-                  <video src={getMediaUrl(post.videoUrl)} controls style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} preload="metadata" />
-                </div>
-              )}
+          {venture.posts?.length === 0 && (
+            <div style={{
+              padding: '40px', textAlign: 'center', borderRadius: '20px',
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: 700 }}>No updates yet</span>
             </div>
-          ))}
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {venture.posts?.map((post: any) => (
+              <PanXPostItem
+                key={post.id}
+                post={{ ...post, venture }}
+                user={user}
+                navigate={navigate}
+                handleFollowToggle={() => {}} // Ventures don't have user follows yet
+                handleDeletePost={handleDeletePost}
+                handleLikeToggle={handleLikeToggle}
+                setActiveReplyPostId={setActiveReplyPostId}
+                activeReplyPostId={activeReplyPostId}
+                handleRepostToggle={handleRepostToggle}
+                setPosts={(setter: any) => {
+                  setVenture((prev: any) => ({
+                    ...prev,
+                    posts: typeof setter === 'function' ? setter(prev.posts) : setter
+                  }));
+                }}
+                replyText={replyText}
+                setReplyText={setReplyText}
+                handlePostReply={handlePostReply}
+                setFullscreenMedia={setFullscreenMedia}
+                api={api}
+                message={message}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -396,6 +463,58 @@ const VentureProfilePage: React.FC = () => {
               </Form>
             </div>
           </div>
+        </Modal>
+
+        <Modal
+          title={null}
+          open={postModalOpen}
+          onCancel={() => setPostModalOpen(false)}
+          footer={null}
+          width={600}
+          destroyOnClose
+          centered
+          closeIcon={null}
+          className="engagement-glass-modal"
+        >
+          {selectedPost && (
+            <div className="relative overflow-hidden" style={{
+              backgroundColor: 'rgba(24, 36, 30, 0.95)', backdropFilter: 'blur(40px)',
+              borderRadius: '32px', border: '1px solid rgba(16,185,129,0.2)',
+              boxShadow: '0 20px 60px -10px rgba(0,0,0,0.5)'
+            }}>
+              <div style={{ padding: '32px' }} className="relative z-10">
+                <button
+                  onClick={() => setPostModalOpen(false)}
+                  className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300 z-50"
+                >
+                  <X size={18} />
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', marginTop: '8px' }}>
+                  <Calendar size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
+                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>
+                    {new Date(selectedPost.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+
+                {selectedPost.imageUrl && (
+                  <div style={{ marginBottom: '20px', borderRadius: '16px', overflow: 'hidden' }}>
+                    <img src={getMediaUrl(selectedPost.imageUrl)} alt="Post attachment" style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', background: 'rgba(0,0,0,0.3)' }} loading="lazy" />
+                  </div>
+                )}
+                
+                {selectedPost.videoUrl && (
+                  <div style={{ marginBottom: '20px', borderRadius: '16px', overflow: 'hidden' }}>
+                    <video src={getMediaUrl(selectedPost.videoUrl)} controls style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', background: 'rgba(0,0,0,0.3)' }} preload="metadata" />
+                  </div>
+                )}
+
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '15px', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap', fontWeight: 500 }}>
+                  {selectedPost.content}
+                </p>
+              </div>
+            </div>
+          )}
         </Modal>
       </ConfigProvider>
     </div>

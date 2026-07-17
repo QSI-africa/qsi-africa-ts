@@ -160,7 +160,7 @@ const VenturesPage = () => {
 
   const handleUpdateEngagementStatus = async (ventureId, engagementId, status) => {
     try {
-      await api.put(`/ventures/${ventureId}/engagements/${engagementId}`, { status });
+      await api.patch(`/ventures/${ventureId}/engagements/${engagementId}`, { status });
       message.success(`Status updated to ${status}`);
       fetchVentureEngagements(ventureId);
     } catch (error) {

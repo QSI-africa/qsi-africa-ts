@@ -41,7 +41,7 @@ interface LabRecording {
   description: string;
   categoryId: string;
   categoryTitle: string;
-  channelId: string;
+  teacherId: string;
   channelTitle: string;
   teacherName: string;
   mimeType: string;
@@ -50,11 +50,11 @@ interface LabRecording {
   mediaUrl: string | null;
 }
 
-interface TvChannel {
+interface LabTeacherProfile {
   id: string;
   userId: string;
   title: string;
-  description: string;
+  bio?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
@@ -85,14 +85,14 @@ const LabPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
-  // Channel (Teacher Profile)
-  const [myChannel, setMyChannel] = useState<TvChannel | null>(null);
-  const [channelLoading, setChannelLoading] = useState(true);
+  // Teacher Profile
+  const [myTeacherProfile, setMyTeacherProfile] = useState<LabTeacherProfile | null>(null);
+  const [teacherLoading, setTeacherLoading] = useState(true);
   
   // Applications & uploads
-  const [newChannelTitle, setNewChannelTitle] = useState('');
-  const [newChannelDesc, setNewChannelDesc] = useState('');
-  const [isSubmittingChannel, setIsSubmittingChannel] = useState(false);
+  const [newTeacherTitle, setNewTeacherTitle] = useState('');
+  const [newTeacherBio, setNewTeacherBio] = useState('');
+  const [isSubmittingTeacher, setIsSubmittingTeacher] = useState(false);
 
   const [newRecTitle, setNewRecTitle] = useState('');
   const [newRecDesc, setNewRecDesc] = useState('');
@@ -103,7 +103,7 @@ const LabPage: React.FC = () => {
 
   // Playback Modal
   const [playbackRecording, setPlaybackRecording] = useState<LabRecording | null>(null);
-  const [subscribingChannelId, setSubscribingChannelId] = useState<string | null>(null);
+  const [subscribingTeacherId, setSubscribingTeacherId] = useState<string | null>(null);
 
   // Live Lectures State
   const [streams, setStreams] = useState<any[]>([]);
@@ -121,10 +121,10 @@ const LabPage: React.FC = () => {
     fetchCategories();
     fetchRecordings();
     if (isAuthenticated) {
-      fetchMyChannel();
+      fetchMyTeacherProfile();
       fetchEnrollments();
     } else {
-      setChannelLoading(false);
+      setTeacherLoading(false);
       setEnrolledPackageIds([]);
     }
 
@@ -178,15 +178,15 @@ const LabPage: React.FC = () => {
   };
 
   // Fetch teacher/channel status
-  const fetchMyChannel = async () => {
+  const fetchMyTeacherProfile = async () => {
     try {
-      setChannelLoading(true);
-      const res = await api.get('/tv/channels/my-channel');
-      setMyChannel(res.data);
+      setTeacherLoading(true);
+      const res = await api.get('/lab/teacher/my-profile');
+      setMyTeacherProfile(res.data);
     } catch (err: any) {
       console.error(err);
     } finally {
-      setChannelLoading(false);
+      setTeacherLoading(false);
     }
   };
 
@@ -235,42 +235,38 @@ const LabPage: React.FC = () => {
   };
 
   // Request/create Teacher channel
-  const handleRequestChannel = async (e: React.FormEvent) => {
+  const handleRequestTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
       message.info("Authentication required.");
       navigate('/login');
       return;
     }
-    const title = newChannelTitle.trim();
-    const desc = newChannelDesc.trim();
+    const title = newTeacherTitle.trim();
+    const bio = newTeacherBio.trim();
 
-    if (!title || !desc) {
-      message.warning("Channel title and description are required.");
+    if (!title) {
+      message.warning("Teacher title/name is required.");
       return;
     }
     
     if (title.length < 3) {
-      message.warning("Channel title must be at least 3 characters long.");
+      message.warning("Teacher title must be at least 3 characters long.");
       return;
     }
     
-    if (desc.length < 10) {
-      message.warning("Channel description must be at least 10 characters long.");
-      return;
-    }
     try {
-      setIsSubmittingChannel(true);
-      const res = await api.post('/tv/channels/request', {
+      setIsSubmittingTeacher(true);
+      const res = await api.post('/lab/teacher/request', {
         title,
-        description: desc
+        bio
       });
-      setMyChannel(res.data);
+      setMyTeacherProfile(res.data);
       message.success("Teacher profile requested! Admin approval pending.");
     } catch (err: any) {
       message.error(err.response?.data?.error || "Failed to submit request.");
     } finally {
-      setIsSubmittingChannel(false);
+      setIsSubmittingTeacher(false);
     }
   };
 
@@ -354,32 +350,30 @@ const LabPage: React.FC = () => {
   };
 
   // Subscribe directly to a channel
-  const handleSubscribe = async (channelId: string) => {
+  const handleSubscribe = async (teacherId: string) => {
     if (!isAuthenticated) {
-      message.info("Please sign in or create an account to subscribe to channels.");
+      message.info("Please sign in or create an account to subscribe.");
       navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
     try {
-      setSubscribingChannelId(channelId);
-      await api.post(`/tv/channels/${channelId}/subscribe`);
+      setSubscribingTeacherId(teacherId);
+      await api.post(`/lab/teacher/${teacherId}/subscribe`);
       message.success("Subscribed successfully! Content unlocked.");
       
       // Refresh recordings list
       const updatedRecordings = await api.get('/lab/recordings');
-      console.log(updatedRecordings.data, 'updatedRecordings.data');
       setRecordings(updatedRecordings.data);
       
       // Update playback record
       const match = updatedRecordings.data.find((r: any) => r.id === playbackRecording?.id);
-      console.log(match, 'match');
       if (match) {
         setPlaybackRecording(match);
       }
     } catch (err: any) {
       message.error(err.response?.data?.error || "Failed to subscribe.");
     } finally {
-      setSubscribingChannelId(null);
+      setSubscribingTeacherId(null);
     }
   };
 
@@ -476,13 +470,13 @@ const LabPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Award size={16} color="#3B82F6" />
               <div>
-                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Channel Status</div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Teacher Status</div>
                 <div style={{ 
                   fontSize: '11px', 
                   fontWeight: 900, 
-                  color: myChannel?.status === 'APPROVED' ? GREEN : myChannel?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB' 
+                  color: myTeacherProfile?.status === 'APPROVED' ? GREEN : myTeacherProfile?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB' 
                 }}>
-                  {myChannel ? myChannel.status : 'STUDENT'}
+                  {myTeacherProfile ? myTeacherProfile.status : 'STUDENT'}
                 </div>
               </div>
             </div>
@@ -954,143 +948,94 @@ const LabPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-            ) : channelLoading ? (
+            ) : teacherLoading ? (
               <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
-            ) : !myChannel ? (
-              /* No Channel - Request Profile */
-              <div style={{
-                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
-                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px'
-              }}>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                  <Tv size={40} color={GREEN} style={{ marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '22px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>
-                    Become a Teacher & Broadcaster
-                  </h3>
-                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
-                    Teachers can publish audio/visual lessons to the Panx Lab, configure subscription access gating, and run live TV streams.
-                  </p>
-                </div>
-
-                <form onSubmit={handleRequestChannel}>
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-                      Channel/Profile Name
-                    </label>
+            ) : !myTeacherProfile ? (
+              /* Request Teacher Form */
+              <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px', textAlign: 'center' }}>
+                <Video size={48} color={GREEN} style={{ margin: '0 auto 20px auto' }} />
+                <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
+                  Become a Teacher & Broadcaster
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+                  Teachers can publish audio/visual lessons to the Panx Lab and run live TV streams.
+                </p>
+                <form onSubmit={handleRequestTeacher}>
+                  <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Teacher / Channel Name</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Dr. Kwame's Tech Lab"
-                      value={newChannelTitle}
-                      onChange={(e) => setNewChannelTitle(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', 
-                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', outline: 'none'
-                      }}
-                      required
+                      value={newTeacherTitle} 
+                      onChange={(e) => setNewTeacherTitle(e.target.value)}
+                      placeholder="e.g., Dr. Smith's Advanced Engineering"
+                      className="qsi-input"
+                      style={{ width: '100%', padding: '14px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white' }}
+                      required 
                     />
                   </div>
-
-                  <div style={{ marginBottom: '28px' }}>
-                    <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-                      Teaching Focus & Description
-                    </label>
+                  <div style={{ marginBottom: '32px', textAlign: 'left' }}>
+                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>Biography / Description</label>
                     <textarea 
-                      placeholder="Provide details about your experience and the syllabus you plan to deliver..."
-                      value={newChannelDesc}
-                      onChange={(e) => setNewChannelDesc(e.target.value)}
+                      value={newTeacherBio} 
+                      onChange={(e) => setNewTeacherBio(e.target.value)}
+                      placeholder="What topics will you cover? What are your credentials?"
+                      className="qsi-input"
                       rows={4}
-                      style={{
-                        width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', 
-                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', outline: 'none', resize: 'vertical'
-                      }}
-                      required
+                      style={{ width: '100%', padding: '14px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', resize: 'vertical' }}
+                      required 
                     />
                   </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmittingChannel}
-                    style={{
-                      width: '100%', padding: '14px', background: GREEN, color: 'black',
-                      border: 'none', borderRadius: '14px', fontSize: '12px', fontWeight: 900,
-                      textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                    }}
+                  <button 
+                    type="submit" 
+                    className="qsi-btn qsi-btn-primary" 
+                    style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '14px', opacity: isSubmittingTeacher ? 0.7 : 1 }}
+                    disabled={isSubmittingTeacher}
                   >
-                    {isSubmittingChannel ? 'Submitting...' : 'Submit Profile Application'}
-                    <ArrowRight size={14} />
+                    {isSubmittingTeacher ? 'Submitting...' : 'Apply for Teacher Profile'}
                   </button>
                 </form>
               </div>
-            ) : myChannel.status === 'PENDING' ? (
-              /* Application Pending Approval */
-              <div style={{
-                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
-                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px',
-                textAlign: 'center'
-              }}>
-                <AlertCircle size={40} color="#F59E0B" style={{ marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>
+            ) : myTeacherProfile.status === 'PENDING' ? (
+              <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px', textAlign: 'center' }}>
+                <Hourglass size={48} color="#F59E0B" style={{ margin: '0 auto 20px auto' }} />
+                <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
                   Application Under Review
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5, marginBottom: '24px' }}>
-                  Your profile request is currently pending review by our administrator. Once approved, you can start streaming and publishing lessons.
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+                  Your request to become a Panx Lab Teacher is currently pending admin approval. You will have access to the Teacher Studio once approved.
                 </p>
-                <div style={{ 
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '16px', padding: '20px', textAlign: 'left', marginBottom: '24px'
-                }}>
-                  <h4 style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '16px', margin: 0 }}>
-                    Submitted Details
-                  </h4>
-                  <div style={{ marginBottom: '12px' }}>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: 800 }}>Profile Name</span>
-                    <strong style={{ color: 'white', fontSize: '14px' }}>{myChannel.title}</strong>
+                <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px', textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>Teacher Title</div>
+                    <strong style={{ color: 'white', fontSize: '14px' }}>{myTeacherProfile.title}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: 800 }}>Teaching Focus</span>
-                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>{myChannel.description}</p>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 800, marginBottom: '4px' }}>Bio / Description</div>
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>{myTeacherProfile.bio}</p>
                   </div>
                 </div>
-                <div style={{ 
-                  display: 'inline-flex', alignItems: 'center', gap: '8px', 
-                  background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
-                  padding: '8px 16px', borderRadius: '12px', fontSize: '11px', color: '#F59E0B', fontWeight: 800
-                }}>
-                  <RefreshCw size={12} className="animate-spin" /> Pending Approval
-                </div>
               </div>
-            ) : myChannel.status === 'REJECTED' ? (
-              /* Application Rejected */
-              <div style={{
-                maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.01)',
-                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '40px',
-                textAlign: 'center'
-              }}>
-                <AlertCircle size={40} color="#EF4444" style={{ marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '20px', fontWeight: 900, color: 'white', margin: 0 }}>
+            ) : myTeacherProfile.status === 'REJECTED' ? (
+              /* Rejected State */
+              <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '24px', padding: '40px', textAlign: 'center' }}>
+                <AlertCircle size={48} color="#EF4444" style={{ margin: '0 auto 20px auto' }} />
+                <h3 style={{ fontSize: '24px', fontWeight: 900, color: 'white', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
                   Application Rejected
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5 }}>
-                  Unfortunately, your request to become an instructor was not approved at this time. Please contact support or revise your request specifications.
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+                  Unfortunately, your request to become a Teacher was not approved at this time.
                 </p>
-                <button
+                <button 
+                  className="qsi-btn qsi-btn-secondary"
                   onClick={async () => {
                     try {
-                      setChannelLoading(true);
-                      await api.delete('/tv/channels/my-channel');
-                      setMyChannel(null);
-                    } catch (err: any) {
-                      message.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to reset application.");
-                    } finally {
-                      setChannelLoading(false);
-                    }
-                  }}
-                  style={{
-                    marginTop: '24px', background: 'rgba(255,255,255,0.04)', color: 'white', border: '1px solid rgba(255,255,255,0.1)',
-                    padding: '10px 20px', borderRadius: '12px', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer'
+                      // Note: you may need a separate delete endpoint for teachers if you want them to re-apply
+                      // await api.delete('/lab/teacher/my-profile');
+                      // setMyTeacherProfile(null);
+                    } catch (err) {}
                   }}
                 >
-                  Create New Application
+                  Contact Support
                 </button>
               </div>
             ) : (
@@ -1237,9 +1182,9 @@ const LabPage: React.FC = () => {
                     Your Published Lectures
                   </h3>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
                     {recordings
-                      .filter(rec => rec.channelId === myChannel.id)
+                      .filter(rec => rec.teacherId === myTeacherProfile.id)
                       .map(rec => (
                         <div
                           key={rec.id}
@@ -1269,7 +1214,7 @@ const LabPage: React.FC = () => {
                         </div>
                       ))}
 
-                    {recordings.filter(rec => rec.channelId === myChannel.id).length === 0 && (
+                    {recordings.filter(rec => rec.teacherId === myTeacherProfile.id).length === 0 && (
                       <div style={{ textAlign: 'center', padding: '40px 0', opacity: 0.3, border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '16px' }}>
                         <BookOpen size={24} style={{ margin: '0 auto 8px auto', color: GREEN }} />
                         <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', fontWeight: 800 }}>No Lectures Published</span>
@@ -1336,8 +1281,16 @@ const LabPage: React.FC = () => {
                     Subscription Required
                   </h4>
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5, maxWidth: '400px', margin: '8px auto 24px auto' }}>
-                    This lecture is locked. Subscribe to <strong>{playbackRecording.teacherName}</strong>'s channel (<strong>{playbackRecording.channelTitle}</strong>) on Panx TV to unlock this and all of their premium recorded content.
+                    This lecture is locked. Subscribe to <strong>{playbackRecording.teacherName}</strong> to unlock this and all of their premium recorded content.
                   </p>
+                  <button 
+                    className="qsi-btn qsi-btn-primary" 
+                    style={{ padding: '12px 24px', borderRadius: '12px', fontWeight: 800, opacity: subscribingTeacherId ? 0.7 : 1 }}
+                    onClick={() => handleSubscribe(playbackRecording.teacherId)}
+                    disabled={subscribingTeacherId === playbackRecording.teacherId}
+                  >
+                    {subscribingTeacherId === playbackRecording.teacherId ? 'Subscribing...' : 'Subscribe Now'}
+                  </button>
 
                   <div style={{
                     display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '320px', margin: '0 auto'

@@ -147,26 +147,6 @@ const ProfileDetailPage: React.FC = () => {
                     : "• Professional Member"}
                 </span>
               </div>
-
-              <div className="flex flex-wrap gap-3 items-center mb-2">
-                <span className="text-sm font-semibold text-success-green">
-                  {profile.specialization}
-                </span>
-                <div className="hidden md:block w-px h-3.5 bg-border-subtle" />
-                <div className="flex items-center gap-1.5 text-text-secondary">
-                  <Globe size={14} />
-                  <span className="text-xs font-medium tracking-wide">
-                    Pan-African Ecosystem
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-sm text-text-secondary max-w-3xl leading-snug italic">
-                "
-                {profile.bio ||
-                  "dedicatedToBuildingTheFoundationsOfASovereignAndProsperousAfricanFutureThroughExcellenceInInfrastructureAndThoughtLeadership"}
-                "
-              </p>
             </div>
           </div>
         </div>
@@ -180,10 +160,29 @@ const ProfileDetailPage: React.FC = () => {
             Engage Professional
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-xl mx-auto">
-            <button className="qsi-button primary flex-1 py-4 font-black text-xs tracking-widest shadow-xl shadow-accent-primary/10" style={{ textTransform: 'none' }}>
+            <button 
+              onClick={() => {
+                if (profile.user?.email) {
+                  window.location.href = `mailto:${profile.user.email}?subject=Consultation Inquiry`;
+                }
+              }}
+              className="qsi-button primary flex-1 py-4 font-black text-xs tracking-widest shadow-xl shadow-accent-primary/10" 
+              style={{ textTransform: 'none' }}
+            >
               Schedule Consultation
             </button>
-            <button className="qsi-button flex-1 py-4 font-black text-xs tracking-widest flex items-center justify-center gap-2" style={{ textTransform: 'none' }}>
+            <button 
+              onClick={async () => {
+                try {
+                  await api.post('/messaging/conversations/direct', { targetUserId: profile.userId });
+                  navigate('/inbox');
+                } catch (error) {
+                  console.error("Failed to start conversation:", error);
+                }
+              }}
+              className="qsi-button flex-1 py-4 font-black text-xs tracking-widest flex items-center justify-center gap-2" 
+              style={{ textTransform: 'none' }}
+            >
               <MessageCircle size={16} /> Secure Message
             </button>
           </div>

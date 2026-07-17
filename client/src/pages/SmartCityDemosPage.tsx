@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Spin, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import {
   Building2,
   Activity,
@@ -23,8 +23,7 @@ const SmartCityDemosPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-      const response = await axios.get(`${baseURL}/submit/demos`, {
+      const response = await api.get(`/submit/demos`, {
         params: { category: cat }
       });
       if (Array.isArray(response.data)) {

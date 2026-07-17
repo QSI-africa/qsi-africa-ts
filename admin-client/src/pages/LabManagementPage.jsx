@@ -42,8 +42,8 @@ const LabManagementPage = () => {
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [recordings, setRecordings] = useState([]);
   const [recordingsLoading, setRecordingsLoading] = useState(false);
-  const [channels, setChannels] = useState([]);
-  const [channelsLoading, setChannelsLoading] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [teachersLoading, setTeachersLoading] = useState(false);
 
   // Modals for Category & Package Editing
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -58,7 +58,7 @@ const LabManagementPage = () => {
   useEffect(() => {
     fetchCategories();
     fetchRecordings();
-    fetchChannels();
+    fetchTeachers();
   }, []);
 
   const fetchCategories = async () => {
@@ -87,27 +87,27 @@ const LabManagementPage = () => {
     }
   };
 
-  const fetchChannels = async () => {
-    setChannelsLoading(true);
+  const fetchTeachers = async () => {
+    setTeachersLoading(true);
     try {
-      const res = await api.get("/admin/tv/channels");
-      setChannels(res.data);
+      const res = await api.get("/admin/lab/teachers");
+      setTeachers(res.data);
     } catch (err) {
       console.error(err);
-      message.error("Failed to load channel requests.");
+      message.error("Failed to load teacher requests.");
     } finally {
-      setChannelsLoading(false);
+      setTeachersLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (channelId, status) => {
+  const handleUpdateStatus = async (teacherId, status) => {
     try {
-      await api.put(`/admin/tv/channels/${channelId}/status`, { status });
-      message.success(`Channel successfully ${status.toLowerCase()}.`);
-      fetchChannels();
+      await api.put(`/admin/lab/teachers/${teacherId}/status`, { status });
+      message.success(`Teacher profile successfully ${status.toLowerCase()}.`);
+      fetchTeachers();
     } catch (err) {
       console.error(err);
-      message.error("Failed to update channel status.");
+      message.error("Failed to update teacher status.");
     }
   };
 
@@ -229,14 +229,14 @@ const LabManagementPage = () => {
       key: "teacher",
       render: (_, record) => (
         <div>
-          <div>{record.channel?.user?.name || "Unknown"}</div>
-          <div style={{ fontSize: "11px", color: "#8c8c8c" }}>{record.channel?.user?.email}</div>
+          <div>{record.teacher?.user?.name || "Unknown"}</div>
+          <div style={{ fontSize: "11px", color: "#8c8c8c" }}>{record.teacher?.user?.email}</div>
         </div>
       )
     },
     {
-      title: "TV Channel",
-      dataIndex: ["channel", "title"],
+      title: "Teacher Profile",
+      dataIndex: ["teacher", "title"],
       key: "channel"
     },
     {
@@ -269,24 +269,24 @@ const LabManagementPage = () => {
     }
   ];
 
-  const pendingChannels = channels.filter(c => c.status === "PENDING").length;
+  const pendingTeachers = teachers.filter(c => c.status === "PENDING").length;
 
   const approvalColumns = [
     {
-      title: "Requested Channel",
-      key: "channel",
+      title: "Teacher Profile",
+      key: "teacherProfile",
       render: (_, record) => (
         <div>
           <Text strong style={{ fontSize: "15px" }}>{record.title}</Text>
           <div style={{ marginTop: "4px" }}>
-            <Text type="secondary" style={{ fontSize: "12px" }}>{record.description}</Text>
+            <Text type="secondary" style={{ fontSize: "12px" }}>{record.bio}</Text>
           </div>
         </div>
       ),
     },
     {
-      title: "Teacher",
-      key: "teacher",
+      title: "User",
+      key: "user",
       render: (_, record) => (
         <div>
           <Space>
@@ -385,13 +385,13 @@ const LabManagementPage = () => {
             },
             {
               key: "approvals",
-              label: `Teacher Approvals (${pendingChannels})`,
+              label: `Teacher Approvals (${pendingTeachers})`,
               children: (
                 <Table
-                  dataSource={channels.filter(c => c.status === "PENDING")}
+                  dataSource={teachers.filter(c => c.status === "PENDING")}
                   columns={approvalColumns}
                   rowKey="id"
-                  loading={channelsLoading}
+                  loading={teachersLoading}
                   locale={{ emptyText: <Empty description="No pending teacher requests." /> }}
                 />
               )

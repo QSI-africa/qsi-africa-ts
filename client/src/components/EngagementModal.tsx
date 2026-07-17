@@ -69,7 +69,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
             padding: 0,
             borderRadiusLG: 48,
             boxShadow: 'none',
-            colorBgMask: 'rgba(0, 0, 0, 0.8)'
+            colorBgMask: 'rgba(0, 0, 0, 0.4)'
           },
           Input: {
             colorBgContainer: 'rgba(255, 255, 255, 0.04)',
@@ -87,25 +87,20 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         open={visible}
         onCancel={onClose}
         footer={null}
-        width={800}
+        width={500}
         destroyOnClose
         centered
         closeIcon={null}
         className="engagement-glass-modal"
       >
         <div className="relative overflow-hidden" style={{ 
-          backgroundColor: 'rgba(10, 18, 14, 0.98)', 
-          backdropFilter: 'blur(60px)', 
+          backgroundColor: 'rgba(24, 36, 30, 0.95)', 
+          backdropFilter: 'blur(40px)', 
           borderRadius: '48px', 
           border: '1px solid rgba(16,185,129,0.2)', 
-          boxShadow: '0 40px 120px -20px rgba(0,0,0,0.9)',
-          minHeight: '600px'
+          boxShadow: '0 20px 60px -10px rgba(0,0,0,0.5)'
         }}>
-          {/* Ambient Glows */}
-          <div className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] bg-emerald-400/5 rounded-full blur-[100px] pointer-events-none" />
-
-          <div className="p-10 md:p-16 relative z-10">
+          <div className="p-8 md:p-12 relative z-10">
             {/* Header - Centered Strategy */}
             <div className="text-center mb-16 relative">
               <button 
@@ -118,12 +113,12 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
               <span className="text-[10px] font-black text-accent-primary uppercase tracking-[0.6em] block mb-4">
                 {category === 'concept' ? 'Frequency Calibration' : 'Network Calibration'}
               </span>
-              <h3 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none mb-6">
-                Initialize<br />Profile
+              <h3 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none mb-6">
+                Contact Us
               </h3>
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-white/20" />
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_10px_var(--accent-primary)] animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_10px_var(--accent-primary)]" />
                 <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-white/20" />
               </div>
               <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">{pilotTitle}</p>
@@ -163,17 +158,17 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
                 </Radio.Group>
               </Form.Item>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8">
                 <Form.Item 
                   name="contactName" 
-                  label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Operator Identity</span>}
+                  label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Name</span>}
                   rules={[{ required: true, message: 'Identity validation required' }]}
                 >
                   <Input placeholder="FULL LEGAL NAME" className="font-bold tracking-tight px-6" />
                 </Form.Item>
                 <Form.Item 
                   name="contactEmail" 
-                  label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Strategic Terminal</span>}
+                  label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Email</span>}
                   rules={[{ required: true, type: 'email', message: 'Valid terminal address required' }]}
                 >
                   <Input placeholder="EMAIL@NETWORK.IO" className="font-bold tracking-tight px-6" />
@@ -182,7 +177,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
 
               <Form.Item 
                 name="message" 
-                label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Collaborative Intent</span>}
+                label={<span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Message</span>}
               >
                 <TextArea 
                   rows={4} 
@@ -191,20 +186,20 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
                 />
               </Form.Item>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col gap-4 pt-4">
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="qsi-btn qsi-btn-primary h-16 flex-1 text-[11px] font-black tracking-[0.3em]"
+                  className="qsi-btn qsi-btn-primary h-14 w-full text-[11px] font-black tracking-[0.3em]"
                 >
-                  {loading ? 'SYNCHRONIZING...' : 'ESTABLISH LINK'}
+                  {loading ? 'SENDING...' : 'SUBMIT'}
                 </button>
                 <button 
                   type="button" 
                   onClick={onClose}
-                  className="qsi-btn qsi-btn-secondary h-16 flex-1 text-[11px] font-black tracking-[0.3em] border-white/10 hover:bg-white/5"
+                  className="qsi-btn qsi-btn-secondary h-14 w-full text-[11px] font-black tracking-[0.3em] border-white/10 hover:bg-white/5"
                 >
-                  ABORT MISSION
+                  CANCEL
                 </button>
               </div>
             </Form>

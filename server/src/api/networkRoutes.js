@@ -143,7 +143,7 @@ router.post("/projects", authMiddleware, async (req, res) => {
 // 5. Get individual profile with insights
 router.get("/profile/:id", async (req, res) => {
   try {
-    const profile = await prisma.engineerProfile.findUnique({
+    let profile = await prisma.engineerProfile.findUnique({
       where: { id: req.params.id },
       include: {
         user: { select: { name: true, email: true, role: true } },
@@ -151,7 +151,38 @@ router.get("/profile/:id", async (req, res) => {
         insights: true
       }
     });
-    if (!profile) return res.status(404).json({ error: "Profile not found." });
+    
+    if (!profile) {
+      profile = await prisma.engineerProfile.findUnique({
+        where: { userId: req.params.id },
+        include: {
+          user: { select: { name: true, email: true, role: true } },
+          projects: true,
+          insights: true
+        }
+      });
+    }
+
+    if (!profile) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.params.id }
+      });
+      if (user) {
+        return res.status(200).json({
+          id: user.id,
+          userId: user.id,
+          bio: "",
+          specialization: "General User",
+          skills: [],
+          isVerified: false,
+          user: { name: user.name, email: user.email, role: user.role },
+          projects: [],
+          insights: []
+        });
+      }
+      return res.status(404).json({ error: "Profile not found." });
+    }
+
     res.status(200).json(profile);
   } catch (error) {
     res.status(500).json({ error: "Internal server error." });

@@ -88,8 +88,8 @@ router.get("/recordings", async (req, res) => {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
-        { channel: { title: { contains: search, mode: "insensitive" } } },
-        { channel: { user: { name: { contains: search, mode: "insensitive" } } } }
+        { teacher: { title: { contains: search, mode: "insensitive" } } },
+        { teacher: { user: { name: { contains: search, mode: "insensitive" } } } }
       ];
     }
 
@@ -97,7 +97,7 @@ router.get("/recordings", async (req, res) => {
       where,
       include: {
         category: true,
-        channel: {
+        teacher: {
           include: {
             user: {
               select: {
@@ -115,7 +115,7 @@ router.get("/recordings", async (req, res) => {
     // Check subscriber status of current user (if logged in)
     let userId = null;
     let isAdmin = false;
-    let subscribedChannelIds = new Set();
+    let subscribedTeacherIds = new Set();
 
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -131,10 +131,10 @@ router.get("/recordings", async (req, res) => {
         });
         if (user) {
           isAdmin = user.role === "ADMIN" || user.role === "SUPER_USER";
-          const mySubscriptions = await prisma.tvSubscription.findMany({
+          const mySubscriptions = await prisma.labSubscription.findMany({
             where: { subscriberId: userId }
           });
-          subscribedChannelIds = new Set(mySubscriptions.map((sub) => sub.channelId));
+          subscribedTeacherIds = new Set(mySubscriptions.map((sub) => sub.teacherId));
         }
       } catch (err) {
         // Ignore invalid token, act as guest
@@ -142,8 +142,8 @@ router.get("/recordings", async (req, res) => {
     }
 
     const mappedRecordings = recordings.map((rec) => {
-      const isOwner = userId ? rec.channel.userId === userId : false;
-      const isSubscribed = subscribedChannelIds.has(rec.channelId);
+      const isOwner = userId && rec.teacher ? rec.teacher.userId === userId : false;
+      const isSubscribed = rec.teacher ? subscribedTeacherIds.has(rec.teacher.id) : false;
       const hasAccess = isOwner || isSubscribed || isAdmin;
 
       return {
@@ -152,9 +152,9 @@ router.get("/recordings", async (req, res) => {
         description: rec.description,
         categoryId: rec.categoryId,
         categoryTitle: rec.category.title,
-        channelId: rec.channelId,
-        channelTitle: rec.channel.title,
-        teacherName: rec.channel.user.name || rec.channel.user.email,
+        teacherId: rec.teacher?.id,
+        channelTitle: rec.teacher?.title || "Unknown",
+        teacherName: rec.teacher?.user?.name || rec.teacher?.user?.email || "Unknown",
         mimeType: rec.mimeType,
         createdAt: rec.createdAt,
         isLocked: !hasAccess,
@@ -172,11 +172,11 @@ router.get("/recordings", async (req, res) => {
 // Publish a new lab recording (Approved Broadcasters/Teachers only)
 router.post("/recordings", authMiddleware, async (req, res) => {
   try {
-    const myChannel = await prisma.tvChannel.findUnique({
+    const myTeacherProfile = await prisma.labTeacherProfile.findUnique({
       where: { userId: req.user.id }
     });
 
-    if (!myChannel || myChannel.status !== "APPROVED") {
+    if (!myTeacherProfile || myTeacherProfile.status !== "APPROVED") {
       return res.status(403).json({ error: "Only approved teachers can publish recordings." });
     }
 
@@ -187,7 +187,7 @@ router.post("/recordings", authMiddleware, async (req, res) => {
 
     const recording = await prisma.labRecording.create({
       data: {
-        channelId: myChannel.id,
+        teacherId: myTeacherProfile.id,
         categoryId,
         title,
         description,
@@ -208,14 +208,14 @@ router.delete("/recordings/:id", authMiddleware, async (req, res) => {
   try {
     const recording = await prisma.labRecording.findUnique({
       where: { id: req.params.id },
-      include: { channel: true }
+      include: { teacher: true }
     });
 
     if (!recording) {
       return res.status(404).json({ error: "Recording not found." });
     }
 
-    const isOwner = recording.channel.userId === req.user.id;
+    const isOwner = recording.teacher && recording.teacher.userId === req.user.id;
     const isAdmin = req.user.role === "ADMIN" || req.user.role === "SUPER_USER";
 
     if (!isOwner && !isAdmin) {
@@ -230,6 +230,122 @@ router.delete("/recordings/:id", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Failed to delete recording:", error);
     res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// --- Lab Teacher Profile Endpoints ---
+
+// Get current user's teacher profile
+router.get("/teacher/my-profile", authMiddleware, async (req, res) => {
+  try {
+    const profile = await prisma.labTeacherProfile.findUnique({
+      where: { userId: req.user.id },
+      include: {
+        _count: {
+          select: { subscriptions: true }
+        }
+      }
+    });
+    res.json(profile);
+  } catch (error) {
+    console.error("Failed to fetch teacher profile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Request or update teacher profile
+router.post("/teacher/request", authMiddleware, async (req, res) => {
+  const { title, bio } = req.body;
+  if (!title) return res.status(400).json({ error: "Title is required." });
+
+  try {
+    const existing = await prisma.labTeacherProfile.findUnique({
+      where: { userId: req.user.id }
+    });
+
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+
+    const profile = await prisma.labTeacherProfile.create({
+      data: {
+        userId: req.user.id,
+        title,
+        bio: bio || "",
+        status: "PENDING"
+      }
+    });
+    res.status(201).json(profile);
+  } catch (error) {
+    console.error("Failed to request teacher profile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Subscribe to a teacher
+router.post("/teacher/:teacherId/subscribe", authMiddleware, async (req, res) => {
+  const { teacherId } = req.params;
+  const subscriberId = req.user.id;
+
+  try {
+    const teacher = await prisma.labTeacherProfile.findUnique({
+      where: { id: teacherId }
+    });
+
+    if (!teacher || teacher.status !== "APPROVED") {
+      return res.status(404).json({ error: "Teacher not found or not approved." });
+    }
+
+    if (teacher.userId === subscriberId) {
+      return res.status(400).json({ error: "Cannot subscribe to yourself." });
+    }
+
+    const sub = await prisma.labSubscription.upsert({
+      where: {
+        subscriberId_teacherId: { subscriberId, teacherId }
+      },
+      update: {},
+      create: { subscriberId, teacherId }
+    });
+    res.status(201).json(sub);
+  } catch (error) {
+    console.error("Failed to subscribe:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Unsubscribe from a teacher
+router.post("/teacher/:teacherId/unsubscribe", authMiddleware, async (req, res) => {
+  const { teacherId } = req.params;
+  const subscriberId = req.user.id;
+
+  try {
+    await prisma.labSubscription.delete({
+      where: {
+        subscriberId_teacherId: { subscriberId, teacherId }
+      }
+    });
+    res.status(200).json({ message: "Unsubscribed" });
+  } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Subscription not found" });
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Check subscription status
+router.get("/teacher/:teacherId/subscription-status", authMiddleware, async (req, res) => {
+  const { teacherId } = req.params;
+  try {
+    const sub = await prisma.labSubscription.findUnique({
+      where: {
+        subscriberId_teacherId: { subscriberId: req.user.id, teacherId }
+      }
+    });
+    res.status(200).json({ subscribed: !!sub });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

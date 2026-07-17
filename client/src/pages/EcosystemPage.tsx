@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CheckCircle2, Plus, Globe, 
+import {
+  CheckCircle2, Plus, Globe,
   Heart, MessageCircle, Repeat, Send, Trash2, Bookmark,
   Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
   Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X, Menu
@@ -55,31 +55,8 @@ interface PostItem {
   bookmarksCount: number;
 }
 
-const getServerUrl = (path: string) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-  try { 
-    const origin = new URL(baseURL).origin; 
-    return `${origin}${path.startsWith('/') ? '' : '/'}${path}`; 
-  } catch { 
-    return path; 
-  }
-};
+import PanXPostItem from '../components/panx/PanXPostItem';
 
-
-const formatTimestamp = (dateString: string) => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins}m`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d`;
-};
 const getInitials = (name: string) => {
   if (!name) return "";
   const parts = name.split(" ");
@@ -88,6 +65,7 @@ const getInitials = (name: string) => {
   }
   return name.substring(0, 2).toUpperCase();
 };
+
 const getAvatarColor = (name: string) => {
   const colors = [
     "#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#6366F1", "#8B5CF6", "#EC4899"
@@ -98,9 +76,10 @@ const getAvatarColor = (name: string) => {
   }
   return colors[sum % colors.length];
 };
+
 const getAuthorCategory = (author: any) => {
   if (!author) return 'others';
-  
+
   const org = (author.organization || '').toLowerCase();
   const name = (author.name || '').toLowerCase();
   const role = (author.role || '').toLowerCase();
@@ -120,444 +99,9 @@ const getAuthorCategory = (author: any) => {
   if (author.role === 'ENGINEER' || author.role === 'ARCHITECT' || author.role === 'QUANTITY_SURVEYOR' || role.includes('engineer') || role.includes('architect') || role.includes('surveyor') || org.includes('sovereign') || role.includes('sovereign')) {
     return 'sovereign_minds';
   }
-  
+
   return 'others';
 };
-
-
-const PanXPostItem = React.memo(({ 
-  post, 
-  user, 
-  navigate, 
-  handleFollowToggle, 
-  handleDeletePost, 
-  handleLikeToggle, 
-  setActiveReplyPostId, 
-  activeReplyPostId, 
-  handleRepostToggle, 
-  setPosts, 
-  replyText, 
-  setReplyText, 
-  handlePostReply, 
-  setFullscreenMedia,
-  api,
-  message
-}: any) => {
-                
-                  const author = post.author;
-                  if (!author) return null;
-                  const isFollowing = author.isFollowing;
-                  const isOwnPost = author.id === user?.id;
-                  
-                  return (
-                    <div 
-                      key={post.id}
-                      onClick={() => navigate(`/post/${post.id}`)}
-                      style={{
-                        display: 'flex',
-                        gap: '14px',
-                        padding: '20px',
-                        borderRadius: '24px',
-                        background: 'rgba(255, 255, 255, 0.015)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        position: 'relative',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {/* Left Column: Avatar & Thread line */}
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        flexShrink: 0
-                      }}>
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                          background: getAvatarColor(author.name),
-                          color: 'black',
-                          fontWeight: 800,
-                          fontSize: '13px',
-                          cursor: 'pointer'
-                        }}>
-                          {getInitials(author.name)}
-                        </div>
-
-                        <div style={{
-                          width: '2px',
-                          flexGrow: 1,
-                          background: 'rgba(255, 255, 255, 0.06)',
-                          margin: '8px 0',
-                          borderRadius: '1px'
-                        }} />
-
-                        <div style={{
-                          display: 'flex',
-                          position: 'relative',
-                          width: '28px',
-                          height: '20px',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          {post.replies?.slice(0, 3).map((rep, idx) => (
-                            <div 
-                              key={rep.id}
-                              style={{
-                                width: '14px',
-                                height: '14px',
-                                borderRadius: '50%',
-                                border: '1.5px solid #060b08',
-                                position: 'absolute',
-                                left: idx * 8,
-                                zIndex: 3 - idx,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 800,
-                                fontSize: '5px',
-                                background: getAvatarColor(rep.author?.name || 'User'),
-                                color: 'black'
-                              }}
-                            >
-                              {getInitials(rep.author?.name || 'U')}
-                            </div>
-                          ))}
-                          {(!post.replies || post.replies.length === 0) && (
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Column: Content & Interactivity */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span 
-                              style={{ fontSize: '13px', fontWeight: 800, color: 'white', textTransform: 'capitalize', cursor: 'pointer' }}
-                              className="hover:underline"
-                              onClick={(e) => { e.stopPropagation(); navigate(`/profiles/${author.id}`); }}
-                            >
-                              {author.name}
-                            </span>
-                            {(author.role === "SUPER_USER" || author.role === "ADMIN" || author.role === "ENGINEER") && (
-                              <CheckCircle2 size={13} fill="var(--accent-primary)" stroke="black" strokeWidth={2.5} />
-                            )}
-                            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.25)', margin: '0 4px' }}>•</span>
-                            <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
-                              {formatTimestamp(post.createdAt)}
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {!isOwnPost && (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleFollowToggle(author.id, e); }}
-                                style={{
-                                  background: isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)',
-                                  border: isFollowing ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(16, 185, 129, 0.2)',
-                                  color: isFollowing ? 'rgba(255, 255, 255, 0.4)' : 'var(--accent-primary)',
-                                  borderRadius: '12px',
-                                  padding: '4px 10px',
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                  if (!isFollowing) {
-                                    e.currentTarget.style.background = 'rgba(16, 185, 129, 0.18)';
-                                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                                  }
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.transform = 'scale(1)';
-                                  e.currentTarget.style.background = isFollowing ? 'rgba(255, 255, 255, 0.03)' : 'rgba(16, 185, 129, 0.1)';
-                                  e.currentTarget.style.borderColor = isFollowing ? '1.5px solid rgba(255, 255, 255, 0.1)' : 'rgba(16, 185, 129, 0.2)';
-                                }}
-                              >
-                                {isFollowing ? <UserCheck size={11} /> : <UserPlus size={11} />}
-                                {isFollowing ? 'Following' : 'Follow'}
-                              </button>
-                            )}
-                            {isOwnPost && (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
-                                className="std-delete-btn"
-                                title="Delete Post"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        <p style={{
-                          fontSize: '13.5px',
-                          lineHeight: '1.5',
-                          color: 'rgba(255, 255, 255, 0.85)',
-                          margin: '0 0 12px 0',
-                          whiteSpace: 'pre-wrap'
-                        }}>
-                          {post.content}
-                        </p>
-                        
-                        {post.mediaFiles && post.mediaFiles.length > 0 ? (
-                          <div className="no-scrollbar" style={{ 
-                            display: 'flex', 
-                            overflowX: 'auto', 
-                            scrollSnapType: 'x mandatory', 
-                            gap: '8px', 
-                            margin: '0 0 16px 0',
-                            paddingBottom: '4px'
-                          }}>
-                            {post.mediaFiles.map((media, idx) => (
-                              <div 
-                                key={idx}
-                                style={{ 
-                                  flex: post.mediaFiles.length > 1 ? '0 0 85%' : '0 0 100%',
-                                  scrollSnapAlign: 'center',
-                                  borderRadius: '16px', 
-                                  overflow: 'hidden', 
-                                  border: '1px solid rgba(255,255,255,0.1)', 
-                                  cursor: 'pointer' 
-                                }}
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  setFullscreenMedia({ 
-                                    media: post.mediaFiles.map((m: any) => ({ url: getServerUrl(m.url), type: m.type.toLowerCase() as 'image'|'video' })), 
-                                    initialIndex: idx 
-                                  }); 
-                                }}
-                              >
-                                {media.type === 'VIDEO' ? (
-                                  <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                                ) : (
-                                  <img loading="lazy" src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <>
-                            {post.imageUrl && (
-                              <div 
-                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.imageUrl!), type: 'image' }], initialIndex: 0 }); }}
-                              >
-                                <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
-                              </div>
-                            )}
-
-                            {post.videoUrl && (
-                              <div 
-                                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.videoUrl!), type: 'video' }], initialIndex: 0 }); }}
-                              >
-                                <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleLikeToggle(post.id); }}
-                              className={`std-action-btn ${post.hasLiked ? 'active-red' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount > 0 ? post.likesCount : ''}</span>
-                            </button>
-
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id); }}
-                              className={`std-action-btn ${activeReplyPostId === post.id ? 'active-green' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <MessageCircle size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount > 0 ? post.repliesCount : ''}</span>
-                            </button>
-
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleRepostToggle(post.id); }}
-                              className={`std-action-btn ${post.hasReposted ? 'active-green' : ''}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Repeat size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount > 0 ? post.repostsCount : ''}</span>
-                            </button>
-                            
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                api.post(`/panx/posts/${post.id}/share`).then(() => {
-                                  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, sharesCount: (p.sharesCount || 0) + 1 } : p));
-                                });
-                                navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-                                message.success('Link copied to clipboard!');
-                              }}
-                              className="std-action-btn"
-                              title="Copy link to clipboard"
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                              <Send size={15} />
-                              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        {post.replies && post.replies.length > 0 && (
-                          <div style={{
-                            marginTop: '12px',
-                            padding: '12px 16px',
-                            background: 'rgba(255, 255, 255, 0.01)',
-                            borderLeft: '2px solid rgba(16, 185, 129, 0.2)',
-                            borderRadius: '0 12px 12px 0',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '16px'
-                          }}>
-                            {post.replies.map(rep => (
-                              <div key={rep.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <div 
-                                    style={{ 
-                                      width: '18px', 
-                                      height: '18px', 
-                                      borderRadius: '50%', 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center',
-                                      fontWeight: 800,
-                                      fontSize: '6px',
-                                      background: getAvatarColor(rep.author?.name || 'User'),
-                                      color: 'black' 
-                                    }} 
-                                  >
-                                    {getInitials(rep.author?.name || 'U')}
-                                  </div>
-                                  <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
-                                      <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
-                                    </div>
-                                    <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
-                                    
-                                    {/* Action Bar for Reply */}
-                                    <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-                                      <button 
-                                        onClick={async () => {
-                                          if (!user) return navigate('/login');
-                                          try {
-                                            const res = await api.post(`/panx/replies/${rep.id}/like`);
-                                            setPosts(prev => prev.map(p => p.id === post.id ? {
-                                              ...p,
-                                              replies: p.replies.map(r => r.id === rep.id ? { ...r, hasLiked: res.data.liked, likesCount: res.data.likesCount } : r)
-                                            } : p));
-                                          } catch (error: any) { console.error(error); }
-                                        }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: rep.hasLiked ? '#EF4444' : 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}
-                                      >
-                                        <Heart size={11} fill={rep.hasLiked ? '#EF4444' : 'none'} />
-                                        <span>{rep.likesCount || ''}</span>
-                                      </button>
-                                      <button onClick={() => navigate(`/post/${post.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '10px', cursor: 'pointer', padding: 0 }}>
-                                        <MessageCircle size={11} /> Reply
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* Show 1 nested reply if any */}
-                                {rep.children && rep.children.length > 0 && (
-                                  <div style={{ display: 'flex', gap: '8px', marginLeft: '26px' }}>
-                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '5px', background: getAvatarColor(rep.children[0].author?.name || 'User'), color: 'black' }}>
-                                      {getInitials(rep.children[0].author?.name || 'U')}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)' }}>{rep.children[0].author?.name}</span>
-                                        <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.4)' }}>{rep.children[0].content}</span>
-                                      </div>
-                                      {rep.children.length > 1 && (
-                                        <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '9px', color: 'var(--accent-primary)', cursor: 'pointer', marginTop: '4px', display: 'inline-block' }}>
-                                          View {rep.children.length - 1} more replies
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {post.repliesCount > (post.replies?.length || 0) && (
-                          <div style={{ marginTop: '8px', marginLeft: '12px' }}>
-                            <span onClick={() => navigate(`/post/${post.id}`)} style={{ fontSize: '11px', color: 'var(--accent-primary)', cursor: 'pointer' }}>
-                              View all {post.repliesCount} replies
-                            </span>
-                          </div>
-                        )}
-
-                        {activeReplyPostId === post.id && (
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                            <input 
-                              type="text" 
-                              placeholder="Write a reply..."
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              style={{
-                                flex: 1,
-                                background: 'rgba(255, 255, 255, 0.02)',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                borderRadius: '12px',
-                                padding: '8px 12px',
-                                color: 'white',
-                                fontSize: '12px',
-                                outline: 'none'
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handlePostReply(post.id);
-                              }}
-                            />
-                            <button 
-                              onClick={() => handlePostReply(post.id)}
-                              style={{
-                                background: 'var(--accent-primary)',
-                                color: 'black',
-                                border: 'none',
-                                borderRadius: '12px',
-                                padding: '0 16px',
-                                fontSize: '11px',
-                                fontWeight: 900,
-                                textTransform: 'uppercase',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                              }}
-                            >
-                              <Send size={11} />
-                              Reply
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                
-});
-
 
 const EcosystemPage: React.FC = () => {
   const navigate = useNavigate();
@@ -581,10 +125,7 @@ const EcosystemPage: React.FC = () => {
   const [fullscreenMedia, setFullscreenMedia] = useState<{ media: { url: string, type: 'image' | 'video' }[], initialIndex: number } | null>(null);
 
   // New ecosystem state
-  const [concepts, setConcepts] = useState<any[]>([]);
-  const [demos, setDemos] = useState<any[]>([]);
-  const [loadingEcosystem, setLoadingEcosystem] = useState(true);
-  const [activeMobileTab, setActiveMobileTab] = useState<'feed' | 'concepts' | 'demos'>('feed');
+  const [activeMobileTab, setActiveMobileTab] = useState<'feed'>('feed');
   const [isMobileNavDrawerOpen, setIsMobileNavDrawerOpen] = useState(false);
 
   const fetchPosts = async (pageNum = 1, signal?: AbortSignal) => {
@@ -613,25 +154,9 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
-  const fetchEcosystemData = async () => {
-    try {
-      const [conceptsRes, demosRes] = await Promise.all([
-        api.get('/submit/concepts'),
-        api.get('/submit/demos')
-      ]);
-      setConcepts(conceptsRes.data);
-      setDemos(demosRes.data);
-    } catch (error: any) {
-      console.error('Failed to fetch ecosystem data:', error);
-    } finally {
-      setLoadingEcosystem(false);
-    }
-  };
-
   useEffect(() => {
     const controller = new AbortController();
     fetchPosts(1, controller.signal);
-    fetchEcosystemData();
     return () => {
       controller.abort();
     };
@@ -803,9 +328,9 @@ const EcosystemPage: React.FC = () => {
           type: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
         });
       }
-      
-      const response = await api.post("/panx/posts", { 
-        content: newPostText, 
+
+      const response = await api.post("/panx/posts", {
+        content: newPostText,
         mediaFiles: uploadedMedia.length > 0 ? uploadedMedia : null,
         // For backwards compatibility on old clients if needed, pass the first item to single fields:
         imageUrl: uploadedMedia.find(m => m.type === 'IMAGE')?.url || null,
@@ -838,9 +363,9 @@ const EcosystemPage: React.FC = () => {
 
 
 
-  const filteredPosts = posts.filter(post => {
+  const filteredPosts = (Array.isArray(posts) ? posts : []).filter(post => {
     if (!post.author) return false;
-    
+
     if (activeFilter === 'for_you') return true;
     if (activeFilter === 'following') return post.author.isFollowing || post.author.id === user?.id;
     if (activeFilter === 'saved') return post.hasBookmarked;
@@ -849,80 +374,66 @@ const EcosystemPage: React.FC = () => {
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
-      <UnifiedHeader 
-        title="PanX Feed" 
-        extra={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="sovereign-header-tabs no-scrollbar">
-              {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
-                const isSelected = activeFilter === filter;
-                const getFilterIcon = (filterName: string) => {
-                  switch (filterName) {
-                    case 'for_you': return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'following': return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'saved': return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'enterprise': return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'placebo': return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'heritage_flame': return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'future_craft': return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'sovereign_minds': return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    case 'others': return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                    default: return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                  }
-                };
-                return (
-                  <button 
-                    key={filter}
-                    onClick={() => setActiveFilter(filter)}
-                    className={`pill ${isSelected ? 'active' : ''}`}
-                    style={{
-                      textTransform: 'uppercase',
-                      fontWeight: 800,
-                      fontSize: '11px',
-                      letterSpacing: '0.05em',
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                      background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                      color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      transition: 'all 0.2s',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    onMouseEnter={e => {
-                      const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                      if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
-                    }}
-                    onMouseLeave={e => {
-                      const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                      if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
-                    }}
-                  >
-                    {getFilterIcon(filter)}
-                    {filter.replace('_', ' ')}
-                  </button>
-                );
-              })}
-            </div>
-            {!isDesktop && (
+      <UnifiedHeader
+        title="PanX Feed"
+      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="sovereign-header-tabs no-scrollbar">
+          {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
+            const isSelected = activeFilter === filter;
+            const getFilterIcon = (filterName: string) => {
+              switch (filterName) {
+                case 'for_you': return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'following': return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'saved': return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'enterprise': return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'placebo': return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'heritage_flame': return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'future_craft': return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'sovereign_minds': return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'others': return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                default: return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+              }
+            };
+            return (
               <button
-                onClick={() => setIsMobileNavDrawerOpen(true)}
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`pill ${isSelected ? 'active' : ''}`}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '36px', height: '36px', borderRadius: '12px',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'white', cursor: 'pointer', flexShrink: 0
+                  textTransform: 'uppercase',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                  letterSpacing: '0.05em',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                  background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.2s',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onMouseEnter={e => {
+                  const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                  if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
+                }}
+                onMouseLeave={e => {
+                  const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
+                  if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
                 }}
               >
-                <Menu size={18} />
+                {getFilterIcon(filter)}
+                {filter.replace('_', ' ')}
               </button>
-            )}
-          </div>
-        }
-      />
+            );
+          })}
+        </div>
+
+      </div>
       <div style={{
         maxWidth: isDesktop ? '1200px' : '700px',
         margin: '0 auto',
@@ -933,16 +444,16 @@ const EcosystemPage: React.FC = () => {
         gap: '24px',
         width: '100%'
       }}>
-      {/* Main Layout Grid/Flex Container */}
-      <div style={{
-        display: 'flex',
-        flexDirection: isDesktop ? 'row' : 'column',
-        gap: '32px',
-        width: '100%',
-        alignItems: 'flex-start'
-      }}>
-        {/* Left/Main Column: Threads Feed */}
-        {(isDesktop || activeMobileTab === 'feed') && (
+        {/* Main Layout Grid/Flex Container */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isDesktop ? 'row' : 'column',
+          gap: '32px',
+          width: '100%',
+          alignItems: 'flex-start'
+        }}>
+          {/* Left/Main Column: Threads Feed */}
+
           <div style={{
             flex: isDesktop ? '1' : 'none',
             display: 'flex', flexDirection: 'column',
@@ -965,7 +476,7 @@ const EcosystemPage: React.FC = () => {
                   Join the ecosystem thread discussion. Log in or create an account to start sharing posts.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                  <button 
+                  <button
                     onClick={() => navigate('/login')}
                     style={{
                       background: 'var(--accent-primary)', border: 'none', color: 'black', padding: '8px 16px',
@@ -974,7 +485,7 @@ const EcosystemPage: React.FC = () => {
                   >
                     Log In
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/register')}
                     style={{
                       background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
@@ -1092,7 +603,7 @@ const EcosystemPage: React.FC = () => {
                 </div>
               ) : (
                 filteredPosts.map(post => (
-                  <PanXPostItem 
+                  <PanXPostItem
                     key={post.id}
                     post={post}
                     user={user}
@@ -1158,14 +669,8 @@ const EcosystemPage: React.FC = () => {
               paddingTop: '20px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
-              <button 
-                style={{ flex: 1, height: '48px' }}
-                className="qsi-btn qsi-btn-secondary"
-                onClick={() => navigate('/demos')}
-              >
-                Explore Demos
-              </button>
-              <button 
+              {/* Removed Explore Demos button */}
+              <button
                 style={{ flex: 1, height: '48px' }}
                 className="qsi-btn qsi-btn-primary"
                 onClick={() => navigate('/chat/infrastructure')}
@@ -1175,337 +680,63 @@ const EcosystemPage: React.FC = () => {
               </button>
             </div>
           </div>
-        )}
-
-        {/* Right Column: Concepts & Demos Sidebars (Desktop) OR list items (Mobile when active tab is Concepts or Demos) */}
-        {isDesktop ? (
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-            width: '100%',
-            position: 'sticky',
-            top: '24px',
-            maxHeight: 'calc(100vh - 48px)',
-            overflowY: 'auto'
-          }} className="no-scrollbar">
-            {/* QSI Concepts Card */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.01)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '24px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Lightbulb size={16} className="text-accent-primary" />
-                  <h3 style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'white', margin: 0 }}>
-                    QSI Concepts
-                  </h3>
-                </div>
-                <button 
-                  onClick={() => navigate('/concepts')}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer' }}
+        </div>
+        <Modal
+          open={!!fullscreenMedia}
+          footer={null}
+          onCancel={() => setFullscreenMedia(null)}
+          width="100vw"
+          style={{ top: 0, padding: 0, margin: 0, maxWidth: '100vw' }}
+          styles={{ body: { padding: 0, background: 'black', height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } }}
+          closeIcon={<span style={{ color: 'white', fontSize: '20px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: '16px', top: '16px', zIndex: 100 }}>✕</span>}
+        >
+          {fullscreenMedia && (
+            <div
+              style={{
+                display: 'flex',
+                width: '100vw',
+                height: '100vh',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollSnapType: 'x mandatory',
+                scrollBehavior: 'smooth'
+              }}
+              ref={el => {
+                if (el && fullscreenMedia.initialIndex > 0 && !el.dataset.scrolled) {
+                  setTimeout(() => {
+                    el.scrollLeft = fullscreenMedia.initialIndex * window.innerWidth;
+                    el.dataset.scrolled = "true";
+                  }, 0);
+                }
+              }}
+              className="no-scrollbar"
+            >
+              {fullscreenMedia.media.map((m, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: '0 0 100vw',
+                    width: '100vw',
+                    height: '100vh',
+                    scrollSnapAlign: 'start',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'black'
+                  }}
                 >
-                  View All
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {loadingEcosystem ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
-                  </div>
-                ) : concepts.slice(0, 3).map(concept => (
-                  <div
-                    key={concept.id}
-                    onClick={() => navigate(`/concepts/${concept.id}`)}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.015)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px'
-                    }}
-                    className="hover:border-accent-primary/30 hover:bg-accent-primary/[0.02]"
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: 'white' }}>{concept.title}</span>
-                      <span className="qsi-tag qsi-tag-secondary" style={{ fontSize: '8px', padding: '2px 6px' }}>{concept.category}</span>
-                    </div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                      {concept.shortDescription}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Smart City Demos Card */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.01)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '24px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={16} className="text-accent-primary" />
-                  <h3 style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'white', margin: 0 }}>
-                    Smart City Demos
-                  </h3>
+                  {m.type === 'image' ? (
+                    <img src={m.url} alt={`Media ${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                  ) : (
+                    <video src={m.url} controls autoPlay={i === fullscreenMedia.initialIndex} style={{ width: '100%', height: '100%', display: 'block' }} />
+                  )}
                 </div>
-                <button 
-                  onClick={() => navigate('/demos')}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', cursor: 'pointer' }}
-                >
-                  View All
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {loadingEcosystem ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
-                  </div>
-                ) : demos.slice(0, 3).map(demo => (
-                  <div
-                    key={demo.id}
-                    onClick={() => navigate(`/demos/${demo.id}`)}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.015)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px'
-                    }}
-                    className="hover:border-accent-primary/30 hover:bg-accent-primary/[0.02]"
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: 'white' }}>{demo.title}</span>
-                      <span className="qsi-tag qsi-tag-primary" style={{ fontSize: '8px', padding: '2px 6px' }}>{demo.status || 'PROPOSED'}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase' }}>
-                      <MapPin size={10} className="text-accent-primary" />
-                      <span>{demo.city || 'Pan-African'}</span>
-                    </div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                      {demo.shortDescription}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-          </div>
-        ) : (
-          /* Mobile content for selected tab */
-          activeMobileTab !== 'feed' && (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {activeMobileTab === 'concepts' ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-black uppercase tracking-wider text-white">Digital Concepts</h2>
-                    <span className="text-[10px] text-white/50">{concepts.length} blueprinted</span>
-                  </div>
-                  {loadingEcosystem ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
-                    </div>
-                  ) : (
-                    concepts.map(concept => (
-                      <div
-                        key={concept.id}
-                        onClick={() => navigate(`/concepts/${concept.id}`)}
-                        style={{
-                          padding: '20px',
-                          borderRadius: '24px',
-                          background: 'rgba(255, 255, 255, 0.015)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px'
-                        }}
-                        className="hover:border-accent-primary hover:bg-accent-primary/[0.02]"
-                      >
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-sm font-extrabold text-white" style={{ margin: 0 }}>{concept.title}</h3>
-                          <span className="qsi-tag qsi-tag-secondary">{concept.category}</span>
-                        </div>
-                        <p className="text-xs text-white/60 leading-relaxed" style={{ margin: 0 }}>{concept.shortDescription}</p>
-                        <span className="text-[10px] text-accent-primary font-black uppercase tracking-wider mt-2">View Analysis →</span>
-                      </div>
-                    ))
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-black uppercase tracking-wider text-white">Smart City Demos</h2>
-                    <span className="text-[10px] text-white/50">{demos.length} active</span>
-                  </div>
-                  {loadingEcosystem ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-primary)', animation: 'spin 1s linear infinite' }} />
-                    </div>
-                  ) : (
-                    demos.map(demo => (
-                      <div
-                        key={demo.id}
-                        onClick={() => navigate(`/demos/${demo.id}`)}
-                        style={{
-                          padding: '20px',
-                          borderRadius: '24px',
-                          background: 'rgba(255, 255, 255, 0.015)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px'
-                        }}
-                        className="hover:border-accent-primary hover:bg-accent-primary/[0.02]"
-                      >
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-sm font-extrabold text-white" style={{ margin: 0 }}>{demo.title}</h3>
-                          <span className="qsi-tag qsi-tag-primary">{demo.status || 'PROPOSED'}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase' }}>
-                          <MapPin size={11} className="text-accent-primary" />
-                          <span>{demo.city || 'Pan-African'}</span>
-                        </div>
-                        <p className="text-xs text-white/60 leading-relaxed" style={{ margin: 0 }}>{demo.shortDescription}</p>
-                        <span className="text-[10px] text-accent-primary font-black uppercase tracking-wider mt-2">View Demonstrator →</span>
-                      </div>
-                    ))
-                  )}
-                </>
-              )}
-            </div>
-          )
-        )}
+          )}
+        </Modal>
 
       </div>
-      <Modal
-        visible={!!fullscreenMedia}
-        footer={null}
-        onCancel={() => setFullscreenMedia(null)}
-        width="100vw"
-        style={{ top: 0, padding: 0, margin: 0, maxWidth: '100vw' }}
-        bodyStyle={{ padding: 0, background: 'black', height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-        closeIcon={<span style={{ color: 'white', fontSize: '20px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: '16px', top: '16px', zIndex: 100 }}>✕</span>}
-      >
-        {fullscreenMedia && (
-          <div 
-            style={{ 
-              display: 'flex', 
-              width: '100vw', 
-              height: '100vh', 
-              overflowX: 'auto', 
-              overflowY: 'hidden', 
-              scrollSnapType: 'x mandatory',
-              scrollBehavior: 'smooth'
-            }}
-            ref={el => {
-              if (el && fullscreenMedia.initialIndex > 0 && !el.dataset.scrolled) {
-                setTimeout(() => {
-                  el.scrollLeft = fullscreenMedia.initialIndex * window.innerWidth;
-                  el.dataset.scrolled = "true";
-                }, 0);
-              }
-            }}
-            className="no-scrollbar"
-          >
-            {fullscreenMedia.media.map((m, i) => (
-              <div 
-                key={i} 
-                style={{ 
-                  flex: '0 0 100vw', 
-                  width: '100vw', 
-                  height: '100vh', 
-                  scrollSnapAlign: 'start', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  background: 'black'
-                }}
-              >
-                {m.type === 'image' ? (
-                  <img src={m.url} alt={`Media ${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-                ) : (
-                  <video src={m.url} controls autoPlay={i === fullscreenMedia.initialIndex} style={{ width: '100%', height: '100%', display: 'block' }} />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </Modal>
-
-      {/* Mobile Navigation Drawer */}
-      <Drawer
-        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Explore Ecosystem</span>}
-        placement="right"
-        onClose={() => setIsMobileNavDrawerOpen(false)}
-        open={isMobileNavDrawerOpen}
-        width={300}
-        styles={{
-          header: { borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(10, 16, 24, 0.95)' },
-          body: { background: 'rgba(10, 16, 24, 0.95)', padding: '24px' }
-        }}
-        closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '18px' }}>✕</span>}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {(['feed', 'concepts', 'demos'] as const).map(tab => {
-            const isSelected = activeMobileTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveMobileTab(tab);
-                  setIsMobileNavDrawerOpen(false);
-                }}
-                style={{
-                  background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.02)',
-                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  color: isSelected ? 'var(--accent-primary)' : 'white',
-                  padding: '16px',
-                  borderRadius: '16px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}
-              >
-                {tab === 'feed' ? 'Social Feed' : tab === 'concepts' ? 'Digital Concepts' : 'City Demos'}
-                <span style={{ opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}>→</span>
-              </button>
-            );
-          })}
-        </div>
-      </Drawer>
-    </div>
     </div>
   );
 };

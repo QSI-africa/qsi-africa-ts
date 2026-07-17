@@ -88,6 +88,10 @@ model User {
   tvChannel            TvChannel?                @relation("UserTvChannel")
   tvSubscriptions      TvSubscription[]          @relation("UserTvSubscriptions")
 
+  // Lab Teacher Relations
+  labTeacherProfile    LabTeacherProfile?        @relation("UserLabTeacher")
+  labSubscriptions     LabSubscription[]         @relation("UserLabSubscriptions")
+
   // New relations for PanX Feed
   panxPosts            PanxPost[]                @relation("UserPanxPosts")
   panxReplies          PanxReply[]               @relation("UserPanxReplies")
@@ -698,7 +702,6 @@ model TvChannel {
   
   subscriptions TvSubscription[] @relation("ChannelSubscriptions")
   contents      TvContent[]      @relation("ChannelContents")
-  labRecordings LabRecording[]   @relation("ChannelLabRecordings")
 }
 
 model TvSubscription {
@@ -728,17 +731,42 @@ model TvContent {
 }
 
 model LabRecording {
-  id          String      @id @default(cuid())
-  channelId   String
-  channel     TvChannel   @relation("ChannelLabRecordings", fields: [channelId], references: [id], onDelete: Cascade)
+  id          String            @id @default(cuid())
+  teacherId   String?
+  teacher     LabTeacherProfile? @relation("TeacherLabRecordings", fields: [teacherId], references: [id], onDelete: Cascade)
   categoryId  String
-  category    LabCategory @relation("CategoryRecordings", fields: [categoryId], references: [id], onDelete: Cascade)
+  category    LabCategory       @relation("CategoryRecordings", fields: [categoryId], references: [id], onDelete: Cascade)
   title       String
-  description String?     @db.Text
+  description String?           @db.Text
   mediaUrl    String
-  mimeType    String      // e.g. "AUDIO", "VIDEO"
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  mimeType    String            // e.g. "AUDIO", "VIDEO"
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model LabTeacherProfile {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  user            User              @relation("UserLabTeacher", fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  bio             String?           @db.Text
+  status          String            @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  recordings      LabRecording[]    @relation("TeacherLabRecordings")
+  subscriptions   LabSubscription[] @relation("TeacherSubscriptions")
+}
+
+model LabSubscription {
+  id              String            @id @default(cuid())
+  subscriberId    String
+  subscriber      User              @relation("UserLabSubscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  teacherId       String
+  teacher         LabTeacherProfile @relation("TeacherSubscriptions", fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+
+  @@unique([subscriberId, teacherId])
 }
 
 model PanxPost {
@@ -749,11 +777,14 @@ model PanxPost {
   mediaType   String?      // e.g. "IMAGE", "VIDEO"
   mediaFiles  Json?        // e.g. [{ url: "...", type: "IMAGE" }]
   tvContentId String?
+  ventureId   String?
+  
   tvContent   TvContent?   @relation("TvContentPanxPosts", fields: [tvContentId], references: [id], onDelete: SetNull)
+  venture     Venture?     @relation(fields: [ventureId], references: [id], onDelete: SetNull)
   authorId    String
-  author    User         @relation("UserPanxPosts", fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  author      User         @relation("UserPanxPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   likes     PanxLike[]
   reposts   PanxRepost[]
@@ -857,7 +888,7 @@ model Venture {
 
   engagementTypes  VentureEngagementType[]
   engagements      VentureEngagement[]
-  posts            VenturePost[]
+  panxPosts        PanxPost[]
 }
 
 model VentureEngagementType {
@@ -884,15 +915,4 @@ model VentureEngagement {
   userId           String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-}
-
-model VenturePost {
-  id        String   @id @default(cuid())
-  ventureId String
-  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
-  content   String   @db.Text
-  imageUrl  String?
-  videoUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

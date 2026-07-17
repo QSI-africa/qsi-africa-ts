@@ -193,7 +193,7 @@ const DefaultSidebarContent = () => {
     tool.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredVentures = ventures.filter(v => 
+  const filteredVentures = (Array.isArray(ventures) ? ventures : []).filter(v => 
     v.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     v.shortDescription?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -679,7 +679,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           <Menu size={24} />
-          <span className="mobile-nav-label">Menus</span>
         </button>
         <button 
           className={`mobile-nav-item ${location.pathname === '/' ? 'active' : ''}`}
@@ -688,37 +687,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             setIsMobileMenuOpen(false);
           }}
         >
-          <img 
-            src={panxIcon} 
-            alt="Ecosystem" 
-            style={{ 
-              width: '24px', 
-              height: '24px', 
-              objectFit: 'contain',
-              filter: location.pathname === '/' 
-                ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.8)) sepia(93%) saturate(452%) hue-rotate(113deg) brightness(97%) contrast(90%) drop-shadow(0 0 4px var(--accent-primary))' 
-                : 'brightness(0) invert(0.6)',
-              transition: 'all 0.3s ease'
-            }} 
-          />
-          <span className="mobile-nav-label">Panx Ecosystem</span>
+          <Home size={24} />
         </button>
         <button 
-          className={`mobile-nav-item ${location.pathname === '/lab' ? 'active' : ''}`}
+          className={`mobile-nav-item ${location.pathname === '/inbox' ? 'active' : ''}`}
           onClick={() => {
-            navigate('/lab');
+            navigate('/inbox');
             setIsMobileMenuOpen(false);
           }}
         >
-          <FlaskConical size={24} />
-          <span className="mobile-nav-label">Panx Lab</span>
+          <MessageSquare size={24} />
         </button>
         <button 
           className={`mobile-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
           onClick={() => navigate('/profile')}
         >
           <User size={24} />
-          <span className="mobile-nav-label">Profile</span>
         </button>
       </nav>
       )}

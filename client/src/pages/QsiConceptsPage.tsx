@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Spin, Grid } from "antd";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import {
   Lightbulb,
   Zap,
@@ -23,10 +23,10 @@ const QsiConceptsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-      const response = await axios.get(`${baseURL}/submit/concepts`, {
+      const response = await api.get(`/submit/concepts`, {
         params: { category: cat }
       });
+      console.log("concepts", response.data)
       if (Array.isArray(response.data)) {
         setPilots(response.data);
       } else {

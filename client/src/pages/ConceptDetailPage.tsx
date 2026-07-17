@@ -334,7 +334,7 @@ const ConceptDetailPage: React.FC = () => {
       <UnifiedHeader
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: 'pulse 1.5s infinite' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
               Concept Analysis
             </span>
@@ -347,7 +347,7 @@ const ConceptDetailPage: React.FC = () => {
         }
       />
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
         {/* Immersive Strategic Hero */}
         <div style={{
           borderRadius: '24px', overflow: 'hidden', position: 'relative',
@@ -413,7 +413,7 @@ const ConceptDetailPage: React.FC = () => {
 
         {/* Main Content Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ marginBottom: '64px' }}>
-          <div className="md:col-span-2 space-y-12 reveal-up" style={{ animationDelay: '0.2s' }}>
+          <div className="md:col-span-2 space-y-12">
             <article className="prose prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {pilot.expandedView || pilot.shortDescription}
@@ -421,8 +421,8 @@ const ConceptDetailPage: React.FC = () => {
             </article>
           </div>
 
-          <div className="space-y-6 reveal-up" style={{ animationDelay: '0.4s' }}>
-            {/* Engagement Mission Control */}
+          <div className="space-y-6">
+            {/* Action Button */}
             <div style={{
               borderRadius: '32px', 
               border: '1px solid rgba(255,255,255,0.08)',
@@ -430,57 +430,16 @@ const ConceptDetailPage: React.FC = () => {
               backdropFilter: 'blur(20px)',
               position: 'sticky', 
               top: '120px',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              padding: '24px'
             }}>
-              <div className="p-10 border-b border-white/5 bg-gradient-to-br from-white/5 to-transparent">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse" />
-                  <span className="text-[10px] font-black text-accent-primary uppercase tracking-[0.4em] block">Status: Ready</span>
-                </div>
-                <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Mission Control</h3>
-                <p className="text-white/40 text-xs leading-relaxed mb-0 font-bold uppercase tracking-wide">
-                  Establish technical coherence within the QSI ecosystem.
-                </p>
-              </div>
-              
-              <div className="p-10 space-y-8">
-                <button 
-                  className="qsi-btn qsi-btn-primary group relative overflow-hidden"
-                  style={{ width: '100%', height: '64px', borderRadius: '16px' }}
-                  onClick={() => setEngagementModalVisible(true)}
-                >
-                  <span className="relative z-10 text-[11px] font-black tracking-[0.3em]">INITIATE SYNC</span>
-                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                </button>
-                
-              </div>
-
-              <div className="px-10 pb-8 flex items-center justify-end">
-                <div className="flex gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-white/20" />
-                  <div className="w-1 h-1 rounded-full bg-white/20" />
-                  <div className="w-1 h-1 rounded-full bg-accent-primary shadow-[0_0_8px_var(--accent-primary)]" />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ padding: '28px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest block mb-6">Distribution Network</span>
-              <div className="flex gap-4">
-                {[
-                  { icon: <FaTwitter size={16} />, label: 'Twitter' },
-                  { icon: <FaLinkedin size={16} />, label: 'LinkedIn' },
-                  { icon: <Link size={16} />, label: 'Copy Link' }
-                ].map(social => (
-                  <button 
-                    key={social.label} 
-                    className="qsi-btn qsi-btn-secondary"
-                    style={{ width: '40px', height: '40px', borderRadius: '10px', padding: 0, color: 'rgba(255,255,255,0.5)' }}
-                  >
-                    {social.icon}
-                  </button>
-                ))}
-              </div>
+              <button 
+                className="qsi-btn qsi-btn-primary"
+                style={{ width: '100%', height: '64px', borderRadius: '16px' }}
+                onClick={() => setEngagementModalVisible(true)}
+              >
+                <span className="relative z-10 text-[11px] font-black tracking-[0.3em]">CONTACT US</span>
+              </button>
             </div>
           </div>
         </div>

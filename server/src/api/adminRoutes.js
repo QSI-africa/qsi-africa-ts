@@ -1283,7 +1283,7 @@ router.get("/lab/recordings", isSuperUserOrAdmin, async (req, res) => {
     const recordings = await prisma.labRecording.findMany({
       include: {
         category: true,
-        channel: {
+        teacher: {
           include: {
             user: {
               select: {
@@ -1315,6 +1315,69 @@ router.delete("/lab/recordings/:id", isSuperUserOrAdmin, async (req, res) => {
   } catch (error) {
     console.error("Admin: failed to delete lab recording:", error);
     res.status(500).json({ error: "Failed to delete lab recording." });
+  }
+});
+
+// Get all lab teachers for moderation
+router.get("/lab/teachers", isSuperUserOrAdmin, async (req, res) => {
+  try {
+    const teachers = await prisma.labTeacherProfile.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        _count: {
+          select: {
+            subscriptions: true,
+            recordings: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json(teachers);
+  } catch (error) {
+    console.error("Admin: failed to fetch lab teachers:", error);
+    res.status(500).json({ error: "Failed to fetch lab teachers." });
+  }
+});
+
+// Update teacher status (approve/reject)
+router.put("/lab/teachers/:teacherId/status", isSuperUserOrAdmin, async (req, res) => {
+  const { teacherId } = req.params;
+  const { status } = req.body;
+
+  if (!["PENDING", "APPROVED", "REJECTED"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status value." });
+  }
+
+  try {
+    const updated = await prisma.labTeacherProfile.update({
+      where: { id: teacherId },
+      data: { status }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error("Admin: failed to update teacher status:", error);
+    res.status(500).json({ error: "Failed to update teacher status." });
+  }
+});
+
+// Delete teacher profile
+router.delete("/lab/teachers/:teacherId", isSuperUserOrAdmin, async (req, res) => {
+  const { teacherId } = req.params;
+  try {
+    await prisma.labTeacherProfile.delete({
+      where: { id: teacherId }
+    });
+    res.status(204).send();
+  } catch (error) {
+    console.error("Admin: failed to delete teacher profile:", error);
+    res.status(500).json({ error: "Failed to delete teacher profile." });
   }
 });
 

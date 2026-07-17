@@ -31,6 +31,7 @@ router.get("/posts", async (req, res) => {
         skip: skip,
         orderBy: { createdAt: "desc" },
       include: {
+        venture: { select: { id: true, name: true, logoUrl: true } },
         author: {
           select: { 
             id: true, 
@@ -155,6 +156,7 @@ router.get("/posts/user/:userId", async (req, res) => {
       where: { authorId: targetUserId },
       orderBy: { createdAt: "desc" },
       include: {
+        venture: { select: { id: true, name: true, logoUrl: true } },
         author: {
           select: { 
             id: true, 
@@ -261,6 +263,7 @@ router.post("/posts", async (req, res) => {
         authorId: req.user.id
       },
       include: {
+        venture: { select: { id: true, name: true, logoUrl: true } },
         author: {
           select: { id: true, name: true, email: true, role: true, location: true }
         },
@@ -665,6 +668,7 @@ router.get("/saved", async (req, res) => {
       include: {
         post: {
           include: {
+            venture: { select: { id: true, name: true, logoUrl: true } },
             author: {
               select: { id: true, name: true, email: true, role: true, location: true }
             },
@@ -749,6 +753,7 @@ router.get("/posts/:postId", async (req, res) => {
     const post = await prisma.panxPost.findUnique({
       where: { id: postId },
       include: {
+        venture: { select: { id: true, name: true, logoUrl: true } },
         author: {
           select: { id: true, name: true, email: true, role: true, location: true, followers: { where: { followerId: userId }, select: { followerId: true } } }
         },
