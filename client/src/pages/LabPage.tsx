@@ -533,57 +533,97 @@ const LabPage: React.FC = () => {
           </div>
         )}
         
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs & Filters Row */}
         <div style={{
-          display: 'flex', 
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: '16px',
-          padding: '4px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: '32px',
-          maxWidth: '520px',
-          overflowX: 'auto',
-          gap: '4px'
-        }} className="lab-tabs no-scrollbar">
-          <button 
-            onClick={() => setActiveTab('programs')}
-            className={`pill ${activeTab === 'programs' ? 'active' : ''}`}
-            style={{
-              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-              border: activeTab === 'programs' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-              background: activeTab === 'programs' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-              color: activeTab === 'programs' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
-            }}
-          >
-            Academic Programs
-          </button>
-          <button 
-            onClick={() => setActiveTab('lectures')}
-            className={`pill ${activeTab === 'lectures' ? 'active' : ''}`}
-            style={{
-              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-              border: activeTab === 'lectures' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-              background: activeTab === 'lectures' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-              color: activeTab === 'lectures' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
-            }}
-          >
-            Virtual Lectures
-          </button>
-          <button 
-            onClick={() => setActiveTab('studio')}
-            className={`pill ${activeTab === 'studio' ? 'active' : ''}`}
-            style={{
-              textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-              border: activeTab === 'studio' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-              background: activeTab === 'studio' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-              color: activeTab === 'studio' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-              cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
-            }}
-          >
-            Teacher Studio
-          </button>
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
+          {/* Main Tabs */}
+          <div style={{
+            display: 'flex', 
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '16px',
+            padding: '4px',
+            overflowX: 'auto',
+            gap: '4px'
+          }} className="lab-tabs no-scrollbar">
+            <button 
+              onClick={() => setActiveTab('programs')}
+              className={`pill ${activeTab === 'programs' ? 'active' : ''}`}
+              style={{
+                textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                border: activeTab === 'programs' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                background: activeTab === 'programs' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                color: activeTab === 'programs' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
+              }}
+            >
+              Academic Programs
+            </button>
+            <button 
+              onClick={() => setActiveTab('lectures')}
+              className={`pill ${activeTab === 'lectures' ? 'active' : ''}`}
+              style={{
+                textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                border: activeTab === 'lectures' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                background: activeTab === 'lectures' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                color: activeTab === 'lectures' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
+              }}
+            >
+              Virtual Lectures
+            </button>
+            <button 
+              onClick={() => setActiveTab('studio')}
+              className={`pill ${activeTab === 'studio' ? 'active' : ''}`}
+              style={{
+                textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                border: activeTab === 'studio' ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                background: activeTab === 'studio' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                color: activeTab === 'studio' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
+              }}
+            >
+              Teacher Studio
+            </button>
+          </div>
+
+          {/* Program Filters (inline) */}
+          {activeTab === 'programs' && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="lab-filters">
+              <button 
+                onClick={() => setOnlyEnrolledMissions(false)}
+                className={`pill ${!onlyEnrolledMissions ? 'active' : ''}`}
+                style={{
+                  textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                  border: !onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                  background: !onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: !onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                All Programs
+              </button>
+              <button 
+                onClick={() => setOnlyEnrolledMissions(true)}
+                className={`pill ${onlyEnrolledMissions ? 'active' : ''}`}
+                style={{
+                  textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
+                  border: onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                  background: onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                  color: onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                Active Missions ({enrolledPackageIds.length})
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Tab Panels */}
@@ -591,41 +631,6 @@ const LabPage: React.FC = () => {
         {/* 1. Academic Programs Tab */}
         {activeTab === 'programs' && (
           <div>
-
-            {/* Program Filters */}
-            <div style={{ 
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              marginBottom: '32px', paddingBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)'
-            }} className="lab-filters">
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => setOnlyEnrolledMissions(false)}
-                  className={`pill ${!onlyEnrolledMissions ? 'active' : ''}`}
-                  style={{
-                    textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-                    border: !onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                    background: !onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                    color: !onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  All Programs
-                </button>
-                <button 
-                  onClick={() => setOnlyEnrolledMissions(true)}
-                  className={`pill ${onlyEnrolledMissions ? 'active' : ''}`}
-                  style={{
-                    textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-                    border: onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                    background: onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                    color: onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                    cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  Active Missions ({enrolledPackageIds.length})
-                </button>
-              </div>
-            </div>
 
             {/* Categories */}
             {categoriesLoading ? (
