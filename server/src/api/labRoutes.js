@@ -150,7 +150,7 @@ router.get("/recordings", async (req, res) => {
         title: rec.title,
         description: rec.description,
         categoryId: rec.categoryId,
-        categoryTitle: rec.category.title,
+        categoryTitle: rec.category?.title || "Unknown",
         teacherId: rec.teacher?.id,
         channelTitle: rec.teacher?.title || "Unknown",
         teacherName: rec.teacher?.user?.name || rec.teacher?.user?.email || "Unknown",
@@ -164,7 +164,7 @@ router.get("/recordings", async (req, res) => {
     res.status(200).json(mappedRecordings);
   } catch (error) {
     console.error("Failed to fetch recordings:", error);
-    res.status(500).json({ error: "Internal server error." });
+    res.status(500).json({ error: error.message || "Internal server error." });
   }
 });
 
@@ -248,7 +248,7 @@ router.get("/teacher/my-profile", authMiddleware, async (req, res) => {
     res.json(profile);
   } catch (error) {
     console.error("Failed to fetch teacher profile:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 

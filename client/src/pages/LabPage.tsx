@@ -739,9 +739,9 @@ const LabPage: React.FC = () => {
         {/* 2. Virtual Lectures Tab */}
         {activeTab === 'lectures' && (
           <div>
-            {/* Search and Category Filter Pllls */}
-            <div style={{ marginBottom: '32px' }}>
-              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', marginBottom: '20px' }} className="lab-search-form">
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
+              {/* Search Form */}
+              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }} className="lab-search-form">
                 <div style={{
                   flex: 1, display: 'flex', alignItems: 'center', gap: '10px',
                   background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
