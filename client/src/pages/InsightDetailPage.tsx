@@ -68,7 +68,7 @@ const InsightDetailPage: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center">
         <h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">Insight Not Found</h2>
         {error && <p className="text-text-secondary mb-6">{error}</p>}
-        <button className="qsi-button primary px-8 py-3" onClick={() => navigate('/network')}>Back to Network</button>
+        <button className="qsi-button primary px-8 py-3" onClick={() => navigate(-1)}>Back</button>
       </div>
     );
   }
@@ -86,10 +86,10 @@ const InsightDetailPage: React.FC = () => {
         title="Insight Details"
         extra={
           <button 
-            onClick={() => profile?.id ? navigate(`/profiles/${profile.id}`) : navigate('/network')}
+            onClick={() => navigate(-1)}
             className="qsi-button flex items-center gap-2 py-2 px-4"
           >
-            <ArrowLeft size={18} /> Back to Profile
+            <ArrowLeft size={18} /> Back
           </button>
         }
       />

@@ -75,7 +75,7 @@ const SmartCityDemoDetail: React.FC = () => {
   }), []);
 
   if (loading) return <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen"><Spin size="large" /></div>;
-  if (error || !demo) return <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center"><h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Demonstrator Not Found"}</h2><button className="qsi-button primary px-8 py-3" onClick={() => navigate('/')}>Back to Ecosystem</button></div>;
+  if (error || !demo) return <div className="flex-1 flex flex-col items-center justify-center bg-bg-primary min-h-screen p-8 text-center"><h2 className="text-2xl font-bold text-red-500 mb-6 uppercase tracking-tight">{error || "Demonstrator Not Found"}</h2><button className="qsi-button primary px-8 py-3" onClick={() => navigate(-1)}>Back</button></div>;
 
   return (
     <>
@@ -90,7 +90,7 @@ const SmartCityDemoDetail: React.FC = () => {
           </div>
         }
         extra={
-          <button onClick={() => navigate('/')} className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 16px', borderRadius: '10px' }}>
+          <button onClick={() => navigate(-1)} className="qsi-btn qsi-btn-secondary" style={{ padding: '8px 16px', borderRadius: '10px' }}>
             <ArrowLeft size={16} /> Exit
           </button>
         }

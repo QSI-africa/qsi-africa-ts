@@ -4,6 +4,7 @@ import {
   Avatar,
   Tag,
   Spin,
+  message
 } from "antd";
 import {
   ShieldCheck,
@@ -20,6 +21,8 @@ import {
 } from "lucide-react";
 import api from "../api";
 import UnifiedHeader from "../components/layout/UnifiedHeader";
+import PanXPostItem from "../components/panx/PanXPostItem";
+import { useAuth } from "../context/AuthContext";
 
 const ProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +30,10 @@ const ProfileDetailPage: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: any[], initialIndex: number } | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchProfile();
@@ -127,12 +134,6 @@ const ProfileDetailPage: React.FC = () => {
                   <ShieldCheck size={14} />
                 </div>
               )}
-              <Avatar
-                size={80}
-                src={getServerUrl(profile.avatarUrl)}
-                icon={<User />}
-                className="border-2 border-border-subtle bg-bg-secondary"
-              />
               <div className="absolute inset-0 bg-accent-primary/20 blur-xl rounded-full opacity-20 -z-10 group-hover:opacity-40 transition-opacity" />
             </div>
 
@@ -336,56 +337,48 @@ const ProfileDetailPage: React.FC = () => {
           <div className="space-y-6">
             {userPosts && userPosts.length > 0 ? (
               userPosts.map((post: any) => (
-                <div
+                <PanXPostItem
                   key={post.id}
-                  onClick={() => navigate(`/post/${post.id}`)}
-                  className="feed-card bg-bg-secondary border-border-subtle p-6 hover:border-accent-primary/40 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-start gap-4">
-                    <Avatar
-                      size={42}
-                      src={getServerUrl(post.author?.avatarUrl)}
-                      icon={<User />}
-                      className="border border-border-subtle shrink-0 bg-bg-secondary"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white hover:underline text-sm truncate">
-                            {post.author?.name}
-                          </span>
-                          {(post.author?.role === "SUPER_USER" || post.author?.role === "ADMIN" || post.author?.role === "ENGINEER") && (
-                            <ShieldCheck size={14} className="text-accent-primary" />
-                          )}
-                          <span className="text-xs text-text-tertiary hidden sm:inline">
-                            • {formatDate(post.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap break-words">
-                        {post.content}
-                      </p>
-                      
-                      {post.imageUrl && (
-                        <div className="mt-4 rounded-xl overflow-hidden border border-border-subtle relative max-h-[300px]">
-                          <img src={getServerUrl(post.imageUrl)} alt="Post" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-6 mt-4 text-text-tertiary">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <MessageCircle size={14} /> <span>{post.repliesCount || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <Layers size={14} /> <span>{post.repostsCount || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <Heart size={14} /> <span>{post.likesCount || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  post={post}
+                  user={user}
+                  navigate={navigate}
+                  handleFollowToggle={() => {}}
+                  handleDeletePost={() => {}}
+                  handleLikeToggle={async (postId: string) => {
+                    try {
+                      const res = await api.post(`/panx/posts/${postId}/like`);
+                      setUserPosts(prev => prev.map(p => p.id === postId ? { ...p, hasLiked: res.data.liked, likesCount: res.data.likesCount } : p));
+                    } catch (err) { console.error(err); }
+                  }}
+                  setActiveReplyPostId={setActiveReplyPostId}
+                  activeReplyPostId={activeReplyPostId}
+                  handleRepostToggle={async (postId: string) => {
+                    try {
+                      const res = await api.post(`/panx/posts/${postId}/repost`);
+                      setUserPosts(prev => prev.map(p => p.id === postId ? { ...p, hasReposted: res.data.reposted, repostsCount: res.data.repostsCount } : p));
+                    } catch (err) { console.error(err); }
+                  }}
+                  setPosts={setUserPosts}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  handlePostReply={async (postId: string) => {
+                    if (!replyText.trim()) return;
+                    try {
+                      const res = await api.post(`/panx/posts/${postId}/reply`, { content: replyText });
+                      setUserPosts(prev => prev.map(p => p.id === postId ? {
+                        ...p,
+                        repliesCount: p.repliesCount + 1,
+                        replies: [...(p.replies || []), res.data]
+                      } : p));
+                      setReplyText("");
+                      setActiveReplyPostId(null);
+                      message.success("Reply added!");
+                    } catch (err) { console.error(err); }
+                  }}
+                  setFullscreenMedia={setFullscreenMedia}
+                  api={api}
+                  message={message}
+                />
               ))
             ) : (
               <div className="p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center w-full">

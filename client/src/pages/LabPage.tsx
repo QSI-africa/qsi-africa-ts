@@ -1454,13 +1454,16 @@ const LabPage: React.FC = () => {
             display: none !important;
           }
           .lab-filters {
-            flex-direction: column !important;
-            align-items: stretch !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
             gap: 16px !important;
+            padding-bottom: 8px !important;
           }
+          .lab-filters::-webkit-scrollbar { display: none; }
           .lab-filters > div {
-            width: 100% !important;
-            justify-content: space-between !important;
+            flex-shrink: 0 !important;
           }
         }
         

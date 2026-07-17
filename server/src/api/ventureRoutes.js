@@ -66,7 +66,7 @@ router.get("/:idOrSlug", async (req, res) => {
         panxPosts: {
           orderBy: { createdAt: "desc" },
           include: {
-            author: { select: { id: true, name: true, role: true, isFollowing: true } },
+            author: { select: { id: true, name: true, role: true } },
             likes: true,
             reposts: true,
             bookmarks: true,
@@ -93,7 +93,7 @@ router.get("/:idOrSlug", async (req, res) => {
           panxPosts: {
             orderBy: { createdAt: "desc" },
             include: {
-              author: { select: { id: true, name: true, role: true, isFollowing: true } },
+              author: { select: { id: true, name: true, role: true } },
               likes: true,
               reposts: true,
               bookmarks: true,

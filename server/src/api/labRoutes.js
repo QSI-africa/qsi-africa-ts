@@ -88,7 +88,6 @@ router.get("/recordings", async (req, res) => {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
-        { teacher: { title: { contains: search, mode: "insensitive" } } },
         { teacher: { user: { name: { contains: search, mode: "insensitive" } } } }
       ];
     }

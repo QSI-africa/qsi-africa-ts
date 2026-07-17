@@ -29,14 +29,18 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSidebar } from "../context/SidebarContext";
 import UnifiedHeader from './layout/UnifiedHeader';
+import labIcon from '../assets/images/smart-infrastructure.png';
+import visionIcon from '../assets/images/vision-space.png';
 
 const GREEN = '#10B981';
 
 const moduleDetails = {
   infrastructure: {
     title: "F.R.A.N.C.I.S",
+    sidebarTitle: "Sensol",
+    sidebarSlogan: "Design. Plan. Execute.",
     status: "online",
-    icon: <Bot size={24} />,
+    icon: <img src={labIcon} alt="Infrastructure" style={{ width: 24, height: 24, objectFit: 'contain' }} />,
     endpoint: "/infrastructure",
     slogan: "SENSOL",
     description: "F.R.A.N.C.I.S is your intelligent project intake specialist for Hyper Civil Engineers. It guides you through describing your infrastructure project — from new builds and road repairs to drainage systems — and automatically compiles a comprehensive quote request.",
@@ -68,9 +72,9 @@ const moduleDetails = {
   vision: {
     title: "Vision Space",
     status: "active",
-    icon: <Brain size={24} />,
+    icon: <img src={visionIcon} alt="Vision" style={{ width: 24, height: 24, objectFit: 'contain' }} />,
     endpoint: "/vision",
-    slogan: "Translate imagination...",
+    slogan: "Turn Ideas Into Reality",
     description: "Vision Space is a collaborative AI architect that transforms your raw ideas and ambitions into a structured, professional Vision Document. It guides you section by section — from context and focus areas to institutional engagement and strategic invitations.",
     purpose: "Co-create a comprehensive, investment-ready vision document for your project or initiative.",
     capabilities: [
@@ -267,7 +271,7 @@ const ChatWindow: React.FC = () => {
              onClick={() => navigate(-1)} 
              style={{
                display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none',
-               color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase',
+               color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 800,
                letterSpacing: '0.1em', cursor: 'pointer', marginBottom: '24px'
              }}
            >
@@ -281,8 +285,12 @@ const ChatWindow: React.FC = () => {
                 {details.icon}
               </div>
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0, textTransform: 'uppercase' }}>{details.title}</h2>
-                <p style={{ fontSize: '10px', color: GREEN, fontWeight: 800, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{details.slogan}</p>
+                <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', margin: 0 }}>
+                  {(details as any).sidebarTitle || details.title}
+                </h2>
+                <p style={{ fontSize: '10px', color: GREEN, fontWeight: 800, margin: 0, letterSpacing: '0.1em' }}>
+                  {(details as any).sidebarSlogan || details.slogan}
+                </p>
               </div>
            </div>
         </header>
@@ -291,7 +299,7 @@ const ChatWindow: React.FC = () => {
           {fetchedSuggestions.length > 0 && (
             <div style={{ marginBottom: '32px' }}>
               <h4 style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '16px' }}>
-                Quick Modules
+                Suggestions
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {fetchedSuggestions.map((s, i) => (
