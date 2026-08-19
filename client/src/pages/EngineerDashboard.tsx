@@ -330,17 +330,22 @@ const EngineerDashboard: React.FC = () => {
                                   </div>
                                   {visit.status === 'PENDING' ? (
                                     <div className="flex gap-4">
-                                       <button onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')} className="text-[10px] font-bold text-success-green uppercase tracking-widest flex items-center gap-1 hover:underline">
-                                          <CheckCircle2 size={14} /> Approve
+                                       <button onClick={() => handleUpdateVisitStatus(visit.id, 'APPROVED')} className="px-4 py-2 rounded-xl text-xs font-black text-black uppercase tracking-widest bg-[#008751] hover:brightness-110 flex items-center gap-1">
+                                          <CheckCircle2 size={14} /> Claim Task
                                        </button>
-                                       <button onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')} className="text-[10px] font-bold text-red-500 uppercase tracking-widest flex items-center gap-1 hover:underline">
+                                       <button onClick={() => handleUpdateVisitStatus(visit.id, 'REJECTED')} className="px-3 py-2 rounded-xl text-xs font-bold text-red-500 uppercase tracking-widest border border-red-500/20 hover:bg-red-500/10">
                                           Reject
                                        </button>
                                     </div>
                                   ) : (
-                                    <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest flex items-center gap-1">
-                                       <CheckCircle2 size={14} /> {visit.status}
-                                    </span>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-[10px] font-bold text-[#008751] uppercase tracking-widest flex items-center gap-1">
+                                         <CheckCircle2 size={14} /> Claimed & Active
+                                      </span>
+                                      <button onClick={() => handleUpdateVisitStatus(visit.id, 'COMPLETED')} className="px-3 py-1.5 rounded-lg text-[10px] font-black text-black uppercase tracking-wider bg-[#008751]">
+                                        Submit Deliverable
+                                      </button>
+                                    </div>
                                   )}
                                </div>
                             </div>

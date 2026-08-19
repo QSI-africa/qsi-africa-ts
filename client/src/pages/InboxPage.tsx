@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Input, 
   Empty, 
@@ -25,7 +26,18 @@ import api from '../api';
 import { socketService } from '../services/socket';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
+
+const formatCompactTimestamp = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+};
 
 export interface Conversation {
   id: string;
@@ -35,6 +47,7 @@ export interface Conversation {
   type: 'module' | 'operator' | 'project' | 'system-assisted' | 'GENERAL' | 'DIRECT';
   unreadCount: number;
   status: 'online' | 'offline' | 'active';
+  avatarUrl?: string;
 }
 
 const InboxPage: React.FC = () => {
@@ -47,6 +60,7 @@ const InboxPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [chatSegment, setChatSegment] = useState<'inbox' | 'requests'>('inbox');
   const [inputValue, setInputValue] = useState('');
   
   const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false);
@@ -56,16 +70,29 @@ const InboxPage: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Connect socket on mount
+  const [searchParams] = useSearchParams();
+  const targetUserParam = searchParams.get('user');
+
+  // Connect socket on mount & join user room
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       socketService.connect(token);
+      if (user?.id) {
+        socketService.emit("join-user-room", user.id);
+      }
     }
     return () => {
       socketService.disconnect();
     };
-  }, []);
+  }, [user?.id]);
+
+  // Handle target user URL parameter ?user=userId
+  useEffect(() => {
+    if (targetUserParam && user?.id) {
+      handleStartConversation(targetUserParam);
+    }
+  }, [targetUserParam, user?.id]);
 
   // Fetch discoverable users when modal is opened
   useEffect(() => {
@@ -233,8 +260,8 @@ const InboxPage: React.FC = () => {
     setSidebarContent(
       <div style={{ height: '100%', background: 'rgba(10,16,24,0.95)', display: 'flex', flexDirection: 'column' }}>
         <header style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>Inboxes</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>PanX Chats</h2>
             <button 
               onClick={() => setIsDiscoverModalOpen(true)}
               style={{
@@ -242,7 +269,7 @@ const InboxPage: React.FC = () => {
                 border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,135,81,0.2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
             >
               <Plus size={16} />
@@ -251,7 +278,7 @@ const InboxPage: React.FC = () => {
 
           <div style={{ 
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px'
+            borderRadius: '12px', display: 'flex', alignItems: 'center', padding: '0 12px', marginBottom: '12px'
           }}>
             <Search size={16} color="rgba(255,255,255,0.2)" />
             <input 
@@ -259,10 +286,36 @@ const InboxPage: React.FC = () => {
                 background: 'none', border: 'none', outline: 'none', color: 'white',
                 padding: '10px 12px', flex: 1, fontSize: '13px'
               }}
-              placeholder="Search conversations..." 
+              placeholder="Search PanX Chats..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+
+          {/* Sub-filter toggles directly below search: Inbox & Requests */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setChatSegment('inbox')}
+              style={{
+                flex: 1, padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 800,
+                background: chatSegment === 'inbox' ? GREEN : 'rgba(255,255,255,0.03)',
+                color: chatSegment === 'inbox' ? 'black' : 'rgba(255,255,255,0.6)',
+                border: 'none', cursor: 'pointer'
+              }}
+            >
+              Inbox
+            </button>
+            <button
+              onClick={() => setChatSegment('requests')}
+              style={{
+                flex: 1, padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 800,
+                background: chatSegment === 'requests' ? GREEN : 'rgba(255,255,255,0.03)',
+                color: chatSegment === 'requests' ? 'black' : 'rgba(255,255,255,0.6)',
+                border: 'none', cursor: 'pointer'
+              }}
+            >
+              Requests
+            </button>
           </div>
         </header>
 
@@ -289,32 +342,38 @@ const InboxPage: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{ 
-                    width: '44px', height: '44px', borderRadius: '14px', 
+                    width: '44px', height: '44px', borderRadius: '14px', overflow: 'hidden',
                     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedId === conv.id ? GREEN : 'rgba(255,255,255,0.4)'
                   }}>
-                    {conv.type === 'module' ? <Bot size={20} /> : conv.type === 'operator' ? <User size={20} /> : <Layers size={20} />}
+                    {conv.avatarUrl ? (
+                      <img src={conv.avatarUrl} alt={conv.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : conv.type === 'module' ? (
+                      <Bot size={20} />
+                    ) : (
+                      <User size={20} />
+                    )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                       <span style={{ fontSize: '14px', fontWeight: 800, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.title}</span>
-                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{conv.timestamp}</span>
+                       <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.title}</span>
+                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{formatCompactTimestamp(conv.timestamp)}</span>
                     </div>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.lastMessage}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.lastMessage}</p>
                   </div>
                 </div>
               </div>
             ))
           ) : (
             <div style={{ padding: '40px 0', textAlign: 'center' }}>
-              <Empty description={<span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'none' }}>No Discussions</span>} />
+              <Empty description={<span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: 700, textTransform: 'none' }}>No conversations</span>} />
             </div>
           )}
         </div>
       </div>
     );
     return () => setSidebarContent(null);
-  }, [conversations, selectedId, searchQuery, loading, setSidebarContent, setIsDiscoverModalOpen]);
+  }, [conversations, selectedId, searchQuery, chatSegment, loading, setSidebarContent, setIsDiscoverModalOpen]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>

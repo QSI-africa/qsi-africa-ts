@@ -178,6 +178,18 @@ const PostDetailPage: React.FC = () => {
 
   if (!post) return null;
 
+  const isVenturePost = !!(post as any).venture;
+  let author = (post as any).author;
+
+  if (isVenturePost && (post as any).venture) {
+    author = {
+      ...author,
+      name: (post as any).venture.name,
+      role: 'VENTURE',
+      avatarUrl: (post as any).venture.logoUrl
+    };
+  }
+
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px 16px 100px 16px' }}>
       {/* Header */}
@@ -201,12 +213,33 @@ const PostDetailPage: React.FC = () => {
       {/* Main Post */}
       <div style={{ padding: '24px', borderRadius: '24px', background: 'rgba(255, 255, 255, 0.015)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <div style={{ display: 'flex', gap: '14px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px', background: getAvatarColor(post.author.name), color: 'black' }}>
-            {getInitials(post.author.name)}
-          </div>
+          {author?.avatarUrl ? (
+            <img
+              src={getServerUrl(author.avatarUrl)}
+              alt={author.name}
+              style={{
+                width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover',
+                border: '1.5px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer'
+              }}
+              onClick={() => navigate(isVenturePost ? `/ventures/${(post as any).venture.id}` : `/profiles/${author.id}`)}
+            />
+          ) : (
+            <div 
+              style={{ width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px', background: getAvatarColor(author?.name || 'User'), color: 'black', cursor: 'pointer' }}
+              onClick={() => navigate(isVenturePost ? `/ventures/${(post as any).venture.id}` : `/profiles/${author.id}`)}
+            >
+              {getInitials(author?.name || 'U')}
+            </div>
+          )}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '15px', fontWeight: 800, color: 'white' }}>{post.author.name}</span>
+              <span 
+                style={{ fontSize: '15px', fontWeight: 800, color: 'white', cursor: 'pointer' }}
+                className="hover:underline"
+                onClick={() => navigate(isVenturePost ? `/ventures/${(post as any).venture.id}` : `/profiles/${author.id}`)}
+              >
+                {author?.name}
+              </span>
               <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)' }}>{formatTimestamp(post.createdAt)}</span>
             </div>
           </div>

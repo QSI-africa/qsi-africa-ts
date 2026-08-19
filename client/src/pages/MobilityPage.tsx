@@ -13,7 +13,7 @@ import { socketService } from '../services/socket';
 import { useNavigate, Link } from 'react-router-dom';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 const MobilityPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();

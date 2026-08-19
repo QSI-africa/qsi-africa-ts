@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Popover, List, Typography, Button, Space } from 'antd';
-import { BellOutlined, CheckCircleOutlined, CarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { BellOutlined, CheckCircleOutlined, CarOutlined, EnvironmentOutlined, MessageOutlined } from '@ant-design/icons';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 
@@ -35,6 +35,18 @@ const NotificationCenter: React.FC = () => {
       });
     });
 
+    // Direct Message notification
+    socketService.on('direct_message_notification', (data) => {
+      addNotification({
+        id: Date.now(),
+        type: 'DIRECT_MESSAGE',
+        title: `Message from ${data.senderName}`,
+        description: data.message?.text || 'Sent you a direct message.',
+        time: new Date(),
+        icon: <MessageOutlined style={{ color: '#008751' }} />
+      });
+    });
+
     // Site Visit events (Simulation for Sprint 4)
     socketService.on('site-visit-status', (data) => {
        addNotification({
@@ -50,6 +62,7 @@ const NotificationCenter: React.FC = () => {
     return () => {
       socketService.off('new-vehicle-hire');
       socketService.off('vehicle-hire-accepted');
+      socketService.off('direct_message_notification');
       socketService.off('site-visit-status');
     };
   }, []);

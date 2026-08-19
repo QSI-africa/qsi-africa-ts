@@ -47,6 +47,20 @@ const setupVideoSignaling = (server) => {
   io.on("connection", (socket) => {
     console.log("Verified connection established:", socket.id);
 
+    // Auto-join user room if authenticated
+    if (socket.user) {
+      const userId = socket.user.userId || socket.user.id;
+      socket.join(`user_${userId}`);
+      console.log(`[Socket.io] User ${userId} joined room user_${userId}`);
+    }
+
+    socket.on("join-user-room", (userId) => {
+      if (userId) {
+        socket.join(`user_${userId}`);
+        console.log(`[Socket.io] Socket ${socket.id} explicitly joined user_${userId}`);
+      }
+    });
+
     // --- Broadcasting Events ---
     socket.on("start-broadcast", async (roomId, broadcastInfo) => {
       if (!socket.user) {

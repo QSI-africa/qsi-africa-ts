@@ -4,6 +4,7 @@ import {
   Avatar,
   Tag,
   Spin,
+  Modal,
   message
 } from "antd";
 import {
@@ -22,18 +23,16 @@ import {
 import api from "../api";
 import UnifiedHeader from "../components/layout/UnifiedHeader";
 import PanXPostItem from "../components/panx/PanXPostItem";
+import { ProfileHeader } from "../components/panx/ProfileHeader";
 import { useAuth } from "../context/AuthContext";
 
 const ProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
-  const [userPosts, setUserPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: any[], initialIndex: number } | null>(null);
-  const { user } = useAuth();
+  const [activeProfileTab, setActiveProfileTab] = useState<'posts' | 'projects' | 'insights'>('posts');
+  const [followerCount, setFollowerCount] = useState<number>(0);
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProfile();
@@ -44,6 +43,8 @@ const ProfileDetailPage: React.FC = () => {
     try {
       const response = await api.get(`/network/profile/${id}`);
       setProfile(response.data);
+      setFollowerCount(response.data._count?.followers || response.data.followersCount || 12);
+      setIsFollowing(response.data.isFollowing || false);
       if (response.data.userId) {
         fetchUserPosts(response.data.userId);
       }
@@ -51,6 +52,22 @@ const ProfileDetailPage: React.FC = () => {
       console.error("Fetch profile error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user) {
+      message.info("Please log in to follow profiles.");
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await api.post(`/panx/users/${profile.userId || id}/follow`);
+      const nowFollowing = res.data.following;
+      setIsFollowing(nowFollowing);
+      setFollowerCount(prev => nowFollowing ? prev + 1 : Math.max(0, prev - 1));
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -108,49 +125,46 @@ const ProfileDetailPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-      {/* Generic Page Header */}
-      <UnifiedHeader
-        title="Profile Detail"
-        subTitle="Sovereign Mind Profile"
-        extra={
-          <button
-            onClick={() => navigate("/network")}
-            className="qsi-button flex items-center gap-1.5 py-1.5 px-3 h-10 text-sm rounded-md"
-            style={{ textTransform: 'none' }}
-          >
-            <ArrowLeft size={14} /> Back to Network
-          </button>
+      {/* Standardized Profile Header */}
+      <ProfileHeader
+        name={profile.user.name}
+        role={profile.specialization || 'Pan African Engineer'}
+        bio={profile.bio || profile.headline || 'Pan African Engineers Entity'}
+        avatarUrl={profile.user?.avatarUrl}
+        bannerUrl={profile.bannerUrl}
+        isVerified={profile.isVerified}
+        followersCount={followerCount}
+        followingCount={profile.followingCount || 24}
+        isFollowing={isFollowing}
+        onFollowToggle={handleFollowToggle}
+        isOwnProfile={profile.user.id === user?.id}
+        onBackClick={() => navigate("/network")}
+        activeTab={activeProfileTab}
+        onTabChange={(tabKey) => setActiveProfileTab(tabKey)}
+        extraActions={
+          profile.user.id !== user?.id ? (
+            <button
+              onClick={() => navigate(`/inbox?user=${profile.user.id}`)}
+              style={{
+                padding: '8px 18px', borderRadius: '12px',
+                background: 'rgba(0, 135, 81, 0.15)', border: '1px solid #008751',
+                color: '#008751', fontWeight: 800, fontSize: '11px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+            >
+              <MessageCircle size={14} /> Message
+            </button>
+          ) : null
         }
+        tabs={[
+          { key: 'posts', label: 'Posts', count: userPosts.length },
+          { key: 'projects', label: 'Project Ledger', count: profile.projects?.length || 0 },
+          { key: 'insights', label: 'Sovereign Insights', count: sovereignInsights.length }
+        ]}
       />
 
       {/* Main Content Area */}
-      <section className="max-w-6xl mx-auto w-full p-8 lg:p-12 space-y-12">
-        {/* Row 1: Profile Info Banner / Card */}
-        <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-12">
-          <div className="flex flex-col md:flex-row gap-6 md:items-center">
-            <div className="relative group shrink-0">
-              {profile.isVerified && (
-                <div className="absolute -top-2 -right-2 w-7 h-7 bg-success-green rounded-full flex items-center justify-center text-white border-2 border-bg-secondary z-20 shadow-md">
-                  <ShieldCheck size={14} />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-accent-primary/20 blur-xl rounded-full opacity-20 -z-10 group-hover:opacity-40 transition-opacity" />
-            </div>
-
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-baseline gap-2 mb-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
-                  {profile.user.name}
-                </h1>
-                <span className="text-xs font-semibold text-accent-primary tracking-wider" style={{ textTransform: 'none' }}>
-                  {profile.isVerified
-                    ? "• Sovereign Mind Verified"
-                    : "• Professional Member"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <section className="max-w-6xl mx-auto w-full px-8 pb-12 space-y-12">
         {/* Row 2: Engage Professional */}
         <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-12 text-center relative overflow-hidden">
           <Activity
@@ -429,6 +443,26 @@ const ProfileDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Modal for Avatar Lightbox */}
+        <Modal
+          open={avatarLightboxOpen}
+          footer={null}
+          onCancel={() => setAvatarLightboxOpen(false)}
+          centered
+          styles={{ body: { padding: 0, background: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '24px', overflow: 'hidden' } }}
+        >
+          <div className="p-4 text-center">
+            {profile.user?.avatarUrl ? (
+              <img src={getServerUrl(profile.user.avatarUrl)} alt={profile.user.name} style={{ maxHeight: '70vh', maxWidth: '100%', objectFit: 'contain', borderRadius: '16px' }} />
+            ) : (
+              <div style={{ width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(0, 135, 81, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '20px auto' }}>
+                <User size={100} style={{ color: '#008751' }} />
+              </div>
+            )}
+            <h3 className="text-white text-lg font-bold mt-4">{profile.user.name}</h3>
+            {profile.isVerified && <p className="text-[#008751] text-xs font-bold mt-1">✓ Pan African Verified Entity</p>}
+          </div>
+        </Modal>
       </section>
     </div>
   );

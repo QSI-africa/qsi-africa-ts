@@ -755,7 +755,15 @@ router.get("/posts/:postId", async (req, res) => {
       include: {
         venture: { select: { id: true, name: true, logoUrl: true } },
         author: {
-          select: { id: true, name: true, email: true, role: true, location: true, followers: { where: { followerId: userId }, select: { followerId: true } } }
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            location: true,
+            engineerProfile: { select: { avatarUrl: true } },
+            followers: { where: { followerId: userId }, select: { followerId: true } }
+          }
         },
         replies: {
           where: { parentId: null },
@@ -794,7 +802,8 @@ router.get("/posts/:postId", async (req, res) => {
         email: post.author.email,
         role: post.author.role,
         location: post.author.location,
-        isFollowing: post.author.followers.length > 0
+        avatarUrl: post.author.engineerProfile?.avatarUrl,
+        isFollowing: post.author.followers ? post.author.followers.length > 0 : false
       },
       hasLiked: post.likes.length > 0,
       hasReposted: post.reposts.length > 0,

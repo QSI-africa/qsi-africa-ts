@@ -345,6 +345,8 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     message.success('Viewer link copied to clipboard!');
   };
 
+  const [layoutMode, setLayoutMode] = useState<'host' | 'split' | '4grid'>('host');
+
   return (
     <div ref={containerRef} style={{
       display: 'grid',
@@ -362,18 +364,18 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           zIndex: 10, pointerEvents: 'none'
         }}>
-          {/* Metadata Badges */}
-          <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(239,68,68,0.15)', backdropFilter: 'blur(12px)',
-              padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)'
-            }}>
-              <Radio size={14} className="animate-pulse" color="#EF4444" />
-              <span style={{ fontSize: '10px', fontWeight: 900, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                ON AIR
-              </span>
-            </div>
+          {/* Metadata Badges & Relocated Exit Button */}
+          <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto', alignItems: 'center' }}>
+            <button
+              onClick={handleStopBroadcast}
+              style={{
+                background: '#EF4444', color: 'white', border: 'none',
+                borderRadius: '10px', padding: '6px 14px', fontSize: '11px',
+                fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+            >
+              Exit Stream
+            </button>
 
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -411,13 +413,26 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         {/* Local Stream Canvas */}
         <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
           {localStream ? (
-            <video
-              ref={videoRef} autoPlay muted playsInline
-              style={{
-                width: '100%', height: '100%', objectFit: 'contain', display: 'block',
-                transform: 'scaleX(-1)' // Mirror local stream for natural feel
-              }}
-            />
+            <div style={{
+              width: '100%', height: '100%', position: 'relative',
+              display: 'grid',
+              gridTemplateColumns: layoutMode === 'split' ? '1fr 1fr' : layoutMode === '4grid' ? '1fr 1fr' : '1fr',
+              gridTemplateRows: layoutMode === '4grid' ? '1fr 1fr' : '1fr',
+              gap: '4px', padding: '4px'
+            }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <video
+                  ref={videoRef} autoPlay muted playsInline
+                  style={{
+                    width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                    transform: 'scaleX(-1)'
+                  }}
+                />
+                <span style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 }}>
+                  Host: {user?.name || 'Broadcaster'}
+                </span>
+              </div>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
               <div style={{
@@ -466,6 +481,18 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
           </ControlBtn>
 
+          {/* Layout switcher */}
+          <button
+            onClick={() => setLayoutMode(layoutMode === 'host' ? 'split' : layoutMode === 'split' ? '4grid' : 'host')}
+            style={{
+              height: '48px', padding: '0 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.07)', color: GREEN, cursor: 'pointer', fontSize: '11px', fontWeight: 800
+            }}
+            title="Toggle TikTok Layout Grid"
+          >
+            Grid: {layoutMode.toUpperCase()}
+          </button>
+
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={18} />
           </ControlBtn>
@@ -477,21 +504,6 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           <ControlBtn onClick={copyViewerLink} title="Copy Viewer Link">
             <Link2 size={18} />
           </ControlBtn>
-
-          <div style={{ width: '1px', height: '48px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }} />
-
-          <button
-            onClick={handleStopBroadcast}
-            className="qsi-btn qsi-btn-primary"
-            style={{
-              padding: '0 24px', height: '48px', borderRadius: '14px',
-              background: '#EF4444', border: 'none', color: 'white', fontWeight: 800,
-              fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em',
-              display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'
-            }}
-          >
-            End Live
-          </button>
         </div>
 
       </div>
@@ -508,8 +520,8 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <MessageSquare size={15} color={GREEN} />
-              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Transmission Chat
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'none', letterSpacing: '0.05em' }}>
+                PanX Live Chat
               </span>
             </div>
             <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>

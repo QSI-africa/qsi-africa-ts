@@ -12,15 +12,14 @@
   --bg-secondary: #18241E;
   --bg-tertiary: #203128;
   
-  /* Accents - Premium Green Palette */
-  --accent-primary: #10B981; /* Emerald 500 */
-  --accent-primary-soft: rgba(16, 185, 129, 0.12);
-  --accent-primary-hover: #059669; /* Emerald 600 */
-  --accent-primary-glow: rgba(16, 185, 129, 0.25);
-  /* Removed --accent-gold to enforce Emerald Green Mission Control aesthetic */
+  /* Accents - Pan African Green Palette (#008751) */
+  --accent-primary: #008751; /* Official Pan African Green */
+  --accent-primary-soft: rgba(0, 135, 81, 0.12);
+  --accent-primary-hover: #006e42; /* Darker Pan African Green */
+  --accent-primary-glow: rgba(0, 135, 81, 0.25);
   
-  --success-green: #22C55E;
-  --success-green-soft: rgba(34, 197, 94, 0.1);
+  --success-green: #008751;
+  --success-green-soft: rgba(0, 135, 81, 0.1);
   
   /* Text Colors */
   --text-primary: #F9FAFB;
@@ -623,11 +622,13 @@ body {
     padding-bottom: 96px; /* Space for bottom nav + safe area */
   }
 
-  body.hide-mobile-nav .mobile-nav-bar {
+  body.hide-mobile-nav .mobile-nav-bar,
+  body.keyboard-open .mobile-nav-bar {
     display: none !important;
   }
 
-  body.hide-mobile-nav .has-bottom-nav .main-workspace {
+  body.hide-mobile-nav .has-bottom-nav .main-workspace,
+  body.keyboard-open .has-bottom-nav .main-workspace {
     padding-bottom: 0 !important;
   }
 }
@@ -1144,7 +1145,8 @@ a:visited {
   padding-top: 16px;
 }
 
-.ecosystem-heading {
+.ecosystem-heading,
+.panx-tools-heading {
   font-size: 14px;
   font-weight: 900;
   text-transform: none;

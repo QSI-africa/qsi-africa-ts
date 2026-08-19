@@ -18,7 +18,7 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 const HealingPage: React.FC = () => {
   const { user } = useAuth();
@@ -85,8 +85,8 @@ const HealingPage: React.FC = () => {
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
       <UnifiedHeader
-        title="Healing"
-        subTitle="Wisdom & Restoration"
+        title="Healing & Wisdom"
+        subTitle="Caltivate the mind that builds"
       />
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }}>

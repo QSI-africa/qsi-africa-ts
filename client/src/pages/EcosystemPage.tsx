@@ -5,7 +5,7 @@ import {
   Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
   Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X, Menu
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Grid, message, Modal, Drawer } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
@@ -105,6 +105,8 @@ const getAuthorCategory = (author: any) => {
 
 const EcosystemPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search');
   const authContext = useAuth();
   const user = authContext?.user;
   const screens = Grid.useBreakpoint();
@@ -115,7 +117,7 @@ const EcosystemPage: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'for_you' | 'following' | 'saved' | 'enterprise' | 'placebo' | 'heritage_flame' | 'future_craft' | 'sovereign_minds' | 'others'>('for_you');
+  const [activeFilter, setActiveFilter] = useState<'for_panx' | 'for_you' | 'following' | 'friends'>('for_panx');
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [newPostText, setNewPostText] = useState('');
@@ -332,7 +334,6 @@ const EcosystemPage: React.FC = () => {
       const response = await api.post("/panx/posts", {
         content: newPostText,
         mediaFiles: uploadedMedia.length > 0 ? uploadedMedia : null,
-        // For backwards compatibility on old clients if needed, pass the first item to single fields:
         imageUrl: uploadedMedia.find(m => m.type === 'IMAGE')?.url || null,
         videoUrl: uploadedMedia.find(m => m.type === 'VIDEO')?.url || null,
         mediaType: uploadedMedia[0]?.type || null,
@@ -359,17 +360,24 @@ const EcosystemPage: React.FC = () => {
     }
   };
 
-
-
-
-
   const filteredPosts = (Array.isArray(posts) ? posts : []).filter(post => {
     if (!post.author) return false;
 
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const contentMatch = (post.content || '').toLowerCase().includes(q);
+      const authorMatch = (post.author.name || '').toLowerCase().includes(q);
+      if (!contentMatch && !authorMatch) return false;
+    }
+
+    if (activeFilter === 'for_panx') {
+      const cat = getAuthorCategory(post.author);
+      return cat === 'sovereign_minds' || cat === 'enterprise' || post.author.role === 'ENGINEER' || post.author.role === 'SUPER_USER' || post.author.role === 'ADMIN';
+    }
     if (activeFilter === 'for_you') return true;
     if (activeFilter === 'following') return post.author.isFollowing || post.author.id === user?.id;
-    if (activeFilter === 'saved') return post.hasBookmarked;
-    return getAuthorCategory(post.author) === activeFilter;
+    if (activeFilter === 'friends') return post.author.isFollowing;
+    return true;
   });
 
   return (
@@ -377,39 +385,38 @@ const EcosystemPage: React.FC = () => {
       <UnifiedHeader
         title="PanX Feed"
       />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }} className="sovereign-header-tabs no-scrollbar">
-          {(['for_you', 'following', 'saved', 'enterprise', 'placebo', 'heritage_flame', 'future_craft', 'sovereign_minds', 'others'] as const).map(filter => {
-            const isSelected = activeFilter === filter;
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingLeft: '24px', paddingRight: '16px', paddingBottom: '4px', flex: 1 }} className="sovereign-header-tabs no-scrollbar">
+          {([
+            { id: 'for_panx', label: 'For PanX' },
+            { id: 'for_you', label: 'For You' },
+            { id: 'following', label: 'Following' },
+            { id: 'friends', label: 'Friends' }
+          ] as const).map(tab => {
+            const isSelected = activeFilter === tab.id;
             const getFilterIcon = (filterName: string) => {
               switch (filterName) {
-                case 'for_you': return <Compass size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'following': return <Users size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'saved': return <Bookmark size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'enterprise': return <Briefcase size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'placebo': return <Heart size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'heritage_flame': return <Flame size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'future_craft': return <Hammer size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'sovereign_minds': return <UserCheck size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                case 'others': return <Layers size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
-                default: return <Globe size={12} style={{ marginRight: '6px', transition: 'transform 0.3s ease' }} className="filter-icon" />;
+                case 'for_panx': return <Globe size={12} style={{ marginRight: '6px' }} />;
+                case 'for_you': return <Compass size={12} style={{ marginRight: '6px' }} />;
+                case 'following': return <Users size={12} style={{ marginRight: '6px' }} />;
+                case 'friends': return <UserCheck size={12} style={{ marginRight: '6px' }} />;
+                default: return <Globe size={12} style={{ marginRight: '6px' }} />;
               }
             };
             return (
               <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id as any)}
                 className={`pill ${isSelected ? 'active' : ''}`}
                 style={{
-                  textTransform: 'uppercase',
-                  fontWeight: 800,
-                  fontSize: '11px',
-                  letterSpacing: '0.05em',
-                  padding: '8px 16px',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  letterSpacing: '0.02em',
+                  padding: '8px 18px',
                   borderRadius: '20px',
                   border: isSelected ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                  background: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                  color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                  background: isSelected ? 'var(--accent-primary-soft)' : 'rgba(255,255,255,0.02)',
+                  color: isSelected ? 'var(--accent-primary)' : 'rgba(255,255,255,0.7)',
                   cursor: 'pointer',
                   flexShrink: 0,
                   transition: 'all 0.2s',
@@ -417,22 +424,13 @@ const EcosystemPage: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
-                onMouseEnter={e => {
-                  const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                  if (icon) icon.style.transform = 'scale(1.2) rotate(10deg)';
-                }}
-                onMouseLeave={e => {
-                  const icon = e.currentTarget.querySelector('.filter-icon') as HTMLElement;
-                  if (icon) icon.style.transform = 'scale(1) rotate(0deg)';
-                }}
               >
-                {getFilterIcon(filter)}
-                {filter.replace('_', ' ')}
+                {getFilterIcon(tab.id)}
+                {tab.label}
               </button>
             );
           })}
         </div>
-
       </div>
       <div style={{
         maxWidth: isDesktop ? '1200px' : '700px',

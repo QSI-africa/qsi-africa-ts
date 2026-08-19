@@ -28,8 +28,9 @@ import LiveViewerContainer from '../components/LiveViewerContainer';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
+import { ProfileHeader } from '../components/panx/ProfileHeader';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 const QsiTvPage: React.FC = () => {
   const { token, user } = useAuth() || { token: null, user: null };
@@ -411,37 +412,31 @@ const QsiTvPage: React.FC = () => {
 
     return (
       <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-        {/* Banner/Header */}
-        <header className="p-8 lg:p-12 bg-bg-secondary relative overflow-hidden">
-          <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <button
-              onClick={() => { setSelectedChannel(null); fetchChannels(); }}
-              className="qsi-btn qsi-btn-secondary mb-6"
-              style={{ padding: '8px 16px', borderRadius: '10px' }}
-            >
-              <ArrowLeft size={16} /> Back to Channels
-            </button>
-            <div className="flex items-center justify-between flex-wrap gap-4 mt-4">
-              <div>
-                <h1 className="text-md lg:text-md font-black text-white uppercase tracking-tight mb-2">
-                  {selectedChannel.title}
-                </h1>
-                <p className="text-xs text-text-tertiary font-bold uppercase tracking-widest flex items-center gap-2">
-                  <User size={12} className="text-accent-primary" /> Creator: {selectedChannel.user?.name || 'Agent'}
-                </p>
-              </div>
-              {!isOwner && (
-                <button
-                  onClick={() => toggleSubscription(selectedChannel.id, isSubscribedToSelected)}
-                  className={`qsi-btn ${isSubscribedToSelected ? 'qsi-btn-outline' : 'qsi-btn-primary'}`}
-                  style={{ borderRadius: '12px', padding: '12px 24px', fontWeight: 800 }}
-                >
-                  <Rss size={16} /> {isSubscribedToSelected ? 'Unsubscribe' : 'Subscribe'}
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
+        {/* Standardized Profile Header for TV Channels */}
+        <ProfileHeader
+          name={selectedChannel.title}
+          role="PanX TV Channel"
+          bio={selectedChannel.description || `Creator: ${selectedChannel.user?.name || 'PanX Creator'}`}
+          isVerified={selectedChannel.status === 'APPROVED'}
+          onBackClick={() => { setSelectedChannel(null); fetchChannels(); }}
+          extraActions={
+            !isOwner ? (
+              <button
+                onClick={() => toggleSubscription(selectedChannel.id, isSubscribedToSelected)}
+                style={{
+                  padding: '8px 20px', borderRadius: '12px',
+                  background: isSubscribedToSelected ? 'rgba(255,255,255,0.06)' : GREEN,
+                  border: isSubscribedToSelected ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                  color: isSubscribedToSelected ? 'rgba(255,255,255,0.6)' : 'black',
+                  fontWeight: 900, fontSize: '11px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <Rss size={14} /> {isSubscribedToSelected ? 'Subscribed' : 'Subscribe'}
+              </button>
+            ) : null
+          }
+        />
 
         {/* Content Section */}
         <div className="max-w-5xl mx-auto w-full p-8">
@@ -553,14 +548,23 @@ const QsiTvPage: React.FC = () => {
     <div className="flex-1 flex flex-col h-full bg-bg-primary">
       {/* Header */}
       <UnifiedHeader
-        title={<>PanX <span className="text-accent-primary">TV</span></>}
+        title="PanX TV"
         extra={
-          <div className="flex gap-3">
-            <button onClick={handleStartBroadcastClick} className="qsi-button primary flex items-center gap-2 py-3 px-6 text-xs">
-              <Radio size={14} /> Go Live
+          <div className="flex gap-2 items-center">
+            <button 
+              onClick={handleStartBroadcastClick} 
+              className="qsi-button primary flex items-center gap-1.5 py-1.5 px-4 text-xs font-bold"
+              style={{ background: '#008751', color: 'black', textTransform: 'none', borderRadius: '10px' }}
+            >
+              <Radio size={13} /> Go Live
             </button>
-            <button onClick={handleStartPeerSessionClick} className="qsi-button flex items-center gap-2 py-3 px-6 text-xs">
-              <Video size={14} /> Peer Session
+            <button 
+              onClick={handleStartPeerSessionClick} 
+              className="qsi-btn qsi-btn-secondary text-xs" 
+              style={{ padding: '6px 12px', textTransform: 'none', borderRadius: '10px' }}
+              title="Start private Peer Session"
+            >
+              + Peer Session
             </button>
           </div>
         }
@@ -575,7 +579,7 @@ const QsiTvPage: React.FC = () => {
             onChange={(key) => {
               if (key === 'studio') {
                 fetchMyChannel();
-              } else if (key === 'directory') {
+              } else if (key === 'channels') {
                 fetchChannels();
               }
             }}
@@ -583,7 +587,7 @@ const QsiTvPage: React.FC = () => {
               // TABS 1: Active Transmissions
               {
                 key: 'live',
-                label: <span className="flex items-center gap-2 py-2"><Radio size={16} /> Live Transmissions</span>,
+                label: <span className="flex items-center gap-2 py-2"><Radio size={14} /> Live</span>,
                 children: (
                   <div className="py-6">
                     <div className="flex items-center gap-3 mb-6">

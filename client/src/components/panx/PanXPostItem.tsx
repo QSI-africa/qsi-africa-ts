@@ -286,6 +286,7 @@ const PanXPostItem = React.memo(({
                   borderRadius: '16px',
                   overflow: 'hidden',
                   border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'rgba(0,0,0,0.4)',
                   cursor: 'pointer'
                 }}
                 onClick={(e) => {
@@ -297,9 +298,9 @@ const PanXPostItem = React.memo(({
                 }}
               >
                 {media.type === 'VIDEO' ? (
-                  <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                  <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
                 ) : (
-                  <img loading="lazy" src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                  <img loading="lazy" src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
                 )}
               </div>
             ))}
@@ -308,19 +309,19 @@ const PanXPostItem = React.memo(({
           <>
             {post.imageUrl && (
               <div
-                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', cursor: 'pointer' }}
                 onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.imageUrl!), type: 'image' }], initialIndex: 0 }); }}
               >
-                <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
               </div>
             )}
 
             {post.videoUrl && (
               <div
-                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', cursor: 'pointer' }}
                 onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.videoUrl!), type: 'video' }], initialIndex: 0 }); }}
               >
-                <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', display: 'block' }} />
+                <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
               </div>
             )}
           </>
@@ -334,7 +335,7 @@ const PanXPostItem = React.memo(({
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Heart size={15} fill={post.hasLiked ? '#EF4444' : 'none'} />
-              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount > 0 ? post.likesCount : ''}</span>
+              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.likesCount ?? 0}</span>
             </button>
 
             <button
@@ -343,7 +344,7 @@ const PanXPostItem = React.memo(({
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <MessageCircle size={15} />
-              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount > 0 ? post.repliesCount : ''}</span>
+              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repliesCount ?? 0}</span>
             </button>
 
             <button
@@ -352,7 +353,7 @@ const PanXPostItem = React.memo(({
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Repeat size={15} />
-              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount > 0 ? post.repostsCount : ''}</span>
+              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.repostsCount ?? 0}</span>
             </button>
 
             <button
@@ -369,7 +370,7 @@ const PanXPostItem = React.memo(({
               style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Send size={15} />
-              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount > 0 ? post.sharesCount : ''}</span>
+              <span style={{ fontSize: '11.5px', fontWeight: 600 }}>{post.sharesCount ?? 0}</span>
             </button>
           </div>
         </div>

@@ -126,6 +126,11 @@ router.post("/conversations/:id/messages", async (req, res) => {
         senderId: senderId || null,
         senderType: senderType || "USER",
         text: text
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, email: true, role: true }
+        }
       }
     });
 
@@ -135,10 +140,37 @@ router.post("/conversations/:id/messages", async (req, res) => {
       data: { updatedAt: new Date() }
     });
 
-    // Optional: Emit socket event for real-time update
+    // Fetch conversation participants for real-time socket delivery
+    const conversation = await prisma.conversation.findUnique({
+      where: { id },
+      include: {
+        participants: {
+          include: {
+            user: { select: { id: true, name: true } }
+          }
+        }
+      }
+    });
+
     const io = req.app.get("io");
     if (io) {
+      // 1. Emit to conversation room
       io.to(id).emit("new_message", message);
+
+      // 2. Emit direct notification to each participant's user room (user_${userId})
+      if (conversation && conversation.participants) {
+        conversation.participants.forEach(p => {
+          if (p.userId !== senderId) {
+            io.to(`user_${p.userId}`).emit("direct_message_notification", {
+              conversationId: id,
+              message,
+              senderName: message.sender?.name || "Someone"
+            });
+            // Also emit new_message to their user room so conversation list updates live
+            io.to(`user_${p.userId}`).emit("new_message", message);
+          }
+        });
+      }
     }
 
     res.status(201).json(message);

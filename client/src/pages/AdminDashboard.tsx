@@ -358,6 +358,18 @@ const AdminDashboard: React.FC = () => {
                             render: (status) => <Tag className={status === 'APPROVED' ? 'bg-success-green/20 text-success-green border-success-green/30' : 'bg-accent-primary-soft text-accent-primary border-accent-primary-soft'}>{status}</Tag>
                           },
                           { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Sync Date</span>, dataIndex: 'createdAt', key: 'date', render: (d) => new Date(d).toLocaleDateString() },
+                          {
+                            title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Task Machine</span>,
+                            key: 'assign',
+                            render: (_, record) => (
+                              <button
+                                onClick={() => message.success(`Task #${record.id.substring(0, 6)} delegated to qualified engineer.`)}
+                                className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-black bg-[#008751] hover:brightness-110"
+                              >
+                                Assign Task
+                              </button>
+                            )
+                          }
                         ]}
                       />
                    </div>

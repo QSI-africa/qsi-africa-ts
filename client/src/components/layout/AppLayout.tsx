@@ -63,6 +63,7 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
   switch (catName) {
     case 'PanX':
       return <img src={panxIcon} alt="PanX" style={mergedStyle} />;
+    case 'SENSOL (Design. Plan. Execute.)':
     case 'Smart Infrastructure':
       return <img src={labIcon} alt={catName} style={mergedStyle} />;
     case 'PanX Lab':
@@ -149,14 +150,14 @@ const DefaultSidebarContent = () => {
 
 
   const categories = [
-    { name: 'PanX', shortName: 'PanX', path: '/', description: 'Unified control center for the QSI infrastructure.' },
+    { name: 'PanX', shortName: 'PanX Feed', path: '/', description: 'Unified control center for the PanX infrastructure.' },
     { name: 'PanX Lab', shortName: 'PanX Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
-    { name: 'PanX Mobility', shortName: 'PanX Mobility', path: '/mobility', description: 'Advanced logistics and fleet optimization.' },
+    { name: 'PanX Concepts', shortName: 'PanX Concepts', path: '/concepts', description: 'Digital concepts and frameworks.' },
     { name: 'PanX TV', shortName: 'PanX TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
   ];
 
   const panxTools = [
-    { name: 'Smart Infrastructure', path: '/chat/infrastructure', description: 'Design, Plan, Execute.' },
+    { name: 'SENSOL (Design. Plan. Execute.)', path: '/chat/infrastructure', description: 'Design. Plan. Execute.' },
     { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
     ...(user?.role === 'ADMIN' ? [{ name: 'Admin Dashboard', path: '/admin', description: 'Manage Ecosystem & Ventures.' }] : []),
   ];
@@ -270,14 +271,22 @@ const DefaultSidebarContent = () => {
             borderRadius: "14px", padding: "10px 16px",
             transition: "all 0.3s"
           }}
-          className="focus-within:border-[#10B981] focus-within:bg-[#10B981]/05"
+          className="focus-within:border-[#008751] focus-within:bg-[#008751]/05"
           >
             <Search size={16} style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
             <input
               type="text"
-              placeholder="Search Feed..."
+              placeholder="Search PanX..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+                  setIsMobileMenuOpen(false);
+                }
+              }}
               style={{ 
                 color: "white", outline: "none", background: "transparent", 
                 border: "none", width: "100%", fontSize: "11px", fontWeight: 800,
@@ -329,13 +338,7 @@ const DefaultSidebarContent = () => {
         </div>
 
         <div style={{ padding: "0 16px", marginBottom: "8px" }}>
-          <h3 style={{ 
-            fontSize: "14px", 
-            fontWeight: "900", 
-            letterSpacing: "0.2em", 
-            color: "white",
-            opacity: 0.6
-          }}>
+          <h3 className="panx-tools-heading">
             PanX Tools
           </h3>
         </div>
@@ -509,6 +512,52 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Auto-hide mobile bottom navbar when inputs/textareas are focused or virtual keyboard opens
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        document.body.classList.add('keyboard-open');
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !(active as HTMLElement).isContentEditable)) {
+            document.body.classList.remove('keyboard-open');
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
+
+    const handleViewportResize = () => {
+      if (window.visualViewport && window.visualViewport.height < window.innerHeight * 0.8) {
+        document.body.classList.add('keyboard-open');
+      } else {
+        document.body.classList.remove('keyboard-open');
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+    }
+
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focusout', handleFocusOut);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      }
+      document.body.classList.remove('keyboard-open');
+    };
   }, []);
 
   return (

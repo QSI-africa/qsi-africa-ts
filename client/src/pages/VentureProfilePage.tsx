@@ -18,6 +18,7 @@ import {
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import PanXPostItem from '../components/panx/PanXPostItem';
+import ProfileHeader from '../components/panx/ProfileHeader';
 
 const { TextArea } = Input;
 
@@ -191,87 +192,16 @@ const VentureProfilePage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar" style={{ background: 'var(--bg-primary)' }}>
-      {/* Hero Section */}
-      <div style={{ position: 'relative', width: '100%', minHeight: '280px', overflow: 'hidden' }}>
-        {venture.bannerUrl ? (
-          <img
-            src={getMediaUrl(venture.bannerUrl)}
-            alt={venture.name}
-            style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }}
-            loading="lazy"
-          />
-        ) : (
-          <div style={{
-            width: '100%', height: '280px',
-            background: 'linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(10,18,14,0.95) 70%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <Rocket size={80} style={{ color: 'rgba(16,185,129,0.2)' }} />
-          </div>
-        )}
-
-        {/* Overlay gradient */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '120px',
-          background: 'linear-gradient(to top, var(--bg-primary) 0%, transparent 100%)'
-        }} />
-
-        {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            position: 'absolute', top: '16px', left: '16px',
-            width: '40px', height: '40px', borderRadius: '50%',
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: 'white'
-          }}
-        >
-          <ArrowLeft size={18} />
-        </button>
-      </div>
-
-      {/* Identity Section */}
-      <div style={{ padding: '0 24px', marginTop: '-40px', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', marginBottom: '16px' }}>
-          {venture.logoUrl ? (
-            <img
-              src={getMediaUrl(venture.logoUrl)}
-              alt={venture.name}
-              style={{
-                width: '72px', height: '72px', borderRadius: '20px', objectFit: 'cover',
-                border: '3px solid var(--bg-primary)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-              }}
-              loading="lazy"
-            />
-          ) : (
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '20px',
-              background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '3px solid var(--bg-primary)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-              color: 'black', fontWeight: 900, fontSize: '24px'
-            }}>
-              {venture.name?.charAt(0)?.toUpperCase()}
-            </div>
-          )}
-          <div>
-            <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-              {venture.name}
-            </h1>
-          </div>
-        </div>
-
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', lineHeight: 1.6, margin: '0 0 24px 0', maxWidth: '600px' }}>
-          {venture.shortDescription}
-        </p>
-
-        {venture.fullDescription && (
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', lineHeight: 1.7, margin: '0 0 32px 0', maxWidth: '700px' }}>
-            {venture.fullDescription}
-          </p>
-        )}
-      </div>
+      {/* Standardized Profile Header */}
+      <ProfileHeader
+        name={venture.name}
+        role="VENTURE"
+        bio={venture.shortDescription || venture.fullDescription}
+        avatarUrl={venture.logoUrl}
+        bannerUrl={venture.bannerUrl}
+        isVerified={true}
+        onBackClick={() => navigate(-1)}
+      />
 
       {/* Action Layer */}
       {venture.engagementTypes?.length > 0 && (

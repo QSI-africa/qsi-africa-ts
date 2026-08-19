@@ -116,7 +116,25 @@ const MyRequestsPage: React.FC = () => {
                         dataSource={siteVisits}
                         locale={{ emptyText: <Empty description={<span className="text-text-tertiary">No site visit requests found</span>} /> }}
                         renderItem={visit => (
-                          <div key={visit.id} className="feed-card mb-6 group hover:border-accent-primary/20 transition-all p-6">
+                          <div key={visit.id} className="feed-card mb-6 group hover:border-[#008751]/30 transition-all p-6 bg-[#18241E] border border-white/10 rounded-2xl">
+                            {/* Card Header Spec */}
+                            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+                              <div className="flex items-center gap-2">
+                                <FileText size={16} className="text-[#008751]" />
+                                <span className="text-xs font-mono font-bold text-white/80">
+                                  Task Card @sustainable.engineering.solutions
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20">
+                                  High Urgency
+                                </span>
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#008751]/10 text-[#008751] border border-[#008751]/20">
+                                  SLA: 48h Remaining
+                                </span>
+                              </div>
+                            </div>
+
                             <div className="flex items-center justify-between mb-4">
                               <div>
                                 <h3 className="text-xl font-bold text-white uppercase tracking-tight">{visit.project.title}</h3>
@@ -132,15 +150,23 @@ const MyRequestsPage: React.FC = () => {
                                 {visit.status}
                               </div>
                             </div>
-                            <Divider className="border-border-subtle my-6 opacity-30" />
+                            <Divider className="border-border-subtle my-4 opacity-30" />
                             <div className="flex items-center justify-between">
-                               <p className="text-xs text-text-secondary">
-                                 <span className="text-accent-primary font-black uppercase tracking-widest text-[9px] mr-3">Assigned Architect:</span> 
-                                 <span className="font-bold text-text-primary uppercase">{visit.project.engineerProfile?.user?.name || 'In Evaluation'}</span>
-                               </p>
-                               <button className="text-accent-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">
-                                  Full Schematics <ArrowRight size={14} />
+                              <p className="text-xs text-text-secondary">
+                                <span className="text-[#008751] font-black uppercase tracking-widest text-[9px] mr-3">Assigned Engineer:</span> 
+                                <span className="font-bold text-text-primary uppercase">{visit.project.engineerProfile?.user?.name || 'In Evaluation'}</span>
+                              </p>
+                              
+                              {/* State Machine Action Button */}
+                              {visit.status === 'PENDING' ? (
+                                <button className="qsi-btn qsi-btn-primary py-2 px-4 text-xs font-black uppercase tracking-widest text-black" style={{ background: '#008751' }}>
+                                  Track Task
                                 </button>
+                              ) : (
+                                <button className="text-[#008751] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                                  Track Task <ArrowRight size={14} />
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

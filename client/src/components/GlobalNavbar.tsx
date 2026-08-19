@@ -39,14 +39,13 @@ const GlobalNavbar: React.FC = () => {
 
   const servicesMenu = (
     <Menu className="header-menu" style={{ minWidth: '260px' }}>
-      <Menu.Item key="infrastructure" icon={<DesktopOutlined />} onClick={() => navigate('/chat/infrastructure')}>Smart Infrastructure</Menu.Item>
+      <Menu.Item key="infrastructure" icon={<DesktopOutlined />} onClick={() => navigate('/chat/infrastructure')}>SENSOL (Design. Plan. Execute.)</Menu.Item>
       <Menu.Item key="vision" icon={<BulbOutlined />} onClick={() => navigate('/chat/vision')}>Vision Space</Menu.Item>
-      <Menu.Item key="mobility" icon={<CarOutlined />} onClick={() => navigate('/mobility')}>PanX Mobility</Menu.Item>
-      <Menu.Item key="healing" icon={<HeartOutlined />} onClick={() => navigate('/chat/healing')}>Healing and Wisdom</Menu.Item>
+      <Menu.Item key="healing" icon={<HeartOutlined />} onClick={() => navigate('/chat/healing')}>Healing & Wisdom</Menu.Item>
       <Menu.Item key="lab" icon={<ExperimentOutlined />} onClick={() => navigate('/lab')}>PanX Lab</Menu.Item>
-      <Menu.Item key="inbox" icon={<MessageOutlined />} onClick={() => navigate('/inbox')}>Messaging Inbox</Menu.Item>
+      <Menu.Item key="inbox" icon={<MessageOutlined />} onClick={() => navigate('/inbox')}>PanX Chats</Menu.Item>
       <Menu.Divider />
-      <Menu.Item key="concepts" onClick={() => navigate('/concepts')}>Digital Concepts</Menu.Item>
+      <Menu.Item key="concepts" onClick={() => navigate('/concepts')}>PanX Concepts</Menu.Item>
       <Menu.Item key="demos" onClick={() => navigate('/demos')}>City Demonstrators</Menu.Item>
     </Menu>
   );

@@ -15,7 +15,7 @@ import LiveViewerContainer from '../components/LiveViewerContainer';
 import { Modal, Form, Input } from 'antd';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface LabPackage {
   id: string;
@@ -710,16 +710,16 @@ const LabPage: React.FC = () => {
                               <button 
                                 onClick={() => handleEnrollToggle(pkg.id)}
                                 style={{
-                                  width: '100%', padding: '12px', borderRadius: '12px', 
-                                  border: isEnrolled ? `1px solid ${GREEN}40` : '1px solid rgba(255,255,255,0.1)',
-                                  background: isEnrolled ? 'rgba(16, 185, 129, 0.08)' : 'transparent', 
-                                  color: isEnrolled ? GREEN : 'white', 
+                                  width: '100%', padding: '8px 16px', borderRadius: '10px', 
+                                  border: isEnrolled ? `1px solid ${GREEN}` : 'none',
+                                  background: isEnrolled ? 'rgba(0, 135, 81, 0.15)' : GREEN, 
+                                  color: isEnrolled ? GREEN : 'black', 
                                   cursor: 'pointer',
-                                  fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
-                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                  fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.05em',
+                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                                 }}
                               >
-                                {isEnrolled ? 'Leave Mission' : 'Enroll Module'} <ArrowRight size={12} />
+                                {isEnrolled ? 'Enrolled ✓' : 'Enroll'} <ArrowRight size={12} />
                               </button>
                             </div>
                           </div>
