@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   FlaskConical, Cpu, Code, Layers, Sparkles, Binary, Rocket, 
-  ArrowRight, Search, BookOpen, CheckCircle, Award, Hourglass,
+  ArrowRight, Search, BookOpen, CheckCircle, Hourglass,
   Video, Music, Lock, Play, Upload, X, Trash2, 
   Tv, AlertCircle, Radio
 } from 'lucide-react';
@@ -73,8 +73,10 @@ interface LabTeacherProfileDetail extends LabTeacherProfile {
   recordings: LabRecording[];
 }
 
-const LabPackageCard = ({ pkg, isEnrolled, onToggle }: {
+const LabPackageCard = ({ pkg, categoryTitle, categoryTagline, isEnrolled, onToggle }: {
   pkg: LabPackage;
+  categoryTitle: string;
+  categoryTagline: string;
   isEnrolled: boolean;
   onToggle: () => void;
 }) => (
@@ -86,9 +88,9 @@ const LabPackageCard = ({ pkg, isEnrolled, onToggle }: {
     </div>
     <div className="lab-card-body">
       <div>
-        <div className="lab-card-kicker">Learning package</div>
+        <div className="lab-card-kicker">{pkg.level || categoryTitle}</div>
         <h4>{pkg.name}</h4>
-        <p>{pkg.description || 'An applied learning module designed to build practical, high-impact capability.'}</p>
+        <p>{categoryTagline || pkg.description || 'An applied learning module designed to build practical, high-impact capability.'}</p>
       </div>
       <div className="lab-card-footer">
         <span className="lab-card-meta"><Hourglass size={13} /> {pkg.duration}</span>
@@ -172,7 +174,6 @@ const LabPage: React.FC = () => {
   const [categories, setCategories] = useState<LabCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [enrolledPackageIds, setEnrolledPackageIds] = useState<string[]>([]);
-  const [onlyEnrolledMissions, setOnlyEnrolledMissions] = useState(false);
 
   // Recordings & Search
   const [recordings, setRecordings] = useState<LabRecording[]>([]);
@@ -560,13 +561,7 @@ const LabPage: React.FC = () => {
     }
   };
 
-  // Filter dynamic categories based on enrollment tab
-  const filteredCategories = categories.map(cat => {
-    const matchingPackages = cat.packages.filter(pkg => {
-      return !onlyEnrolledMissions || enrolledPackageIds.includes(pkg.id);
-    });
-    return { ...cat, packages: matchingPackages };
-  }).filter(cat => cat.packages.length > 0);
+  const filteredCategories = categories.filter(cat => cat.packages.length > 0);
 
   const handleLaunchBroadcast = (values: any) => {
     setBroadcastTitle(values.title);
@@ -783,14 +778,7 @@ const LabPage: React.FC = () => {
         extra={
           <div style={{ display: 'flex', gap: '20px' }} className="lab-metrics">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookOpen size={16} color={GREEN} />
-              <div>
-                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Missions Active</div>
-                <div style={{ fontSize: '14px', fontWeight: 900, color: 'white' }}>{enrolledPackageIds.length} Modules</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={16} color="#3B82F6" />
+              <CheckCircle size={16} color={myTeacherProfile?.status === 'APPROVED' ? GREEN : myTeacherProfile?.status === 'PENDING' ? '#F59E0B' : '#E5E7EB'} />
               <div>
                 <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: 800 }}>Teacher Status</div>
                 <div style={{ 
@@ -915,37 +903,6 @@ const LabPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Program Filters (inline) */}
-          {activeTab === 'programs' && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="lab-filters">
-              <button 
-                onClick={() => setOnlyEnrolledMissions(false)}
-                className={`pill ${!onlyEnrolledMissions ? 'active' : ''}`}
-                style={{
-                  textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-                  border: !onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                  background: !onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                  color: !onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                  cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                Packages
-              </button>
-              <button 
-                onClick={() => setActiveTab('studio')}
-                className={`pill ${onlyEnrolledMissions ? 'active' : ''}`}
-                style={{
-                  textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.02)',
-                color: 'rgba(255,255,255,0.6)',
-                  cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                My Studio
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Dynamic Tab Panels */}
@@ -984,6 +941,8 @@ const LabPage: React.FC = () => {
                           <LabPackageCard
                             key={pkg.id}
                             pkg={pkg}
+                            categoryTitle={cat.title}
+                            categoryTagline={cat.descriptor}
                             isEnrolled={isEnrolled}
                             onToggle={() => handleEnrollToggle(pkg.id)}
                           />
@@ -1011,26 +970,16 @@ const LabPage: React.FC = () => {
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
               {/* Search Form */}
               <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }} className="lab-search-form">
-                <div style={{
-                  flex: 1, display: 'flex', alignItems: 'center', gap: '10px',
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '16px', padding: '12px 18px'
-                }}>
+                <div className="qsi-search-bar qsi-search-bar--with-button" style={{ flex: 1 }}>
                   <Search size={16} color="rgba(255,255,255,0.3)" />
                   <input 
                     type="text" 
                     placeholder="Search recorded lectures, topics, or teachers..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{
-                      background: 'transparent', border: 'none', outline: 'none', color: 'white', fontSize: '14px', width: '100%'
-                    }}
                   />
                 </div>
-                <button type="submit" style={{
-                  background: GREEN, color: 'black', border: 'none', padding: '12px 24px', 
-                  borderRadius: '16px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer'
-                }}>
+                <button type="submit" className="qsi-search-button">
                   Search
                 </button>
               </form>

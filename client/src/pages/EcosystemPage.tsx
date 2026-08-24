@@ -164,6 +164,20 @@ const EcosystemPage: React.FC = () => {
     };
   }, []);
 
+  // Restore scroll position when returning from a thread
+  useEffect(() => {
+    const saved = sessionStorage.getItem('panx_scroll');
+    if (saved) {
+      sessionStorage.removeItem('panx_scroll');
+      const scrollEl = document.querySelector('.main-workspace');
+      if (scrollEl) {
+        requestAnimationFrame(() => {
+          scrollEl.scrollTop = Number(saved);
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => subscribeToPanXPostUpdates((postId, update) => {
     setPosts(prev => prev.map(post => post.id === postId ? { ...post, ...update } : post));
   }), []);
@@ -525,7 +539,7 @@ const EcosystemPage: React.FC = () => {
                   {getInitials(user?.name || 'User')}
                 </div>
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: "12px" }}>
                   <textarea
                     placeholder={`What's on your mind, ${user?.name?.split(' ')[0] || 'builder'}?`}
                     value={newPostText}
@@ -680,7 +694,7 @@ const EcosystemPage: React.FC = () => {
                 onClick={() => navigate('/chat/infrastructure')}
               >
                 <Plus size={16} strokeWidth={2.5} />
-                Create Venture
+                SENSOL
               </button>
             </div>
           </div>

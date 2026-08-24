@@ -13,6 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "YOUR_FALLBACK_SECRET_KEY";
 const { authMiddleware } = require("../middleware/authMiddleware");
 const { authLimiter, registrationLimiter, passwordResetLimiter } = require("../middleware/rateLimiter");
 const { sendFleetDriverRegistrationEmail } = require("../services/emailService");
+const { uploadSingle } = require("../middleware/uploadMiddleware");
 // -------------------------
 // -------------------------
 
@@ -121,10 +122,8 @@ router.post("/login", authLimiter, async (req, res) => {
 });
 
 // 3. User Profile (Protected Route)
-// This is where the "argument handler" error was likely happening
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    // authMiddleware attaches the full user object to req.user
     const userWithProfile = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
@@ -133,6 +132,10 @@ router.get("/me", authMiddleware, async (req, res) => {
         name: true,
         role: true,
         phone: true,
+        location: true,
+        organization: true,
+        avatarUrl: true,
+        bannerUrl: true,
         frequencyScans: {
           select: {
             id: true,
@@ -182,12 +185,48 @@ router.put("/profile", authMiddleware, async (req, res) => {
         phone: true,
         location: true,
         organization: true,
+        avatarUrl: true,
+        bannerUrl: true,
       },
     });
 
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Failed to update profile:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 3.2a Upload Avatar
+router.put("/avatar", authMiddleware, uploadSingle("avatar"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+  try {
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatarUrl },
+      select: { id: true, avatarUrl: true },
+    });
+    res.status(200).json({ avatarUrl: updatedUser.avatarUrl });
+  } catch (error) {
+    console.error("Failed to update avatar:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// 3.2b Upload Banner
+router.put("/banner", authMiddleware, uploadSingle("banner"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+  try {
+    const bannerUrl = `/uploads/${req.file.filename}`;
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { bannerUrl },
+      select: { id: true, bannerUrl: true },
+    });
+    res.status(200).json({ bannerUrl: updatedUser.bannerUrl });
+  } catch (error) {
+    console.error("Failed to update banner:", error);
     res.status(500).json({ error: "Internal server error." });
   }
 });

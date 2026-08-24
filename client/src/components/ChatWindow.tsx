@@ -37,7 +37,7 @@ const GREEN = '#10B981';
 const moduleDetails = {
   infrastructure: {
     title: "F.R.A.N.C.I.S",
-    sidebarTitle: "Sensol",
+    sidebarTitle: "SENSOL",
     sidebarSlogan: "Design. Plan. Execute.",
     status: "online",
     icon: <img src={labIcon} alt="Infrastructure" style={{ width: 24, height: 24, objectFit: 'contain' }} />,
@@ -398,6 +398,20 @@ const ChatWindow: React.FC = () => {
             >
               <ChevronLeft size={24} />
             </button>
+            <span style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '10px',
+              background: `${GREEN}15`,
+              border: `1px solid ${GREEN}30`,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: GREEN,
+              flexShrink: 0
+            }}>
+              {details.icon}
+            </span>
             {details.title}
           </div>
         }

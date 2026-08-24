@@ -17,7 +17,8 @@ import {
   Search,
   Home,
   MessageCircle,
-  Shield
+  Shield,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
@@ -55,6 +56,7 @@ const renderCategoryIcon = (catName: string, isVertical: boolean, isActive: bool
   switch (catName) {
     case 'PanX':
       return <img src={panxIcon} alt="PanX" style={mergedStyle} />;
+    case 'SENSOL':
     case 'SENSOL (Design. Plan. Execute.)':
     case 'Smart Infrastructure':
       return <img src={labIcon} alt={catName} style={mergedStyle} />;
@@ -142,14 +144,14 @@ const DefaultSidebarContent = () => {
 
 
   const categories = [
+    { name: 'PanX Concepts', shortName: 'PanX Concepts', path: '/concepts', description: 'Digital concepts and frameworks.' },
     { name: 'PanX', shortName: 'PanX Feed', path: '/', description: 'Unified control center for the PanX infrastructure.' },
     { name: 'PanX Lab', shortName: 'PanX Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
-    { name: 'PanX Concepts', shortName: 'PanX Concepts', path: '/concepts', description: 'Digital concepts and frameworks.' },
     { name: 'PanX TV', shortName: 'PanX TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
   ];
 
   const panxTools = [
-    { name: 'SENSOL (Design. Plan. Execute.)', path: '/chat/infrastructure', description: 'Design. Plan. Execute.' },
+    { name: 'SENSOL', path: '/chat/infrastructure', description: 'Design. Plan. Execute.' },
     { name: 'Vision Space', path: '/chat/vision', description: 'Turn Ideas Into Reality.' },
     ...(user?.role === 'ADMIN' ? [{ name: 'Admin Dashboard', path: '/admin', description: 'Manage Ecosystem & Ventures.' }] : []),
   ];
@@ -203,7 +205,7 @@ const DefaultSidebarContent = () => {
           marginBottom: "16px",
           padding: "0 16px"
         }}>
-          <div className="flex items-center justify-between flex-1 mr-12 md:mr-4 gap-4">
+          <div className="flex items-center flex-1 gap-4">
             <Link to="/" className="flex items-center shrink-0">
               <img src={panxWordmark} alt="PANX" className="h-6 md:h-7 object-contain" />
             </Link>
@@ -255,16 +257,38 @@ const DefaultSidebarContent = () => {
           </div> */}
         </div>
         
+        {/* Mobile Quick Links — only visible on mobile */}
+        <div className="md:hidden" style={{ padding: '0 16px 16px 16px' }}>
+          <p style={{ fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '10px' }}>Quick Access</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[
+              { icon: <MessageCircle size={18} />, label: 'Messages', path: '/inbox', color: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.25)', accent: '#10B981' },
+              { icon: <User size={18} />, label: 'My Profile', path: '/profile', color: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.25)', accent: '#6366F1' },
+              { icon: <Users size={18} />, label: 'All Profiles', path: '/network', color: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)', accent: '#F59E0B' },
+            ].map(item => (
+              <button
+                key={item.path}
+                onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '12px 14px', borderRadius: '14px',
+                  background: item.color,
+                  border: `1px solid ${item.border}`,
+                  color: 'white', cursor: 'pointer', transition: 'all 0.2s',
+                  width: '100%', textAlign: 'left'
+                }}
+              >
+                <span style={{ color: item.accent, flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ fontSize: '13px', fontWeight: 800, flex: 1 }}>{item.label}</span>
+                <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '16px 0 4px 0' }} />
+        </div>
+        
         <div style={{ padding: "0 16px", marginBottom: "16px" }}>
-          <div style={{ 
-            display: "flex", alignItems: "center", gap: "12px", 
-            background: "rgba(255, 255, 255, 0.03)", 
-            border: "1px solid rgba(255, 255, 255, 0.08)", 
-            borderRadius: "14px", padding: "10px 16px",
-            transition: "all 0.3s"
-          }}
-          className="focus-within:border-[#008751] focus-within:bg-[#008751]/05"
-          >
+          <div className="qsi-search-bar qsi-search-bar--compact">
             <Search size={16} style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
             <input
               type="text"
@@ -279,11 +303,7 @@ const DefaultSidebarContent = () => {
                   setIsMobileMenuOpen(false);
                 }
               }}
-              style={{ 
-                color: "white", outline: "none", background: "transparent", 
-                border: "none", width: "100%", fontSize: "11px", fontWeight: 800,
-                letterSpacing: "0.1em"
-              }}
+              style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "0.1em" }}
             />
           </div>
         </div>
@@ -337,8 +357,8 @@ const DefaultSidebarContent = () => {
       </header>
 
       <div style={{ paddingBottom: "100px" }}>
-        {/* PanX Tools Section */}
-        <div className="panx-tools-container" >
+        {/* PanX Tools Section - Single Card List Layout */}
+        <div className="panx-tools-container">
           {filteredTools.map((tool) => {
             const isActive = location.pathname === tool.path;
             return (
@@ -346,7 +366,7 @@ const DefaultSidebarContent = () => {
                 key={tool.name} 
                 to={tool.path}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`panx-tool-card ${isActive ? 'active' : ''}`}
+                className={`panx-tool-item ${isActive ? 'active' : ''}`}
               >
                 <div className="panx-tool-icon-wrapper">
                   {renderCategoryIcon(tool.name, true, isActive)}
@@ -364,7 +384,7 @@ const DefaultSidebarContent = () => {
                   </p>
                 </div>
 
-                <div className={`transition-all duration-300 ${isActive ? 'text-accent-primary translate-x-1' : 'text-white opacity-20'}`}>
+                <div className={`transition-all duration-300 ${isActive ? 'text-accent-primary' : 'text-white opacity-20'}`}>
                   <ChevronRight size={16} strokeWidth={3} />
                 </div>
               </Link>
@@ -383,30 +403,6 @@ const DefaultSidebarContent = () => {
           <h3 className="ecosystem-heading">Pan African Engineers</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div 
-              className={`channel-card ${location.pathname === '/concepts' ? 'active' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                navigate('/concepts');
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <div className="panx-tool-icon-wrapper" style={{ overflow: 'hidden' }}>
-                <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                  <Lightbulb size={24} />
-                </div>
-              </div>
-              <div className="channel-info">
-                <div className="channel-name-row">
-                  <span className="channel-name" style={{ textTransform: 'capitalize' }}>PanX Concepts</span>
-                </div>
-                <div className="channel-followers">
-                  Digital concepts & frameworks.
-                </div>
-              </div>
-              <ChevronRight size={14} className="opacity-40" />
-            </div>
-
             {filteredVentures.map((venture) => {
               const isActive = location.pathname === `/ventures/${venture.slug}`;
               const initial = venture.name?.charAt(0)?.toUpperCase() || 'V';
@@ -452,13 +448,26 @@ const DefaultSidebarContent = () => {
             )}
 
             <button 
-              className="md:hidden w-full mt-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[11px] font-black tracking-widest uppercase text-white/70 hover:text-white transition-colors"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                width: '100%', marginTop: '12px', padding: '11px 16px',
+                background: 'rgba(16,185,129,0.06)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                borderRadius: '14px',
+                fontSize: '11px', fontWeight: 900, letterSpacing: '0.06em',
+                textTransform: 'uppercase', color: 'var(--accent-primary)',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              className="md:hidden"
               onClick={() => {
                 navigate('/network');
                 setIsMobileMenuOpen(false);
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.06)'; }}
             >
-              View More
+              View All Profiles
+              <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -687,7 +696,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           {sidebarContent || <DefaultSidebarContent />}
         </div>
         
-        {/* {deferredPrompt && ( */}
+        {deferredPrompt && (
           <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', background: 'rgba(10, 16, 24, 0.95)', flexShrink: 0 }}>
             <button 
               onClick={handleInstallClick}
@@ -705,7 +714,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               Install App
             </button>
           </div>
-        {/* )} */}
+        )}
       </aside>
 
       {/* 3. Main Workspace */}

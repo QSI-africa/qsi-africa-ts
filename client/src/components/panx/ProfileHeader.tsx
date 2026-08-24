@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldCheck, UserCheck, UserPlus, Edit3, ArrowLeft, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ShieldCheck, UserCheck, UserPlus, Edit3, ArrowLeft, X, Camera, ImagePlus } from 'lucide-react';
 import { Modal, Tag } from 'antd';
 
 const GREEN = '#008751';
@@ -17,8 +17,8 @@ const getServerUrl = (path?: string) => {
 };
 
 const getInitials = (name: string) => {
-  if (!name) return "P";
-  const parts = name.split(" ");
+  if (!name) return 'P';
+  const parts = name.split(' ');
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.substring(0, 2).toUpperCase();
 };
@@ -43,6 +43,8 @@ export interface ProfileHeaderProps {
   isOwnProfile?: boolean;
   onEditClick?: () => void;
   onBackClick?: () => void;
+  onAvatarUpload?: (file: File) => Promise<void>;
+  onBannerUpload?: (file: File) => Promise<void>;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   tabs?: ProfileTabItem[];
@@ -63,17 +65,41 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isOwnProfile,
   onEditClick,
   onBackClick,
+  onAvatarUpload,
+  onBannerUpload,
   activeTab,
   onTabChange,
   tabs,
   extraActions
 }) => {
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const [avatarHovered, setAvatarHovered] = useState(false);
+  const [bannerHovered, setBannerHovered] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onAvatarUpload) return;
+    await onAvatarUpload(file);
+    e.target.value = '';
+  };
+
+  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onBannerUpload) return;
+    await onBannerUpload(file);
+    e.target.value = '';
+  };
 
   return (
     <div className="w-full flex flex-col bg-bg-primary">
       {/* 1. Cover Banner */}
-      <div style={{ position: 'relative', width: '100%', height: '220px', overflow: 'hidden' }}>
+      <div
+        style={{ position: 'relative', width: '100%', height: '220px', overflow: 'hidden' }}
+        onMouseEnter={() => setBannerHovered(true)}
+        onMouseLeave={() => setBannerHovered(false)}
+      >
         {bannerUrl ? (
           <img
             src={getServerUrl(bannerUrl)}
@@ -99,6 +125,34 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           background: 'linear-gradient(to top, var(--bg-primary) 0%, transparent 100%)'
         }} />
 
+        {/* Banner upload overlay — own profile only */}
+        {isOwnProfile && onBannerUpload && (
+          <>
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleBannerFileChange}
+            />
+            <button
+              onClick={() => bannerInputRef.current?.click()}
+              style={{
+                position: 'absolute', top: '12px', right: '12px', zIndex: 20,
+                width: '36px', height: '36px', borderRadius: '10px',
+                background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', cursor: 'pointer', transition: 'all 0.2s',
+                opacity: bannerHovered ? 1 : 0.7
+              }}
+              title="Change banner image"
+            >
+              <ImagePlus size={16} />
+            </button>
+          </>
+        )}
+
         {onBackClick && (
           <button
             onClick={onBackClick}
@@ -119,20 +173,26 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {/* 2. Identity Header */}
       <div style={{ padding: '0 24px', marginTop: '-48px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
-          {/* Avatar Icon */}
-          <div style={{ position: 'relative' }}>
+          {/* Avatar */}
+          <div
+            style={{ position: 'relative' }}
+            onMouseEnter={() => setAvatarHovered(true)}
+            onMouseLeave={() => setAvatarHovered(false)}
+          >
             <button
               type="button"
-              onClick={() => setIsAvatarOpen(true)}
-              aria-label={`Expand ${name}'s profile image`}
+              onClick={() => !isOwnProfile && setIsAvatarOpen(true)}
+              aria-label={`${name}'s profile image`}
               style={{
-              width: '96px', height: '96px', borderRadius: '50%',
-              overflow: 'hidden', border: '4px solid var(--bg-primary)',
-              background: 'rgba(0, 135, 81, 0.2)',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'zoom-in', padding: 0
-            }}>
+                width: '96px', height: '96px', borderRadius: '50%',
+                overflow: 'hidden', border: '4px solid var(--bg-primary)',
+                background: 'rgba(0, 135, 81, 0.2)',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: isOwnProfile ? 'default' : 'zoom-in', padding: 0,
+                position: 'relative'
+              }}
+            >
               {avatarUrl ? (
                 <img src={getServerUrl(avatarUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -141,10 +201,52 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 </span>
               )}
             </button>
-            {isVerified && (
-              <div 
+
+            {/* Avatar upload overlay — own profile only */}
+            {isOwnProfile && onAvatarUpload && (
+              <>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarFileChange}
+                />
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  style={{
+                    position: 'absolute', bottom: 0, right: 0,
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    background: GREEN, border: '3px solid var(--bg-primary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'black', cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    transform: avatarHovered ? 'scale(1.1)' : 'scale(1)',
+                    zIndex: 5
+                  }}
+                  title="Change profile picture"
+                >
+                  <Camera size={14} strokeWidth={2.5} />
+                </button>
+              </>
+            )}
+
+            {isVerified && !isOwnProfile && (
+              <div
                 style={{
                   position: 'absolute', bottom: '2px', right: '2px',
+                  width: '26px', height: '26px', borderRadius: '50%',
+                  background: GREEN, color: 'black', border: '3px solid var(--bg-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
+                }}
+              >
+                <ShieldCheck size={14} strokeWidth={2.5} />
+              </div>
+            )}
+            {isVerified && isOwnProfile && (
+              <div
+                style={{
+                  position: 'absolute', bottom: '32px', right: '0px',
                   width: '26px', height: '26px', borderRadius: '50%',
                   background: GREEN, color: 'black', border: '3px solid var(--bg-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
@@ -244,6 +346,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
         )}
       </div>
+
       <Modal
         open={isAvatarOpen}
         onCancel={() => setIsAvatarOpen(false)}

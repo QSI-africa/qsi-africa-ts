@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Spin, message } from "antd";
-import { Activity, BookOpen, ExternalLink, Globe, Layers, MessageCircle, Zap } from "lucide-react";
+import { Activity, BookOpen, Globe, MessageCircle, Zap } from "lucide-react";
 import api from "../api";
 import EntityProfileView from "../components/panx/EntityProfileView";
 import PanXPostItem from "../components/panx/PanXPostItem";
@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { PanXMediaViewer, PanXMediaViewerState } from "../components/panx/PanXMediaGallery";
 import { applyPanXPostUpdates, publishPanXPostUpdate, subscribeToPanXPostUpdates } from "../services/panxPostSync";
 
-type ProfileTabKey = "posts" | "projects" | "insights";
+type ProfileTabKey = "posts" | "insights";
 
 interface EngineerProfile {
   id: string;
@@ -43,18 +43,6 @@ interface EngineerProfile {
     createdAt: string;
   }>;
 }
-
-const getServerUrl = (path?: string) => {
-  if (!path) return "";
-  if (path.startsWith("http")) return path;
-  const baseURL = import.meta.env.VITE_API_BASE_URL || "https://api.qsi.africa/api";
-  try {
-    const origin = new URL(baseURL).origin;
-    return `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
-  } catch {
-    return path;
-  }
-};
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -113,7 +101,6 @@ const ProfileDetailPage: React.FC = () => {
   }), []);
 
   const sovereignInsights = useMemo(() => profile?.insights || [], [profile]);
-  const projects = useMemo(() => profile?.projects || [], [profile]);
   const isOwnProfile = !!profile && !!user && profile.userId === user.id;
 
   const handleFollowToggle = async () => {
@@ -257,7 +244,6 @@ const ProfileDetailPage: React.FC = () => {
         }
         tabs={[
           { key: "posts", label: "Posts", count: userPosts.length },
-          { key: "projects", label: "Project Ledger", count: projects.length },
           { key: "insights", label: "Sovereign Insights", count: sovereignInsights.length },
         ]}
       >
@@ -339,60 +325,6 @@ const ProfileDetailPage: React.FC = () => {
                   <Globe size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
                   <p className="text-text-tertiary font-bold tracking-widest" style={{ textTransform: "none" }}>
                     No platform activity logged yet
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeProfileTab === "projects" && (
-          <div>
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <span className="eyebrow">Practical Contribution</span>
-                <h2 className="text-3xl font-black text-white tracking-tight">Project Ledger</h2>
-              </div>
-              <Layers size={32} className="text-accent-primary opacity-10" />
-            </div>
-
-            <div className="space-y-6">
-              {projects.length > 0 ? (
-                projects.map((project) => (
-                  <div key={project.id} className="feed-card bg-bg-secondary border-border-subtle overflow-hidden p-0 group">
-                    {project.imageUrl && (
-                      <div className="h-64 border-b border-border-subtle relative overflow-hidden">
-                        <img
-                          src={getServerUrl(project.imageUrl)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                          alt={project.title}
-                        />
-                      </div>
-                    )}
-                    <div className="p-8 lg:p-10">
-                      <h3 className="text-2xl font-bold text-white tracking-tight mb-4">{project.title}</h3>
-                      <p className="text-text-secondary leading-relaxed mb-8">
-                        {project.description || "Verified project contribution within the QSI ecosystem."}
-                      </p>
-                      <div className="flex items-center justify-between pt-6 border-t border-border-subtle/50">
-                        <div className="flex items-center gap-2 text-text-tertiary">
-                          <Layers size={16} />
-                          <span className="text-[10px] font-bold tracking-widest" style={{ textTransform: "none" }}>
-                            {project.status || "Outcome Verified"}
-                          </span>
-                        </div>
-                        <button className="qsi-button text-xs font-black tracking-widest text-accent-primary hover:underline flex items-center gap-2" style={{ textTransform: "none" }}>
-                          View Case Study <ExternalLink size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center">
-                  <Layers size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
-                  <p className="text-text-tertiary font-bold tracking-widest" style={{ textTransform: "none" }}>
-                    No projects logged yet
                   </p>
                 </div>
               )}

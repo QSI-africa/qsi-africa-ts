@@ -99,7 +99,12 @@ const PanXPostItem = React.memo(({
   return (
     <div
       key={post.id}
-      onClick={() => navigate(`/post/${post.id}`)}
+      onClick={() => {
+        // Save scroll position before navigating into the thread
+        const scrollEl = document.querySelector('.main-workspace');
+        if (scrollEl) sessionStorage.setItem('panx_scroll', String(scrollEl.scrollTop));
+        navigate(`/post/${post.id}`);
+      }}
       className="panx-content-card"
       style={{
         display: 'flex',

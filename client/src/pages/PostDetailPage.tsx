@@ -198,7 +198,7 @@ const PostDetailPage: React.FC = () => {
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button 
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/')}
                 style={{ background: 'transparent', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '8px', borderRadius: '50%' }}
                 className="hover:bg-white/10"
               >

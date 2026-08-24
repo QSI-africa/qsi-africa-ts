@@ -59,43 +59,44 @@ const SovereignMindsPage: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', background: 'transparent' }} className="no-scrollbar">
       {/* Header */}
-      <UnifiedHeader
-        title="Profiles"
-        extra={
-          <div style={{ display: 'flex', gap: '8px' }} className="sovereign-header-tabs no-scrollbar">
-              {[
-                { label: 'All Members', key: 'ALL' },
-                { label: 'Sovereign Minds', key: 'SOVEREIGN' },
-                { label: 'Professionals', key: 'PROFESSIONALS' }
-              ].map((tab) => (
-                <button 
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`pill ${activeTab === tab.key ? 'active' : ''}`}
-                  style={{
-                    textTransform: 'uppercase',
-                    fontWeight: 800,
-                    fontSize: '11px',
-                    letterSpacing: '0.05em',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    border: activeTab === tab.key ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                    background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                    color: activeTab === tab.key ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    transition: 'all 0.2s',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-          </div>
-        }
-      />
+      <UnifiedHeader title="Profiles" />
+
+      {/* Filter Strip */}
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflowX: 'auto', marginBottom: '4px' }} className="no-scrollbar">
+        <div style={{ display: 'flex', gap: '8px', paddingLeft: '24px', paddingRight: '16px', paddingBottom: '4px', paddingTop: '4px' }} className="sovereign-header-tabs no-scrollbar">
+          {[
+            { label: 'All Members', key: 'ALL' },
+            { label: 'Sovereign Minds', key: 'SOVEREIGN' },
+            { label: 'Professionals', key: 'PROFESSIONALS' }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`pill ${activeTab === tab.key ? 'active' : ''}`}
+              style={{
+                textTransform: 'uppercase',
+                fontWeight: 800,
+                fontSize: '11px',
+                letterSpacing: '0.05em',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                border: activeTab === tab.key ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                background: activeTab === tab.key ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                color: activeTab === tab.key ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.2s',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 24px' }} className="sovereign-container">
         
@@ -108,27 +109,14 @@ const SovereignMindsPage: React.FC = () => {
         }} className="sovereign-hero">
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(16,185,129,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
           {/* Search Bar Redesign */}
-          <div style={{ 
-            position: 'relative', zIndex: 1, maxWidth: '600px',
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px', display: 'flex', alignItems: 'center', padding: '2px 2px 2px 10px',
-            boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
-          }} className="sovereign-search-container">
+          <div style={{ maxWidth: '600px' }} className="qsi-search-bar qsi-search-bar--with-button sovereign-search-container">
             <Search size={18} color="rgba(255,255,255,0.3)" />
             <input 
-              style={{
-                background: 'none', border: 'none', outline: 'none', color: 'white',
-                padding: '12px 16px', flex: 1, fontSize: '14px', fontWeight: 500
-              }}
               placeholder="Search by name, expertise, or mission..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
-            <button style={{
-              background: GREEN, color: 'white', border: 'none', borderRadius: '12px',
-              padding: '10px 24px', fontSize: '11px', fontWeight: 800, textTransform: 'none',
-              cursor: 'pointer', boxShadow: `0 4px 12px ${GREEN}40`
-            }}>
+            <button className="qsi-search-button">
               Search
             </button>
           </div>
@@ -253,19 +241,6 @@ const SovereignMindsPage: React.FC = () => {
         }
         
         @media (max-width: 500px) {
-          .sovereign-search-container {
-            flex-direction: column !important;
-            padding: 12px !important;
-            align-items: stretch !important;
-            gap: 12px !important;
-          }
-          .sovereign-search-container input {
-            padding: 4px 0 !important;
-          }
-          .sovereign-search-container button {
-            width: 100% !important;
-            text-align: center !important;
-          }
         }
       `}</style>
     </div>

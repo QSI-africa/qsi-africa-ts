@@ -178,6 +178,70 @@ const QsiTvPage: React.FC = () => {
 
   useEffect(() => () => stopPreviewPlayback(), []);
 
+  const handleChannelBack = () => {
+    closePreview();
+    setSelectedChannel(null);
+    fetchChannels();
+  };
+
+  const renderPreviewModal = () => (
+    <Modal
+      title={null}
+      open={!!previewContent}
+      onCancel={closePreview}
+      footer={null}
+      width={920}
+      centered
+      className="dark-modal"
+      destroyOnClose
+      afterClose={stopPreviewPlayback}
+    >
+      {previewContent && (
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow" style={{ color: GREEN }}>{previewContent.mimeType}</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-4">{previewContent.title}</h3>
+          {previewContent.description && (
+            <p className="text-text-secondary text-sm leading-relaxed mb-6 border-l-2 border-accent-primary pl-4">{previewContent.description}</p>
+          )}
+          
+          <div className="mt-6 bg-bg-primary border border-border-subtle p-4 md:p-6 rounded-xl">
+            {previewContent.mimeType === 'TEXT' ? (
+              <div className="text-white text-base leading-relaxed whitespace-pre-wrap font-mono text-sm">
+                {previewContent.textContent}
+              </div>
+            ) : previewContent.mimeType === 'VIDEO' ? (
+              <div className="tv-media-stage">
+                <video
+                  ref={previewVideoRef}
+                  src={getServerUrl(previewContent.mediaUrl)}
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                />
+              </div>
+            ) : previewContent.mimeType === 'IMAGE' ? (
+              <img
+                src={getServerUrl(previewContent.mediaUrl)}
+                alt={previewContent.title}
+                className="w-full rounded-xl border border-border-subtle object-contain" style={{ maxHeight: "600px" }}
+              />
+            ) : (
+              <a
+                href={getServerUrl(previewContent.mediaUrl)}
+                target="_blank"
+                rel="noreferrer"
+                className="qsi-btn qsi-btn-primary w-full text-center py-4 rounded-xl"
+              >
+                Download Attached Document
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+
   // Socket sync
   useEffect(() => {
     socketService.connect(token || undefined);
@@ -500,13 +564,14 @@ const QsiTvPage: React.FC = () => {
     const isSubscribed = isSubscribedToSelected || isOwner;
 
     return (
+      <>
       <EntityProfileView
           name={selectedChannel.title}
           role="PanX TV Channel"
           bio={selectedChannel.description || `Broadcast by ${selectedChannel.user?.name || 'PanX Creator'}`}
           isVerified={selectedChannel.status === 'APPROVED'}
           followersCount={selectedChannel._count?.subscriptions || 0}
-          onBackClick={() => { setSelectedChannel(null); fetchChannels(); }}
+          onBackClick={handleChannelBack}
           extraActions={
             !isOwner ? (
               <button
@@ -601,7 +666,11 @@ const QsiTvPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {channelContents.map((post) => (
-                  <div key={post.id} className="feed-card bg-bg-secondary border-border-subtle p-6 flex flex-col justify-between">
+                  <div
+                    key={post.id}
+                    className="feed-card bg-bg-secondary border-border-subtle p-6 flex flex-col justify-between cursor-pointer"
+                    onClick={() => setPreviewContent(post)}
+                  >
                     <div>
                       <span className="eyebrow" style={{ color: GREEN }}>{post.mimeType || 'TRANSMISSION'}</span>
                       <h3 className="text-lg font-bold text-white uppercase tracking-tight mt-2 mb-3">
@@ -641,6 +710,7 @@ const QsiTvPage: React.FC = () => {
                             rel="noreferrer"
                             className="qsi-btn qsi-btn-outline w-full text-center"
                             style={{ display: 'block', borderRadius: '8px', padding: '10px' }}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             Download Asset
                           </a>
@@ -674,6 +744,8 @@ const QsiTvPage: React.FC = () => {
           </div>
         </div>
       </EntityProfileView>
+      {renderPreviewModal()}
+      </>
     );
   }
 
@@ -713,7 +785,7 @@ const QsiTvPage: React.FC = () => {
             onChange={(key) => {
               if (key === 'studio') {
                 fetchMyChannel();
-              } else if (key === 'channels' || key === 'for-you') {
+              } else if (key === 'channels') {
                 fetchChannels();
               }
             }}
@@ -782,42 +854,6 @@ const QsiTvPage: React.FC = () => {
                               <span>ID: {stream.roomId?.substring(5, 11).toUpperCase()}</span>
                             </div>
                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              },
-
-              // Personalized horizontal shelves, intentionally independent from the directory.
-              {
-                key: 'for-you',
-                label: <span className="flex items-center gap-2 py-2"><Rss size={16} /> For You</span>,
-                children: (
-                  <div className="py-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h2 className="text-lg font-bold text-white tracking-tight">Recommended Broadcasts</h2>
-                        <p className="text-xs text-text-tertiary mt-1">Channels and archives selected from your PanX activity.</p>
-                      </div>
-                    </div>
-                    {isLoadingChannels ? (
-                      <div className="flex justify-center py-20"><Spin /></div>
-                    ) : channels.length === 0 ? (
-                      <Empty description={<span className="text-text-tertiary">No recommendations available yet.</span>} />
-                    ) : (
-                      <div className="flex gap-5 overflow-x-auto pb-4 no-scrollbar">
-                        {channels.map((chan) => (
-                          <article key={chan.id} className="feed-card bg-bg-secondary border-border-subtle p-6 shrink-0 w-[280px] flex flex-col justify-between">
-                            <div>
-                              <span className="text-[10px] font-bold text-accent-primary tracking-wider">PANX TV CHANNEL</span>
-                              <h3 className="text-white text-lg font-bold tracking-tight mt-3 mb-2">{chan.title}</h3>
-                              <p className="text-text-secondary text-sm leading-relaxed line-clamp-3">{chan.description || 'Broadcasts and knowledge from the PanX network.'}</p>
-                            </div>
-                            <button onClick={() => loadChannelDetails(chan)} className="qsi-btn qsi-btn-secondary text-xs mt-6 self-start" style={{ borderRadius: '8px', padding: '6px 12px' }}>
-                              View Profile
-                            </button>
-                          </article>
                         ))}
                       </div>
                     )}
@@ -1156,61 +1192,7 @@ const QsiTvPage: React.FC = () => {
         </div>
       </Modal>
       {/* --- content preview modal --- */}
-      <Modal
-        title={null}
-        open={!!previewContent}
-        onCancel={closePreview}
-        footer={null}
-        width={920}
-        centered
-        className="dark-modal"
-        destroyOnClose
-        afterClose={stopPreviewPlayback}
-      >
-        {previewContent && (
-          <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
-            <span className="eyebrow" style={{ color: GREEN }}>{previewContent.mimeType}</span>
-            <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-4">{previewContent.title}</h3>
-            {previewContent.description && (
-              <p className="text-text-secondary text-sm leading-relaxed mb-6 border-l-2 border-accent-primary pl-4">{previewContent.description}</p>
-            )}
-            
-            <div className="mt-6 bg-bg-primary border border-border-subtle p-4 md:p-6 rounded-xl">
-              {previewContent.mimeType === 'TEXT' ? (
-                <div className="text-white text-base leading-relaxed whitespace-pre-wrap font-mono text-sm">
-                  {previewContent.textContent}
-                </div>
-              ) : previewContent.mimeType === 'VIDEO' ? (
-                <div className="tv-media-stage">
-                  <video
-                    ref={previewVideoRef}
-                    src={getServerUrl(previewContent.mediaUrl)}
-                    controls
-                    autoPlay
-                    playsInline
-                    preload="metadata"
-                  />
-                </div>
-              ) : previewContent.mimeType === 'IMAGE' ? (
-                <img
-                  src={getServerUrl(previewContent.mediaUrl)}
-                  alt={previewContent.title}
-                  className="w-full rounded-xl border border-border-subtle object-contain" style={{ maxHeight: "600px" }}
-                />
-              ) : (
-                <a
-                  href={getServerUrl(previewContent.mediaUrl)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="qsi-btn qsi-btn-primary w-full text-center py-4 rounded-xl"
-                >
-                  Download Attached Document
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
+      {renderPreviewModal()}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

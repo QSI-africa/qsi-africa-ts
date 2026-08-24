@@ -31,6 +31,18 @@ const iconMap: Record<string, React.ReactNode> = {
   Send: <Send size={20} strokeWidth={2.5} />,
 };
 
+const getVentureBio = (venture: any) => {
+  const bioFields = [
+    venture?.bio,
+    venture?.fullDescription,
+    venture?.shortDescription,
+    venture?.description,
+    venture?.about
+  ];
+
+  return bioFields.find(field => typeof field === 'string' && field.trim())?.trim();
+};
+
 const VentureProfilePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -204,8 +216,7 @@ const VentureProfilePage: React.FC = () => {
       {/* Standardized Profile Header */}
       <ProfileHeader
         name={venture.name}
-        role="VENTURE"
-        bio={venture.shortDescription || venture.fullDescription}
+        bio={getVentureBio(venture)}
         avatarUrl={venture.logoUrl}
         bannerUrl={venture.bannerUrl}
         isVerified={true}

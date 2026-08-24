@@ -16,6 +16,8 @@ const ProfilePage: React.FC = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('1');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
 
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
@@ -64,8 +66,38 @@ const ProfilePage: React.FC = () => {
 
   const handleLogoutClick = () => {
     logout();
-    message.info("Operational session terminated.");
+    message.info('Operational session terminated.');
     navigate('/login');
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      await api.put('/auth/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      message.success('Profile picture updated!');
+      await refetchUser();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to upload avatar.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleBannerUpload = async (file: File) => {
+    setBannerUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('banner', file);
+      await api.put('/auth/banner', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      message.success('Cover banner updated!');
+      await refetchUser();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to upload banner.');
+    } finally {
+      setBannerUploading(false);
+    }
   };
 
   if (!user) return null;
@@ -78,8 +110,11 @@ const ProfilePage: React.FC = () => {
         role={user.role}
         bio={user.email}
         avatarUrl={user.avatarUrl}
+        bannerUrl={user.bannerUrl}
         isVerified={true}
         isOwnProfile={true}
+        onAvatarUpload={handleAvatarUpload}
+        onBannerUpload={handleBannerUpload}
         extraActions={
           <button 
             onClick={handleLogoutClick}

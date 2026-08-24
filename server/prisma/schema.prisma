@@ -54,6 +54,8 @@ model User {
   phone        String?
   location     String?
   organization String?
+  avatarUrl    String?
+  bannerUrl    String?
 
   // Submissions
   // Submissions

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Spin, Grid } from "antd";
+import { Row, Col, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import {
@@ -17,7 +17,6 @@ const QsiConceptsPage: React.FC = () => {
   const [error, setError] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const navigate = useNavigate();
-  const screens = Grid.useBreakpoint();
 
   const fetchConcepts = useCallback(async (cat: string = 'all') => {
     setLoading(true);
@@ -48,27 +47,31 @@ const QsiConceptsPage: React.FC = () => {
       <UnifiedHeader
         title="Concepts"
         subTitle="Digital Concepts & Frameworks"
-        extra={
-          <div style={{ 
-            display: 'flex', 
-            gap: '8px',
-            width: screens.md ? 'auto' : '100%',
-            overflowX: screens.md ? 'visible' : 'auto',
-            paddingBottom: screens.md ? '0' : '4px',
-          }} className="no-scrollbar">
-            {['all', 'infrastructure','renaissance'].map((cat) => (
-              <button 
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{ whiteSpace: 'nowrap' }}
-                className={`qsi-btn ${activeCategory === cat ? 'qsi-btn-primary' : 'qsi-btn-secondary'}`}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </button>
-            ))}
-          </div>
-        }
       />
+
+      {/* Filter Strip */}
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '4px', overflowX: 'auto' }} className="no-scrollbar">
+        <div style={{ display: 'flex', gap: '8px', paddingLeft: '24px', paddingRight: '16px', paddingBottom: '4px', paddingTop: '4px' }} className="no-scrollbar">
+          {['all', 'infrastructure', 'renaissance'].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`pill ${activeCategory === cat ? 'active' : ''}`}
+              style={{
+                whiteSpace: 'nowrap',
+                textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em',
+                padding: '8px 16px', borderRadius: '20px', flexShrink: 0,
+                border: activeCategory === cat ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                background: activeCategory === cat ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
+                color: activeCategory === cat ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
 

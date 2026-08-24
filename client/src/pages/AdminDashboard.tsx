@@ -18,7 +18,9 @@ import {
   Globe,
   Layers,
   MonitorPlay,
-  Rocket
+  Rocket,
+  Handshake,
+  Image as ImageIcon
 } from 'lucide-react';
 
 import api from '../api';
@@ -51,9 +53,20 @@ const AdminDashboard: React.FC = () => {
   // TV Moderation State
   const [tvChannels, setTvChannels] = useState<any[]>([]);
 
+  // Venture Management State
+  const [ventures, setVentures] = useState<any[]>([]);
+  const [selectedVentureId, setSelectedVentureId] = useState<string | null>(null);
+  const [selectedVentureData, setSelectedVentureData] = useState<any>(null);
+  const [isEngTypeModalOpen, setIsEngTypeModalOpen] = useState(false);
+  const [editingEngType, setEditingEngType] = useState<any>(null);
+  const [isVenturePostModalOpen, setIsVenturePostModalOpen] = useState(false);
+  const [postFiles, setPostFiles] = useState<FileList | null>(null);
+  const [postContent, setPostContent] = useState('');
+
   const [categoryForm] = Form.useForm();
   const [packageForm] = Form.useForm();
   const [serviceForm] = Form.useForm();
+  const [engTypeForm] = Form.useForm();
 
   const fetchLabData = async () => {
     setIsLoading(true);
@@ -113,11 +126,34 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchVenturesData = async () => {
+    try {
+      const res = await api.get('/ventures/admin/all');
+      setVentures(res.data);
+      if (res.data.length > 0 && !selectedVentureId) {
+        setSelectedVentureId(res.data[0].id);
+        fetchVentureDetail(res.data[0].id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch ventures");
+    }
+  };
+
+  const fetchVentureDetail = async (vId: string) => {
+    try {
+      const res = await api.get(`/ventures/${vId}`);
+      setSelectedVentureData(res.data);
+    } catch (error) {
+      console.error("Failed to fetch venture detail");
+    }
+  };
+
   useEffect(() => {
     fetchLabData();
     fetchMobilityData();
     fetchRegistryData();
     fetchTvChannels();
+    fetchVenturesData();
   }, []);
 
   const handleUpdateChannelStatus = async (channelId: string, status: string) => {
@@ -204,6 +240,78 @@ const AdminDashboard: React.FC = () => {
       message.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to update service registry");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveEngType = async (values: any) => {
+    if (!selectedVentureId) return;
+    setIsSubmitting(true);
+    try {
+      if (editingEngType) {
+        await api.put(`/ventures/${selectedVentureId}/engagement-types/${editingEngType.id}`, values);
+        message.success("Engagement type updated");
+      } else {
+        await api.post(`/ventures/${selectedVentureId}/engagement-types`, values);
+        message.success("Engagement type created");
+      }
+      setIsEngTypeModalOpen(false);
+      fetchVentureDetail(selectedVentureId);
+    } catch (error: any) {
+      message.error(error?.response?.data?.error || "Failed to save engagement type");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteEngType = async (typeId: string) => {
+    if (!selectedVentureId) return;
+    try {
+      await api.delete(`/ventures/${selectedVentureId}/engagement-types/${typeId}`);
+      message.success("Engagement type deleted");
+      fetchVentureDetail(selectedVentureId);
+    } catch (error) {
+      message.error("Failed to delete engagement type");
+    }
+  };
+
+  const handleCreateVenturePost = async () => {
+    if (!selectedVentureId) return;
+    if (!postContent.trim() && (!postFiles || postFiles.length === 0)) {
+      message.warning("Please enter post content or select media files.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("content", postContent);
+      if (postFiles) {
+        Array.from(postFiles).forEach(file => {
+          formData.append("images", file);
+        });
+      }
+      await api.post(`/ventures/${selectedVentureId}/posts`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      message.success("Venture post published with attached images!");
+      setIsVenturePostModalOpen(false);
+      setPostContent('');
+      setPostFiles(null);
+      fetchVentureDetail(selectedVentureId);
+    } catch (error: any) {
+      message.error(error?.response?.data?.error || "Failed to publish post");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteVenturePost = async (postId: string) => {
+    if (!selectedVentureId) return;
+    try {
+      await api.delete(`/ventures/${selectedVentureId}/posts/${postId}`);
+      message.success("Post deleted");
+      fetchVentureDetail(selectedVentureId);
+    } catch (error) {
+      message.error("Failed to delete post");
     }
   };
 
@@ -788,6 +896,119 @@ const AdminDashboard: React.FC = () => {
               </button>
             </div>
           </Form>
+        </div>
+      </Modal>
+
+      {/* Engagement Type Modal */}
+      <Modal
+        title={null}
+        open={isEngTypeModalOpen}
+        onCancel={() => setIsEngTypeModalOpen(false)}
+        footer={null}
+        width={500}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow">Engagement Options</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">
+            {editingEngType ? "Edit Engagement Type" : "New Engagement Type"}
+          </h3>
+          <Form form={engTypeForm} layout="vertical" onFinish={handleSaveEngType} className="space-y-4">
+            <Form.Item name="label" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Button Label</span>} rules={[{ required: true }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" placeholder="e.g. Request Partnership" />
+            </Form.Item>
+
+            <Form.Item name="icon" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Icon</span>} initialValue="Handshake">
+              <Select className="custom-select h-12">
+                <Option value="Handshake">Handshake</Option>
+                <Option value="TrendingUp">TrendingUp</Option>
+                <Option value="Users">Users</Option>
+                <Option value="Lightbulb">Lightbulb</Option>
+                <Option value="Rocket">Rocket</Option>
+                <Option value="Send">Send</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item name="order" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Display Order</span>} initialValue={0}>
+              <InputNumber min={0} className="bg-bg-primary border-border-subtle text-white h-12 w-full" />
+            </Form.Item>
+
+            <Form.Item name="isActive" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Status</span>} valuePropName="checked" initialValue={true}>
+              <Select className="custom-select h-12">
+                <Option value={true}>Active</Option>
+                <Option value={false}>Hidden</Option>
+              </Select>
+            </Form.Item>
+
+            <div className="flex gap-4 pt-4">
+              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit" disabled={isSubmitting}>
+                <ShieldCheck size={18} /> {isSubmitting ? 'Saving...' : 'Save Engagement Type'}
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsEngTypeModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Multi-Image Venture Post Modal */}
+      <Modal
+        title={null}
+        open={isVenturePostModalOpen}
+        onCancel={() => setIsVenturePostModalOpen(false)}
+        footer={null}
+        width={550}
+        centered
+        className="dark-modal"
+      >
+        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+          <span className="eyebrow">Venture Update</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">
+            New Venture Post (Multi-Image)
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-text-tertiary uppercase tracking-widest mb-2">Update Content</label>
+              <Input.TextArea
+                rows={4}
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
+                placeholder="Write your venture update..."
+                className="bg-bg-primary border-border-subtle text-white p-4 rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-tertiary uppercase tracking-widest mb-2">Attach Images (Select Multiple at Once)</label>
+              <input
+                type="file"
+                multiple
+                accept="image/*,video/*"
+                onChange={(e) => setPostFiles(e.target.files)}
+                className="w-full text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer"
+              />
+              {postFiles && postFiles.length > 0 && (
+                <p className="text-xs text-emerald-500 mt-2 font-bold">
+                  {postFiles.length} file(s) selected for upload.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-4 pt-6">
+              <button
+                className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2"
+                onClick={handleCreateVenturePost}
+                disabled={isSubmitting}
+              >
+                <Rocket size={18} /> {isSubmitting ? 'Publishing...' : 'Publish Update'}
+              </button>
+              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsVenturePostModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       </Modal>
     </div>

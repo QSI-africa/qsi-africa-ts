@@ -295,21 +295,43 @@ router.delete("/:id", authMiddleware, isAdminOrSuper, async (req, res) => {
 // =========================================================================
 
 // POST /api/ventures/:id/posts — Post content for a venture
-router.post("/:id/posts", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
+router.post("/:id/posts", authMiddleware, isAdminOrSuper, uploadFields([{ name: 'images', maxCount: 10 }, { name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
   let { imageUrl, videoUrl } = req.body;
 
-  if (req.files?.image?.[0]) imageUrl = `/uploads/${req.files.image[0].filename}`;
-  if (req.files?.video?.[0]) videoUrl = `/uploads/${req.files.video[0].filename}`;
+  let mediaFiles = [];
+  if (req.files?.images?.length) {
+    mediaFiles = req.files.images.map(f => ({ url: `/uploads/${f.filename}`, type: 'IMAGE' }));
+  } else if (req.files?.image?.[0]) {
+    mediaFiles = [{ url: `/uploads/${req.files.image[0].filename}`, type: 'IMAGE' }];
+  }
 
-  if (!content) {
-    return res.status(400).json({ error: "Content is required." });
+  if (req.files?.video?.[0]) {
+    const vUrl = `/uploads/${req.files.video[0].filename}`;
+    videoUrl = vUrl;
+    mediaFiles.push({ url: vUrl, type: 'VIDEO' });
+  }
+
+  if (!imageUrl && mediaFiles.length > 0) {
+    const firstImg = mediaFiles.find(m => m.type === 'IMAGE');
+    if (firstImg) imageUrl = firstImg.url;
+  }
+
+  if (!content && mediaFiles.length === 0) {
+    return res.status(400).json({ error: "Content or media is required." });
   }
 
   try {
     const post = await prisma.panxPost.create({
-      data: { ventureId: id, authorId: req.user.id, content, imageUrl, videoUrl },
+      data: {
+        ventureId: id,
+        authorId: req.user.id,
+        content: content || '',
+        imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        mediaFiles: mediaFiles.length ? mediaFiles : null,
+      },
     });
     res.status(201).json(post);
   } catch (error) {
