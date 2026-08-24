@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface UnifiedHeaderProps {
   title: React.ReactNode;
@@ -16,7 +16,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   extra
 }) => {
   return (
-    <div className="unified-header flex flex-row md:flex-row md:items-center justify-between gap-4 px-6 py-4 md:px-8 md:py-6" style={{
+    <div className="unified-header flex flex-row items-center justify-between gap-4 px-6 md:px-8" style={{
       background: 'rgba(10, 16, 24, 0.85)',
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
@@ -24,7 +24,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       top: 0,
       zIndex: 20,
       width: '100%',
-      maxWidth: '100vw'
+      maxWidth: '100vw',
+      minHeight: '72px'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, textAlign: 'left' }}>
         <div>

@@ -55,10 +55,42 @@ const setupVideoSignaling = (server) => {
     }
 
     socket.on("join-user-room", (userId) => {
-      if (userId) {
+      const authenticatedUserId = socket.user?.userId || socket.user?.id;
+      if (authenticatedUserId && userId === authenticatedUserId) {
         socket.join(`user_${userId}`);
         console.log(`[Socket.io] Socket ${socket.id} explicitly joined user_${userId}`);
       }
+    });
+
+    socket.on("join-conversation", async (conversationId) => {
+      const userId = socket.user?.userId || socket.user?.id;
+      if (!userId || !conversationId) return;
+
+      try {
+        const participant = await prisma.conversationParticipant.findUnique({
+          where: { conversationId_userId: { conversationId, userId } }
+        });
+
+        if (!participant) {
+          socket.emit("conversation-error", {
+            conversationId,
+            message: "You do not have access to this conversation."
+          });
+          return;
+        }
+
+        socket.join(`conversation:${conversationId}`);
+      } catch (error) {
+        console.error(`[Messaging] Failed to join conversation ${conversationId}:`, error);
+        socket.emit("conversation-error", {
+          conversationId,
+          message: "The conversation could not be opened."
+        });
+      }
+    });
+
+    socket.on("leave-conversation", (conversationId) => {
+      if (conversationId) socket.leave(`conversation:${conversationId}`);
     });
 
     // --- Broadcasting Events ---
@@ -174,11 +206,13 @@ const setupVideoSignaling = (server) => {
         });
       } else {
         console.log(`[Viewer] Broadcast not found: ${roomId}. Active IDs:`, Array.from(activeBroadcasts.keys()));
+        socket.emit("join-error", { roomId, message: "This broadcast is no longer available." });
       }
     });
 
     socket.on("leave-broadcast", (roomId) => {
       socket.leave(roomId);
+      socket.to(roomId).emit("user-disconnected", { socketId: socket.id });
       console.log(`[Viewer] Left broadcast: ${roomId} from ${socket.id}`);
     });
 
@@ -190,7 +224,7 @@ const setupVideoSignaling = (server) => {
       // Inject server-verified identity
       io.to(roomId).emit("receive-chat-message", {
         message,
-        senderName: socket.user?.name || "Participant",
+        senderName: socket.user?.name || socket.data.participantName || payload.senderName || "Participant",
         senderId: socket.id,
         timestamp
       });
@@ -220,23 +254,33 @@ const setupVideoSignaling = (server) => {
     });
 
     // --- Standard Room Joining ---
-    socket.on("join-room", (roomId) => {
+    socket.on("join-room", (roomId, participantName) => {
+      socket.data.participantName = socket.user?.name || participantName || "Participant";
       socket.join(roomId);
       console.log(`[Room] User ${socket.id} joined: ${roomId}`);
       
       // Notify others in the room
       socket.to(roomId).emit("user-connected", { 
         userId: socket.user?.userId || socket.user?.id, 
-        socketId: socket.id 
+        socketId: socket.id,
+        participantName: socket.data.participantName,
       });
+    });
+
+    socket.on("leave-room", (roomId) => {
+      if (!roomId || !socket.rooms.has(roomId)) return;
+      socket.leave(roomId);
+      socket.to(roomId).emit("user-disconnected", { socketId: socket.id });
+      console.log(`[Room] User ${socket.id} left: ${roomId}`);
     });
 
     // --- Secure WebRTC Signaling Relay ---
     socket.on("offer", (payload) => {
+      const senderName = socket.user?.name || socket.data.participantName || "Participant";
       if (payload.targetUserId) {
-        io.to(payload.targetUserId).emit("offer", { ...payload, senderUserId: socket.id });
+        io.to(payload.targetUserId).emit("offer", { ...payload, senderUserId: socket.id, senderName });
       } else if (payload.targetRoomId) {
-        socket.to(payload.targetRoomId).emit("offer", { ...payload, senderUserId: socket.id });
+        socket.to(payload.targetRoomId).emit("offer", { ...payload, senderUserId: socket.id, senderName });
       }
     });
 

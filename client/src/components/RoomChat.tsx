@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { socketService } from '../services/socket';
 import { Send, MessageSquare, Clock } from 'lucide-react';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface ChatMessage {
   message: string;
@@ -14,9 +14,10 @@ interface ChatMessage {
 interface RoomChatProps {
   roomId: string;
   userName: string;
+  showHeader?: boolean;
 }
 
-const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
+const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName, showHeader = true }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -56,8 +57,7 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Header (The calling component might provide its own header, but we keep a small one or just padding) */}
-      <div style={{ 
+      {showHeader && <div style={{
         padding: '16px 20px', 
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         display: 'flex',
@@ -69,25 +69,11 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
           fontSize: '12px', 
           fontWeight: 800, 
           color: 'white', 
-          textTransform: 'uppercase', 
           letterSpacing: '0.1em' 
         }}>
-          Live Intelligence Log
+          PanX Live Chat
         </span>
-        <div style={{ 
-          marginLeft: 'auto',
-          padding: '2px 8px',
-          borderRadius: '6px',
-          background: 'rgba(16,185,129,0.1)',
-          border: `1px solid ${GREEN}30`,
-          fontSize: '9px',
-          fontWeight: 900,
-          color: GREEN,
-          textTransform: 'uppercase'
-        }}>
-          Active
-        </div>
-      </div>
+      </div>}
       
       {/* Messages */}
       <div className="no-scrollbar" style={{ 
@@ -112,10 +98,9 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
               fontSize: '10px', 
               fontWeight: 800, 
               color: 'white', 
-              textTransform: 'uppercase', 
               letterSpacing: '0.1em' 
             }}>
-              Initializing logs...
+              No messages yet
             </span>
           </div>
         ) : (
@@ -137,7 +122,6 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
                     fontSize: '9px', 
                     fontWeight: 800, 
                     color: isMe ? GREEN : 'rgba(255,255,255,0.3)',
-                    textTransform: 'uppercase'
                   }}>
                     {item.senderName}
                   </span>
@@ -189,7 +173,7 @@ const RoomChat: React.FC<RoomChatProps> = ({ roomId, userName }) => {
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="TYPE LOG..."
+            placeholder="Message this session"
             style={{ 
               flex: 1,
               background: 'none', 

@@ -8,6 +8,7 @@ const path = require("path");
 const http = require("http");
 const { apiLimiter } = require("./src/middleware/rateLimiter");
 const setupVideoSignaling = require("./src/services/videoSignaling");
+const { createIceConfig } = require("./src/services/iceConfig");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -111,15 +112,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/ice-config", (req, res) => {
-  res.json({
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' }
-    ]
-  });
+  res.set("Cache-Control", "no-store");
+  res.json(createIceConfig());
 });
 
 const server = http.createServer(app);

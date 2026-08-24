@@ -3,6 +3,12 @@ const prisma = require("../config/prisma");
 const { authMiddleware } = require("../middleware/authMiddleware");
 const router = express.Router();
 
+const findParticipant = (conversationId, userId) => prisma.conversationParticipant.findUnique({
+  where: {
+    conversationId_userId: { conversationId, userId }
+  }
+});
+
 // Helper to get conversation title based on type and participants
 const getConversationTitle = (conversation, currentUserId) => {
   if (conversation.title) return conversation.title;
@@ -22,12 +28,8 @@ const getConversationTitle = (conversation, currentUserId) => {
 };
 
 // 1. Get all conversations for a user
-router.get("/conversations", async (req, res) => {
-  const { userId } = req.query; // In a real app, this would come from auth middleware (req.user.id)
-
-  if (!userId) {
-    return res.status(400).json({ error: "User ID is required." });
-  }
+router.get("/conversations", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
 
   try {
     const conversations = await prisma.conversation.findMany({
@@ -82,10 +84,15 @@ router.get("/conversations", async (req, res) => {
 });
 
 // 2. Get messages for a specific conversation
-router.get("/conversations/:id/messages", async (req, res) => {
+router.get("/conversations/:id/messages", authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
+    const participant = await findParticipant(id, req.user.id);
+    if (!participant) {
+      return res.status(403).json({ error: "You do not have access to this conversation." });
+    }
+
     const messages = await prisma.message.findMany({
       where: {
         conversationId: id
@@ -111,21 +118,31 @@ router.get("/conversations/:id/messages", async (req, res) => {
 });
 
 // 3. Send a message in a conversation
-router.post("/conversations/:id/messages", async (req, res) => {
+router.post("/conversations/:id/messages", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { senderId, text, senderType } = req.body;
+  const { text } = req.body;
+  const senderId = req.user.id;
 
-  if (!text) {
+  if (typeof text !== "string" || !text.trim()) {
     return res.status(400).json({ error: "Message text is required." });
   }
 
+  if (text.trim().length > 5000) {
+    return res.status(400).json({ error: "Messages cannot exceed 5,000 characters." });
+  }
+
   try {
+    const participant = await findParticipant(id, senderId);
+    if (!participant) {
+      return res.status(403).json({ error: "You cannot send messages to this conversation." });
+    }
+
     const message = await prisma.message.create({
       data: {
         conversationId: id,
-        senderId: senderId || null,
-        senderType: senderType || "USER",
-        text: text
+        senderId,
+        senderType: "USER",
+        text: text.trim()
       },
       include: {
         sender: {
@@ -155,7 +172,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     const io = req.app.get("io");
     if (io) {
       // 1. Emit to conversation room
-      io.to(id).emit("new_message", message);
+      io.to(`conversation:${id}`).emit("new_message", message);
 
       // 2. Emit direct notification to each participant's user room (user_${userId})
       if (conversation && conversation.participants) {
@@ -166,8 +183,6 @@ router.post("/conversations/:id/messages", async (req, res) => {
               message,
               senderName: message.sender?.name || "Someone"
             });
-            // Also emit new_message to their user room so conversation list updates live
-            io.to(`user_${p.userId}`).emit("new_message", message);
           }
         });
       }
@@ -181,7 +196,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
 });
 
 // 4. Create a new conversation (e.g., when starting a project discussion)
-router.post("/conversations", async (req, res) => {
+router.post("/conversations", authMiddleware, async (req, res) => {
   const { title, type, participantIds, firstMessage } = req.body;
 
   if (!participantIds || !Array.isArray(participantIds)) {
@@ -189,12 +204,13 @@ router.post("/conversations", async (req, res) => {
   }
 
   try {
+    const uniqueParticipantIds = [...new Set([req.user.id, ...participantIds])];
     const conversation = await prisma.conversation.create({
       data: {
         title,
         type: type || "GENERAL",
         participants: {
-          create: participantIds.map(userId => ({
+          create: uniqueParticipantIds.map(userId => ({
             userId: userId
           }))
         }
@@ -205,8 +221,8 @@ router.post("/conversations", async (req, res) => {
       await prisma.message.create({
         data: {
           conversationId: conversation.id,
-          senderId: firstMessage.senderId || null,
-          senderType: firstMessage.senderType || "SYSTEM",
+          senderId: req.user.id,
+          senderType: "USER",
           text: firstMessage.text
         }
       });
@@ -260,9 +276,13 @@ router.post("/conversations/direct", authMiddleware, async (req, res) => {
     return res.status(400).json({ error: "Target user ID is required." });
   }
 
+  if (targetUserId === currentUserId) {
+    return res.status(400).json({ error: "You cannot start a conversation with yourself." });
+  }
+
   try {
     // Look for an existing conversation of type "GENERAL" with exactly the two participants
-    const existingConversation = await prisma.conversation.findFirst({
+    const candidateConversations = await prisma.conversation.findMany({
       where: {
         type: "GENERAL",
         AND: [
@@ -294,6 +314,7 @@ router.post("/conversations/direct", authMiddleware, async (req, res) => {
       }
     });
 
+    const existingConversation = candidateConversations.find(conversation => conversation.participants.length === 2);
     if (existingConversation) {
       return res.status(200).json({
         ...existingConversation,

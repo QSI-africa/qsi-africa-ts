@@ -1,15 +1,17 @@
+/* global RTCConfiguration */
 // client/src/components/LiveBroadcastContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Radio, Eye, Lock, Globe, Link2, Maximize, Minimize
+  MessageSquare, Eye, Lock, Globe, Link2, Maximize, Minimize, PhoneOff
 } from 'lucide-react';
 import { App, Drawer } from 'antd';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
-import api from '../api';
+import { getIceConfiguration, toRtcConfiguration } from '../services/webrtc';
+import { useAuth } from '../context/AuthContext';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface LiveBroadcastProps {
   onStop: () => void;
@@ -40,7 +42,9 @@ const ControlBtn: React.FC<{
 );
 
 const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, isPrivate }) => {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
+  const auth = useAuth();
+  const user = auth?.user;
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -48,11 +52,13 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
   const [showChat, setShowChat] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [relayConfigured, setRelayConfigured] = useState(false);
+  const [broadcastStatus, setBroadcastStatus] = useState<'preparing' | 'live' | 'reconnecting' | 'failed'>('preparing');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
-  const roomId = useRef(`live-${Math.random().toString(36).substring(7)}`);
+  const roomId = useRef(`live-${window.crypto.randomUUID()}`);
   const isMobile = windowWidth <= 768;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -84,31 +90,27 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     }
   }, [localStream]);
 
-  const [servers, setServers] = useState<RTCConfiguration>({
+  const serversRef = useRef<RTCConfiguration>({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' }
+      { urls: 'stun:stun1.l.google.com:19302' }
     ],
+    iceCandidatePoolSize: 10,
   });
-  const serversRef = useRef(servers);
-
-  useEffect(() => {
-    api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) {
-        setServers(res.data);
-        serversRef.current = res.data;
-      }
-    }).catch(err => console.error("Failed to load ICE servers", err));
-  }, []);
 
   // ─── Clean stop: kill all tracks, close all peers ─────────────────────────
+  const detachLocalPreview = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+  };
+
   const handleStopBroadcast = () => {
     streamRef.current?.getTracks().forEach(track => track.stop());
     streamRef.current = null;
     setLocalStream(null);
+    detachLocalPreview();
 
     peerConnections.current.forEach(pc => pc.close());
     peerConnections.current.clear();
@@ -119,10 +121,25 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
     onStop();
   };
 
+  const requestStopBroadcast = () => {
+    modal.confirm({
+      title: 'End live broadcast?',
+      content: 'The stream will close immediately for every viewer.',
+      okText: 'End Broadcast',
+      cancelText: 'Keep Broadcasting',
+      okButtonProps: { danger: true },
+      onOk: handleStopBroadcast,
+    });
+  };
+
   useEffect(() => {
     const handlers: any = {};
     const startBroadcasting = async () => {
       try {
+        const iceConfiguration = await getIceConfiguration();
+        serversRef.current = toRtcConfiguration(iceConfiguration);
+        setRelayConfigured(iceConfiguration.relayConfigured);
+
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Camera/microphone access is not supported by your browser or requires a secure origin (HTTPS or localhost).');
         }
@@ -160,6 +177,8 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         setIsVideoOff(!hasVideoTrack || !stream.getVideoTracks()[0].enabled);
         setIsMuted(!hasAudioTrack || !stream.getAudioTracks()[0].enabled);
 
+        await socketService.waitForConnection();
+
         // Setup error handler first
         handlers.onBroadcastError = ({ message: errMsg }: any) => {
           message.error(errMsg || 'Failed to start broadcast');
@@ -168,6 +187,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         socketService.on('broadcast-error', handlers.onBroadcastError);
 
         socketService.emit('start-broadcast', roomId.current, { title, isPrivate });
+        setBroadcastStatus('live');
 
         handlers.onViewerJoined = async ({ viewerId }: any) => {
           if (peerConnections.current.has(viewerId)) {
@@ -183,10 +203,22 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
               socketService.emit('ice-candidate', { targetUserId: viewerId, candidate: event.candidate });
             }
           };
-          pc.oniceconnectionstatechange = () => {
+          pc.oniceconnectionstatechange = async () => {
+            if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+              setBroadcastStatus('live');
+            } else if (pc.iceConnectionState === 'disconnected') {
+              setBroadcastStatus('reconnecting');
+            }
             if (pc.iceConnectionState === 'failed') {
-              console.warn(`ICE connection failed for ${viewerId}, attempting restart`);
-              pc.restartIce();
+              setBroadcastStatus('reconnecting');
+              try {
+                const restartOffer = await pc.createOffer({ iceRestart: true });
+                await pc.setLocalDescription(restartOffer);
+                socketService.emit('offer', { targetUserId: viewerId, offer: restartOffer });
+              } catch (error) {
+                console.error(`ICE restart failed for viewer ${viewerId}`, error);
+                setBroadcastStatus('failed');
+              }
             }
           };
           const offer = await pc.createOffer();
@@ -235,6 +267,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
 
       } catch (err: any) {
         console.error('Broadcast error:', err);
+        setBroadcastStatus('failed');
         message.error(err.message || 'Could not access media devices for broadcasting.');
         onStop();
       }
@@ -247,6 +280,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         streamRef.current.getTracks().forEach(track => track.stop());
       }
       peerConnections.current.forEach(pc => pc.close());
+      detachLocalPreview();
       socketService.emit('stop-broadcast', roomId.current);
 
       if (handlers.onViewerJoined) socketService.off('viewer-joined', handlers.onViewerJoined);
@@ -367,14 +401,14 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
           {/* Metadata Badges & Relocated Exit Button */}
           <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto', alignItems: 'center' }}>
             <button
-              onClick={handleStopBroadcast}
+              onClick={requestStopBroadcast}
               style={{
                 background: '#EF4444', color: 'white', border: 'none',
                 borderRadius: '10px', padding: '6px 14px', fontSize: '11px',
                 fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
               }}
             >
-              Exit Stream
+              <PhoneOff size={13} /> End Broadcast
             </button>
 
             <div style={{
@@ -398,6 +432,10 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
                 {viewerCount}
               </span>
             </div>
+            <span className={`panx-connection-badge ${broadcastStatus}`}>{broadcastStatus}</span>
+            <span className={`panx-relay-badge ${relayConfigured ? 'ready' : 'missing'}`}>
+              {relayConfigured ? 'Relay Ready' : 'Direct Network'}
+            </span>
           </div>
 
           {/* Broadcast Title HUD */}
@@ -529,14 +567,14 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <RoomChat roomId={roomId.current} userName="Broadcaster" />
+            <RoomChat roomId={roomId.current} userName="Broadcaster" showHeader={false} />
           </div>
         </div>
       )}
 
       {/* ── Chat Drawer (Mobile) ── */}
       <Drawer
-        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Transmission Chat</span>}
+        title={<span style={{ color: 'white', fontWeight: 800, fontSize: '12px' }}>PanX Live Chat</span>}
         placement="bottom"
         onClose={() => setShowChat(false)}
         open={showChat && isMobile}
@@ -548,7 +586,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         }}
         closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
       >
-        <RoomChat roomId={roomId.current} userName="Broadcaster" />
+        <RoomChat roomId={roomId.current} userName="Broadcaster" showHeader={false} />
       </Drawer>
       
       <style>{`

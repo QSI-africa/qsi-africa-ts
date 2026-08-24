@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, Form, Input, message, ConfigProvider, theme } from 'antd';
 import {
-  ArrowLeft,
   Handshake,
   TrendingUp,
   Users,
@@ -11,14 +10,14 @@ import {
   Eye,
   Send,
   X,
-  Calendar,
-  Image as ImageIcon,
-  Play
+  Calendar
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import PanXPostItem from '../components/panx/PanXPostItem';
 import ProfileHeader from '../components/panx/ProfileHeader';
+import { PanXMediaViewer, PanXMediaViewerState } from '../components/panx/PanXMediaGallery';
+import { applyPanXPostUpdates, publishPanXPostUpdate, subscribeToPanXPostUpdates } from '../services/panxPostSync';
 
 const { TextArea } = Input;
 
@@ -46,7 +45,7 @@ const VentureProfilePage: React.FC = () => {
 
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: any[], initialIndex: number } | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<PanXMediaViewerState | null>(null);
   
   const { user } = useAuth();
 
@@ -73,7 +72,7 @@ const VentureProfilePage: React.FC = () => {
     const fetchVenture = async () => {
       try {
         const res = await axios.get(`${baseURL}/ventures/${slug}`);
-        setVenture(res.data);
+        setVenture({ ...res.data, posts: applyPanXPostUpdates(res.data.posts || []) });
       } catch (err) {
         console.error("Failed to load venture:", err);
       } finally {
@@ -82,6 +81,13 @@ const VentureProfilePage: React.FC = () => {
     };
     if (slug) fetchVenture();
   }, [slug, baseURL]);
+
+  useEffect(() => subscribeToPanXPostUpdates((postId, update) => {
+    setVenture((prev: any) => prev ? {
+      ...prev,
+      posts: (prev.posts || []).map((post: any) => post.id === postId ? { ...post, ...update } : post)
+    } : prev);
+  }), []);
 
   const handleEngage = async (values: any) => {
     const token = localStorage.getItem('token');
@@ -117,6 +123,7 @@ const VentureProfilePage: React.FC = () => {
     if (!user) return navigate('/login');
     try {
       const res = await api.post(`/panx/posts/${postId}/like`);
+      publishPanXPostUpdate(postId, { hasLiked: res.data.liked, likesCount: res.data.likesCount });
       setVenture((prev: any) => ({
         ...prev,
         posts: prev.posts.map((p: any) => p.id === postId ? { ...p, hasLiked: res.data.liked, likesCount: res.data.likesCount } : p)
@@ -128,6 +135,7 @@ const VentureProfilePage: React.FC = () => {
     if (!user) return navigate('/login');
     try {
       const res = await api.post(`/panx/posts/${postId}/repost`);
+      publishPanXPostUpdate(postId, { hasReposted: res.data.reposted, repostsCount: res.data.repostsCount });
       setVenture((prev: any) => ({
         ...prev,
         posts: prev.posts.map((p: any) => p.id === postId ? { ...p, hasReposted: res.data.reposted, repostsCount: res.data.repostsCount } : p)
@@ -152,13 +160,14 @@ const VentureProfilePage: React.FC = () => {
     if (!replyText.trim()) return;
     try {
       const res = await api.post(`/panx/posts/${postId}/reply`, { content: replyText });
+      publishPanXPostUpdate(postId, { repliesCount: res.data.repliesCount });
       setVenture((prev: any) => ({
         ...prev,
         posts: prev.posts.map((p: any) => {
           if (p.id === postId) {
             return {
               ...p,
-              repliesCount: p.repliesCount + 1,
+              repliesCount: res.data.repliesCount,
               replies: [...(p.replies || []), res.data]
             };
           }
@@ -447,6 +456,7 @@ const VentureProfilePage: React.FC = () => {
           )}
         </Modal>
       </ConfigProvider>
+      <PanXMediaViewer state={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
     </div>
   );
 };

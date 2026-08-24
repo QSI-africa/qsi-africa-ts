@@ -5,6 +5,40 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+const getViewerContext = async (authHeader) => {
+  let userId = null;
+  let isAdmin = false;
+  let subscribedTeacherIds = new Set();
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { userId, isAdmin, subscribedTeacherIds };
+  }
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const JWT_SECRET = process.env.JWT_SECRET || "your-default-secret-change-me";
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (user) {
+      isAdmin = user.role === "ADMIN" || user.role === "SUPER_USER";
+      const mySubscriptions = await prisma.labSubscription.findMany({
+        where: { subscriberId: userId },
+      });
+      subscribedTeacherIds = new Set(mySubscriptions.map((sub) => sub.teacherId));
+    }
+  } catch (err) {
+    return { userId: null, isAdmin: false, subscribedTeacherIds: new Set() };
+  }
+
+  return { userId, isAdmin, subscribedTeacherIds };
+};
+
 // Get all lab categories with their packages
 router.get("/categories", async (req, res) => {
   try {
@@ -111,34 +145,7 @@ router.get("/recordings", async (req, res) => {
       orderBy: { createdAt: "desc" }
     });
 
-    // Check subscriber status of current user (if logged in)
-    let userId = null;
-    let isAdmin = false;
-    let subscribedTeacherIds = new Set();
-
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.split(' ')[1];
-        const JWT_SECRET = process.env.JWT_SECRET || "your-default-secret-change-me";
-        const decoded = jwt.verify(token, JWT_SECRET);
-        userId = decoded.userId;
-
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { id: true, role: true }
-        });
-        if (user) {
-          isAdmin = user.role === "ADMIN" || user.role === "SUPER_USER";
-          const mySubscriptions = await prisma.labSubscription.findMany({
-            where: { subscriberId: userId }
-          });
-          subscribedTeacherIds = new Set(mySubscriptions.map((sub) => sub.teacherId));
-        }
-      } catch (err) {
-        // Ignore invalid token, act as guest
-      }
-    }
+    const { userId, isAdmin, subscribedTeacherIds } = await getViewerContext(req.headers.authorization);
 
     const mappedRecordings = recordings.map((rec) => {
       const isOwner = userId && rec.teacher ? rec.teacher.userId === userId : false;
@@ -164,6 +171,81 @@ router.get("/recordings", async (req, res) => {
     res.status(200).json(mappedRecordings);
   } catch (error) {
     console.error("Failed to fetch recordings:", error);
+    res.status(500).json({ error: error.message || "Internal server error." });
+  }
+});
+
+router.get("/teacher/:teacherId", async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const { userId, isAdmin, subscribedTeacherIds } = await getViewerContext(req.headers.authorization);
+
+    const teacher = await prisma.labTeacherProfile.findUnique({
+      where: { id: teacherId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        recordings: {
+          include: {
+            category: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        _count: {
+          select: {
+            subscriptions: true,
+            recordings: true,
+          },
+        },
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found." });
+    }
+
+    const isOwner = !!userId && teacher.userId === userId;
+    if (teacher.status !== "APPROVED" && !isOwner && !isAdmin) {
+      return res.status(404).json({ error: "Teacher not found." });
+    }
+
+    const isSubscribed = subscribedTeacherIds.has(teacher.id);
+    const hasAccess = isOwner || isSubscribed || isAdmin;
+
+    res.status(200).json({
+      id: teacher.id,
+      userId: teacher.userId,
+      title: teacher.title,
+      bio: teacher.bio || "",
+      status: teacher.status,
+      user: teacher.user,
+      isOwner,
+      isSubscribed,
+      followersCount: teacher._count.subscriptions,
+      recordingsCount: teacher._count.recordings,
+      recordings: teacher.recordings.map((recording) => ({
+        id: recording.id,
+        title: recording.title,
+        description: recording.description,
+        categoryId: recording.categoryId,
+        categoryTitle: recording.category?.title || "Unknown",
+        teacherId: teacher.id,
+        channelTitle: teacher.title,
+        teacherName: teacher.user?.name || teacher.user?.email || "Unknown",
+        mimeType: recording.mimeType,
+        createdAt: recording.createdAt,
+        isLocked: !hasAccess,
+        mediaUrl: hasAccess ? recording.mediaUrl : null,
+      })),
+    });
+  } catch (error) {
+    console.error("Failed to fetch teacher detail:", error);
     res.status(500).json({ error: error.message || "Internal server error." });
   }
 });

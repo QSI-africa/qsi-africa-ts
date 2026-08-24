@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Typography, Tabs, App as AntApp, Row, Col, Card, Tag } from 'antd';
-import { User, Lock, Mail, MapPin, Building, Phone, LogOut, CheckCircle2 } from 'lucide-react';
+import { Form, Input, Typography, Tabs, App as AntApp, Row, Col, Card } from 'antd';
+import { User, Lock, MapPin, Building, Phone, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import UnifiedHeader from '../components/layout/UnifiedHeader';
 import { ProfileHeader } from '../components/panx/ProfileHeader';
 
 const { Paragraph } = Typography;

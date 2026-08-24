@@ -33,7 +33,7 @@ class SocketService {
 
   connect(token?: string) {
     // If socket exists and token matches, do nothing (Socket.io will handle reconnects automatically)
-    // @ts-ignore - access internal auth for comparison
+    // @ts-expect-error - Socket.IO's public type omits the runtime auth payload.
     if (this.socket && this.socket.auth?.token === token) return;
 
     // If token changed, disconnect existing and reconnect
@@ -67,6 +67,42 @@ class SocketService {
 
   getSocket() {
     return this.socket;
+  }
+
+  waitForConnection(timeoutMs = 8000) {
+    if (this.socket?.connected) return Promise.resolve();
+
+    return new Promise<void>((resolve, reject) => {
+      const socket = this.socket;
+      if (!socket) {
+        reject(new Error('The signalling service has not been initialized.'));
+        return;
+      }
+
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        reject(new Error('Could not connect to the video signalling service.'));
+      }, timeoutMs);
+
+      const handleConnect = () => {
+        cleanup();
+        resolve();
+      };
+
+      const handleError = (error: Error) => {
+        cleanup();
+        reject(error);
+      };
+
+      const cleanup = () => {
+        window.clearTimeout(timeout);
+        socket.off('connect', handleConnect);
+        socket.off('connect_error', handleError);
+      };
+
+      socket.once('connect', handleConnect);
+      socket.once('connect_error', handleError);
+    });
   }
 
   emit(event: string, ...args: any[]) {

@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutGrid, Brain, Sparkles, X } from 'lucide-react';
 import qsiLogo from '../assets/images/qsi_light_logo.png';
 import { useAuth } from '../context/AuthContext';
+import { setMobileNavigationSuppressed } from '../config/mobileNavigation';
 
 const LogicAssistant: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,15 @@ const LogicAssistant: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && isMobile) {
+      setMobileNavigationSuppressed('logic-assistant', true);
+    } else {
+      setMobileNavigationSuppressed('logic-assistant', false);
+    }
+    return () => setMobileNavigationSuppressed('logic-assistant', false);
+  }, [isOpen, isMobile]);
 
   // Close dropdown on click outside
   useEffect(() => {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   FlaskConical, Cpu, Code, Layers, Sparkles, Binary, Rocket, 
   ArrowRight, Search, BookOpen, CheckCircle, Award, Hourglass,
   Video, Music, Lock, Play, Upload, X, Trash2, 
-  Tv, AlertCircle, RefreshCw, Radio
+  Tv, AlertCircle, Radio
 } from 'lucide-react';
 import { message, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,8 @@ import LiveBroadcastContainer from '../components/LiveBroadcastContainer';
 import LiveViewerContainer from '../components/LiveViewerContainer';
 import { Modal, Form, Input } from 'antd';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
+import EntityProfileView from '../components/panx/EntityProfileView';
+import { setMobileNavigationSuppressed } from '../config/mobileNavigation';
 
 const GREEN = '#008751';
 
@@ -57,6 +59,99 @@ interface LabTeacherProfile {
   bio?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
+
+interface LabTeacherProfileDetail extends LabTeacherProfile {
+  user: {
+    id: string;
+    name: string;
+    email?: string;
+  };
+  followersCount: number;
+  recordingsCount: number;
+  isOwner: boolean;
+  isSubscribed: boolean;
+  recordings: LabRecording[];
+}
+
+const LabPackageCard = ({ pkg, isEnrolled, onToggle }: {
+  pkg: LabPackage;
+  isEnrolled: boolean;
+  onToggle: () => void;
+}) => (
+  <article className={`panx-content-card lab-content-card ${isEnrolled ? 'is-active' : ''}`}>
+    <div className="lab-card-visual lab-card-visual--module">
+      <div className="lab-card-icon"><BookOpen size={22} /></div>
+      <span className="lab-card-index">{String(pkg.order + 1).padStart(2, '0')}</span>
+      <span className="lab-card-badge">{pkg.level}</span>
+    </div>
+    <div className="lab-card-body">
+      <div>
+        <div className="lab-card-kicker">Learning package</div>
+        <h4>{pkg.name}</h4>
+        <p>{pkg.description || 'An applied learning module designed to build practical, high-impact capability.'}</p>
+      </div>
+      <div className="lab-card-footer">
+        <span className="lab-card-meta"><Hourglass size={13} /> {pkg.duration}</span>
+        <button className={`lab-card-action ${isEnrolled ? 'is-secondary' : ''}`} onClick={onToggle}>
+          {isEnrolled ? <><CheckCircle size={14} /> Enrolled</> : <>Enroll <ArrowRight size={14} /></>}
+        </button>
+      </div>
+    </div>
+  </article>
+);
+
+const LabLiveCard = ({ stream, onOpen }: { stream: any; onOpen: () => void }) => (
+  <button className="panx-content-card lab-content-card lab-content-card--button" onClick={onOpen}>
+    <div className="lab-card-visual lab-card-visual--live">
+      <div className="lab-live-status"><span /> Live now</div>
+      <Radio size={34} />
+    </div>
+    <div className="lab-card-body">
+      <div>
+        <div className="lab-card-kicker">Live classroom</div>
+        <h4>{stream.title}</h4>
+        <p>Join the lecture and participate in the live learning session.</p>
+      </div>
+      <div className="lab-card-footer">
+        <span className="lab-card-meta">Prof. {stream.broadcasterName || 'PanX Instructor'}</span>
+        <span className="lab-card-open">Join <ArrowRight size={14} /></span>
+      </div>
+    </div>
+  </button>
+);
+
+const LabRecordingCard = ({ recording, onOpen, onTeacher }: {
+  recording: LabRecording;
+  onOpen: () => void;
+  onTeacher: () => void;
+}) => {
+  const isVideo = recording.mimeType.startsWith('video');
+  return (
+    <article className="panx-content-card lab-content-card lab-content-card--recording" onClick={onOpen}>
+      <div className={`lab-card-visual ${isVideo ? 'lab-card-visual--video' : 'lab-card-visual--audio'}`}>
+        <div className="lab-card-icon">{isVideo ? <Video size={22} /> : <Music size={22} />}</div>
+        <span className="lab-card-badge">{recording.categoryTitle}</span>
+        <div className="lab-recording-play">{recording.isLocked ? <Lock size={18} /> : <Play size={18} fill="currentColor" />}</div>
+      </div>
+      <div className="lab-card-body">
+        <div>
+          <div className="lab-card-kicker">{isVideo ? 'Video lecture' : 'Audio lecture'}</div>
+          <h4>{recording.title}</h4>
+          <p>{recording.description}</p>
+        </div>
+        <div className="lab-card-footer">
+          <button className="lab-teacher-link" onClick={(event) => { event.stopPropagation(); onTeacher(); }}>
+            <strong>{recording.teacherName}</strong>
+            <span>{recording.channelTitle}</span>
+          </button>
+          <span className={`lab-access-state ${recording.isLocked ? 'is-locked' : ''}`}>
+            {recording.isLocked ? 'Locked' : 'Watch'}
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+};
 
 const LabPage: React.FC = () => {
   const getServerUrl = (path: string) => {
@@ -103,7 +198,11 @@ const LabPage: React.FC = () => {
 
   // Playback Modal
   const [playbackRecording, setPlaybackRecording] = useState<LabRecording | null>(null);
+  const playbackVideoRef = useRef<HTMLVideoElement>(null);
+  const playbackAudioRef = useRef<HTMLAudioElement>(null);
   const [subscribingTeacherId, setSubscribingTeacherId] = useState<string | null>(null);
+  const [selectedTeacherProfile, setSelectedTeacherProfile] = useState<LabTeacherProfileDetail | null>(null);
+  const [selectedTeacherLoading, setSelectedTeacherLoading] = useState(false);
 
   // Live Lectures State
   const [streams, setStreams] = useState<any[]>([]);
@@ -116,6 +215,39 @@ const LabPage: React.FC = () => {
   const navigate = useNavigate();
   const authContext = useAuth();
   const isAuthenticated = authContext?.isAuthenticated ?? false;
+
+  const stopPlayback = () => {
+    [playbackVideoRef.current, playbackAudioRef.current].forEach(media => {
+      if (!media) return;
+      media.pause();
+      media.currentTime = 0;
+      media.removeAttribute('src');
+      media.load();
+    });
+  };
+
+  const closePlayback = () => {
+    stopPlayback();
+    setPlaybackRecording(null);
+  };
+
+  useEffect(() => {
+    if (!playbackRecording) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closePlayback();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      stopPlayback();
+    };
+  }, [playbackRecording?.id]);
+
+  useEffect(() => {
+    const shouldHideNavigation = !!(playbackRecording || isBroadcasting || activeViewerRoom);
+    setMobileNavigationSuppressed('lab-media', shouldHideNavigation);
+    return () => setMobileNavigationSuppressed('lab-media', false);
+  }, [playbackRecording, isBroadcasting, activeViewerRoom]);
 
   useEffect(() => {
     fetchCategories();
@@ -377,6 +509,44 @@ const LabPage: React.FC = () => {
     }
   };
 
+  const loadTeacherProfile = async (teacherId: string) => {
+    try {
+      setSelectedTeacherLoading(true);
+      const res = await api.get(`/lab/teacher/${teacherId}`);
+      setSelectedTeacherProfile(res.data);
+    } catch (err: any) {
+      message.error(err.response?.data?.error || "Failed to load teacher profile.");
+    } finally {
+      setSelectedTeacherLoading(false);
+    }
+  };
+
+  const handleTeacherSubscriptionToggle = async (teacherId: string, currentlySubscribed: boolean) => {
+    if (!isAuthenticated) {
+      message.info("Please sign in or create an account to subscribe.");
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+
+    try {
+      setSubscribingTeacherId(teacherId);
+      if (currentlySubscribed) {
+        await api.post(`/lab/teacher/${teacherId}/unsubscribe`);
+        message.success("Subscription removed.");
+      } else {
+        await api.post(`/lab/teacher/${teacherId}/subscribe`);
+        message.success("Subscribed successfully! Content unlocked.");
+      }
+
+      await fetchRecordings();
+      await loadTeacherProfile(teacherId);
+    } catch (err: any) {
+      message.error(err.response?.data?.error || "Failed to update subscription.");
+    } finally {
+      setSubscribingTeacherId(null);
+    }
+  };
+
   // Helper for Lucide icons based on category icon string
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -450,6 +620,158 @@ const LabPage: React.FC = () => {
           )}
         </div>
       </div>
+    );
+  }
+
+  if (selectedTeacherLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-bg-primary min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (selectedTeacherProfile) {
+    return (
+      <EntityProfileView
+        name={selectedTeacherProfile.title}
+        role="PanX Lab Teacher"
+        bio={selectedTeacherProfile.bio || `Hosted by ${selectedTeacherProfile.user.name}`}
+        isVerified={selectedTeacherProfile.status === 'APPROVED'}
+        followersCount={selectedTeacherProfile.followersCount}
+        isFollowing={selectedTeacherProfile.isSubscribed}
+        onFollowToggle={
+          selectedTeacherProfile.isOwner
+            ? undefined
+            : () => handleTeacherSubscriptionToggle(selectedTeacherProfile.id, selectedTeacherProfile.isSubscribed)
+        }
+        isOwnProfile={selectedTeacherProfile.isOwner}
+        onBackClick={() => setSelectedTeacherProfile(null)}
+        extraActions={
+          !selectedTeacherProfile.isOwner ? (
+            <button
+              onClick={() => {
+                setActiveTab('lectures');
+                setSelectedTeacherProfile(null);
+              }}
+              style={{
+                padding: '8px 18px',
+                borderRadius: '12px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '11px',
+                cursor: 'pointer'
+              }}
+            >
+              Browse Lab
+            </button>
+          ) : null
+        }
+      >
+        <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <span className="eyebrow">Teacher Node</span>
+              <h3 className="text-2xl font-black text-white tracking-tight mt-2 mb-3">
+                {selectedTeacherProfile.user.name}
+              </h3>
+              <p className="text-text-secondary text-sm max-w-2xl leading-relaxed">
+                {selectedTeacherProfile.bio || "This PanX Lab teacher curates lectures, masterclasses, and specialized lab archives."}
+              </p>
+            </div>
+
+            {!selectedTeacherProfile.isOwner && (
+              <button
+                onClick={() =>
+                  handleTeacherSubscriptionToggle(selectedTeacherProfile.id, selectedTeacherProfile.isSubscribed)
+                }
+                className="qsi-button primary"
+                style={{
+                  padding: '14px 22px',
+                  textTransform: 'none',
+                  opacity: subscribingTeacherId === selectedTeacherProfile.id ? 0.7 : 1
+                }}
+                disabled={subscribingTeacherId === selectedTeacherProfile.id}
+              >
+                {subscribingTeacherId === selectedTeacherProfile.id
+                  ? 'Processing...'
+                  : selectedTeacherProfile.isSubscribed
+                    ? 'Unsubscribe'
+                    : 'Subscribe to Unlock'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <span className="eyebrow">Recorded Knowledge</span>
+              <h2 className="text-3xl font-black text-white tracking-tight">Lab Archives</h2>
+            </div>
+            <span className="qsi-tag qsi-tag-primary">{selectedTeacherProfile.recordingsCount} recordings</span>
+          </div>
+
+          {selectedTeacherProfile.recordings.length === 0 ? (
+            <div className="p-20 border-2 border-dashed border-border-subtle rounded-3xl text-center">
+              <Video size={48} className="mx-auto text-text-tertiary opacity-20 mb-4" />
+              <p className="text-text-tertiary font-bold tracking-widest" style={{ textTransform: 'none' }}>
+                No recordings published yet
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+              {selectedTeacherProfile.recordings.map((recording) => (
+                <div
+                  key={recording.id}
+                  onClick={() => setPlaybackRecording(recording)}
+                  className="feed-card bg-bg-secondary border-border-subtle p-6 cursor-pointer hover:border-accent-primary/30 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">
+                      {recording.categoryTitle}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: recording.isLocked ? '#EF4444' : GREEN }}>
+                      {recording.isLocked ? 'Locked' : 'Open'}
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white tracking-tight mb-2">{recording.title}</h4>
+                  <p className="text-text-secondary text-sm leading-relaxed mb-4">
+                    {recording.description}
+                  </p>
+                  <div className="pt-4 border-t border-border-subtle text-xs text-text-tertiary">
+                    {recording.mimeType}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-10">
+          <h4 className="text-[10px] font-black text-text-tertiary tracking-widest mb-6" style={{ textTransform: 'none' }}>
+            Profile Metadata
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Teacher ID</span>
+              <span className="text-xs font-mono text-white">LAB-{selectedTeacherProfile.id.slice(-4).toUpperCase()}</span>
+            </div>
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Access</span>
+              <span className="text-xs font-black text-white">
+                {selectedTeacherProfile.isSubscribed || selectedTeacherProfile.isOwner ? 'Unlocked' : 'Subscription Required'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Status</span>
+              <span className="text-xs font-black text-success-green">{selectedTeacherProfile.status}</span>
+            </div>
+          </div>
+        </div>
+      </EntityProfileView>
     );
   }
 
@@ -563,7 +885,7 @@ const LabPage: React.FC = () => {
                 cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
               }}
             >
-              Academic Programs
+              Packages
             </button>
             <button 
               onClick={() => setActiveTab('lectures')}
@@ -576,7 +898,7 @@ const LabPage: React.FC = () => {
                 cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
               }}
             >
-              Virtual Lectures
+              For You
             </button>
             <button 
               onClick={() => setActiveTab('studio')}
@@ -589,7 +911,7 @@ const LabPage: React.FC = () => {
                 cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'
               }}
             >
-              Teacher Studio
+              My Studio
             </button>
           </div>
 
@@ -607,20 +929,20 @@ const LabPage: React.FC = () => {
                   cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
-                All Programs
+                Packages
               </button>
               <button 
-                onClick={() => setOnlyEnrolledMissions(true)}
+                onClick={() => setActiveTab('studio')}
                 className={`pill ${onlyEnrolledMissions ? 'active' : ''}`}
                 style={{
                   textTransform: 'uppercase', fontWeight: 800, fontSize: '11px', letterSpacing: '0.05em', padding: '8px 16px', borderRadius: '20px',
-                  border: onlyEnrolledMissions ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
-                  background: onlyEnrolledMissions ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
-                  color: onlyEnrolledMissions ? 'var(--accent-primary)' : 'rgba(255,255,255,0.6)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.02)',
+                color: 'rgba(255,255,255,0.6)',
                   cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
-                Active Missions ({enrolledPackageIds.length})
+                My Studio
               </button>
             </div>
           )}
@@ -659,70 +981,12 @@ const LabPage: React.FC = () => {
                       {cat.packages.map((pkg) => {
                         const isEnrolled = enrolledPackageIds.includes(pkg.id);
                         return (
-                          <div 
+                          <LabPackageCard
                             key={pkg.id}
-                            style={{
-                              background: 'rgba(255,255,255,0.015)', 
-                              border: isEnrolled ? `1px solid ${GREEN}40` : '1px solid rgba(255,255,255,0.05)',
-                              borderRadius: '20px', 
-                              padding: '24px', 
-                              display: 'flex', 
-                              flexDirection: 'column', 
-                              justifyContent: 'space-between',
-                              minHeight: '260px',
-                              position: 'relative',
-                              overflow: 'hidden'
-                            }}
-                          >
-                            {isEnrolled && (
-                              <div style={{ position: 'absolute', top: 0, right: 0, width: '4px', height: '100%', background: GREEN }} />
-                            )}
-
-                            <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                                <span style={{ 
-                                  fontSize: '9px', fontWeight: 900, 
-                                  color: pkg.level === 'Advanced' ? '#8B5CF6' : pkg.level === 'Intermediate' ? '#3B82F6' : GREEN, 
-                                  background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase'
-                                }}>
-                                  {pkg.level}
-                                </span>
-                                {isEnrolled && (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', fontWeight: 900, color: GREEN, textTransform: 'uppercase' }}>
-                                    <CheckCircle size={10} /> Active
-                                  </div>
-                                )}
-                              </div>
-                              <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '8px', letterSpacing: '-0.01em', margin: 0 }}>
-                                {pkg.name}
-                              </h4>
-                              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginTop: '8px' }}>
-                                {pkg.description || "Interactive engineering module designed for high-impact capability acquisition."}
-                              </p>
-                            </div>
-
-                            <div style={{ marginTop: '20px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                                <Hourglass size={12} />
-                                <span>{pkg.duration} Duration</span>
-                              </div>
-                              
-                              <button 
-                                onClick={() => handleEnrollToggle(pkg.id)}
-                                style={{
-                                  width: '100%', padding: '8px 16px', borderRadius: '10px', 
-                                  border: isEnrolled ? `1px solid ${GREEN}` : 'none',
-                                  background: isEnrolled ? 'rgba(0, 135, 81, 0.15)' : GREEN, 
-                                  color: isEnrolled ? GREEN : 'black', 
-                                  cursor: 'pointer',
-                                  fontSize: '11px', fontWeight: 900, textTransform: 'none', letterSpacing: '0.05em',
-                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                                }}
-                              >
-                                {isEnrolled ? 'Enrolled ✓' : 'Enroll'} <ArrowRight size={12} />
-                              </button>
-                            </div>
-                          </div>
+                            pkg={pkg}
+                            isEnrolled={isEnrolled}
+                            onToggle={() => handleEnrollToggle(pkg.id)}
+                          />
                         );
                       })}
                     </div>
@@ -802,26 +1066,11 @@ const LabPage: React.FC = () => {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
                   {streams.map((stream, idx) => (
-                    <button
+                    <LabLiveCard
                       key={idx}
-                      onClick={() => setActiveViewerRoom({ id: stream.roomId, title: stream.title })}
-                      style={{
-                        background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '20px', padding: '24px', cursor: 'pointer', transition: 'all 0.2s',
-                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                        minHeight: '160px', textAlign: 'left', width: '100%'
-                      }}
-                      className="recording-card"
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 6px #EF4444' }} />
-                          <span style={{ fontSize: '10px', fontWeight: 800, color: '#EF4444', textTransform: 'uppercase' }}>LIVE NOW</span>
-                        </div>
-                      </div>
-                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', margin: '16px 0 8px 0' }}>{stream.title}</h4>
-                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Prof. {stream.broadcasterName}</div>
-                    </button>
+                      stream={stream}
+                      onOpen={() => setActiveViewerRoom({ id: stream.roomId, title: stream.title })}
+                    />
                   ))}
                 </div>
               </div>
@@ -838,69 +1087,12 @@ const LabPage: React.FC = () => {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
                 {recordings.map(rec => (
-                  <div
+                  <LabRecordingCard
                     key={rec.id}
-                    onClick={() => setPlaybackRecording(rec)}
-                    style={{
-                      background: 'rgba(255,255,255,0.015)',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: '20px',
-                      padding: '24px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      minHeight: '220px',
-                      position: 'relative'
-                    }}
-                    className="recording-card"
-                  >
-                    {/* Media Type Tag (Floating) */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                      <span style={{ 
-                        fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', 
-                        background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '6px', textTransform: 'uppercase'
-                      }}>
-                        {rec.categoryTitle}
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: rec.mimeType.startsWith('video') ? '#3B82F6' : '#EC4899' }}>
-                        {rec.mimeType.startsWith('video') ? <Video size={12} /> : <Music size={12} />}
-                        <span style={{ fontWeight: 800, textTransform: 'uppercase' }}>{rec.mimeType.split('/')[0]}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'white', marginBottom: '6px', margin: 0 }}>
-                        {rec.title}
-                      </h4>
-                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineBreak: 'anywhere', margin: '4px 0 12px 0' }}>
-                        {rec.description}
-                      </p>
-                    </div>
-
-                    <div style={{ 
-                      marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center' 
-                    }}>
-                      <div>
-                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'white' }}>{rec.teacherName}</div>
-                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: '2px' }}>{rec.channelTitle}</div>
-                      </div>
-                      
-                      {rec.isLocked ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#EF4444', background: 'rgba(239,68,68,0.1)', padding: '6px 10px', borderRadius: '10px' }}>
-                          <Lock size={12} />
-                          <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Locked</span>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: GREEN, background: 'rgba(16,185,129,0.1)', padding: '6px 10px', borderRadius: '10px' }}>
-                          <Play size={12} fill={GREEN} />
-                          <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase' }}>Watch</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    recording={rec}
+                    onOpen={() => setPlaybackRecording(rec)}
+                    onTeacher={() => loadTeacherProfile(rec.teacherId)}
+                  />
                 ))}
 
                 {recordings.length === 0 && (
@@ -1007,7 +1199,7 @@ const LabPage: React.FC = () => {
                   Application Under Review
                 </h3>
                 <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', maxWidth: '400px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
-                  Your request to become a Panx Lab Teacher is currently pending admin approval. You will have access to the Teacher Studio once approved.
+                  Your request to become a PanX Lab Teacher is currently pending admin approval. You will have access to My Studio once approved.
                 </p>
                 <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px', textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
                   <div style={{ marginBottom: '16px' }}>
@@ -1032,13 +1224,7 @@ const LabPage: React.FC = () => {
                 </p>
                 <button 
                   className="qsi-btn qsi-btn-secondary"
-                  onClick={async () => {
-                    try {
-                      // Note: you may need a separate delete endpoint for teachers if you want them to re-apply
-                      // await api.delete('/lab/teacher/my-profile');
-                      // setMyTeacherProfile(null);
-                    } catch (err) {}
-                  }}
+                  onClick={() => { window.location.href = 'mailto:support@qsi.africa?subject=PanX Lab teacher application'; }}
                 >
                   Contact Support
                 </button>
@@ -1237,13 +1423,13 @@ const LabPage: React.FC = () => {
 
       {/* 4. Playback / Subscription Modal */}
       {playbackRecording && (
-        <div style={{
+        <div onClick={closePlayback} style={{
           position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'rgba(5, 5, 8, 0.85)', backdropFilter: 'blur(10px)', padding: '20px'
         }}>
-          <div style={{
+          <div onClick={(event) => event.stopPropagation()} style={{
             background: 'rgba(15, 20, 30, 0.95)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '28px', maxWidth: '640px', width: '100%', overflow: 'hidden', position: 'relative',
+            borderRadius: '28px', maxWidth: '880px', width: '100%', maxHeight: '92dvh', overflow: 'auto', position: 'relative',
             boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
           }}>
             {/* Modal Header */}
@@ -1260,7 +1446,7 @@ const LabPage: React.FC = () => {
                 </h3>
               </div>
               <button 
-                onClick={() => setPlaybackRecording(null)}
+                onClick={closePlayback}
                 style={{
                   background: 'rgba(255,255,255,0.03)', border: 'none', padding: '8px', 
                   borderRadius: '10px', color: 'white', cursor: 'pointer'
@@ -1288,33 +1474,32 @@ const LabPage: React.FC = () => {
                   <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '8px', lineHeight: 1.5, maxWidth: '400px', margin: '8px auto 24px auto' }}>
                     This lecture is locked. Subscribe to <strong>{playbackRecording.teacherName}</strong> to unlock this and all of their premium recorded content.
                   </p>
-                  <button 
-                    className="qsi-btn qsi-btn-primary" 
-                    style={{ padding: '12px 24px', borderRadius: '12px', fontWeight: 800, opacity: subscribingTeacherId ? 0.7 : 1 }}
-                    onClick={() => handleSubscribe(playbackRecording.teacherId)}
-                    disabled={subscribingTeacherId === playbackRecording.teacherId}
-                  >
-                    {subscribingTeacherId === playbackRecording.teacherId ? 'Subscribing...' : 'Subscribe Now'}
-                  </button>
+	                  <button
+	                    className="qsi-btn qsi-btn-primary"
+	                    style={{ padding: '12px 24px', borderRadius: '12px', fontWeight: 800, opacity: subscribingTeacherId ? 0.7 : 1 }}
+	                    onClick={() => handleSubscribe(playbackRecording.teacherId)}
+	                    disabled={subscribingTeacherId === playbackRecording.teacherId}
+	                  >
+	                    {subscribingTeacherId === playbackRecording.teacherId ? 'Subscribing...' : 'Subscribe Now'}
+	                  </button>
 
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '320px', margin: '0 auto'
-                  }}>
-                    <button
-                      onClick={() => handleSubscribe(playbackRecording.channelId)}
-                      disabled={subscribingChannelId !== null}
-                      style={{
-                        width: '100%', padding: '14px', background: GREEN, color: 'black', border: 'none',
-                        borderRadius: '14px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                      }}
-                    >
-                      {subscribingChannelId ? 'Processing...' : `Subscribe to Channel ($5.00/mo)`}
-                      <Tv size={14} />
-                    </button>
+	                  <div style={{
+	                    display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '320px', margin: '0 auto'
+	                  }}>
+	                    <button
+	                      onClick={() => loadTeacherProfile(playbackRecording.teacherId)}
+	                      style={{
+	                        width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', color: 'white', border: '1px solid rgba(255,255,255,0.08)',
+	                        borderRadius: '14px', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase',
+	                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+	                      }}
+	                    >
+	                      View Teacher Profile
+	                      <Tv size={14} />
+	                    </button>
                     
                     <button
-                      onClick={() => setPlaybackRecording(null)}
+                      onClick={closePlayback}
                       style={{
                         width: '100%', padding: '12px', background: 'transparent', color: 'rgba(255,255,255,0.6)', 
                         border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', fontSize: '11px', 
@@ -1330,12 +1515,14 @@ const LabPage: React.FC = () => {
                 <div>
                   {playbackRecording.mimeType.startsWith('video') ? (
                     /* Video Player */
-                    <div style={{ background: 'black', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ width: '100%', aspectRatio: '16 / 9', background: 'black', borderRadius: '16px', overflow: 'hidden' }}>
                       <video 
+                        ref={playbackVideoRef}
                         src={getServerUrl(playbackRecording.mediaUrl || '')} 
                         controls 
                         autoPlay 
-                        style={{ width: '100%', display: 'block', maxHeight: '360px' }}
+                        playsInline
+                        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}
                         preload="metadata"
                       />
                     </div>
@@ -1361,6 +1548,7 @@ const LabPage: React.FC = () => {
                       </div>
 
                       <audio 
+                        ref={playbackAudioRef}
                         src={getServerUrl(playbackRecording.mediaUrl || '')} 
                         controls 
                         autoPlay 

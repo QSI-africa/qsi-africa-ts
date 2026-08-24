@@ -1,5 +1,6 @@
 import React from 'react';
 import { Heart, MessageCircle, Repeat, Send, Trash2, CheckCircle2, UserCheck, UserPlus } from 'lucide-react';
+import { PanXMediaGallery, PanXMediaItem } from './PanXMediaGallery';
 
 const getServerUrl = (path: string) => {
   if (!path) return '';
@@ -85,18 +86,26 @@ const PanXPostItem = React.memo(({
 
   const displayReplies = post.replies ? post.replies.slice(0, 2) : []; // Limit to 2 replies directly
   const hasMoreReplies = post.repliesCount > displayReplies.length;
+  const mediaItems: PanXMediaItem[] = post.mediaFiles?.length
+    ? post.mediaFiles.map((media: any) => ({
+        url: getServerUrl(media.url),
+        type: media.type?.toUpperCase() === 'VIDEO' ? 'video' : 'image'
+      }))
+    : [
+        ...(post.imageUrl ? [{ url: getServerUrl(post.imageUrl), type: 'image' as const }] : []),
+        ...(post.videoUrl ? [{ url: getServerUrl(post.videoUrl), type: 'video' as const }] : [])
+      ];
 
   return (
     <div
       key={post.id}
       onClick={() => navigate(`/post/${post.id}`)}
+      className="panx-content-card"
       style={{
         display: 'flex',
         gap: '14px',
         padding: '20px',
         borderRadius: '24px',
-        background: 'rgba(255, 255, 255, 0.015)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
         position: 'relative',
         cursor: 'pointer'
       }}
@@ -268,63 +277,11 @@ const PanXPostItem = React.memo(({
           {post.content}
         </p>
 
-        {post.mediaFiles && post.mediaFiles.length > 0 ? (
-          <div className="no-scrollbar" style={{
-            display: 'flex',
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            gap: '8px',
-            margin: '0 0 16px 0',
-            paddingBottom: '4px'
-          }}>
-            {post.mediaFiles.map((media: any, idx: number) => (
-              <div
-                key={idx}
-                style={{
-                  flex: post.mediaFiles.length > 1 ? '0 0 85%' : '0 0 100%',
-                  scrollSnapAlign: 'center',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'rgba(0,0,0,0.4)',
-                  cursor: 'pointer'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFullscreenMedia({
-                    media: post.mediaFiles.map((m: any) => ({ url: getServerUrl(m.url), type: m.type.toLowerCase() as 'image' | 'video' })),
-                    initialIndex: idx
-                  });
-                }}
-              >
-                {media.type === 'VIDEO' ? (
-                  <video preload="metadata" src={getServerUrl(media.url)} style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
-                ) : (
-                  <img loading="lazy" src={getServerUrl(media.url)} alt="Post media" style={{ width: '100%', height: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <>
-            {post.imageUrl && (
-              <div
-                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', cursor: 'pointer' }}
-                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.imageUrl!), type: 'image' }], initialIndex: 0 }); }}
-              >
-                <img loading="lazy" src={getServerUrl(post.imageUrl)} alt="Post image" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
-              </div>
-            )}
-
-            {post.videoUrl && (
-              <div
-                style={{ margin: '0 0 16px 0', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', cursor: 'pointer' }}
-                onClick={(e) => { e.stopPropagation(); setFullscreenMedia({ media: [{ url: getServerUrl(post.videoUrl!), type: 'video' }], initialIndex: 0 }); }}
-              >
-                <video preload="metadata" src={getServerUrl(post.videoUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }} />
-              </div>
-            )}
-          </>
+        {mediaItems.length > 0 && (
+          <PanXMediaGallery
+            media={mediaItems}
+            onOpen={(initialIndex) => setFullscreenMedia({ media: mediaItems, initialIndex })}
+          />
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>

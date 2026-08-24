@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  CheckCircle2, Plus, Globe,
-  Heart, MessageCircle, Repeat, Send, Trash2, Bookmark,
-  Briefcase, Flame, Hammer, Layers, Users, UserCheck, UserPlus, Compass,
-  Lightbulb, Building2, MapPin, Image as ImageIcon, Video as VideoIcon, X, Menu
+  Plus, Globe, Users, UserCheck, Compass,
+  Image as ImageIcon, Video as VideoIcon, X
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Grid, message, Modal, Drawer } from 'antd';
+import { Grid, message } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
@@ -56,6 +54,8 @@ interface PostItem {
 }
 
 import PanXPostItem from '../components/panx/PanXPostItem';
+import { PanXMediaViewer, PanXMediaViewerState } from '../components/panx/PanXMediaGallery';
+import { applyPanXPostUpdates, publishPanXPostUpdate, subscribeToPanXPostUpdates } from '../services/panxPostSync';
 
 const getInitials = (name: string) => {
   if (!name) return "";
@@ -124,7 +124,7 @@ const EcosystemPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<{ url: string, type: string }[]>([]);
   const [submittingPost, setSubmittingPost] = useState(false);
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ media: { url: string, type: 'image' | 'video' }[], initialIndex: number } | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<PanXMediaViewerState | null>(null);
 
   // New ecosystem state
   const [activeMobileTab, setActiveMobileTab] = useState<'feed'>('feed');
@@ -135,10 +135,10 @@ const EcosystemPage: React.FC = () => {
     try {
       const response = await api.get(`/panx/posts?page=${pageNum}&limit=20`, { signal });
       if (pageNum === 1) {
-        setPosts(response.data.posts);
+        setPosts(applyPanXPostUpdates<PostItem>(response.data.posts));
       } else {
         setPosts(prev => {
-          const newPosts = response.data.posts.filter((p: any) => !prev.find(existing => existing.id === p.id));
+          const newPosts = applyPanXPostUpdates<PostItem>(response.data.posts).filter(p => !prev.find(existing => existing.id === p.id));
           return [...prev, ...newPosts];
         });
       }
@@ -163,6 +163,10 @@ const EcosystemPage: React.FC = () => {
       controller.abort();
     };
   }, []);
+
+  useEffect(() => subscribeToPanXPostUpdates((postId, update) => {
+    setPosts(prev => prev.map(post => post.id === postId ? { ...post, ...update } : post));
+  }), []);
 
   const handleFollowToggle = async (authorId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -200,6 +204,7 @@ const EcosystemPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/like`);
       const { liked, likesCount } = response.data;
+      publishPanXPostUpdate(postId, { hasLiked: liked, likesCount });
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
           return {
@@ -224,6 +229,7 @@ const EcosystemPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/repost`);
       const { reposted, repostsCount } = response.data;
+      publishPanXPostUpdate(postId, { hasReposted: reposted, repostsCount });
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
           return {
@@ -273,12 +279,13 @@ const EcosystemPage: React.FC = () => {
     try {
       const response = await api.post(`/panx/posts/${postId}/reply`, { content: replyText });
       const newReply = response.data;
+      publishPanXPostUpdate(postId, { repliesCount: newReply.repliesCount });
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
           return {
             ...post,
             replies: [...post.replies, newReply],
-            repliesCount: post.repliesCount + 1
+            repliesCount: newReply.repliesCount
           };
         }
         return post;
@@ -435,7 +442,7 @@ const EcosystemPage: React.FC = () => {
       <div style={{
         maxWidth: isDesktop ? '1200px' : '700px',
         margin: '0 auto',
-        padding: '24px 16px 100px 16px',
+        padding: '12px 16px 100px 16px',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -478,7 +485,7 @@ const EcosystemPage: React.FC = () => {
                     onClick={() => navigate('/login')}
                     style={{
                       background: 'var(--accent-primary)', border: 'none', color: 'black', padding: '8px 16px',
-                      borderRadius: '10px', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer'
+                      borderRadius: '10px', fontWeight: 800, fontSize: '11px', cursor: 'pointer'
                     }}
                   >
                     Log In
@@ -487,7 +494,7 @@ const EcosystemPage: React.FC = () => {
                     onClick={() => navigate('/register')}
                     style={{
                       background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'white',
-                      padding: '8px 16px', borderRadius: '10px', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer'
+                      padding: '8px 16px', borderRadius: '10px', fontWeight: 800, fontSize: '11px', cursor: 'pointer'
                     }}
                   >
                     Register
@@ -576,7 +583,6 @@ const EcosystemPage: React.FC = () => {
                         padding: '8px 20px',
                         fontSize: '11px',
                         fontWeight: 900,
-                        textTransform: 'uppercase',
                         cursor: 'pointer',
                         opacity: (newPostText.trim() || selectedFiles.length > 0) && !submittingPost ? 1 : 0.5,
                         transition: 'all 0.2s',
@@ -679,60 +685,7 @@ const EcosystemPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <Modal
-          open={!!fullscreenMedia}
-          footer={null}
-          onCancel={() => setFullscreenMedia(null)}
-          width="100vw"
-          style={{ top: 0, padding: 0, margin: 0, maxWidth: '100vw' }}
-          styles={{ body: { padding: 0, background: 'black', height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } }}
-          closeIcon={<span style={{ color: 'white', fontSize: '20px', background: 'rgba(0,0,0,0.5)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: '16px', top: '16px', zIndex: 100 }}>✕</span>}
-        >
-          {fullscreenMedia && (
-            <div
-              style={{
-                display: 'flex',
-                width: '100vw',
-                height: '100vh',
-                overflowX: 'auto',
-                overflowY: 'hidden',
-                scrollSnapType: 'x mandatory',
-                scrollBehavior: 'smooth'
-              }}
-              ref={el => {
-                if (el && fullscreenMedia.initialIndex > 0 && !el.dataset.scrolled) {
-                  setTimeout(() => {
-                    el.scrollLeft = fullscreenMedia.initialIndex * window.innerWidth;
-                    el.dataset.scrolled = "true";
-                  }, 0);
-                }
-              }}
-              className="no-scrollbar"
-            >
-              {fullscreenMedia.media.map((m, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: '0 0 100vw',
-                    width: '100vw',
-                    height: '100vh',
-                    scrollSnapAlign: 'start',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'black'
-                  }}
-                >
-                  {m.type === 'image' ? (
-                    <img src={m.url} alt={`Media ${i}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-                  ) : (
-                    <video src={m.url} controls autoPlay={i === fullscreenMedia.initialIndex} style={{ width: '100%', height: '100%', display: 'block' }} />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Modal>
+        <PanXMediaViewer state={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
 
       </div>
     </div>

@@ -1,4 +1,5 @@
 // client/src/components/VideoCallContainer.tsx
+/* global RTCConfiguration, RTCIceConnectionState */
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
@@ -8,18 +9,21 @@ import { App, Drawer } from 'antd';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import RoomChat from './RoomChat';
-import api from '../api';
+import { getIceConfiguration, toRtcConfiguration } from '../services/webrtc';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface VideoCallProps {
   roomId: string;
+  title?: string;
   onLeave: () => void;
 }
 
 interface RemoteParticipant {
   socketId: string;
   stream: MediaStream;
+  name?: string;
+  iceState?: RTCIceConnectionState;
 }
 
 const ControlBtn: React.FC<{
@@ -49,8 +53,8 @@ const ControlBtn: React.FC<{
   </button>
 );
 
-const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
-  const { message } = App.useApp();
+const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, title = 'Peer Session', onLeave }) => {
+  const { message, modal } = App.useApp();
   const auth = useAuth();
   const user = auth?.user;
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -60,6 +64,8 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [relayConfigured, setRelayConfigured] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<'preparing' | 'waiting' | 'connected' | 'reconnecting' | 'failed'>('preparing');
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -88,25 +94,13 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const [servers, setServers] = useState<RTCConfiguration>({
+  const serversRef = useRef<RTCConfiguration>({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' }
+      { urls: 'stun:stun1.l.google.com:19302' }
     ],
+    iceCandidatePoolSize: 10,
   });
-  const serversRef = useRef(servers);
-
-  useEffect(() => {
-    api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) {
-        setServers(res.data);
-        serversRef.current = res.data;
-      }
-    }).catch(err => console.error("Failed to load ICE servers", err));
-  }, []);
 
   // ─── Clean teardown: stop all tracks + close all peers ────────────────────
   const handleLeaveCall = () => {
@@ -126,10 +120,25 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     onLeave();
   };
 
+  const requestLeaveCall = () => {
+    modal.confirm({
+      title: 'Leave peer session?',
+      content: 'Your camera and microphone will stop, and the other participant will be notified.',
+      okText: 'Leave Session',
+      cancelText: 'Stay',
+      okButtonProps: { danger: true },
+      onOk: handleLeaveCall,
+    });
+  };
+
   useEffect(() => {
     const handlers: any = {};
     const startCall = async () => {
       try {
+        const iceConfiguration = await getIceConfiguration();
+        serversRef.current = toRtcConfiguration(iceConfiguration);
+        setRelayConfigured(iceConfiguration.relayConfigured);
+
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Camera/microphone access is not supported by your browser or requires a secure origin (HTTPS or localhost).');
         }
@@ -167,18 +176,20 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         setIsVideoOff(!hasVideoTrack || !stream.getVideoTracks()[0].enabled);
         setIsMuted(!hasAudioTrack || !stream.getAudioTracks()[0].enabled);
 
+        await socketService.waitForConnection();
+
         const pendingCandidates = new Map<string, RTCIceCandidate[]>();
 
-        handlers.onUserConnected = async ({ socketId }: any) => {
-          const pc = createPeerConnection(socketId, stream);
+        handlers.onUserConnected = async ({ socketId, participantName }: any) => {
+          const pc = createPeerConnection(socketId, stream, participantName);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           socketService.emit('offer', { targetUserId: socketId, offer });
         };
         socketService.on('user-connected', handlers.onUserConnected);
 
-        handlers.onOffer = async ({ offer, senderUserId }: any) => {
-          const pc = createPeerConnection(senderUserId, stream);
+        handlers.onOffer = async ({ offer, senderUserId, senderName }: any) => {
+          const pc = peerConnections.current.get(senderUserId) || createPeerConnection(senderUserId, stream, senderName);
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
@@ -231,8 +242,10 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         socketService.on('user-disconnected', handlers.onUserDisconnected);
 
         socketService.emit('join-room', roomId, user?.name || 'Guest-' + Math.random().toString(36).substring(7));
+        setSessionStatus('waiting');
       } catch (err: any) {
         console.error('Error starting call:', err);
+        setSessionStatus('failed');
         message.error(err.message || 'Could not access media devices for the call.');
       }
     };
@@ -242,6 +255,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     return () => {
       streamRef.current?.getTracks().forEach(track => track.stop());
       peerConnections.current.forEach(pc => pc.close());
+      socketService.emit('leave-room', roomId);
       if (handlers.onUserConnected) socketService.off('user-connected', handlers.onUserConnected);
       if (handlers.onOffer) socketService.off('offer', handlers.onOffer);
       if (handlers.onAnswer) socketService.off('answer', handlers.onAnswer);
@@ -250,14 +264,15 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
     };
   }, [roomId]);
 
-  const createPeerConnection = (targetSocketId: string, stream: MediaStream) => {
+  const createPeerConnection = (targetSocketId: string, stream: MediaStream, participantName?: string) => {
     const pc = new RTCPeerConnection(serversRef.current);
     peerConnections.current.set(targetSocketId, pc);
     stream.getTracks().forEach(track => pc.addTrack(track, stream));
     pc.ontrack = (event) => {
+      setSessionStatus('connected');
       setRemoteParticipants(prev => {
         if (prev.find(p => p.socketId === targetSocketId)) return prev;
-        return [...prev, { socketId: targetSocketId, stream: event.streams[0], iceState: pc.iceConnectionState }];
+        return [...prev, { socketId: targetSocketId, stream: event.streams[0], name: participantName, iceState: pc.iceConnectionState }];
       });
     };
     pc.onicecandidate = (event) => {
@@ -265,13 +280,24 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         socketService.emit('ice-candidate', { targetUserId: targetSocketId, candidate: event.candidate });
       }
     };
-    pc.oniceconnectionstatechange = () => {
+    pc.oniceconnectionstatechange = async () => {
       setRemoteParticipants(prev => 
         prev.map(p => p.socketId === targetSocketId ? { ...p, iceState: pc.iceConnectionState } : p)
       );
-      if (pc.iceConnectionState === 'failed') {
-        console.warn(`ICE connection failed for ${targetSocketId}, attempting restart`);
-        pc.restartIce();
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        setSessionStatus('connected');
+      } else if (pc.iceConnectionState === 'disconnected') {
+        setSessionStatus('reconnecting');
+      } else if (pc.iceConnectionState === 'failed') {
+        setSessionStatus('reconnecting');
+        try {
+          const offer = await pc.createOffer({ iceRestart: true });
+          await pc.setLocalDescription(offer);
+          socketService.emit('offer', { targetUserId: targetSocketId, offer });
+        } catch (error) {
+          console.error(`ICE restart failed for ${targetSocketId}`, error);
+          setSessionStatus('failed');
+        }
       }
     };
     return pc;
@@ -328,7 +354,10 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
   };
 
   const copyShareLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/tv?call=${roomId}`);
+    const inviteUrl = new URL('/tv', window.location.origin);
+    inviteUrl.searchParams.set('call', roomId);
+    inviteUrl.searchParams.set('title', title);
+    navigator.clipboard.writeText(inviteUrl.toString());
     message.success('Join link copied!');
   };
 
@@ -346,16 +375,20 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
       <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '12px' : '20px', gap: '16px', overflow: 'hidden' }}>
 
         {/* Session Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="panx-session-summary">
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: 'white', fontSize: '14px', fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '10px', fontFamily: 'monospace', marginTop: '2px' }}>{roomId}</div>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Users size={14} color={GREEN} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
               {allParticipants} participant{allParticipants !== 1 ? 's' : ''}
             </span>
           </div>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)' }} />
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
-            {roomId}
+          <span className={`panx-connection-badge ${sessionStatus}`}>{sessionStatus}</span>
+          <span className={`panx-relay-badge ${relayConfigured ? 'ready' : 'missing'}`}>
+            {relayConfigured ? 'Relay Ready' : 'Direct Network'}
           </span>
         </div>
 
@@ -389,7 +422,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
           {/* Remote Participants */}
           {remoteParticipants.map(p => (
-            <RemoteVideo key={p.socketId} stream={p.stream} socketId={p.socketId} />
+            <RemoteVideo key={p.socketId} stream={p.stream} socketId={p.socketId} name={p.name} iceState={p.iceState} />
           ))}
 
           {remoteParticipants.length === 0 && (
@@ -437,7 +470,7 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
 
           {/* End Call */}
           <button
-            onClick={handleLeaveCall}
+            onClick={requestLeaveCall}
             title="End Call"
             style={{
               height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
@@ -467,8 +500,8 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <MessageSquare size={15} color={GREEN} />
-              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Chat
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white' }}>
+                Session Chat
               </span>
             </div>
             <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
@@ -476,14 +509,14 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
             </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <RoomChat roomId={roomId} userName={user?.name || 'Participant'} />
+            <RoomChat roomId={roomId} userName={user?.name || 'Participant'} showHeader={false} />
           </div>
         </div>
       )}
 
       {/* ── Chat Drawer (Mobile) ── */}
       <Drawer
-        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Chat</span>}
+        title={<span style={{ color: 'white', fontWeight: 800, fontSize: '12px' }}>Session Chat</span>}
         placement="bottom"
         onClose={() => setShowChat(false)}
         open={showChat && isMobile}
@@ -495,13 +528,13 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, onLeave }) => {
         }}
         closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
       >
-        <RoomChat roomId={roomId} userName={user?.name || 'Participant'} />
+        <RoomChat roomId={roomId} userName={user?.name || 'Participant'} showHeader={false} />
       </Drawer>
     </div>
   );
 };
 
-const RemoteVideo = ({ stream, socketId }: { stream: MediaStream; socketId: string }) => {
+const RemoteVideo = ({ stream, socketId, name, iceState }: { stream: MediaStream; socketId: string; name?: string; iceState?: RTCIceConnectionState }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     if (videoRef.current) videoRef.current.srcObject = stream;
@@ -519,7 +552,8 @@ const RemoteVideo = ({ stream, socketId }: { stream: MediaStream; socketId: stri
         background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
         padding: '4px 10px', borderRadius: '8px'
       }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'white' }}>{socketId.substring(0, 5)}...</span>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'white' }}>{name || `Participant ${socketId.substring(0, 5)}`}</span>
+        {iceState && <span style={{ marginLeft: '8px', fontSize: '9px', color: GREEN }}>{iceState}</span>}
       </div>
     </div>
   );

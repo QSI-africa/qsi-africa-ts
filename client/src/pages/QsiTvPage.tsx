@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Tv,
   Video,
   Play,
-  ArrowLeft,
   User,
   Radio,
   Users,
@@ -28,9 +27,88 @@ import LiveViewerContainer from '../components/LiveViewerContainer';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
-import { ProfileHeader } from '../components/panx/ProfileHeader';
+import EntityProfileView from '../components/panx/EntityProfileView';
+import { setMobileNavigationSuppressed } from '../config/mobileNavigation';
 
 const GREEN = '#008751';
+
+const getCreatorInitials = (name: string) => {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'PX';
+};
+
+const CreatorCard: React.FC<{
+  channel: any;
+  isOwn: boolean;
+  onOpen: () => void;
+}> = ({ channel, isOwn, onOpen }) => {
+  const creatorName = channel.user?.name || 'PanX Creator';
+  const subscribers = channel._count?.subscriptions || 0;
+
+  return (
+    <article
+      className="panx-content-card relative overflow-hidden rounded-[24px] p-3"
+      style={{ minHeight: '350px' }}
+    >
+      <div
+        className="relative h-28 overflow-hidden rounded-[17px] border border-white/10"
+        style={{
+          background: 'radial-gradient(circle at 78% 18%, rgba(255,255,255,0.18), transparent 25%), radial-gradient(circle at 14% 90%, rgba(0,135,81,0.9), transparent 52%), linear-gradient(125deg, #0b1913 0%, #1f4f37 100%)'
+        }}
+      >
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
+        <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/20 px-2.5 py-1 text-[9px] font-black tracking-[0.12em] text-white backdrop-blur-sm">
+          <Radio size={10} color={GREEN} fill={GREEN} /> Approved Creator
+        </div>
+        {isOwn && (
+          <span className="absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-[9px] font-black tracking-wide text-[#0d2117]">
+            My Channel
+          </span>
+        )}
+      </div>
+
+      <div className="relative px-3 pb-3 pt-0">
+        <div className="-mt-9 mb-4 flex items-end justify-between">
+          <div className="grid h-[72px] w-[72px] place-items-center rounded-[22px] border-4 border-[#15241d] bg-[#008751] text-lg font-black text-[#06110b] shadow-lg">
+            {getCreatorInitials(creatorName)}
+          </div>
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold text-emerald-300">
+            <CheckCircle2 size={13} fill={GREEN} color="#07140d" /> Verified Channel
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <h3 className="line-clamp-1 text-xl font-black tracking-tight text-white">{channel.title}</h3>
+          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-white/55">
+            <Tv size={13} color={GREEN} /> {creatorName}
+          </p>
+        </div>
+
+        <p className="mb-5 line-clamp-3 min-h-[60px] text-sm leading-relaxed text-white/60">
+          {channel.description || 'A verified PanX broadcast node sharing knowledge, stories, and live programming.'}
+        </p>
+
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-black/15 px-3 py-2.5">
+            <div className="mb-1 flex items-center gap-1 text-[10px] text-white/40"><Users size={12} /> Audience</div>
+            <strong className="text-sm text-white">{subscribers.toLocaleString()}</strong>
+          </div>
+          <div className="rounded-xl bg-black/15 px-3 py-2.5">
+            <div className="mb-1 text-[10px] text-white/40">Channel Node</div>
+            <strong className="font-mono text-xs text-white">TV-{channel.id.slice(-4).toUpperCase()}</strong>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpen}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#008751] px-4 py-3 text-xs font-black text-[#06110b] transition-colors hover:bg-[#16a466]"
+        >
+          View Creator Profile <Play size={13} fill="currentColor" />
+        </button>
+      </div>
+    </article>
+  );
+};
 
 const QsiTvPage: React.FC = () => {
   const { token, user } = useAuth() || { token: null, user: null };
@@ -40,6 +118,7 @@ const QsiTvPage: React.FC = () => {
   
   // Navigation & session states
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [peerSessionTitle, setPeerSessionTitle] = useState<string>('Peer Session');
   const [isBroadcasting, setIsBroadcasting] = useState<boolean>(false);
   const [broadcastTitle, setBroadcastTitle] = useState<string>('');
   const [broadcastIsPrivate, setBroadcastIsPrivate] = useState<boolean>(false);
@@ -81,15 +160,36 @@ const QsiTvPage: React.FC = () => {
 
   // Preview Modal
   const [previewContent, setPreviewContent] = useState<any | null>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
+
+  const stopPreviewPlayback = () => {
+    const video = previewVideoRef.current;
+    if (!video) return;
+    video.pause();
+    video.currentTime = 0;
+    video.removeAttribute('src');
+    video.load();
+  };
+
+  const closePreview = () => {
+    stopPreviewPlayback();
+    setPreviewContent(null);
+  };
+
+  useEffect(() => () => stopPreviewPlayback(), []);
 
   // Socket sync
   useEffect(() => {
     socketService.connect(token || undefined);
 
     const callRoomId = searchParams.get('call');
+    const callTitle = searchParams.get('title');
     const viewRoomId = searchParams.get('view');
 
-    if (callRoomId) setActiveRoomId(callRoomId);
+    if (callRoomId) {
+      setActiveRoomId(callRoomId);
+      if (callTitle) setPeerSessionTitle(callTitle);
+    }
     else if (viewRoomId) setActiveViewerRoom({ id: viewRoomId, title: 'Connecting...' });
 
     socketService.on('broadcast-list-updated', (updatedStreams: any[]) => {
@@ -122,13 +222,13 @@ const QsiTvPage: React.FC = () => {
 
   // Hide mobile navbar during active session
   useEffect(() => {
-    if (activeRoomId || isBroadcasting || activeViewerRoom) {
-      document.body.classList.add('hide-mobile-nav');
+    if (activeRoomId || isBroadcasting || activeViewerRoom || previewContent) {
+      setMobileNavigationSuppressed('tv-media', true);
     } else {
-      document.body.classList.remove('hide-mobile-nav');
+      setMobileNavigationSuppressed('tv-media', false);
     }
-    return () => document.body.classList.remove('hide-mobile-nav');
-  }, [activeRoomId, isBroadcasting, activeViewerRoom]);
+    return () => setMobileNavigationSuppressed('tv-media', false);
+  }, [activeRoomId, isBroadcasting, activeViewerRoom, previewContent]);
 
   const fetchChannels = async (signal?: AbortSignal) => {
     setIsLoadingChannels(true);
@@ -192,7 +292,8 @@ const QsiTvPage: React.FC = () => {
   };
 
   const handleCreateRoom = (values: any) => {
-    const roomId = Math.random().toString(36).substring(2, 9);
+    const roomId = window.crypto.randomUUID();
+    setPeerSessionTitle(values.title.trim());
     setActiveRoomId(roomId);
     setIsPeerSessionSetupOpen(false);
   };
@@ -245,15 +346,18 @@ const QsiTvPage: React.FC = () => {
 
   // Load selected channel detail view
   const loadChannelDetails = async (channel: any) => {
-    setSelectedChannel(channel);
     setIsLoadingContents(true);
     try {
+      const channelRes = await api.get(`/tv/channels/${channel.id}`);
+      const fullChannel = channelRes.data;
+      setSelectedChannel(fullChannel);
+
       // Check subscription status
       const statusRes = await api.get(`/tv/channels/${channel.id}/subscription-status`);
       const isSub = statusRes.data.subscribed;
       setIsSubscribedToSelected(isSub);
 
-      const isOwner = channel.userId === user?.id;
+      const isOwner = fullChannel.userId === user?.id;
 
       if (isSub || isOwner) {
         const contentRes = await api.get(`/tv/channels/${channel.id}/content`);
@@ -352,40 +456,25 @@ const QsiTvPage: React.FC = () => {
   // ─── Active Session View (Live broadcast or peer session or viewer) ────────
   if (activeRoomId || isBroadcasting || activeViewerRoom) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#000' }}>
+      <div className="panx-session-page">
         {/* Session Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: isMobile ? '12px 16px' : '16px 28px',
-          background: 'rgba(10,16,24,0.9)', backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          zIndex: 50
-        }}>
-          <button
-            onClick={() => { setActiveRoomId(null); setIsBroadcasting(false); setActiveViewerRoom(null); }}
-            className="qsi-btn qsi-btn-secondary"
-            style={{ padding: isMobile ? '8px 12px' : '8px 16px', borderRadius: '10px' }}
-          >
-            <ArrowLeft size={16} /> {!isMobile && 'Exit'}
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 8px #EF4444', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-              {activeRoomId 
-                ? (isMobile ? 'Session' : `Session · ${activeRoomId}`) 
-                : isBroadcasting 
-                  ? (isMobile ? 'Live' : 'Live Transmission') 
-                  : (isMobile ? 'Viewing' : `Viewing · ${activeViewerRoom?.title}`)}
-            </span>
+        <div className="panx-session-page-header">
+          <div className="panx-session-page-mark">
+            {activeRoomId ? <Video size={16} /> : <Radio size={16} />}
           </div>
-
-          <div style={{ width: isMobile ? '32px' : '80px' }} />
+          <div style={{ minWidth: 0 }}>
+            <div className="panx-session-page-kicker">
+              {activeRoomId ? 'Peer Session' : isBroadcasting ? 'Live Broadcast' : 'Watching Live'}
+            </div>
+            <div className="panx-session-page-title">
+              {activeRoomId ? peerSessionTitle : isBroadcasting ? broadcastTitle : activeViewerRoom?.title}
+            </div>
+          </div>
         </div>
 
         {/* Video Area */}
         <div style={{ flex: 1, position: 'relative', background: '#000' }}>
-          {activeRoomId && <VideoCallContainer roomId={activeRoomId} onLeave={handleLeaveCall} />}
+          {activeRoomId && <VideoCallContainer roomId={activeRoomId} title={peerSessionTitle} onLeave={handleLeaveCall} />}
           {isBroadcasting && (
             <LiveBroadcastContainer
               onStop={handleStopBroadcast}
@@ -411,13 +500,12 @@ const QsiTvPage: React.FC = () => {
     const isSubscribed = isSubscribedToSelected || isOwner;
 
     return (
-      <div className="flex-1 flex flex-col h-full bg-bg-primary overflow-y-auto no-scrollbar">
-        {/* Standardized Profile Header for TV Channels */}
-        <ProfileHeader
+      <EntityProfileView
           name={selectedChannel.title}
           role="PanX TV Channel"
-          bio={selectedChannel.description || `Creator: ${selectedChannel.user?.name || 'PanX Creator'}`}
+          bio={selectedChannel.description || `Broadcast by ${selectedChannel.user?.name || 'PanX Creator'}`}
           isVerified={selectedChannel.status === 'APPROVED'}
+          followersCount={selectedChannel._count?.subscriptions || 0}
           onBackClick={() => { setSelectedChannel(null); fetchChannels(); }}
           extraActions={
             !isOwner ? (
@@ -436,10 +524,40 @@ const QsiTvPage: React.FC = () => {
               </button>
             ) : null
           }
-        />
+        contentWidthClassName="max-w-5xl"
+      >
+        <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <span className="eyebrow">Broadcast Node</span>
+              <h3 className="text-2xl font-black text-white tracking-tight mt-2 mb-3">
+                {selectedChannel.user?.name || 'PanX Creator'}
+              </h3>
+              <p className="text-text-secondary text-sm max-w-2xl leading-relaxed">
+                {selectedChannel.description || 'A dedicated creator frequency for live transmissions and archived channel content.'}
+              </p>
+            </div>
+            {!isOwner && (
+              <button
+                onClick={() => toggleSubscription(selectedChannel.id, isSubscribedToSelected)}
+                className="qsi-button primary"
+                style={{ padding: '14px 22px', textTransform: 'none' }}
+              >
+                {isSubscribedToSelected ? 'Unsubscribe' : 'Subscribe to Unlock'}
+              </button>
+            )}
+          </div>
+        </div>
 
-        {/* Content Section */}
-        <div className="max-w-5xl mx-auto w-full p-8">
+        <div>
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <span className="eyebrow">Channel Archives</span>
+              <h2 className="text-3xl font-black text-white tracking-tight">Frequency Content</h2>
+            </div>
+            <span className="qsi-tag qsi-tag-primary">{channelContents.length} items</span>
+          </div>
+
           {!isSubscribed ? (
             <div style={{
               padding: '80px 40px', borderRadius: '24px',
@@ -469,77 +587,93 @@ const QsiTvPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div>
-              <h2 className="text-xl font-black text-white uppercase tracking-tight mb-6 flex items-center gap-2">
-                <Signal size={16} className="text-accent-primary" /> Channel Contents
-              </h2>
-              {isLoadingContents ? (
-                <div className="flex justify-center py-20"><Spin /></div>
-              ) : channelContents.length === 0 ? (
-                <div style={{
-                  padding: '60px', borderRadius: '20px',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  background: 'rgba(255,255,255,0.01)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
-                }}>
-                  <Empty description={<span className="text-text-tertiary">No uploaded content in this channel yet.</span>} />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {channelContents.map((post) => (
-                    <div key={post.id} className="feed-card bg-bg-secondary border-border-subtle p-6 flex flex-col justify-between">
-                      <div>
-                        <span className="eyebrow" style={{ color: GREEN }}>{post.mimeType || 'TRANSMISSION'}</span>
-                        <h3 className="text-lg font-bold text-white uppercase tracking-tight mt-2 mb-3">
-                          {post.title}
-                        </h3>
-                        <p className="text-text-secondary text-xs leading-relaxed mb-4">
-                          {post.description}
-                        </p>
-                      </div>
-
-                      {post.mediaUrl && (
-                        <div className="mt-4 pt-4 border-t border-border-subtle">
-                          {post.mimeType === 'VIDEO' ? (
-                            <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
-                              <video
-                                src={getServerUrl(post.mediaUrl)}
-                                className="w-full rounded-xl border border-border-subtle bg-black"
-                                style={{ maxHeight: '200px' }}
-                                preload="metadata"
-                              />
-                            </div>
-                          ) : post.mimeType === 'IMAGE' ? (
-                            <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
-                              <img
-                                src={getServerUrl(post.mediaUrl)}
-                                alt={post.title}
-                                className="w-full rounded-xl border border-border-subtle object-cover"
-                                style={{ maxHeight: '200px' }}
-                                loading="lazy"
-                              />
-                            </div>
-                          ) : (
-                            <a
-                              href={getServerUrl(post.mediaUrl)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="qsi-btn qsi-btn-outline w-full text-center"
-                              style={{ display: 'block', borderRadius: '8px', padding: '10px' }}
-                            >
-                              Download Asset
-                            </a>
-                          )}
-                        </div>
-                      )}
+            isLoadingContents ? (
+              <div className="flex justify-center py-20"><Spin /></div>
+            ) : channelContents.length === 0 ? (
+              <div style={{
+                padding: '60px', borderRadius: '20px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'rgba(255,255,255,0.01)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
+              }}>
+                <Empty description={<span className="text-text-tertiary">No uploaded content in this channel yet.</span>} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {channelContents.map((post) => (
+                  <div key={post.id} className="feed-card bg-bg-secondary border-border-subtle p-6 flex flex-col justify-between">
+                    <div>
+                      <span className="eyebrow" style={{ color: GREEN }}>{post.mimeType || 'TRANSMISSION'}</span>
+                      <h3 className="text-lg font-bold text-white uppercase tracking-tight mt-2 mb-3">
+                        {post.title}
+                      </h3>
+                      <p className="text-text-secondary text-xs leading-relaxed mb-4">
+                        {post.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+
+                    {post.mediaUrl && (
+                      <div className="mt-4 pt-4 border-t border-border-subtle">
+                        {post.mimeType === 'VIDEO' ? (
+                          <div className="tv-content-thumbnail cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
+                            <video
+                              src={getServerUrl(post.mediaUrl)}
+                              className="w-full bg-black"
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                          </div>
+                        ) : post.mimeType === 'IMAGE' ? (
+                          <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setPreviewContent(post); }}>
+                            <img
+                              src={getServerUrl(post.mediaUrl)}
+                              alt={post.title}
+                              className="w-full rounded-xl border border-border-subtle object-cover"
+                              style={{ maxHeight: '200px' }}
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : (
+                          <a
+                            href={getServerUrl(post.mediaUrl)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="qsi-btn qsi-btn-outline w-full text-center"
+                            style={{ display: 'block', borderRadius: '8px', padding: '10px' }}
+                          >
+                            Download Asset
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
-      </div>
+
+        <div className="feed-card bg-bg-secondary border-border-subtle p-8 lg:p-10">
+          <h4 className="text-[10px] font-black text-text-tertiary tracking-widest mb-6" style={{ textTransform: 'none' }}>
+            Channel Metadata
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Channel ID</span>
+              <span className="text-xs font-mono text-white">TV-{selectedChannel.id.slice(-4).toUpperCase()}</span>
+            </div>
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Visibility</span>
+              <span className="text-xs font-black text-white">{selectedChannel.status}</span>
+            </div>
+            <div className="flex justify-between items-center sm:flex-col sm:items-start sm:gap-2">
+              <span className="text-xs text-text-secondary">Subscribers</span>
+              <span className="text-xs font-black text-success-green">{selectedChannel._count?.subscriptions || 0}</span>
+            </div>
+          </div>
+        </div>
+      </EntityProfileView>
     );
   }
 
@@ -564,7 +698,7 @@ const QsiTvPage: React.FC = () => {
               style={{ padding: '6px 12px', textTransform: 'none', borderRadius: '10px' }}
               title="Start private Peer Session"
             >
-              + Peer Session
+              Peer Session
             </button>
           </div>
         }
@@ -579,7 +713,7 @@ const QsiTvPage: React.FC = () => {
             onChange={(key) => {
               if (key === 'studio') {
                 fetchMyChannel();
-              } else if (key === 'channels') {
+              } else if (key === 'channels' || key === 'for-you') {
                 fetchChannels();
               }
             }}
@@ -655,10 +789,46 @@ const QsiTvPage: React.FC = () => {
                 )
               },
 
+              // Personalized horizontal shelves, intentionally independent from the directory.
+              {
+                key: 'for-you',
+                label: <span className="flex items-center gap-2 py-2"><Rss size={16} /> For You</span>,
+                children: (
+                  <div className="py-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-lg font-bold text-white tracking-tight">Recommended Broadcasts</h2>
+                        <p className="text-xs text-text-tertiary mt-1">Channels and archives selected from your PanX activity.</p>
+                      </div>
+                    </div>
+                    {isLoadingChannels ? (
+                      <div className="flex justify-center py-20"><Spin /></div>
+                    ) : channels.length === 0 ? (
+                      <Empty description={<span className="text-text-tertiary">No recommendations available yet.</span>} />
+                    ) : (
+                      <div className="flex gap-5 overflow-x-auto pb-4 no-scrollbar">
+                        {channels.map((chan) => (
+                          <article key={chan.id} className="feed-card bg-bg-secondary border-border-subtle p-6 shrink-0 w-[280px] flex flex-col justify-between">
+                            <div>
+                              <span className="text-[10px] font-bold text-accent-primary tracking-wider">PANX TV CHANNEL</span>
+                              <h3 className="text-white text-lg font-bold tracking-tight mt-3 mb-2">{chan.title}</h3>
+                              <p className="text-text-secondary text-sm leading-relaxed line-clamp-3">{chan.description || 'Broadcasts and knowledge from the PanX network.'}</p>
+                            </div>
+                            <button onClick={() => loadChannelDetails(chan)} className="qsi-btn qsi-btn-secondary text-xs mt-6 self-start" style={{ borderRadius: '8px', padding: '6px 12px' }}>
+                              View Profile
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              },
+
               // TABS 2: Creator Channels Directory
               {
-                key: 'directory',
-                label: <span className="flex items-center gap-2 py-2"><Users size={16} /> Channels Directory</span>,
+                key: 'channels',
+                label: <span className="flex items-center gap-2 py-2"><Users size={16} /> Channels</span>,
                 children: (
                   <div className="py-6">
                     <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-6">Approved Creators</h2>
@@ -668,39 +838,16 @@ const QsiTvPage: React.FC = () => {
                     ) : channels.length === 0 ? (
                       <Empty description={<span className="text-text-tertiary">No approved creator channels found.</span>} />
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                         {channels.map((chan) => {
                           const isOwn = chan.userId === user?.id;
                           return (
-                            <div key={chan.id} className="feed-card bg-bg-secondary border-border-subtle p-6 flex flex-col justify-between">
-                              <div>
-                                <h3 className="text-white text-xl font-bold uppercase tracking-tight mb-2 flex items-center justify-between">
-                                  {chan.title}
-                                  {isOwn && <span className="qsi-tag text-[9px] uppercase tracking-wider bg-accent-primary/10 text-accent-primary border-accent-primary/20">My Channel</span>}
-                                </h3>
-                                <p className="text-xs text-text-tertiary font-bold mb-4">
-                                  Broadcaster: {chan.user?.name || 'Agent'}
-                                </p>
-                                <p className="text-text-secondary text-sm leading-relaxed mb-6">
-                                  {chan.description}
-                                </p>
-                              </div>
-
-                              <div className="flex items-center justify-between pt-4 border-t border-border-subtle">
-                                <span className="text-xs text-text-tertiary font-bold">
-                                  {chan._count?.subscriptions || 0} Subscribers
-                                </span>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => loadChannelDetails(chan)}
-                                    className="qsi-btn qsi-btn-secondary text-xs"
-                                    style={{ borderRadius: '8px', padding: '6px 12px' }}
-                                  >
-                                    View Archives
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                            <CreatorCard
+                              key={chan.id}
+                              channel={chan}
+                              isOwn={isOwn}
+                              onOpen={() => loadChannelDetails(chan)}
+                            />
                           );
                         })}
                       </div>
@@ -712,7 +859,7 @@ const QsiTvPage: React.FC = () => {
               // TABS 3: My Channel Creator Portal
               {
                 key: 'studio',
-                label: <span className="flex items-center gap-2 py-2"><User size={16} /> My Channel Studio</span>,
+                label: <span className="flex items-center gap-2 py-2"><User size={16} /> My Studio</span>,
                 children: (
                   <div className="py-6">
                     {isLoadingMyChannel ? (
@@ -941,15 +1088,17 @@ const QsiTvPage: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
-          <span className="eyebrow">Frequency Setup</span>
-          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">Broadcast Details</h3>
+        <div className="panx-session-setup-card">
+          <div className="panx-session-setup-icon"><Radio size={20} /></div>
+          <span className="eyebrow">PanX TV Live</span>
+          <h3 className="text-2xl font-black text-white tracking-tight mt-2 mb-2">Start a live broadcast</h3>
+          <p className="text-sm text-white/50 leading-relaxed mb-6">Share a one-way live video feed with your audience. You can invite viewers after your camera is ready.</p>
           <Form form={broadcastForm} layout="vertical" onFinish={handleLaunchBroadcast} className="space-y-6">
-            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Broadcast Title</span>} rules={[{ required: true }]}>
-              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary">Broadcast title</span>} rules={[{ required: true, whitespace: true, message: 'Enter a broadcast title' }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" placeholder="What are you broadcasting?" />
             </Form.Item>
 
-            <Form.Item name="isPrivate" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Visibility</span>} rules={[{ required: true }]}>
+            <Form.Item name="isPrivate" label={<span className="text-xs font-bold text-text-tertiary">Audience</span>} rules={[{ required: true }]}>
               <AntdRadio.Group className="custom-radio-group w-full grid grid-cols-2 gap-4">
                 <AntdRadio.Button value="false" className="bg-bg-primary border-border-subtle text-white h-12 flex items-center justify-center">
                   <span className="flex items-center gap-2"><Globe size={14} /> Public</span>
@@ -960,12 +1109,12 @@ const QsiTvPage: React.FC = () => {
               </AntdRadio.Group>
             </Form.Item>
 
-            <div className="flex gap-4 pt-4">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                <Radio size={16} /> Broadcast Live
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="qsi-button flex-1 py-3 font-bold" onClick={() => setIsLiveSetupOpen(false)}>
+                Cancel
               </button>
-              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsLiveSetupOpen(false)}>
-                Abort
+              <button className="qsi-button primary flex-[1.4] py-3 font-bold flex items-center justify-center gap-2" type="submit">
+                <Radio size={16} /> Go Live
               </button>
             </div>
           </Form>
@@ -981,31 +1130,26 @@ const QsiTvPage: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="panx-session-setup-card">
+          <div className="panx-session-setup-icon"><Users size={20} /></div>
           <span className="eyebrow">Peer Session Setup</span>
-          <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">Session Details</h3>
+          <h3 className="text-2xl font-black text-white tracking-tight mt-2 mb-2">Start a peer video session</h3>
+          <p className="text-sm text-white/50 leading-relaxed mb-6">Create a private room for a two-way call. Once connected, copy the secure invite link for the other participant.</p>
           <Form form={peerSessionForm} layout="vertical" onFinish={handleCreateRoom} className="space-y-6">
-            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Session Title</span>} rules={[{ required: true }]}>
-              <Input className="bg-bg-primary border-border-subtle text-white h-12" />
+            <Form.Item name="title" label={<span className="text-xs font-bold text-text-tertiary">Session title</span>} rules={[{ required: true, whitespace: true, message: 'Enter a session title' }]}>
+              <Input className="bg-bg-primary border-border-subtle text-white h-12" placeholder="Name this conversation" />
             </Form.Item>
 
-            <Form.Item name="isPrivate" label={<span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Visibility</span>} rules={[{ required: true }]}>
-              <AntdRadio.Group className="custom-radio-group w-full grid grid-cols-2 gap-4">
-                <AntdRadio.Button value="false" className="bg-bg-primary border-border-subtle text-white h-12 flex items-center justify-center">
-                  <span className="flex items-center gap-2"><Globe size={14} /> Public</span>
-                </AntdRadio.Button>
-                <AntdRadio.Button value="true" className="bg-bg-primary border-border-subtle text-white h-12 flex items-center justify-center">
-                  <span className="flex items-center gap-2"><Lock size={14} /> Private</span>
-                </AntdRadio.Button>
-              </AntdRadio.Group>
-            </Form.Item>
+            <div className="rounded-xl bg-black/15 px-4 py-3 flex items-center gap-3 text-xs text-white/55">
+              <Lock size={15} color={GREEN} /> Invite-only session with encrypted media transport
+            </div>
 
-            <div className="flex gap-4 pt-4">
-              <button className="qsi-button primary flex-1 py-4 font-bold flex items-center justify-center gap-2" type="submit">
-                <Video size={16} /> Start Session
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="qsi-button flex-1 py-3 font-bold" onClick={() => setIsPeerSessionSetupOpen(false)}>
+                Cancel
               </button>
-              <button className="qsi-button flex-1 py-4 font-bold" onClick={() => setIsPeerSessionSetupOpen(false)}>
-                Abort
+              <button className="qsi-button primary flex-[1.4] py-3 font-bold flex items-center justify-center gap-2" type="submit">
+                <Video size={16} /> Start Session
               </button>
             </div>
           </Form>
@@ -1015,11 +1159,13 @@ const QsiTvPage: React.FC = () => {
       <Modal
         title={null}
         open={!!previewContent}
-        onCancel={() => setPreviewContent(null)}
+        onCancel={closePreview}
         footer={null}
-        width={800}
+        width={920}
         centered
         className="dark-modal"
+        destroyOnClose
+        afterClose={stopPreviewPlayback}
       >
         {previewContent && (
           <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
@@ -1029,17 +1175,22 @@ const QsiTvPage: React.FC = () => {
               <p className="text-text-secondary text-sm leading-relaxed mb-6 border-l-2 border-accent-primary pl-4">{previewContent.description}</p>
             )}
             
-            <div className="mt-6 bg-bg-primary border border-border-subtle p-6 rounded-xl">
+            <div className="mt-6 bg-bg-primary border border-border-subtle p-4 md:p-6 rounded-xl">
               {previewContent.mimeType === 'TEXT' ? (
                 <div className="text-white text-base leading-relaxed whitespace-pre-wrap font-mono text-sm">
                   {previewContent.textContent}
                 </div>
               ) : previewContent.mimeType === 'VIDEO' ? (
-                <video
-                  src={getServerUrl(previewContent.mediaUrl)}
-                  controls
-                  className="w-full rounded-xl border border-border-subtle bg-black"
-                />
+                <div className="tv-media-stage">
+                  <video
+                    ref={previewVideoRef}
+                    src={getServerUrl(previewContent.mediaUrl)}
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                  />
+                </div>
               ) : previewContent.mimeType === 'IMAGE' ? (
                 <img
                   src={getServerUrl(previewContent.mediaUrl)}

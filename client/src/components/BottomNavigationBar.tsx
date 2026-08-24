@@ -14,7 +14,7 @@ const BottomNavigationBar: React.FC = () => {
   const navItems = [
     { label: 'Home', icon: <HomeOutlined />, path: '/' },
     { label: 'Lab', icon: <ExperimentOutlined />, path: '/lab' },
-    { label: 'Inbox', icon: <MessageOutlined />, path: '/inbox' },
+    { label: 'PanX Chats', icon: <MessageOutlined />, path: '/inbox' },
     { label: 'Profiles', icon: <UserOutlined />, path: '/network' },
   ];
 
@@ -49,15 +49,13 @@ const BottomNavigationBar: React.FC = () => {
               gap: '6px',
               cursor: 'pointer',
               color: isActive ? 'var(--bg-secondary)' : 'var(--slate-grey)',
-              transition: 'var(--transition-smooth)',
               flex: 1,
               position: 'relative'
             }}
           >
             <div style={{ 
               fontSize: '24px',
-              transform: isActive ? 'translateY(-2px)' : 'none',
-              transition: 'transform 0.3s ease'
+              transform: 'none'
             }}>{item.icon}</div>
             {isActive && (
               <div style={{

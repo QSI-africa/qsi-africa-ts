@@ -63,6 +63,18 @@ body {
   line-height: 1.5;
 }
 
+/* Every PanX surface uses the same fixed header strip. */
+.unified-header {
+  height: 72px;
+}
+
+@media (max-width: 768px) {
+  .unified-header {
+    height: 64px;
+    min-height: 64px !important;
+  }
+}
+
 /* --- Layout Architecture (CSS Grid) --- */
 .app-grid {
   display: grid;
@@ -350,6 +362,602 @@ body {
   box-shadow: 0 20px 40px -20px rgba(0,0,0,0.7);
   transform: translateY(-4px) scale(1.01);
   background-color: rgba(31, 41, 55, 0.8);
+}
+
+/* Shared content surface for PanX feed and PanX TV creator cards. */
+.panx-content-card {
+  background: linear-gradient(145deg, rgba(31, 49, 40, 0.9), rgba(17, 26, 22, 0.96));
+  border: 1px solid rgba(0, 135, 81, 0.16);
+  box-shadow: 0 18px 45px -28px rgba(0, 0, 0, 0.9);
+}
+
+.tv-content-thumbnail,
+.tv-media-stage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #000;
+}
+
+.tv-content-thumbnail video,
+.tv-media-stage video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* Compact feed gallery inspired by Threads: scan in-feed, focus in a dedicated viewer. */
+.panx-media-grid {
+  height: min(430px, 58vw);
+  min-height: 240px;
+  margin: 0 0 16px;
+  display: grid;
+  gap: 3px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #08100c;
+}
+
+.panx-media-grid--1 { grid-template-columns: 1fr; }
+.panx-media-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.panx-media-grid--3 { grid-template-columns: 1.45fr 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.panx-media-grid--3 .panx-media-tile:first-child { grid-row: 1 / 3; }
+.panx-media-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+
+.panx-media-tile {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  position: relative;
+  overflow: hidden;
+  background: #0b1510;
+  cursor: zoom-in;
+}
+
+.panx-media-tile img,
+.panx-media-tile video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.panx-media-play,
+.panx-media-more {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.64);
+  backdrop-filter: blur(8px);
+}
+
+.panx-media-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.panx-media-more {
+  inset: 0;
+  transform: none;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.panx-media-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.96);
+  overscroll-behavior: contain;
+}
+
+.panx-media-viewer__topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  min-height: 68px;
+  padding: max(14px, env(safe-area-inset-top)) 18px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 750;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent);
+}
+
+.panx-media-viewer__topbar button,
+.panx-media-viewer__arrow {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+
+.panx-media-viewer__stage {
+  width: 100%;
+  height: 100%;
+  padding: 72px 80px 94px;
+  display: grid;
+  place-items: center;
+  touch-action: pan-y;
+}
+
+.panx-media-viewer__stage img,
+.panx-media-viewer__stage video {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.panx-media-viewer__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+}
+
+.panx-media-viewer__arrow.is-left { left: 20px; }
+.panx-media-viewer__arrow.is-right { right: 20px; }
+
+.panx-media-viewer__rail {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 3;
+  max-width: calc(100vw - 32px);
+  padding: 5px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  transform: translateX(-50%);
+  border-radius: 14px;
+  background: rgba(13, 18, 15, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.panx-media-viewer__rail button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  opacity: 0.56;
+  background: #111;
+  cursor: pointer;
+}
+
+.panx-media-viewer__rail button.is-active {
+  border-color: #fff;
+  opacity: 1;
+}
+
+.panx-media-viewer__rail img,
+.panx-media-viewer__rail video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .panx-media-grid {
+    height: min(390px, 88vw);
+    min-height: 220px;
+    border-radius: 15px;
+  }
+
+  .panx-media-viewer__stage {
+    padding: 64px 0 82px;
+  }
+
+  .panx-media-viewer__arrow {
+    display: none;
+  }
+}
+
+/* PanX Lab cards use the same surface language as PanX and PanX TV. */
+.lab-content-card {
+  min-width: 0;
+  min-height: 330px;
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  text-align: left;
+}
+
+.lab-content-card--button {
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lab-content-card--recording {
+  cursor: pointer;
+}
+
+.lab-content-card.is-active {
+  border-color: rgba(0, 180, 108, 0.48);
+  box-shadow: 0 22px 52px -30px rgba(0, 135, 81, 0.8);
+}
+
+.lab-card-visual {
+  min-height: 118px;
+  padding: 18px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  color: #75e2ad;
+  background-color: #102a20;
+  background-image:
+    linear-gradient(rgba(117, 226, 173, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 226, 173, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at 78% 22%, rgba(0, 180, 108, 0.34), transparent 42%);
+  background-size: 22px 22px, 22px 22px, auto;
+}
+
+.lab-card-visual--video {
+  background-color: #10252b;
+  background-image: radial-gradient(circle at 78% 20%, rgba(44, 145, 178, 0.4), transparent 46%);
+}
+
+.lab-card-visual--audio {
+  background-color: #2a2112;
+  background-image: radial-gradient(circle at 78% 20%, rgba(218, 151, 44, 0.38), transparent 46%);
+  color: #f4c66f;
+}
+
+.lab-card-visual--live {
+  align-items: center;
+  background-color: #2a1717;
+  background-image: radial-gradient(circle at 78% 20%, rgba(239, 68, 68, 0.38), transparent 46%);
+  color: #ff8181;
+}
+
+.lab-card-icon,
+.lab-recording-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 12, 8, 0.48);
+}
+
+.lab-recording-play {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+}
+
+.lab-card-index {
+  position: absolute;
+  right: 16px;
+  top: 4px;
+  font-size: 58px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  color: rgba(255, 255, 255, 0.08);
+}
+
+.lab-card-badge,
+.lab-live-status {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.84);
+  background: rgba(4, 12, 8, 0.56);
+}
+
+.lab-live-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff9999;
+}
+
+.lab-live-status span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.lab-card-body {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.lab-card-kicker {
+  margin-bottom: 7px;
+  color: #56c894;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lab-card-body h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.lab-card-body p {
+  margin: 9px 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.lab-card-footer {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lab-card-meta,
+.lab-card-open {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+}
+
+.lab-card-open {
+  color: #75e2ad;
+  font-weight: 800;
+}
+
+.lab-card-action {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #008751;
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.lab-card-action.is-secondary {
+  color: #75e2ad;
+  background: rgba(0, 135, 81, 0.16);
+}
+
+.lab-teacher-link {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lab-teacher-link strong,
+.lab-teacher-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-teacher-link strong {
+  font-size: 11px;
+}
+
+.lab-teacher-link span {
+  color: rgba(255, 255, 255, 0.34);
+  font-size: 9px;
+}
+
+.lab-access-state {
+  padding: 6px 9px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  color: #75e2ad;
+  background: rgba(0, 135, 81, 0.14);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.lab-access-state.is-locked {
+  color: #ff8d8d;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+@media (max-width: 640px) {
+  .lab-content-card {
+    min-height: 300px;
+  }
+
+  .lab-card-visual {
+    min-height: 104px;
+  }
+}
+
+/* PanX TV session architecture */
+.panx-session-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #070c0a;
+}
+
+.panx-session-page-header {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background: rgba(12, 24, 18, 0.94);
+  border-bottom: 1px solid rgba(0, 135, 81, 0.18);
+  backdrop-filter: blur(18px);
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.panx-session-page-mark,
+.panx-session-setup-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #008751;
+  background: rgba(0, 135, 81, 0.13);
+}
+
+.panx-session-page-kicker {
+  color: #008751;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panx-session-page-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panx-session-summary {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.panx-connection-badge,
+.panx-relay-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.panx-connection-badge.connected,
+.panx-connection-badge.live,
+.panx-relay-badge.ready {
+  background: rgba(0, 135, 81, 0.16);
+  color: #22c77f;
+}
+
+.panx-connection-badge.reconnecting,
+.panx-connection-badge.preparing,
+.panx-connection-badge.connecting,
+.panx-connection-badge.waiting {
+  background: rgba(245, 158, 11, 0.13);
+  color: #fbbf24;
+}
+
+.panx-connection-badge.failed,
+.panx-relay-badge.missing {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.panx-session-setup-card {
+  position: relative;
+  padding: 30px;
+  border-radius: 24px;
+  color: white;
+  background: linear-gradient(145deg, rgba(31, 49, 40, 0.98), rgba(17, 26, 22, 0.98));
+  border: 1px solid rgba(0, 135, 81, 0.2);
+  box-shadow: 0 24px 70px -32px rgba(0, 0, 0, 0.9);
+}
+
+.panx-session-setup-icon {
+  position: absolute;
+  right: 30px;
+  top: 28px;
+}
+
+@media (max-width: 768px) {
+  .panx-session-page-header {
+    min-height: 60px;
+    padding: 9px 14px;
+  }
+
+  .panx-session-summary {
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .panx-relay-badge {
+    display: none;
+  }
+
+  .panx-session-setup-card {
+    padding: 24px;
+  }
 }
 
 /* AI Chat Bubbles */

@@ -6,6 +6,13 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-default-secret-change-me";
 
+router.use((req, res, next) => {
+  if (req.method === "GET") {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  }
+  next();
+});
+
 // 1. Get all feed posts (Public, optional auth context)
 router.get("/posts", async (req, res) => {
   try {
@@ -324,10 +331,13 @@ router.post("/posts/:postId/reply", async (req, res) => {
       }
     });
 
+    const repliesCount = await prisma.panxReply.count({ where: { postId } });
+
     res.status(201).json({
       ...reply,
       hasLiked: false,
       likesCount: 0,
+      repliesCount,
       children: []
     });
   } catch (error) {

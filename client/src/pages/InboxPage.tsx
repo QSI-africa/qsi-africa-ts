@@ -15,10 +15,10 @@ import {
   Info,
   User,
   Bot,
-  Layers,
   Plus,
   MessageSquare,
-  Paperclip
+  Paperclip,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
@@ -50,18 +50,30 @@ export interface Conversation {
   avatarUrl?: string;
 }
 
+interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  senderId: string | null;
+  senderType: string;
+  text: string;
+  createdAt: string;
+  sender?: { id: string; name: string } | null;
+}
+
 const InboxPage: React.FC = () => {
   const auth = useAuth();
   const user = auth?.user;
   const { setSidebarContent } = useSidebar();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [chatSegment, setChatSegment] = useState<'inbox' | 'requests'>('inbox');
+  const [chatSegment, setChatSegment] = useState<'all' | 'unread'>('all');
   const [inputValue, setInputValue] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   
   const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false);
   const [discoverUsers, setDiscoverUsers] = useState<any[]>([]);
@@ -69,23 +81,78 @@ const InboxPage: React.FC = () => {
   const [discoverLoading, setDiscoverLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedIdRef = useRef<string | null>(null);
 
   const [searchParams] = useSearchParams();
   const targetUserParam = searchParams.get('user');
 
-  // Connect socket on mount & join user room
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Connect once per authenticated user. The server automatically joins the verified user room.
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       socketService.connect(token);
-      if (user?.id) {
-        socketService.emit("join-user-room", user.id);
-      }
     }
     return () => {
       socketService.disconnect();
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    const handleNotification = ({ conversationId, message: incoming, senderName }: { conversationId: string; message: ConversationMessage; senderName: string }) => {
+      setConversations(prev => {
+        const existing = prev.find(conv => conv.id === conversationId);
+        if (!existing) {
+          return [{
+            id: conversationId,
+            title: senderName || incoming.sender?.name || 'New conversation',
+            type: 'GENERAL',
+            status: 'active',
+            lastMessage: incoming.text,
+            timestamp: incoming.createdAt,
+            unreadCount: 1
+          }, ...prev];
+        }
+
+        const updated = prev.map(conv => conv.id === conversationId
+          ? {
+              ...conv,
+              lastMessage: incoming.text,
+              timestamp: incoming.createdAt,
+              unreadCount: conv.id === selectedId ? (conv.unreadCount ?? 0) : (conv.unreadCount ?? 0) + 1
+            }
+          : conv
+        );
+        const changed = updated.find(conv => conv.id === conversationId);
+        return changed ? [changed, ...updated.filter(conv => conv.id !== conversationId)] : updated;
+      });
+    };
+
+    const handleConversationError = ({ message: errorMessage }: { message: string }) => {
+      message.error(errorMessage || 'Unable to open this conversation.');
+    };
+
+    socketService.on('direct_message_notification', handleNotification);
+    socketService.on('conversation-error', handleConversationError);
+    return () => {
+      socketService.off('direct_message_notification', handleNotification);
+      socketService.off('conversation-error', handleConversationError);
+    };
+  }, [selectedId, user?.id]);
+
+  const openConversation = (conversationId: string) => {
+    setSelectedId(conversationId);
+    setConversations(prev => prev.map(conv => conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv));
+  };
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   // Handle target user URL parameter ?user=userId
   useEffect(() => {
@@ -122,7 +189,13 @@ const InboxPage: React.FC = () => {
       const response = await api.post('/messaging/conversations/direct', {
         targetUserId
       });
-      const newConv = response.data;
+      const newConv: Conversation = {
+        ...response.data,
+        lastMessage: response.data.lastMessage || 'No messages yet',
+        timestamp: response.data.timestamp || response.data.updatedAt,
+        unreadCount: response.data.unreadCount ?? 0,
+        status: (response.data.status || 'active').toLowerCase() as Conversation['status']
+      };
       
       setConversations(prev => {
         const exists = prev.some(c => c.id === newConv.id);
@@ -160,9 +233,10 @@ const InboxPage: React.FC = () => {
   const fetchConversations = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const response = await api.get(`/messaging/conversations?userId=${user.id}`, { signal });
+      const response = await api.get('/messaging/conversations', { signal });
       setConversations(response.data);
-      if (response.data.length > 0 && !selectedId) {
+      // Mobile opens the full conversation list first instead of restoring a prior thread.
+      if (!isMobile && response.data.length > 0 && !selectedId) {
         setSelectedId(response.data[0].id);
       }
     } catch (error: any) {
@@ -180,8 +254,7 @@ const InboxPage: React.FC = () => {
       fetchMessages(selectedId, controller.signal);
       
       // Join conversation room
-      socketService.emit("join-room", selectedId);
-      console.log(`[Socket] Joined conversation room: ${selectedId}`);
+      socketService.emit("join-conversation", selectedId);
 
       const handleNewMessage = (messageObj: any) => {
         if (messageObj.conversationId === selectedId) {
@@ -201,6 +274,7 @@ const InboxPage: React.FC = () => {
       socketService.on("new_message", handleNewMessage);
 
       return () => {
+        socketService.emit("leave-conversation", selectedId);
         socketService.off("new_message", handleNewMessage);
         controller.abort();
       };
@@ -226,30 +300,33 @@ const InboxPage: React.FC = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !selectedId || !user) return;
+    if (!inputValue.trim() || !selectedId || !user || isSending) return;
     
-    const textToSend = inputValue;
+    const conversationId = selectedId;
+    const textToSend = inputValue.trim();
     setInputValue('');
+    setIsSending(true);
 
     try {
-      const response = await api.post(`/messaging/conversations/${selectedId}/messages`, {
-        senderId: user.id,
-        senderType: 'USER',
-        text: textToSend
-      });
+      const response = await api.post(`/messaging/conversations/${conversationId}/messages`, { text: textToSend });
       
-      setMessages(prev => {
-        if (prev.some(msg => msg.id === response.data.id)) return prev;
-        return [...prev, response.data];
-      });
+      if (selectedIdRef.current === conversationId) {
+        setMessages(prev => {
+          if (prev.some(msg => msg.id === response.data.id)) return prev;
+          return [...prev, response.data];
+        });
+      }
       setConversations(prev => prev.map(conv => 
-        conv.id === selectedId 
+        conv.id === conversationId
           ? { ...conv, lastMessage: textToSend, timestamp: 'Just now' } 
           : conv
       ));
     } catch (error: any) {
       console.error("Failed to send message:", error);
       setInputValue(textToSend);
+      message.error(error?.response?.data?.error || 'Message could not be sent. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -292,29 +369,29 @@ const InboxPage: React.FC = () => {
             />
           </div>
 
-          {/* Sub-filter toggles directly below search: Inbox & Requests */}
+          {/* Conversation filters */}
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              onClick={() => setChatSegment('inbox')}
+              onClick={() => setChatSegment('all')}
               style={{
                 flex: 1, padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 800,
-                background: chatSegment === 'inbox' ? GREEN : 'rgba(255,255,255,0.03)',
-                color: chatSegment === 'inbox' ? 'black' : 'rgba(255,255,255,0.6)',
+                background: chatSegment === 'all' ? GREEN : 'rgba(255,255,255,0.03)',
+                color: chatSegment === 'all' ? 'black' : 'rgba(255,255,255,0.6)',
                 border: 'none', cursor: 'pointer'
               }}
             >
-              Inbox
+              All
             </button>
             <button
-              onClick={() => setChatSegment('requests')}
+              onClick={() => setChatSegment('unread')}
               style={{
                 flex: 1, padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 800,
-                background: chatSegment === 'requests' ? GREEN : 'rgba(255,255,255,0.03)',
-                color: chatSegment === 'requests' ? 'black' : 'rgba(255,255,255,0.6)',
+                background: chatSegment === 'unread' ? GREEN : 'rgba(255,255,255,0.03)',
+                color: chatSegment === 'unread' ? 'black' : 'rgba(255,255,255,0.6)',
                 border: 'none', cursor: 'pointer'
               }}
             >
-              Requests
+              Unread
             </button>
           </div>
         </header>
@@ -323,10 +400,12 @@ const InboxPage: React.FC = () => {
           {loading ? (
              <div style={{ padding: '40px 0', textAlign: 'center' }}><Spin size="small" /></div>
           ) : conversations.length > 0 ? (
-            (Array.isArray(conversations) ? conversations : []).filter(c => (c?.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())).map(conv => (
+            (Array.isArray(conversations) ? conversations : [])
+              .filter(c => chatSegment === 'all' || c.unreadCount > 0)
+              .filter(c => (c?.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())).map(conv => (
               <div 
                 key={conv.id} 
-                onClick={() => setSelectedId(conv.id)}
+                onClick={() => openConversation(conv.id)}
                 style={{ 
                   padding: '16px', borderRadius: '16px', marginBottom: '8px', cursor: 'pointer',
                   transition: 'all 0.2s',
@@ -361,6 +440,11 @@ const InboxPage: React.FC = () => {
                     </div>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.lastMessage}</p>
                   </div>
+                  {conv.unreadCount > 0 && (
+                    <span style={{ minWidth: 20, height: 20, padding: '0 6px', borderRadius: 10, display: 'grid', placeItems: 'center', background: GREEN, color: 'white', fontSize: 10, fontWeight: 800 }}>
+                      {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                    </span>
+                  )}
                 </div>
               </div>
             ))
@@ -392,6 +476,11 @@ const InboxPage: React.FC = () => {
             }
             extra={
               <div style={{ display: 'flex', gap: '16px', color: 'rgba(255,255,255,0.3)' }}>
+                {isMobile && (
+                  <button onClick={() => setSelectedId(null)} aria-label="Back to conversations" style={{ border: 0, padding: 0, background: 'none', color: 'inherit', cursor: 'pointer' }}>
+                    <ArrowLeft size={20} />
+                  </button>
+                )}
                 <Info size={20} style={{ cursor: 'pointer' }} />
                 <MoreVertical size={20} style={{ cursor: 'pointer' }} />
               </div>
@@ -403,26 +492,28 @@ const InboxPage: React.FC = () => {
             {messagesLoading ? (
                <div style={{ padding: '60px 0', textAlign: 'center' }}><Spin /></div>
             ) : messages && Array.isArray(messages) && messages.length > 0 ? (
-              messages.map((msg, idx) => (
+              messages.map((msg) => {
+                const isOwnMessage = msg.senderId === user?.id;
+                return (
                 <div 
-                  key={idx} 
+                  key={msg.id}
                   style={{ 
-                    alignSelf: msg.senderType === 'USER' ? 'flex-end' : 'flex-start',
+                    alignSelf: isOwnMessage ? 'flex-end' : 'flex-start',
                     maxWidth: '70%',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: msg.senderType === 'USER' ? 'flex-end' : 'flex-start'
+                    alignItems: isOwnMessage ? 'flex-end' : 'flex-start'
                   }}
                 >
                   <div style={{ 
                     padding: '14px 18px', borderRadius: '20px', 
-                    background: msg.senderType === 'USER' ? GREEN : 'rgba(255,255,255,0.05)',
-                    color: msg.senderType === 'USER' ? 'white' : 'rgba(255,255,255,0.9)',
-                    border: msg.senderType === 'USER' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    background: isOwnMessage ? GREEN : 'rgba(255,255,255,0.05)',
+                    color: isOwnMessage ? 'white' : 'rgba(255,255,255,0.9)',
+                    border: isOwnMessage ? 'none' : '1px solid rgba(255,255,255,0.08)',
                     fontSize: '14px', lineHeight: 1.6,
-                    boxShadow: msg.senderType === 'USER' ? `0 8px 20px -8px ${GREEN}60` : 'none',
-                    borderBottomRightRadius: msg.senderType === 'USER' ? '4px' : '20px',
-                    borderBottomLeftRadius: msg.senderType === 'USER' ? '20px' : '4px',
+                    boxShadow: isOwnMessage ? `0 8px 20px -8px ${GREEN}60` : 'none',
+                    borderBottomRightRadius: isOwnMessage ? '4px' : '20px',
+                    borderBottomLeftRadius: isOwnMessage ? '20px' : '4px',
                   }}>
                     {msg.text}
                   </div>
@@ -430,7 +521,7 @@ const InboxPage: React.FC = () => {
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-              ))
+              );})
             ) : (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Empty description={<span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: 800, textTransform: 'none' }}>Synchronisation initiated</span>} />
@@ -515,7 +606,7 @@ const InboxPage: React.FC = () => {
 
               <button 
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || isSending}
                 style={{ 
                   width: '44px', 
                   height: '44px', 
@@ -523,7 +614,7 @@ const InboxPage: React.FC = () => {
                   border: 'none',
                   background: inputValue.trim() ? GREEN : 'rgba(255, 255, 255, 0.03)',
                   color: inputValue.trim() ? 'white' : 'rgba(255, 255, 255, 0.1)',
-                  cursor: inputValue.trim() ? 'pointer' : 'default',
+                  cursor: inputValue.trim() && !isSending ? 'pointer' : 'default',
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
@@ -532,7 +623,7 @@ const InboxPage: React.FC = () => {
                   transform: inputValue.trim() ? 'scale(1)' : 'scale(0.95)'
                 }}
               >
-                <Send size={18} fill={inputValue.trim() ? 'currentColor' : 'none'} />
+                {isSending ? <Spin size="small" /> : <Send size={18} fill={inputValue.trim() ? 'currentColor' : 'none'} />}
               </button>
             </div>
           </footer>

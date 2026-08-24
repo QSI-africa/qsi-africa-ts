@@ -1,3 +1,4 @@
+/* global RTCConfiguration */
 // client/src/components/LiveViewerContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { MessageSquare, X, Lock, Maximize, Minimize } from 'lucide-react';
@@ -5,9 +6,9 @@ import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';
 import { Drawer } from 'antd';
-import api from '../api';
+import { getIceConfiguration, toRtcConfiguration } from '../services/webrtc';
 
-const GREEN = '#10B981';
+const GREEN = '#008751';
 
 interface LiveViewerProps {
   roomId: string;
@@ -20,12 +21,16 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   const [showChat, setShowChat] = useState(false);
   const [connecting, setConnecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [relayConfigured, setRelayConfigured] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'reconnecting' | 'failed'>('connecting');
 
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -49,36 +54,36 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
 
   useEffect(() => {
     if (remoteStream && videoRef.current) {
+      remoteStreamRef.current = remoteStream;
       videoRef.current.srcObject = remoteStream;
       videoRef.current.play().catch(e => console.warn("Video play failed", e));
     }
   }, [remoteStream]);
 
   const isMobile = windowWidth <= 768;
-  const [servers, setServers] = useState<RTCConfiguration>({
+  const serversRef = useRef<RTCConfiguration>({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' }
+      { urls: 'stun:stun1.l.google.com:19302' }
     ],
+    iceCandidatePoolSize: 10,
   });
-  const serversRef = useRef(servers);
-
-  useEffect(() => {
-    api.get('/ice-config').then(res => {
-      if (res.data && res.data.iceServers) {
-        setServers(res.data);
-        serversRef.current = res.data;
-      }
-    }).catch(err => console.error("Failed to load ICE servers", err));
-  }, []);
   const broadcasterId = useRef<string | null>(null);
   const hasReceivedOffer = useRef(false);
+  const hasFailed = useRef(false);
 
   // ─── Clean close: stop peer, remove listeners ──────────────────────────────
+  const stopRemotePlayback = () => {
+    remoteStreamRef.current?.getTracks().forEach(track => track.stop());
+    remoteStreamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+  };
+
   const handleClose = () => {
+    stopRemotePlayback();
     pc.current?.close();
     pc.current = null;
     // socket listeners will be cleaned up by useEffect return function
@@ -88,11 +93,17 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
   useEffect(() => {
     const handlers: any = {};
     const initPC = async () => {
+      hasFailed.current = false;
+      const iceConfiguration = await getIceConfiguration();
+      serversRef.current = toRtcConfiguration(iceConfiguration);
+      setRelayConfigured(iceConfiguration.relayConfigured);
       pc.current = new RTCPeerConnection(serversRef.current);
 
       pc.current.ontrack = (event) => {
+        remoteStreamRef.current = event.streams[0];
         setRemoteStream(event.streams[0]);
         setConnecting(false);
+        setConnectionStatus('connected');
         if (videoRef.current) videoRef.current.srcObject = event.streams[0];
       };
 
@@ -103,9 +114,16 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       };
 
       pc.current.oniceconnectionstatechange = () => {
-        if (pc.current?.iceConnectionState === 'failed') {
-          console.warn(`ICE connection failed, attempting restart`);
-          pc.current.restartIce();
+        const iceState = pc.current?.iceConnectionState;
+        if (iceState === 'connected' || iceState === 'completed') {
+          setConnectionStatus('connected');
+        } else if (iceState === 'disconnected') {
+          setConnectionStatus('reconnecting');
+        } else if (iceState === 'failed') {
+          hasFailed.current = true;
+          setConnectionStatus('failed');
+          setError('The video connection could not cross the current networks. Please retry after confirming TURN relay configuration.');
+          setConnecting(false);
         }
       };
 
@@ -147,23 +165,33 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       handlers.onJoinError = ({ roomId: errRoomId, message: errMsg }: any) => {
         if (errRoomId === roomId) {
           setError(errMsg);
+          hasFailed.current = true;
+          setConnectionStatus('failed');
           setConnecting(false);
         }
       };
       socketService.on('join-error', handlers.onJoinError);
 
+      await socketService.waitForConnection();
       socketService.emit('request-join-broadcast', roomId);
     };
 
-    initPC();
+    initPC().catch((connectionError) => {
+      console.error('Failed to initialize broadcast viewer', connectionError);
+      hasFailed.current = true;
+      setConnectionStatus('failed');
+      setConnecting(false);
+      setError(connectionError?.message || 'Could not initialize the video connection.');
+    });
 
     const retryInterval = setInterval(() => {
-      if (!remoteStream && pc.current && !error && !hasReceivedOffer.current) {
+      if (!remoteStream && pc.current && !hasFailed.current && !hasReceivedOffer.current) {
         socketService.emit('request-join-broadcast', roomId);
       }
     }, 3000);
 
     return () => {
+      stopRemotePlayback();
       pc.current?.close();
       clearInterval(retryInterval);
       socketService.emit('leave-broadcast', roomId);
@@ -172,7 +200,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
       if (handlers.onBroadcastEnded) socketService.off('broadcast-ended', handlers.onBroadcastEnded);
       if (handlers.onJoinError) socketService.off('join-error', handlers.onJoinError);
     };
-  }, [roomId, error]);
+  }, [roomId]);
 
   return (
     <div ref={containerRef} style={{
@@ -201,6 +229,10 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             <span style={{ fontSize: '10px', fontWeight: 900, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Live</span>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.2)' }} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'white' }}>{title}</span>
+            <span className={`panx-connection-badge ${connectionStatus}`}>{connectionStatus}</span>
+            <span className={`panx-relay-badge ${relayConfigured ? 'ready' : 'missing'}`}>
+              {relayConfigured ? 'Relay Ready' : 'Direct Network'}
+            </span>
           </div>
 
           {/* Actions */}
@@ -306,8 +338,8 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <MessageSquare size={15} color={GREEN} />
-              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Live Chat
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'white' }}>
+                PanX Live Chat
               </span>
             </div>
             <button onClick={() => setShowChat(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
@@ -315,14 +347,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             </button>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} />
+            <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} showHeader={false} />
           </div>
         </div>
       )}
 
       {/* ── Chat Drawer (Mobile) ── */}
       <Drawer
-        title={<span style={{ color: 'white', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '12px' }}>Live Chat</span>}
+        title={<span style={{ color: 'white', fontWeight: 800, fontSize: '12px' }}>PanX Live Chat</span>}
         placement="bottom"
         onClose={() => setShowChat(false)}
         open={showChat && isMobile && !error}
@@ -334,7 +366,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
         }}
         closeIcon={<span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
       >
-        <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} />
+        <RoomChat roomId={roomId} userName={user?.name || 'Viewer'} showHeader={false} />
       </Drawer>
 
       <style>{`

@@ -2,24 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { 
   Building2, 
-  MapPin, 
-  Plus, 
-  Settings, 
-  LayoutGrid, 
   MessageSquare,
   FlaskConical,
-  Activity,
   Heart,
-  Globe,
   Flame,
   Users,
   Hammer,
   Menu,
   ChevronRight,
-  MoreVertical,
   X,
   User,
-  Tv,
   Download,
   Lightbulb,
   Search,
@@ -32,11 +24,11 @@ import axios from 'axios';
 import { useSidebar } from '../../context/SidebarContext';
 import api from '../../api';
 import panxWordmark from '../../assets/images/panx_wordmark.png';
-import qsiLogo from '../../assets/images/qsi_light_logo.png';
 import panxIcon from '../../assets/images/panx.png';
 import labIcon from '../../assets/images/smart-infrastructure.png';
 import mobilityIcon from '../../assets/images/mobility.png';
 import tvIcon from '../../assets/images/vision-space.png';
+import { shouldShowMobileNavigation } from '../../config/mobileNavigation';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -482,6 +474,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [showDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { user } = useAuth();
+  const showMobileNavigation = shouldShowMobileNavigation(location.pathname);
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
@@ -561,7 +554,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className={`app-grid ${showDetails ? 'with-details' : ''} ${isMobileMenuOpen ? 'mobile-menu-open' : ''} ${!location.pathname.startsWith('/chat') ? 'has-bottom-nav' : ''}`}>
+    <div className={`app-grid ${showDetails ? 'with-details' : ''} ${isMobileMenuOpen ? 'mobile-menu-open' : ''} ${showMobileNavigation ? 'has-bottom-nav' : ''}`}>
       {/* 0. Mobile Overlay */}
       <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />
 
@@ -721,7 +714,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       </main>
 
       {/* 4. Mobile Bottom Bar */}
-      {!location.pathname.startsWith('/chat') && (
+      {showMobileNavigation && (
         <nav className="mobile-nav-bar">
         <button 
           className={`mobile-nav-item ${isMobileMenuOpen ? 'active' : ''}`}

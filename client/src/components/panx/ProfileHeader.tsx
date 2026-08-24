@@ -1,6 +1,6 @@
-import React from 'react';
-import { ShieldCheck, UserCheck, UserPlus, Edit3, ArrowLeft } from 'lucide-react';
-import { Tag } from 'antd';
+import React, { useState } from 'react';
+import { ShieldCheck, UserCheck, UserPlus, Edit3, ArrowLeft, X } from 'lucide-react';
+import { Modal, Tag } from 'antd';
 
 const GREEN = '#008751';
 
@@ -29,7 +29,7 @@ export interface ProfileTabItem {
   count?: number;
 }
 
-interface ProfileHeaderProps {
+export interface ProfileHeaderProps {
   name: string;
   role?: string;
   bio?: string;
@@ -68,6 +68,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   tabs,
   extraActions
 }) => {
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+
   return (
     <div className="w-full flex flex-col bg-bg-primary">
       {/* 1. Cover Banner */}
@@ -119,12 +121,17 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
           {/* Avatar Icon */}
           <div style={{ position: 'relative' }}>
-            <div style={{
+            <button
+              type="button"
+              onClick={() => setIsAvatarOpen(true)}
+              aria-label={`Expand ${name}'s profile image`}
+              style={{
               width: '96px', height: '96px', borderRadius: '50%',
               overflow: 'hidden', border: '4px solid var(--bg-primary)',
               background: 'rgba(0, 135, 81, 0.2)',
               boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'zoom-in', padding: 0
             }}>
               {avatarUrl ? (
                 <img src={getServerUrl(avatarUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -133,7 +140,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   {getInitials(name)}
                 </span>
               )}
-            </div>
+            </button>
             {isVerified && (
               <div 
                 style={{
@@ -237,6 +244,27 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
         )}
       </div>
+      <Modal
+        open={isAvatarOpen}
+        onCancel={() => setIsAvatarOpen(false)}
+        footer={null}
+        closeIcon={<X size={18} />}
+        centered
+        width="min(92vw, 640px)"
+        styles={{
+          content: { background: '#0a1018', border: '1px solid rgba(255,255,255,0.12)', padding: '16px' },
+          body: { display: 'flex', justifyContent: 'center' },
+          mask: { background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' }
+        }}
+      >
+        {avatarUrl ? (
+          <img src={getServerUrl(avatarUrl)} alt={name} style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '12px' }} />
+        ) : (
+          <div style={{ width: 'min(70vw, 420px)', aspectRatio: '1', borderRadius: '50%', background: 'rgba(0,135,81,0.2)', display: 'grid', placeItems: 'center', color: GREEN, fontSize: '120px', fontWeight: 900 }}>
+            {getInitials(name)}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
