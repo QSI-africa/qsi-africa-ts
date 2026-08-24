@@ -418,27 +418,29 @@ const ChatWindow: React.FC = () => {
         extra={
           <div className="flex items-center gap-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <div className="flex md:hidden items-center gap-4">
-              <Lightbulb
-                size={20}
+              <span
+                title="Suggested Focus Areas"
+                className="hover:text-accent-primary transition-colors flex items-center"
                 style={{ cursor: 'pointer' }}
-                className="hover:text-accent-primary transition-colors"
                 onClick={() => {
                   setDrawerType('suggestions');
                   setIsDrawerOpen(true);
                 }}
-                title="Suggested Focus Areas"
-              />
+              >
+                <Lightbulb size={20} />
+              </span>
               {moduleName === 'healing' && (
-                <Package
-                  size={20}
+                <span
+                  title="Healing Trajectories"
+                  className="hover:text-accent-primary transition-colors flex items-center"
                   style={{ cursor: 'pointer' }}
-                  className="hover:text-accent-primary transition-colors"
                   onClick={() => {
                     setDrawerType('packages');
                     setIsDrawerOpen(true);
                   }}
-                  title="Healing Trajectories"
-                />
+                >
+                  <Package size={20} />
+                </span>
               )}
             </div>
           </div>
@@ -449,7 +451,7 @@ const ChatWindow: React.FC = () => {
       <div 
         ref={scrollContainerRef}
         className="p-4 md:p-8 no-scrollbar" 
-        style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}
+        style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}
       >
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
