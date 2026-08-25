@@ -1,19 +1,31 @@
 // admin-client/src/components/HealingPackagesSidebar.jsx
-import React from "react";
+import React, { CSSProperties } from "react";
 import { Typography, theme } from "antd";
 import { ShoppingOutlined } from "@ant-design/icons";
 
 const { Paragraph, Text } = Typography;
 const { useToken } = theme;
 
-const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
+interface Package {
+  key: string;
+  title: string;
+  shortPreview: string;
+}
+
+interface HealingPackagesSidebarProps {
+  packages: Package[];
+  onPackageClick: (pkg: Package) => void;
+  isMobile: boolean;
+}
+
+const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }: HealingPackagesSidebarProps) => {
   const { token } = useToken();
 
   if (!packages || packages.length === 0) {
     return null;
   }
 
-  const buttonStyle = {
+  const buttonStyle: CSSProperties = {
     background: "var(--canvas-white)",
     border: "3px solid var(--border-subtle)",
     borderRadius: 0,
@@ -30,7 +42,7 @@ const HealingPackagesSidebar = ({ packages, onPackageClick, isMobile }) => {
     transition: "transform 0.1s ease",
   };
 
-  const handlePackageClick = (pkg) => {
+  const handlePackageClick = (pkg: Package) => {
     if (onPackageClick) {
       onPackageClick(pkg);
     }

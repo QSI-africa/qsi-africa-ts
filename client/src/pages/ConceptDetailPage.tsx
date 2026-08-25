@@ -124,7 +124,7 @@ const ConceptDetailPage: React.FC = () => {
         status: 'Calibration: 62% Sync',
         percent: 62
       }
-    }[pilot.key] || {
+    }[pilot.key as 'placebo' | 'heritage_flame' | 'futurecraft'] || {
       color: '#10B981',
       glowColor: 'rgba(16, 185, 129, 0.4)',
       icon: <Activity size={64} />,

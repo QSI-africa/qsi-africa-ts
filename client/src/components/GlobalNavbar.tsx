@@ -164,7 +164,7 @@ const GlobalNavbar: React.FC = () => {
             </>
           ) : (
             <Button 
-              primary 
+              type="primary" 
               style={{ padding: '0 24px', height: '44px' }}
               onClick={() => navigate('/login')}
             >

@@ -4,7 +4,13 @@ import { Modal, Form, Input, theme } from "antd";
 
 const { useToken } = theme;
 
-const ContactModal = ({ open, onCancel, onFinish }) => {
+interface ContactModalProps {
+  open: boolean;
+  onCancel: () => void;
+  onFinish: (values: { name: string; email: string }) => void;
+}
+
+const ContactModal = ({ open, onCancel, onFinish }: ContactModalProps) => {
   const [form] = Form.useForm();
   const { token } = useToken();
 
@@ -52,15 +58,6 @@ const ContactModal = ({ open, onCancel, onFinish }) => {
     borderRadius: token.borderRadius,
     color: token.colorText,
     fontSize: token.fontSize,
-
-    "&:hover": {
-      borderColor: token.colorPrimaryHover,
-    },
-
-    "&:focus": {
-      borderColor: token.colorPrimary,
-      boxShadow: `0 0 0 2px ${token.colorPrimaryBg}`,
-    },
   };
 
   return (
@@ -113,7 +110,7 @@ const ContactModal = ({ open, onCancel, onFinish }) => {
             <span
               style={{
                 color: token.colorText,
-                fontWeight: token.fontWeightMedium,
+                fontWeight: token.fontWeightStrong,
               }}
             >
               Your Name
@@ -134,7 +131,7 @@ const ContactModal = ({ open, onCancel, onFinish }) => {
             <span
               style={{
                 color: token.colorText,
-                fontWeight: token.fontWeightMedium,
+                fontWeight: token.fontWeightStrong,
               }}
             >
               Your Email

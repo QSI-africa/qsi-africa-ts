@@ -1,5 +1,5 @@
 // src/components/PilotProjectsSidebar.jsx
-import React from "react";
+import React, { CSSProperties } from "react";
 import { Typography, theme } from "antd";
 import { RocketOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -7,14 +7,21 @@ import { Link } from "react-router-dom";
 const { Paragraph, Text } = Typography;
 const { useToken } = theme;
 
-const PilotProjectsSidebar = ({ pilots }) => {
+interface Pilot {
+  key?: string;
+  id?: string;
+  title: string;
+  shortDescription: string;
+}
+
+const PilotProjectsSidebar = ({ pilots }: { pilots: Pilot[] }) => {
   const { token } = useToken();
 
   if (!pilots || pilots.length === 0) {
     return null;
   }
 
-  const linkStyle = {
+  const linkStyle: CSSProperties = {
     background: "var(--canvas-white)",
     border: "3px solid var(--border-subtle)",
     borderRadius: 0,

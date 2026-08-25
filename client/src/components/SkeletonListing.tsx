@@ -6,9 +6,9 @@ const SkeletonListing: React.FC = () => {
       {[...Array(6)].map((_, i) => (
         <div key={i} className="loading-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ aspectRatio: '1/1', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '24px', width: '100%' }} />
-          <div style={{ h: '16px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '4px', width: '75%' }} />
-          <div style={{ h: '16px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '4px', width: '50%' }} />
-          <div style={{ h: '40px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '12px', width: '100%', marginTop: '8px' }} />
+          <div style={{ height: '16px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '4px', width: '75%' }} />
+          <div style={{ height: '16px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '4px', width: '50%' }} />
+          <div style={{ height: '40px', backgroundColor: 'var(--bg-soft-grey)', borderRadius: '12px', width: '100%', marginTop: '8px' }} />
         </div>
       ))}
     </div>

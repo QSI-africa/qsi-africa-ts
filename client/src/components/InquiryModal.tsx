@@ -6,7 +6,14 @@ import { qsiTheme } from "./theme/theme"; // Adjust path
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const InquiryModal = ({ open, onCancel, onFinish, packageName }) => {
+interface InquiryModalProps {
+  open: boolean;
+  onCancel: () => void;
+  onFinish: (values: { description: string }) => void;
+  packageName?: string;
+}
+
+const InquiryModal = ({ open, onCancel, onFinish, packageName }: InquiryModalProps) => {
   const [form] = Form.useForm();
   const { token } = qsiTheme; // Use our theme
 

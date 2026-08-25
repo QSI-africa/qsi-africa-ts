@@ -80,7 +80,7 @@ export const lightTheme: ThemeConfig = {
     },
     Tabs: {
       colorText: "#9CA3AF",
-      colorTextSelected: "#D4AF37",
+      itemSelectedColor: "#D4AF37",
       colorBorderSecondary: "rgba(255, 255, 255, 0.06)",
       inkBarColor: "#D4AF37",
     }

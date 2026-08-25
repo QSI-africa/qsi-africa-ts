@@ -4,7 +4,21 @@ import { Row, Col, Card, Typography, Pagination } from "antd";
 import { RocketOutlined, ArrowRightOutlined } from "@ant-design/icons";
 const { Title, Paragraph, Link } = Typography;
 
-export default function PilotsGrid({ pilots, token, isMobile, navigate }) {
+interface Pilot {
+  key?: string;
+  id?: string;
+  title: string;
+  shortDescription: string;
+}
+
+interface PilotsGridProps {
+  pilots: Pilot[];
+  token: Record<string, any>;
+  isMobile: boolean;
+  navigate: (path: string) => void;
+}
+
+export default function PilotsGrid({ pilots, token, isMobile, navigate }: PilotsGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6; // number of pilots per page
 
@@ -55,7 +69,7 @@ export default function PilotsGrid({ pilots, token, isMobile, navigate }) {
               </Paragraph>
               <Link
                 style={{
-                  fontWeight: token.fontWeightMedium,
+                  fontWeight: token.fontWeightStrong,
                   color: token.colorPrimary,
                 }}
               >

@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [logout]);
 
   useEffect(() => {
-    const verifyToken = async (tokenToVerify) => {
+    const verifyToken = async (tokenToVerify: string) => {
       try {
         api.defaults.headers.common[
           "Authorization"
@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token, logout]);
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     const response = await api.post("/auth/login", { email, password });
     const { token, refreshToken, user } = response.data;
     localStorage.setItem("token", token);
@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user;
   };
 
-  const register = async (name, email, password, phone) => {
+  const register = async (name: string, email: string, password: string, phone?: string) => {
     const response = await api.post("/auth/register-user", {
       name,
       email,
@@ -132,6 +132,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };

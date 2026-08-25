@@ -163,9 +163,6 @@ const TermsAndConditions: React.FC = () => {
       color: token.colorPrimary,
       fontWeight: 600,
       textDecoration: "none",
-      '&:hover': {
-        textDecoration: 'underline',
-      }
     }
   };
 
