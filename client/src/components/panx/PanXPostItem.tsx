@@ -47,6 +47,62 @@ const getAvatarColor = (name: string) => {
   return colors[sum % colors.length];
 };
 
+const TruncatedText = ({ text, style }: { text: string, style?: React.CSSProperties }) => {
+  const [expanded, setExpanded] = React.useState(false);
+  const [isClamped, setIsClamped] = React.useState(false);
+  const textRef = React.useRef<HTMLParagraphElement>(null);
+
+  React.useEffect(() => {
+    const checkClamped = () => {
+      if (textRef.current) {
+        setIsClamped(textRef.current.scrollHeight > textRef.current.clientHeight);
+      }
+    };
+    // Check initially
+    checkClamped();
+    // Re-check after a small delay to ensure fonts/layout are loaded
+    const timeout = setTimeout(checkClamped, 100);
+    return () => clearTimeout(timeout);
+  }, [text]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+      <p 
+        ref={textRef}
+        style={{
+          ...style,
+          ...(expanded ? {} : {
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          })
+        }}
+      >
+        {text}
+      </p>
+      {isClamped && !expanded && (
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(true);
+          }}
+          style={{
+            color: 'var(--accent-primary)',
+            fontSize: style?.fontSize ? `max(10px, calc(100% - 2px))` : '11px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            marginTop: '4px',
+            display: 'inline-block'
+          }}
+        >
+          View more
+        </span>
+      )}
+    </div>
+  );
+};
+
 const PanXPostItem = React.memo(({
   post,
   user,
@@ -272,15 +328,16 @@ const PanXPostItem = React.memo(({
           </div>
         </div>
 
-        <p style={{
-          fontSize: '13.5px',
-          lineHeight: '1.5',
-          color: 'rgba(255, 255, 255, 0.85)',
-          margin: '0 0 12px 0',
-          whiteSpace: 'pre-wrap'
-        }}>
-          {post.content}
-        </p>
+        <TruncatedText 
+          text={post.content} 
+          style={{
+            fontSize: '13.5px',
+            lineHeight: '1.5',
+            color: 'rgba(255, 255, 255, 0.85)',
+            margin: '0 0 12px 0',
+            whiteSpace: 'pre-wrap'
+          }} 
+        />
 
         {mediaItems.length > 0 && (
           <PanXMediaGallery
@@ -372,7 +429,10 @@ const PanXPostItem = React.memo(({
                       <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)' }}>{rep.author?.name}</span>
                       <span style={{ fontSize: '9px', color: 'rgba(255, 255, 255, 0.3)', marginLeft: '6px' }}>{formatTimestamp(rep.createdAt)}</span>
                     </div>
-                    <p style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }}>{rep.content}</p>
+                    <TruncatedText 
+                      text={rep.content} 
+                      style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.55)', margin: '2px 0 0 0' }} 
+                    />
 
                     {/* Action Bar for Reply */}
                     <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
