@@ -18,7 +18,8 @@ import {
   Home,
   MessageCircle,
   Shield,
-  ArrowRight
+  ArrowRight,
+  MoreVertical
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
@@ -144,9 +145,9 @@ const DefaultSidebarContent = () => {
 
 
   const categories = [
-    { name: 'PanX Concepts', shortName: 'PanX Concepts', path: '/concepts', description: 'Digital concepts and frameworks.' },
     { name: 'PanX', shortName: 'PanX Feed', path: '/', description: 'Unified control center for the PanX infrastructure.' },
     { name: 'PanX Lab', shortName: 'PanX Lab', path: '/lab', description: 'Specialized research and lab documentation.' },
+    { name: 'PanX Concepts', shortName: 'PanX Concepts', path: '/concepts', description: 'Digital concepts and frameworks.' },
     { name: 'PanX TV', shortName: 'PanX TV', path: '/tv', description: 'HD broadcast and media streaming services.' },
   ];
 
@@ -257,35 +258,7 @@ const DefaultSidebarContent = () => {
           </div> */}
         </div>
         
-        {/* Mobile Quick Links — only visible on mobile */}
-        <div className="md:hidden" style={{ padding: '0 16px 16px 16px' }}>
-          <p style={{ fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '10px' }}>Quick Access</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              { icon: <MessageCircle size={18} />, label: 'Messages', path: '/inbox', color: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.25)', accent: '#10B981' },
-              { icon: <User size={18} />, label: 'My Profile', path: '/profile', color: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.25)', accent: '#6366F1' },
-              { icon: <Users size={18} />, label: 'All Profiles', path: '/network', color: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)', accent: '#F59E0B' },
-            ].map(item => (
-              <button
-                key={item.path}
-                onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '12px 14px', borderRadius: '14px',
-                  background: item.color,
-                  border: `1px solid ${item.border}`,
-                  color: 'white', cursor: 'pointer', transition: 'all 0.2s',
-                  width: '100%', textAlign: 'left'
-                }}
-              >
-                <span style={{ color: item.accent, flexShrink: 0 }}>{item.icon}</span>
-                <span style={{ fontSize: '13px', fontWeight: 800, flex: 1 }}>{item.label}</span>
-                <ChevronRight size={14} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
-              </button>
-            ))}
-          </div>
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '16px 0 4px 0' }} />
-        </div>
+        {/* Mobile Quick Links — removed as they are now in the top right menu */}
         
         <div style={{ padding: "0 16px", marginBottom: "16px" }}>
           <div className="qsi-search-bar qsi-search-bar--compact">
@@ -482,6 +455,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { sidebarContent, isMobileMenuOpen, setIsMobileMenuOpen, deferredPrompt, setDeferredPrompt } = useSidebar();
   const [showDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showMobileQuickLinks, setShowMobileQuickLinks] = useState(false);
   const { user } = useAuth();
   const showMobileNavigation = shouldShowMobileNavigation(location.pathname);
 
@@ -669,7 +643,70 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* 2. Sidebar Panel (360px) */}
       <aside className="sidebar-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div className="md:hidden" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50, width: 'max-content' }}>
+        <div className="md:hidden" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50, display: 'flex', gap: '8px' }}>
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowMobileQuickLinks(!showMobileQuickLinks)}
+              style={{
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                backdropFilter: 'blur(8px)'
+              }}
+              className="hover:scale-105 active:scale-95"
+            >
+              <MoreVertical size={20} strokeWidth={2.5} />
+            </button>
+            {showMobileQuickLinks && (
+              <div style={{
+                position: 'absolute',
+                top: '48px',
+                right: '0',
+                background: 'rgba(10, 16, 24, 0.95)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                minWidth: '180px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                backdropFilter: 'blur(12px)',
+                zIndex: 60
+              }}>
+                {[
+                  { icon: <MessageCircle size={16} />, label: 'Messages', path: '/inbox' },
+                  { icon: <User size={16} />, label: 'My Profile', path: '/profile' },
+                  { icon: <Users size={16} />, label: 'All Profiles', path: '/network' },
+                ].map(item => (
+                  <button
+                    key={item.path}
+                    onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); setShowMobileQuickLinks(false); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '10px 12px', borderRadius: '8px',
+                      background: 'transparent', border: 'none',
+                      color: 'white', cursor: 'pointer', textAlign: 'left',
+                      fontSize: '13px', fontWeight: 600
+                    }}
+                    className="hover:bg-white/5"
+                  >
+                    <span style={{ color: 'rgba(255,255,255,0.7)' }}>{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
             style={{

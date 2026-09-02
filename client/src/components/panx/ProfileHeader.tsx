@@ -49,6 +49,8 @@ export interface ProfileHeaderProps {
   onTabChange?: (tab: string) => void;
   tabs?: ProfileTabItem[];
   extraActions?: React.ReactNode;
+  shortBio?: string;
+  fullBio?: string;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -70,11 +72,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   activeTab,
   onTabChange,
   tabs,
-  extraActions
+  extraActions,
+  shortBio,
+  fullBio
 }) => {
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [avatarHovered, setAvatarHovered] = useState(false);
   const [bannerHovered, setBannerHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -304,10 +309,34 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </Tag>
             )}
           </div>
-          {bio && (
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13.5px', lineHeight: 1.6, margin: 0, maxWidth: '650px' }}>
-              {bio}
+          {shortBio && (
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14.5px', lineHeight: 1.6, margin: '0 0 12px 0', maxWidth: '650px', fontWeight: 600 }}>
+              {shortBio}
             </p>
+          )}
+          {(fullBio || bio) && (
+            <div style={{ maxWidth: '650px' }}>
+              <p style={{ 
+                color: 'rgba(255,255,255,0.6)', 
+                fontSize: '13.5px', 
+                lineHeight: 1.6, 
+                margin: 0,
+                display: '-webkit-box',
+                WebkitLineClamp: isExpanded ? 'unset' : 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}>
+                {fullBio || bio}
+              </p>
+              {((fullBio || bio)?.length > 150) && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{ background: 'none', border: 'none', color: GREEN, fontSize: '12px', fontWeight: 600, padding: 0, marginTop: '8px', cursor: 'pointer' }}
+                >
+                  {isExpanded ? 'Read less' : 'Read more'}
+                </button>
+              )}
+            </div>
           )}
         </div>
 

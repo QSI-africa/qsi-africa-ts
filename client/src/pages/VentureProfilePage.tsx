@@ -216,7 +216,8 @@ const VentureProfilePage: React.FC = () => {
       {/* Standardized Profile Header */}
       <ProfileHeader
         name={venture.name}
-        bio={getVentureBio(venture)}
+        shortBio={venture.shortDescription}
+        fullBio={venture.fullDescription || venture.bio || venture.about}
         avatarUrl={venture.logoUrl}
         bannerUrl={venture.bannerUrl}
         isVerified={true}

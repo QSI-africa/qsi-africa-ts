@@ -25,6 +25,7 @@ interface LabPackage {
   level: string;
   duration: string;
   description: string | null;
+  fullDescription?: string;
   isActive: boolean;
   order: number;
 }
@@ -41,6 +42,7 @@ interface LabRecording {
   id: string;
   title: string;
   description: string;
+  fullDescription?: string;
   categoryId: string;
   categoryTitle: string;
   teacherId: string;
@@ -90,7 +92,7 @@ const LabPackageCard = ({ pkg, categoryTitle, categoryTagline, isEnrolled, onTog
       <div>
         <div className="lab-card-kicker">{pkg.level || categoryTitle}</div>
         <h4>{pkg.name}</h4>
-        <p>{categoryTagline || pkg.description || 'An applied learning module designed to build practical, high-impact capability.'}</p>
+        <p>{pkg.fullDescription || pkg.description || categoryTagline || 'An applied learning module designed to build practical, high-impact capability.'}</p>
       </div>
       <div className="lab-card-footer">
         <span className="lab-card-meta"><Hourglass size={13} /> {pkg.duration}</span>
@@ -139,7 +141,7 @@ const LabRecordingCard = ({ recording, onOpen, onTeacher }: {
         <div>
           <div className="lab-card-kicker">{isVideo ? 'Video lecture' : 'Audio lecture'}</div>
           <h4>{recording.title}</h4>
-          <p>{recording.description}</p>
+          <p>{recording.fullDescription || recording.description}</p>
         </div>
         <div className="lab-card-footer">
           <button className="lab-teacher-link" onClick={(event) => { event.stopPropagation(); onTeacher(); }}>
