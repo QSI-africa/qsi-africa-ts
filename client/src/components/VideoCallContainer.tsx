@@ -3,9 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize
+  MessageSquare, Link2, PhoneOff, Users, Maximize, Minimize, MoreVertical
 } from 'lucide-react';
-import { App, Drawer } from 'antd';
+import { App, Drawer, Dropdown } from 'antd';
 import { socketService } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import RoomChat from './RoomChat';
@@ -448,23 +448,42 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, title = 'Peer Se
           <ControlBtn onClick={toggleVideo} danger={isVideoOff} title={isVideoOff ? 'Camera On' : 'Camera Off'}>
             {isVideoOff ? <VideoOff size={20} /> : <Video size={20} />}
           </ControlBtn>
-          {!isMobile && (
-            <ControlBtn onClick={toggleScreenShare} active={isScreenSharing} title={isScreenSharing ? 'Stop Sharing' : 'Share Screen'}>
-              {isScreenSharing ? <MonitorOff size={20} /> : <Monitor size={20} />}
-            </ControlBtn>
-          )}
-
           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={20} />
           </ControlBtn>
-          <ControlBtn onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
-            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-          </ControlBtn>
-          <ControlBtn onClick={copyShareLink} title="Copy Invite Link">
-            <Link2 size={20} />
-          </ControlBtn>
+          
+          <Dropdown
+            menu={{
+              items: [
+                ...(isMobile ? [] : [{
+                  key: 'share',
+                  icon: isScreenSharing ? <MonitorOff size={16} /> : <Monitor size={16} />,
+                  label: isScreenSharing ? 'Stop Sharing' : 'Share Screen',
+                  onClick: toggleScreenShare
+                }]),
+                {
+                  key: 'fullscreen',
+                  icon: isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />,
+                  label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
+                  onClick: toggleFullscreen
+                },
+                {
+                  key: 'copyLink',
+                  icon: <Link2 size={16} />,
+                  label: 'Copy Invite Link',
+                  onClick: copyShareLink
+                }
+              ]
+            }}
+            placement="topRight"
+            trigger={['click']}
+          >
+            <ControlBtn title="More Options">
+              <MoreVertical size={20} />
+            </ControlBtn>
+          </Dropdown>
 
           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 

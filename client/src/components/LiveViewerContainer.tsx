@@ -1,11 +1,11 @@
 /* global RTCConfiguration */
 // client/src/components/LiveViewerContainer.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, X, Lock, Maximize, Minimize } from 'lucide-react';
+import { MessageSquare, X, Lock, Maximize, Minimize, PhoneOff, MoreVertical } from 'lucide-react';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { useAuth } from '../context/AuthContext';
-import { Drawer } from 'antd';
+import { Drawer, Dropdown } from 'antd';
 import { getIceConfiguration, toRtcConfiguration } from '../services/webrtc';
 
 const GREEN = '#008751';
@@ -235,45 +235,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             </span>
           </div>
 
-          {/* Actions */}
-          <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
-            <button
-              onClick={toggleFullscreen}
-              style={{
-                width: '40px', height: '40px', borderRadius: '12px', border: 'none',
-                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
-                color: 'rgba(255,255,255,0.7)', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-            </button>
-            {!error && (
-              <button
-                onClick={() => setShowChat(!showChat)}
-                style={{
-                  width: '40px', height: '40px', borderRadius: '12px', border: 'none',
-                  background: showChat ? `${GREEN}20` : 'rgba(0,0,0,0.6)',
-                  backdropFilter: 'blur(12px)',
-                  color: showChat ? GREEN : 'rgba(255,255,255,0.7)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}
-              >
-                <MessageSquare size={16} />
-              </button>
-            )}
-            <button
-              onClick={handleClose}
-              style={{
-                width: '40px', height: '40px', borderRadius: '12px', border: 'none',
-                background: 'rgba(239,68,68,0.15)', backdropFilter: 'blur(12px)',
-                color: '#EF4444', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              <X size={16} />
-            </button>
-          </div>
+          {/* Actions removed from top HUD */}
         </div>
 
         {/* Video / Connecting / Error State */}
@@ -323,6 +285,75 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
               </div>
             </div>
           )}
+        </div>
+
+        {/* Media Controller dock */}
+        <div style={{
+          padding: '16px 24px',
+          background: 'linear-gradient(to top, rgba(7,12,20,1) 0%, rgba(7,12,20,0.8) 80%, rgba(7,12,20,0) 100%)',
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px', zIndex: 10, flexShrink: 0
+        }}>
+          {!error && (
+            <button
+              onClick={() => setShowChat(!showChat)}
+              title="Toggle Chat"
+              style={{
+                width: '52px', height: '52px', borderRadius: '16px', border: 'none',
+                background: showChat ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
+                color: showChat ? 'white' : 'rgba(255,255,255,0.7)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+            >
+              <MessageSquare size={18} />
+            </button>
+          )}
+
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'fullscreen',
+                  icon: isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />,
+                  label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
+                  onClick: toggleFullscreen
+                }
+              ]
+            }}
+            placement="topRight"
+            trigger={['click']}
+          >
+            <button
+              title="More Options"
+              style={{
+                width: '52px', height: '52px', borderRadius: '16px', border: 'none',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'rgba(255,255,255,0.7)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+            >
+              <MoreVertical size={18} />
+            </button>
+          </Dropdown>
+
+          <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px', alignSelf: 'center' }} />
+
+          {/* Close / Hang Up */}
+          <button
+            onClick={handleClose}
+            title="Leave Broadcast"
+            style={{
+              height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
+              background: '#EF4444', color: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
+              boxShadow: '0 8px 20px -5px rgba(239,68,68,0.5)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <PhoneOff size={18} /> Leave
+          </button>
         </div>
       </div>
 

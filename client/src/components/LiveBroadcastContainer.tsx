@@ -3,9 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
-  MessageSquare, Eye, Lock, Globe, Link2, Maximize, Minimize, PhoneOff
+  MessageSquare, Eye, Lock, Globe, Link2, Maximize, Minimize, PhoneOff, MoreVertical
 } from 'lucide-react';
-import { App, Drawer } from 'antd';
+import { App, Drawer, Dropdown } from 'antd';
 import { socketService } from '../services/socket';
 import RoomChat from './RoomChat';
 import { getIceConfiguration, toRtcConfiguration } from '../services/webrtc';
@@ -400,16 +400,6 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
         }}>
           {/* Metadata Badges & Relocated Exit Button */}
           <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto', alignItems: 'center' }}>
-            <button
-              onClick={requestStopBroadcast}
-              style={{
-                background: '#EF4444', color: 'white', border: 'none',
-                borderRadius: '10px', padding: '6px 14px', fontSize: '11px',
-                fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
-              }}
-            >
-              <PhoneOff size={13} /> End Broadcast
-            </button>
 
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
@@ -515,33 +505,65 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             {isVideoOff ? <VideoOff size={18} /> : <Video size={18} />}
           </ControlBtn>
 
-          <ControlBtn onClick={toggleScreenShare} active={isScreenSharing} title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}>
-            {isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}
-          </ControlBtn>
-
-          {/* Layout switcher */}
-          <button
-            onClick={() => setLayoutMode(layoutMode === 'host' ? 'split' : layoutMode === 'split' ? '4grid' : 'host')}
-            style={{
-              height: '48px', padding: '0 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.07)', color: GREEN, cursor: 'pointer', fontSize: '11px', fontWeight: 800
-            }}
-            title="Toggle TikTok Layout Grid"
-          >
-            Grid: {layoutMode.toUpperCase()}
-          </button>
+          <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
           <ControlBtn onClick={() => setShowChat(!showChat)} active={showChat} title="Toggle Chat">
             <MessageSquare size={18} />
           </ControlBtn>
 
-          <ControlBtn onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}>
-            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-          </ControlBtn>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'share',
+                  icon: isScreenSharing ? <MonitorOff size={16} /> : <Monitor size={16} />,
+                  label: isScreenSharing ? 'Stop Screen Share' : 'Share Screen',
+                  onClick: toggleScreenShare
+                },
+                {
+                  key: 'layout',
+                  label: `Grid: ${layoutMode.toUpperCase()}`,
+                  onClick: () => setLayoutMode(layoutMode === 'host' ? 'split' : layoutMode === 'split' ? '4grid' : 'host')
+                },
+                {
+                  key: 'fullscreen',
+                  icon: isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />,
+                  label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
+                  onClick: toggleFullscreen
+                },
+                {
+                  key: 'copyLink',
+                  icon: <Link2 size={16} />,
+                  label: 'Copy Viewer Link',
+                  onClick: copyViewerLink
+                }
+              ]
+            }}
+            placement="topRight"
+            trigger={['click']}
+          >
+            <ControlBtn title="More Options">
+              <MoreVertical size={18} />
+            </ControlBtn>
+          </Dropdown>
 
-          <ControlBtn onClick={copyViewerLink} title="Copy Viewer Link">
-            <Link2 size={18} />
-          </ControlBtn>
+          <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+
+          {/* End Broadcast */}
+          <button
+            onClick={requestStopBroadcast}
+            title="End Broadcast"
+            style={{
+              height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
+              background: '#EF4444', color: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
+              boxShadow: '0 8px 20px -5px rgba(239,68,68,0.5)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <PhoneOff size={18} /> End Broadcast
+          </button>
         </div>
 
       </div>
