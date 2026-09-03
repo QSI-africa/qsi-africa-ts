@@ -377,7 +377,6 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, title = 'Peer Se
         {/* Session Info */}
         <div className="panx-session-summary">
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: 'white', fontSize: '14px', fontWeight: 850, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
             <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '10px', fontFamily: 'monospace', marginTop: '2px' }}>{roomId}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -480,9 +479,19 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, title = 'Peer Se
             placement="topRight"
             trigger={['click']}
           >
-            <ControlBtn title="More Options">
+            <button
+              title="More Options"
+              style={{
+                width: '52px', height: '52px', borderRadius: '16px', border: 'none',
+                background: 'rgba(255,255,255,0.07)',
+                color: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(12px)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s', flexShrink: 0
+              }}
+            >
               <MoreVertical size={20} />
-            </ControlBtn>
+            </button>
           </Dropdown>
 
           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
@@ -492,15 +501,14 @@ const VideoCallContainer: React.FC<VideoCallProps> = ({ roomId, title = 'Peer Se
             onClick={requestLeaveCall}
             title="End Call"
             style={{
-              height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
+              width: '52px', height: '52px', borderRadius: '16px', border: 'none',
               background: '#EF4444', color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 8px 20px -5px rgba(239,68,68,0.5)',
               transition: 'all 0.2s'
             }}
           >
-            <PhoneOff size={18} /> End Call
+            <PhoneOff size={18} />
           </button>
         </div>
       </div>

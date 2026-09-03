@@ -227,8 +227,6 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           }}>
             <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 6px #EF4444', animation: 'pulse 1.5s infinite' }} />
             <span style={{ fontSize: '10px', fontWeight: 900, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Live</span>
-            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.2)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'white' }}>{title}</span>
             <span className={`panx-connection-badge ${connectionStatus}`}>{connectionStatus}</span>
             <span className={`panx-relay-badge ${relayConfigured ? 'ready' : 'missing'}`}>
               {relayConfigured ? 'Relay Ready' : 'Direct Network'}
@@ -344,15 +342,14 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
             onClick={handleClose}
             title="Leave Broadcast"
             style={{
-              height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
+              width: '52px', height: '52px', borderRadius: '16px', border: 'none',
               background: '#EF4444', color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 8px 20px -5px rgba(239,68,68,0.5)',
               transition: 'all 0.2s'
             }}
           >
-            <PhoneOff size={18} /> Leave
+            <PhoneOff size={18} />
           </button>
         </div>
       </div>

@@ -428,14 +428,6 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             </span>
           </div>
 
-          {/* Broadcast Title HUD */}
-          <div style={{
-            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)',
-            padding: '6px 12px', borderRadius: '10px', color: 'white',
-            fontSize: '11px', fontWeight: 700, pointerEvents: 'auto'
-          }}>
-            {title}
-          </div>
         </div>
 
         {/* Local Stream Canvas */}
@@ -542,9 +534,19 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             placement="topRight"
             trigger={['click']}
           >
-            <ControlBtn title="More Options">
+            <button
+              title="More Options"
+              style={{
+                width: '52px', height: '52px', borderRadius: '16px', border: 'none',
+                background: 'rgba(255,255,255,0.07)',
+                color: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(12px)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s', flexShrink: 0
+              }}
+            >
               <MoreVertical size={18} />
-            </ControlBtn>
+            </button>
           </Dropdown>
 
           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
@@ -554,15 +556,14 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
             onClick={requestStopBroadcast}
             title="End Broadcast"
             style={{
-              height: '52px', padding: '0 24px', borderRadius: '16px', border: 'none',
+              width: '52px', height: '52px', borderRadius: '16px', border: 'none',
               background: '#EF4444', color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '8px',
-              fontSize: '12px', fontWeight: 800, letterSpacing: '0.05em',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 8px 20px -5px rgba(239,68,68,0.5)',
               transition: 'all 0.2s'
             }}
           >
-            <PhoneOff size={18} /> End Broadcast
+            <PhoneOff size={18} />
           </button>
         </div>
 
