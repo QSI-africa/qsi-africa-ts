@@ -157,6 +157,28 @@ const EcosystemPage: React.FC = () => {
   };
 
   useEffect(() => {
+    const savedStateStr = sessionStorage.getItem('panx_feed_state');
+    if (savedStateStr) {
+      try {
+        const savedState = JSON.parse(savedStateStr);
+        setPosts(savedState.posts);
+        setPage(savedState.page);
+        setHasMore(savedState.hasMore);
+        setActiveFilter(savedState.activeFilter);
+        setLoading(false);
+        sessionStorage.removeItem('panx_feed_state');
+        requestAnimationFrame(() => {
+          const scrollEl = document.querySelector('.main-workspace');
+          if (scrollEl && savedState.scroll) {
+            scrollEl.scrollTop = savedState.scroll;
+          }
+        });
+        return;
+      } catch (e) {
+        console.error('Failed to parse feed state', e);
+      }
+    }
+
     const controller = new AbortController();
     fetchPosts(1, controller.signal);
     return () => {
@@ -164,19 +186,20 @@ const EcosystemPage: React.FC = () => {
     };
   }, []);
 
-  // Restore scroll position when returning from a thread
   useEffect(() => {
-    const saved = sessionStorage.getItem('panx_scroll');
-    if (saved) {
-      sessionStorage.removeItem('panx_scroll');
-      const scrollEl = document.querySelector('.main-workspace');
-      if (scrollEl) {
-        requestAnimationFrame(() => {
-          scrollEl.scrollTop = Number(saved);
-        });
+    return () => {
+      if (posts.length > 0) {
+        const scrollEl = document.querySelector('.main-workspace');
+        sessionStorage.setItem('panx_feed_state', JSON.stringify({
+          posts,
+          page,
+          hasMore,
+          activeFilter,
+          scroll: scrollEl?.scrollTop || 0
+        }));
       }
-    }
-  }, []);
+    };
+  }, [posts, page, hasMore, activeFilter]);
 
   useEffect(() => subscribeToPanXPostUpdates((postId, update) => {
     setPosts(prev => prev.map(post => post.id === postId ? { ...post, ...update } : post));

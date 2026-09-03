@@ -462,7 +462,7 @@ const LiveBroadcastContainer: React.FC<LiveBroadcastProps> = ({ onStop, title, i
                 <video
                   ref={videoRef} autoPlay muted playsInline
                   style={{
-                    width: '100%', height: '100%', objectFit: 'contain', display: 'block',
+                    width: '100%', height: '100%', objectFit: isMobile ? 'cover' : 'contain', display: 'block',
                     transform: 'scaleX(-1)'
                   }}
                 />

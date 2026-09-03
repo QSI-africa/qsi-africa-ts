@@ -349,7 +349,7 @@ const VentureProfilePage: React.FC = () => {
               </div>
 
               <Form form={form} layout="vertical" onFinish={handleEngage} className="space-y-3">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Form.Item
                     name="contactName"
                     label={<span style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Your Name</span>}

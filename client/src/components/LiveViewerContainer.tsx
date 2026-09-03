@@ -304,7 +304,7 @@ const LiveViewerContainer: React.FC<LiveViewerProps> = ({ roomId, title, onClose
           ) : remoteStream ? (
             <video
               ref={videoRef} autoPlay playsInline
-              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: isMobile ? 'cover' : 'contain', display: 'block' }}
             />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>

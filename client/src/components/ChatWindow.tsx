@@ -374,7 +374,7 @@ const ChatWindow: React.FC = () => {
 
 
   return (
-    <div style={{ position: 'relative', height: '100dvh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+    <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* Header */}
       {/* Header */}
       <UnifiedHeader

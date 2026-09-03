@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Input, 
   Empty, 
@@ -71,6 +71,7 @@ interface ConversationListProps {
   onSegmentChange: (s: 'all' | 'unread') => void;
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
+  onBack?: () => void;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
@@ -83,6 +84,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   onSegmentChange,
   onSelectConversation,
   onNewConversation,
+  onBack,
 }) => {
   const filtered = useMemo(() =>
     (Array.isArray(conversations) ? conversations : [])
@@ -93,25 +95,28 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <div style={{ height: '100%', background: 'rgba(10,16,24,0.95)', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: '20px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', margin: 0 }}>PanX Chats</h2>
-          <button
-            onClick={onNewConversation}
-            aria-label="New conversation"
-            style={{
-              width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)', color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = `${GREEN}30`}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-          >
-            <Plus size={16} />
-          </button>
-        </div>
+      <header style={{ padding: '0 0 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+        <UnifiedHeader
+          title="PanX Chats"
+          backAction={onBack}
+          extra={
+            <button
+              onClick={onNewConversation}
+              aria-label="New conversation"
+              style={{
+                width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)', color: 'white', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = `${GREEN}30`}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            >
+              <Plus size={16} />
+            </button>
+          }
+        />
 
-        <div className="qsi-search-bar qsi-search-bar--compact" style={{ marginBottom: '12px' }}>
+        <div className="qsi-search-bar qsi-search-bar--compact" style={{ marginBottom: '12px', padding: '0 16px', marginTop: '16px' }}>
           <Search size={16} color="rgba(255,255,255,0.2)" />
           <input
             placeholder="Search PanX Chats..."
@@ -120,7 +125,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', padding: '0 16px' }}>
           <button
             onClick={() => onSegmentChange('all')}
             style={{
@@ -209,6 +214,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
 const InboxPage: React.FC = () => {
   const auth = useAuth();
   const user = auth?.user;
+  const navigate = useNavigate();
   const { setSidebarContent } = useSidebar();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -620,6 +626,7 @@ const InboxPage: React.FC = () => {
               onSegmentChange={setChatSegment}
               onSelectConversation={openConversation}
               onNewConversation={() => setIsDiscoverModalOpen(true)}
+              onBack={() => navigate(-1)}
             />
           </div>
         )

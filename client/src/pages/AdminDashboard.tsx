@@ -414,6 +414,7 @@ const AdminDashboard: React.FC = () => {
                            </div>
                            <div className="p-0">
                               <Table 
+                                scroll={{ x: 'max-content' }}
                                 dataSource={cat.packages} 
                                 columns={packageColumns} 
                                 rowKey="id" 
@@ -453,6 +454,7 @@ const AdminDashboard: React.FC = () => {
                          </h4>
                       </div>
                       <Table 
+                        scroll={{ x: 'max-content' }}
                         dataSource={siteVisits} 
                         rowKey="id"
                         className="custom-table"
@@ -489,6 +491,7 @@ const AdminDashboard: React.FC = () => {
                          </h4>
                       </div>
                       <Table 
+                        scroll={{ x: 'max-content' }}
                         dataSource={vehicleHires} 
                         rowKey="id"
                         className="custom-table"
@@ -529,6 +532,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
 
                   <Table 
+                    scroll={{ x: 'max-content' }}
                     dataSource={services} 
                     rowKey="id"
                     className="custom-table"
@@ -578,6 +582,7 @@ const AdminDashboard: React.FC = () => {
                          </h4>
                       </div>
                       <Table 
+                        scroll={{ x: 'max-content' }}
                         dataSource={concepts} 
                         rowKey="id"
                         className="custom-table"
@@ -602,6 +607,7 @@ const AdminDashboard: React.FC = () => {
                          </h4>
                       </div>
                       <Table 
+                        scroll={{ x: 'max-content' }}
                         dataSource={demos} 
                         rowKey="id"
                         className="custom-table"
@@ -638,6 +644,7 @@ const AdminDashboard: React.FC = () => {
                          </h4>
                       </div>
                       <Table 
+                        scroll={{ x: 'max-content' }}
                         dataSource={tvChannels} 
                         rowKey="id"
                         className="custom-table"
@@ -728,6 +735,84 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )
             },
+            {
+              key: 'ventures',
+              label: <span className="flex items-center gap-2 py-2"><Rocket size={16} /> Ventures</span>,
+              children: (
+                <div className="py-8 space-y-12">
+                   <div className="feed-card bg-bg-secondary border-border-subtle p-0 overflow-hidden">
+                      <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-bg-primary/50">
+                         <h4 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                            <Rocket size={18} className="text-accent-primary" /> Venture Engagement Management
+                         </h4>
+                         <Select
+                           className="custom-select min-w-[200px]"
+                           value={selectedVentureId}
+                           onChange={(val) => {
+                             setSelectedVentureId(val);
+                             fetchVentureDetail(val);
+                           }}
+                         >
+                           {ventures.map(v => (
+                             <Option key={v.id} value={v.id}>{v.name}</Option>
+                           ))}
+                         </Select>
+                      </div>
+                      
+                      <div className="p-6">
+                        <div className="flex justify-between items-center mb-6">
+                          <h5 className="text-white font-bold uppercase tracking-wider text-xs">Engagement Types</h5>
+                          <button
+                            onClick={() => {
+                              if (!selectedVentureId) return message.warning("Select a venture first");
+                              setEditingEngType(null);
+                              engTypeForm.resetFields();
+                              setIsEngTypeModalOpen(true);
+                            }}
+                            className="qsi-button primary py-2 px-4 text-xs font-bold"
+                          >
+                            <Plus size={14} className="mr-2 inline" /> Add Engagement Type
+                          </button>
+                        </div>
+                        
+                        <Table 
+                          scroll={{ x: 'max-content' }}
+                          dataSource={selectedVentureData?.engagementTypes || []} 
+                          rowKey="id"
+                          className="custom-table"
+                          columns={[
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Label</span>, dataIndex: 'label', key: 'label' },
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Icon</span>, dataIndex: 'icon', key: 'icon' },
+                            { title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Order</span>, dataIndex: 'order', key: 'order' },
+                            { 
+                              title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Status</span>, 
+                              dataIndex: 'isActive', 
+                              key: 'isActive',
+                              render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+                            },
+                            {
+                              title: <span className="text-[10px] font-bold uppercase text-text-tertiary">Actions</span>,
+                              key: 'actions',
+                              render: (_, record) => (
+                                <Space>
+                                  <button className="text-text-tertiary hover:text-accent-primary" onClick={() => {
+                                    setEditingEngType(record);
+                                    engTypeForm.setFieldsValue(record);
+                                    setIsEngTypeModalOpen(true);
+                                  }}><Edit3 size={16} /></button>
+                                  <Popconfirm title="Delete this engagement type?" onConfirm={() => handleDeleteEngType(record.id)}>
+                                    <button className="text-text-tertiary hover:text-red-500"><Trash2 size={16} /></button>
+                                  </Popconfirm>
+                                </Space>
+                              ),
+                            },
+                          ]}
+                        />
+                      </div>
+                   </div>
+                </div>
+              )
+            }
           ]}
         />
       </div>
@@ -742,7 +827,7 @@ const AdminDashboard: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow">Registry Update</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">{editingCategory ? "Update Category" : "New R&D Category"}</h3>
           <Form form={categoryForm} layout="vertical" onFinish={handleSaveCategory} className="space-y-6">
@@ -784,7 +869,7 @@ const AdminDashboard: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow">Registry Update</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">{editingPackage ? "Update Module" : "Initialize New Module"}</h3>
           <Form form={packageForm} layout="vertical" onFinish={handleSavePackage} className="space-y-6">
@@ -830,7 +915,7 @@ const AdminDashboard: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow">Service Registry</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">{editingService ? "Update Service" : "Register New Service"}</h3>
           <Form form={serviceForm} layout="vertical" onFinish={handleSaveService} className="space-y-4">
@@ -909,7 +994,7 @@ const AdminDashboard: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow">Engagement Options</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">
             {editingEngType ? "Edit Engagement Type" : "New Engagement Type"}
@@ -963,7 +1048,7 @@ const AdminDashboard: React.FC = () => {
         centered
         className="dark-modal"
       >
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow">Venture Update</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-6">
             New Venture Post (Multi-Image)

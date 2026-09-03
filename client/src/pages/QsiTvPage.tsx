@@ -112,7 +112,8 @@ const CreatorCard: React.FC<{
 
 const QsiTvPage: React.FC = () => {
   const { token, user } = useAuth() || { token: null, user: null };
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'live';
   const [streams, setStreams] = useState<any[]>([]);
   const [isLoadingStreams, setIsLoadingStreams] = useState<boolean>(true);
   
@@ -197,7 +198,7 @@ const QsiTvPage: React.FC = () => {
       afterClose={stopPreviewPlayback}
     >
       {previewContent && (
-        <div className="p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
+        <div className="p-4 md:p-8 bg-bg-secondary rounded-3xl border border-border-subtle shadow-2xl">
           <span className="eyebrow" style={{ color: GREEN }}>{previewContent.mimeType}</span>
           <h3 className="text-2xl font-black text-white uppercase tracking-tight mt-2 mb-4">{previewContent.title}</h3>
           {previewContent.description && (
@@ -780,9 +781,13 @@ const QsiTvPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto no-scrollbar p-8">
         <div className="max-w-5xl mx-auto">
           <Tabs
-            defaultActiveKey="live"
+            activeKey={currentTab}
             className="custom-tabs"
             onChange={(key) => {
+              setSearchParams(prev => {
+                prev.set('tab', key);
+                return prev;
+              });
               if (key === 'studio') {
                 fetchMyChannel();
               } else if (key === 'channels') {
