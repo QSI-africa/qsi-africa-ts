@@ -71,6 +71,19 @@ const ClientDetailPage = () => {
     }
   };
 
+  const handleUnverifyUser = async () => {
+    try {
+      setLoading(true);
+      await api.post(`/admin/clients/${id}/unverify`);
+      message.success("User unverified successfully. They are no longer a Sovereign Mind.");
+      fetchClient();
+    } catch (error) {
+      console.error("Failed to unverify user:", error);
+      message.error(error.response?.data?.error || "Failed to unverify user.");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchClient();
   }, [fetchClient]);
@@ -340,9 +353,13 @@ const ClientDetailPage = () => {
             </Button>
           </Link>
           
-          {!client.engineerProfile?.isVerified && (
+          {!client.engineerProfile?.isVerified ? (
             <Button type="primary" onClick={handleVerifyUser}>
               Verify User
+            </Button>
+          ) : (
+            <Button danger onClick={handleUnverifyUser}>
+              Unverify User
             </Button>
           )}
         </div>

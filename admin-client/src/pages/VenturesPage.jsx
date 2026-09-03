@@ -29,6 +29,7 @@ const VenturesPage = () => {
   const [selectedVenture, setSelectedVenture] = useState(null);
   const [ventureEngagements, setVentureEngagements] = useState([]);
   const [isEngTypModalOpen, setIsEngTypModalOpen] = useState(false);
+  const [editingEngType, setEditingEngType] = useState(null);
   const [isVenturePostModalOpen, setIsVenturePostModalOpen] = useState(false);
 
   const [ventureForm] = Form.useForm();
@@ -109,16 +110,33 @@ const VenturesPage = () => {
     if (!selectedVenture) return;
     setIsAddingEngType(true);
     try {
-      await api.post(`/ventures/${selectedVenture.id}/engagement-types`, values);
-      message.success("Engagement type added");
+      if (editingEngType) {
+        await api.put(`/ventures/${selectedVenture.id}/engagement-types/${editingEngType.id}`, values);
+        message.success("Engagement type updated");
+      } else {
+        await api.post(`/ventures/${selectedVenture.id}/engagement-types`, values);
+        message.success("Engagement type added");
+      }
       setIsEngTypModalOpen(false);
       
       const res = await api.get(`/ventures/${selectedVenture.slug}`);
       setSelectedVenture(res.data);
     } catch (error) {
-      message.error("Failed to add engagement type");
+      message.error(error.response?.data?.error || "Failed to save engagement type");
     } finally {
       setIsAddingEngType(false);
+    }
+  };
+
+  const handleDeleteEngType = async (typeId) => {
+    if (!selectedVenture) return;
+    try {
+      await api.delete(`/ventures/${selectedVenture.id}/engagement-types/${typeId}`);
+      message.success("Engagement type deleted");
+      const res = await api.get(`/ventures/${selectedVenture.slug}`);
+      setSelectedVenture(res.data);
+    } catch (error) {
+      message.error("Failed to delete engagement type");
     }
   };
 
@@ -260,20 +278,44 @@ const VenturesPage = () => {
             </div>
           </Card>
 
-          <Card title="Engagement Types" extra={<Button type="link" onClick={() => { engTypeForm.resetFields(); setIsEngTypModalOpen(true); }}>+ Add Type</Button>}>
-            <Space wrap>
-              {selectedVenture.engagementTypes?.map((et) => (
-                <Tag key={et.id} color="cyan" style={{ padding: '4px 8px', fontSize: '14px' }}>
-                  <Space>
-                    {et.icon && iconMap[et.icon]}
-                    {et.label}
-                  </Space>
-                </Tag>
-              ))}
-              {(!selectedVenture.engagementTypes || selectedVenture.engagementTypes.length === 0) && (
-                <Text type="secondary">No engagement types configured</Text>
-              )}
-            </Space>
+          <Card title="Engagement Types" extra={<Button type="link" onClick={() => { setEditingEngType(null); engTypeForm.resetFields(); setIsEngTypModalOpen(true); }}>+ Add Type</Button>}>
+            <Table
+              dataSource={selectedVenture.engagementTypes || []}
+              rowKey="id"
+              pagination={false}
+              columns={[
+                { title: 'Label', dataIndex: 'label', key: 'label' },
+                { title: 'Icon', dataIndex: 'icon', key: 'icon', render: (icon) => (
+                    <Space>
+                      {icon && iconMap[icon]}
+                      {icon}
+                    </Space>
+                ) },
+                { title: 'Order', dataIndex: 'order', key: 'order' },
+                {
+                  title: 'Status',
+                  dataIndex: 'isActive',
+                  key: 'isActive',
+                  render: (val) => <Tag color={val ? 'green' : 'red'}>{val ? 'ACTIVE' : 'HIDDEN'}</Tag>
+                },
+                {
+                  title: 'Actions',
+                  key: 'actions',
+                  render: (_, record) => (
+                    <Space>
+                      <Button size="small" type="text" icon={<EditOutlined />} onClick={() => {
+                        setEditingEngType(record);
+                        engTypeForm.setFieldsValue(record);
+                        setIsEngTypModalOpen(true);
+                      }} />
+                      <Popconfirm title="Delete this engagement type?" onConfirm={() => handleDeleteEngType(record.id)}>
+                        <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+                      </Popconfirm>
+                    </Space>
+                  ),
+                }
+              ]}
+            />
           </Card>
 
           <Card title={`Posts (${selectedVenture.posts?.length || 0})`} extra={<Button type="link" onClick={() => { venturePostForm.resetFields(); setPostImageFileList([]); setPostVideoFileList([]); setIsVenturePostModalOpen(true); }}>+ New Post</Button>}>
@@ -395,7 +437,7 @@ const VenturesPage = () => {
       </Modal>
 
       <Modal
-        title="Add Engagement Type"
+        title={editingEngType ? "Edit Engagement Type" : "Add Engagement Type"}
         open={isEngTypModalOpen}
         onCancel={() => setIsEngTypModalOpen(false)}
         footer={null}
@@ -415,9 +457,18 @@ const VenturesPage = () => {
               ))}
             </Select>
           </Form.Item>
+          <Form.Item name="order" label="Order" initialValue={0}>
+            <Input type="number" min={0} />
+          </Form.Item>
+          <Form.Item name="isActive" label="Status" valuePropName="checked" initialValue={true}>
+            <Select>
+              <Option value={true}>ACTIVE</Option>
+              <Option value={false}>HIDDEN</Option>
+            </Select>
+          </Form.Item>
           <Space style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <Button onClick={() => setIsEngTypModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={isAddingEngType}>Add Type</Button>
+            <Button type="primary" htmlType="submit" loading={isAddingEngType}>{editingEngType ? "Save Changes" : "Add Type"}</Button>
           </Space>
         </Form>
       </Modal>

@@ -538,6 +538,41 @@ router.post("/clients/:id/verify", isSuperUserOrAdmin, async (req, res) => {
   }
 });
 
+// POST /api/admin/clients/:id/unverify
+router.post("/clients/:id/unverify", isSuperUserOrAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { engineerProfile: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Client not found." });
+    }
+
+    // Find or create EngineerProfile and set isVerified = false
+    const profile = await prisma.engineerProfile.upsert({
+      where: { userId: id },
+      update: { isVerified: false },
+      create: { userId: id, isVerified: false }
+    });
+
+    // Downgrade role to GENERAL_USER if they are an ENGINEER
+    if (user.role === "ENGINEER") {
+      await prisma.user.update({
+        where: { id },
+        data: { role: "GENERAL_USER" }
+      });
+    }
+
+    res.json({ message: "User unverified successfully.", profile });
+  } catch (error) {
+    console.error(`Failed to unverify client ${id}:`, error);
+    res.status(500).json({ error: "Failed to unverify client." });
+  }
+});
+
 /**
  * GET /api/admin/documents/:documentId/download
  * Retrieves a physical file from server storage, protected by admin authentication.
